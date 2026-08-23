@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { hintAfter, lineSets } from '../src/engine/store.js'
+import { fileFits, hintAfter, lineSets } from '../src/engine/store.js'
 
 const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
@@ -44,5 +44,14 @@ describe('every question guides the player', () => {
       // the last hint should be concrete: it names where to look
       expect(hintAfter(ask, 99).join(' ').length).toBeGreaterThan(10)
     }
+  })
+})
+
+describe('fileFits', () => {
+  it('accepts any of the files a question names, and nothing for a typed question', () => {
+    expect(fileFits({ files: ['a', 'b'] }, 'b')).toBe(true)
+    expect(fileFits({ files: ['a', 'b'] }, 'c')).toBe(false)
+    expect(fileFits({ accept: ['x'] }, 'a')).toBe(false)
+    expect(fileFits(null, 'a')).toBe(false)
   })
 })

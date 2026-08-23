@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, findFile, hintAfter, quickSets } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, hintAfter, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -151,22 +151,28 @@ export default function Messenger({ source }) {
   // Anything the player has to look up gets typed in, so picking from a list
   // can't stand in for actually finding it.
   const ask = thread ? (thread.id in pendingAsks ? pendingAsks[thread.id] : thread.ask ?? null) : null
+  // Right and wrong are the same whether the answer was typed or dropped in.
+  const solved = () => {
+    // a question may hand straight over to the next one
+    setAsk(thread.id, ask.then ?? null)
+    if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
+    if (ask.grants) grant(ask.grants)
+    speak(ask.ok)
+  }
+  const missed = () => {
+    const n = wrongs[thread.id] ?? 0
+    setWrongs((w) => ({ ...w, [thread.id]: n + 1 }))
+    speak(hintAfter(ask, n))
+  }
+
   const answer = () => {
     const text = draft.trim()
     if (!text) return
     say({ text })
     setDraft('')
-    if (answerFits(ask, text)) {
-      // a question may hand straight over to the next one
-      setAsk(thread.id, ask.then ?? null)
-      if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
-      if (ask.grants) grant(ask.grants)
-      speak(ask.ok)
-      return
-    }
-    const missed = wrongs[thread.id] ?? 0
-    setWrongs((w) => ({ ...w, [thread.id]: missed + 1 }))
-    speak(hintAfter(ask, missed))
+    // typing at a question that wants a file is always the wrong kind of answer
+    if (!ask.files && answerFits(ask, text)) solved()
+    else missed()
   }
 
   const choose = (text) => {
@@ -177,7 +183,9 @@ export default function Messenger({ source }) {
 
   const sendFile = (file) => {
     say({ file: file.name, image: file.image })
-    reactTo(file.id)
+    if (!ask?.files) return reactTo(file.id)
+    if (fileFits(ask, file.id)) solved()
+    else missed()
   }
 
   useEffect(() => () => {

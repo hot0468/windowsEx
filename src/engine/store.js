@@ -387,6 +387,9 @@ export function answerFits(ask, text) {
     (Array.isArray(entry) ? entry : [entry]).every((part) => loose(text).includes(loose(part))))
 }
 
+// A question may want a file instead of typed text; any of the ones it names will do.
+export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
+
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
 export const hintAfter = (ask, wrongs) => {
   const sets = lineSets(ask.no)
