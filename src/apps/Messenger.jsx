@@ -60,6 +60,8 @@ export default function Messenger({ source }) {
   const threads = m.sections.flatMap((s) => s.threads)
   const unreadOf = (t) => msgsOf(t).length - (seen[t.id] ?? 0)
   const thread = threads.find((t) => t.id === openId)
+  // Room messages come from several people, so the sender's name picks the face.
+  const people = Object.fromEntries(threads.map((t) => [t.name, t]))
   const matches = (t) => !q.trim() || t.name.includes(q.trim())
   const totalUnread = threads.reduce((n, t) => n + unreadOf(t), 0)
 
@@ -155,17 +157,29 @@ export default function Messenger({ source }) {
             </div>
             <div className="msg-list">
               {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
-              {msgsOf(thread).map((msg, i) => (
-                <div key={i} className={'bubble ' + (msg.me ? 'me' : 'them')}>
-                  {!msg.me && <b>{msg.from}</b>}{msg.text}
+              {msgsOf(thread).map((msg, i, all) => {
+                if (msg.me) return <div key={i} className="bubble me">{msg.text}</div>
+                const prev = all[i - 1]
+                const opens = !prev || prev.me || prev.from !== msg.from
+                const who = people[msg.from] ?? thread
+                return (
+                  <div key={i} className="msg-row">
+                    <span className="msg-av">{opens && <Avatar t={who} size={32} />}</span>
+                    <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}</div>
+                  </div>
+                )
+              })}
+              {mine.map((sent, i) => (
+                <div key={'r' + i} className={'bubble me' + (sent.file ? ' file' : '')}>
+                  {sent.file ? <><Paperclip size={13} strokeWidth={2} />{sent.file}</> : sent.text}
                 </div>
               ))}
-              {mine.map((m, i) => (
-                <div key={'r' + i} className={'bubble me' + (m.file ? ' file' : '')}>
-                  {m.file ? <><Paperclip size={13} strokeWidth={2} />{m.file}</> : m.text}
+              {busy && (
+                <div className="msg-row">
+                  <span className="msg-av"><Avatar t={thread} size={32} /></span>
+                  <div className="typing"><span className="spinner sm" />작성중…</div>
                 </div>
-              ))}
-              {busy && <div className="typing"><span className="spinner sm" />작성중…</div>}
+              )}
             </div>
             <div className="quick">
               <button className="quick-att" disabled={busy} title="파일 보내기"

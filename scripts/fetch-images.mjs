@@ -9,15 +9,16 @@ const ROOT = fileURLToPath(new URL('../src/assets/', import.meta.url))
 // file → what to search for. `pick` chooses among the first results so faces differ.
 const IMAGES = [
   { file: 'wallpaper.jpg', query: 'abstract blue gradient background', size: 'large2x', pick: 0 },
-  { file: 'avatars/me.jpg', query: 'person portrait neutral background', size: 'tiny', pick: 1 },
-  { file: 'avatars/boss.jpg', query: 'businessman portrait office', size: 'tiny', pick: 0 },
-  { file: 'avatars/junho.jpg', query: 'man smiling casual portrait', size: 'tiny', pick: 2 },
-  { file: 'avatars/minseo.jpg', query: 'young woman working office', size: 'tiny', pick: 1 },
+  // 김한별 is the woman on the ID card scan; the rest match how they talk in the scenario.
+  { file: 'avatars/me.jpg', query: 'asian businesswoman portrait', size: 'tiny', pick: 0 },
+  { file: 'avatars/boss.jpg', query: 'asian businessman office portrait', size: 'tiny', pick: 1 },
+  { file: 'avatars/junho.jpg', query: 'asian man smiling casual', size: 'tiny', pick: 2 },
+  { file: 'avatars/minseo.jpg', query: 'asian woman working laptop', size: 'tiny', pick: 1 },
   { file: 'avatars/room_notice.jpg', query: 'office team meeting', size: 'tiny', pick: 0 },
   { file: 'avatars/room_bs200.jpg', query: 'barcode scanner warehouse', size: 'tiny', pick: 0 },
-  { file: 'avatars/jihyun.jpg', query: 'woman laughing portrait', size: 'tiny', pick: 3 },
-  { file: 'avatars/mom.jpg', query: 'senior woman smiling portrait', size: 'tiny', pick: 0 },
-  { file: 'avatars/guesthouse.jpg', query: 'man outdoors smiling portrait', size: 'tiny', pick: 4 }
+  { file: 'avatars/jihyun.jpg', query: 'asian woman laughing', size: 'tiny', pick: 3 },
+  { file: 'avatars/mom.jpg', query: 'asian senior woman smiling', size: 'tiny', pick: 0 },
+  { file: 'avatars/guesthouse.jpg', query: 'asian man outdoors farmer', size: 'tiny', pick: 1 }
 ]
 
 const key = process.env.PEXELS_API_KEY
