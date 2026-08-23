@@ -43,3 +43,40 @@ describe('window management', () => {
     expect(w.z).toBeGreaterThan(zBefore)
   })
 })
+
+describe('two questions in one conversation', () => {
+  beforeEach(() => useGame.setState({ pendingAsks: {} }))
+
+  it('asks the first question when the thread has none waiting', () => {
+    const first = { placeholder: '하나', accept: ['a'] }
+    useGame.getState().queueAsk('boss', first)
+    expect(useGame.getState().pendingAsks.boss).toBe(first)
+  })
+
+  it('queues the second behind the first instead of dropping it', () => {
+    const first = { placeholder: '하나', accept: ['a'] }
+    const second = { placeholder: '둘', accept: ['b'] }
+    useGame.getState().queueAsk('boss', first)
+    useGame.getState().queueAsk('boss', second)
+    const waiting = useGame.getState().pendingAsks.boss
+    expect(waiting.placeholder).toBe('하나')
+    expect(waiting.then).toBe(second)
+  })
+
+  it('keeps a question a day already chained, and waits behind it', () => {
+    const chained = { placeholder: '하나', accept: ['a'], then: { placeholder: '둘', accept: ['b'] } }
+    const third = { placeholder: '셋', accept: ['c'] }
+    useGame.getState().queueAsk('boss', chained)
+    useGame.getState().queueAsk('boss', third)
+    const waiting = useGame.getState().pendingAsks.boss
+    expect(waiting.then.placeholder).toBe('둘')
+    expect(waiting.then.then).toBe(third)
+  })
+
+  it('takes the next question straight over once the last one is answered', () => {
+    useGame.getState().setAsk('boss', null)
+    const next = { placeholder: '다음', accept: ['a'] }
+    useGame.getState().queueAsk('boss', next)
+    expect(useGame.getState().pendingAsks.boss).toBe(next)
+  })
+})

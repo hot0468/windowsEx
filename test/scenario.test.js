@@ -198,7 +198,8 @@ describe('scenario integrity', () => {
       files, sites: scenario.sites, network: scenario.network,
       places: scenario.places, booking: scenario.booking, printer: scenario.printer
     })
-    const asks = threads.flatMap(asksOf)
+    // a question answered by dropping a file in has nothing to type
+    const asks = threads.flatMap(asksOf).filter((a) => a.accept)
     expect(asks.length).toBeGreaterThan(0)
     for (const a of asks) {
       expect(a.accept.length).toBeGreaterThan(0)
@@ -288,6 +289,10 @@ describe('scenario integrity', () => {
       expect(d.portal.notice.text).toBeTruthy()
       expect(d.portal.news.length).toBeGreaterThan(0)
     })
+  })
+
+  it('asks for ten requests a day, every day', () => {
+    for (const d of scenario.days) expect(d.requests).toHaveLength(10)
   })
 
   it('keeps the workload even across days', () => {

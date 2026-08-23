@@ -210,7 +210,7 @@ export const useGame = create((set, get) => ({
     const beats = [day.opening, ...(day.asks ?? [])].filter(Boolean)
     beats.forEach((beat, i) => setTimeout(() => {
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
-      if (beat.ask) get().setAsk(beat.thread, beat.ask)
+      if (beat.ask) get().queueAsk(beat.thread, beat.ask)
       get().showToast({
         from: beat.from, text: beat.lines[0],
         app: 'messenger', source: beat.source, thread: beat.thread
@@ -255,6 +255,13 @@ export const useGame = create((set, get) => ({
     set((s) => ({ bookings: { ...s.bookings, [place]: details } })),
   setAsk: (threadId, ask) =>
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } })),
+  // A day can raise two questions in the same conversation. The second waits
+  // behind the first instead of replacing it, so neither goes unanswered.
+  queueAsk: (threadId, ask) =>
+    set((s) => {
+      const waiting = s.pendingAsks[threadId]
+      return { pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }
+    }),
   pushMessage: (threadId, msg) =>
     set((s) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }
@@ -396,6 +403,11 @@ export function answerFits(ask, text) {
 
 // A question may want a file instead of typed text; any of the ones it names will do.
 export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
+
+// Hangs a question off the end of one still waiting, so a thread asked twice in
+// a day keeps both — answering the first hands straight over to the second.
+export const appendAsk = (ask, next) =>
+  ask.then ? { ...ask, then: appendAsk(ask.then, next) } : { ...ask, then: next }
 
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
 export const hintAfter = (ask, wrongs) => {
