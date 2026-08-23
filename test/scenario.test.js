@@ -271,6 +271,11 @@ describe('scenario integrity', () => {
     })
   })
 
+  it('gives every day the same number of requests', () => {
+    const counts = scenario.days.map((d) => d.requests.length)
+    expect(new Set(counts).size).toBe(1)
+  })
+
   it('never asks for the same request on two different days', () => {
     const all = scenario.days.flatMap((d) => d.requests)
     expect(new Set(all).size).toBe(all.length)
