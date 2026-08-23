@@ -84,22 +84,18 @@ export default function Messenger({ source }) {
     setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), entry] }))
   // One pick per batch of incoming messages: the choices go quiet until the
   // other side says something new.
-  const arrived = thread ? msgsOf(thread).length : 0
+  const arrived = thread ? msgsOf(thread).length + mine.filter((e) => e.from).length : 0
   const spent = thread && answeredAt[thread.id] >= arrived
   const choices = thread
     ? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
     : []
-  const choose = (text) => {
-    say({ text })
-    setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
-  }
-
-  // Sending a photo can prompt a scripted reply — she writes for a beat first.
-  const sendFile = (file) => {
-    say({ file: file.name, image: file.image })
-    const hit = thread.reactions?.find((r) => r.files.includes(file.id))
-    if (!hit || reacted[file.id]) return
-    setReacted((r) => ({ ...r, [file.id]: true }))
+  // Sharing a photo or picking certain replies can prompt a scripted answer —
+  // the other side writes for a beat first, like a real conversation.
+  const reactTo = (key) => {
+    const hit = thread.reactions?.find(
+      (r) => r.files?.includes(key) || r.choice === key)
+    if (!hit || reacted[key]) return
+    setReacted((r) => ({ ...r, [key]: true }))
     const id = thread.id
     const who = thread.name
     typingFor.current = id
@@ -113,6 +109,17 @@ export default function Messenger({ source }) {
         }
       }, 1200 + i * 1500))
     })
+  }
+
+  const choose = (text) => {
+    say({ text })
+    setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
+    reactTo(text)
+  }
+
+  const sendFile = (file) => {
+    say({ file: file.name, image: file.image })
+    reactTo(file.id)
   }
 
   useEffect(() => () => {

@@ -121,13 +121,26 @@ describe('ep1 scenario integrity', () => {
     expect(quickSets(boss).length).toBeGreaterThan(1)
   })
 
-  it('gives 지현 something to say about every photo you can send her', () => {
-    const jihyun = threads.find((t) => t.id === 'jihyun')
+  it('answers every scripted reaction, whether it keys on a file or a reply', () => {
     const known = new Set(files.map((f) => f.id))
-    for (const r of jihyun.reactions) {
-      expect(r.reply.length).toBeGreaterThan(0)
-      for (const id of r.files) expect(known.has(id)).toBe(true)
+    const reacting = threads.filter((t) => t.reactions)
+    expect(reacting.length).toBeGreaterThan(0)
+    for (const t of reacting) {
+      for (const r of t.reactions) {
+        expect(r.reply.length).toBeGreaterThan(0)
+        expect(Boolean(r.files) !== Boolean(r.choice)).toBe(true)   // one trigger, not both
+        for (const id of r.files ?? []) expect(known.has(id)).toBe(true)
+        // a reply-triggered reaction must be reachable from that thread's choices
+        if (r.choice) expect(quickSets(t).flat()).toContain(r.choice)
+      }
     }
+  })
+
+  it('puts the office address 엄마 asks for somewhere findable', () => {
+    const mom = threads.find((t) => t.id === 'mom')
+    const asked = mom.reactions.find((r) => r.choice && r.reply.length > 1).choice
+    const portal = scenario.sites.find((s) => s.layout === 'portal').portal
+    expect(portal.footer.address).toBe(asked)
   })
 
   it('keeps the phone gallery reachable as its own drive', () => {

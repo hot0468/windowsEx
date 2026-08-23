@@ -110,6 +110,12 @@ export default function Portal({ site }) {
           </Panel>
         </aside>
       </div>
+
+      <footer className="pt-foot">
+        <div className="pt-foot-name">{p.footer.company}</div>
+        <div>{p.footer.address}</div>
+        <div>{p.footer.tel}</div>
+      </footer>
     </div>
   )
 }
