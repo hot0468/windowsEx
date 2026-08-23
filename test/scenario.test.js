@@ -146,13 +146,20 @@ describe('ep1 scenario integrity', () => {
   })
 
   it('makes every typed answer findable somewhere in the game', () => {
-    const world = JSON.stringify({ files, sites: scenario.sites })
+    const world = JSON.stringify({ files, sites: scenario.sites, network: scenario.network })
     const asks = threads.flatMap(asksOf)
     expect(asks.length).toBeGreaterThan(0)
     for (const a of asks) {
       expect(a.accept.length).toBeGreaterThan(0)
       for (const accepted of a.accept) expect(world).toContain(accepted)
     }
+  })
+
+  it('gates the intranet on an IP approval exactly one thread can grant', () => {
+    for (const site of scenario.sites) expect(site.requiresIp).toBe(true)
+    const granting = threads.flatMap(asksOf).filter((a) => a.grants === 'ip')
+    expect(granting).toHaveLength(1)
+    expect(granting[0].accept).toContain(scenario.network.ip)
   })
 
   it('never hands a typed answer over as a clickable choice', () => {

@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'unlocked', 'cleared', 'scratch']
+  'starred', 'pinned', 'unlocked', 'grants', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -75,6 +75,7 @@ export const useGame = create((set, get) => ({
   typing: {},
   extraMails: restored?.extraMails ?? [],
   unlocked: restored?.unlocked ?? {},
+  grants: restored?.grants ?? {},
   cleared: restored?.cleared ?? false,
   scratch: restored?.scratch ?? '',
 
@@ -161,6 +162,7 @@ export const useGame = create((set, get) => ({
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
+  grant: (key) => set((s) => ({ grants: { ...s.grants, [key]: true } })),
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>
     set((s) => ({ openThread: { ...s.openThread, [source]: id } })),

@@ -267,6 +267,20 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .bw-pop-date { color: #aaa; font-size: 11px; flex-shrink: 0; }
 .site-error { text-align: center; padding-top: 60px; color: #444; }
 .err-code { color: #999; font-size: 12px; margin-top: 8px; }
+/* command prompt */
+.cmd { height: 100%; padding: 8px 10px; background: #0c0c0c; cursor: text; }
+.cmd-out { height: 100%; overflow: auto; color: #cccccc; font-family: 'D2Coding', Consolas, monospace; font-size: 13px; line-height: 1.45; white-space: pre-wrap; user-select: text; }
+.cmd-line { display: flex; gap: 6px; }
+.cmd-line input { flex: 1; min-width: 0; border: none; outline: none; background: none; font: inherit; color: #cccccc; caret-color: #cccccc; }
+
+/* blocked by IP */
+.blk { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 30px; background: #f4f5f9; }
+.blk-card { max-width: 400px; padding: 34px 30px; border-radius: 8px; background: #fff; box-shadow: 0 8px 28px rgba(40,50,110,.12); text-align: center; color: #c2553f; }
+.blk-card h2 { margin: 14px 0 12px; font-size: 19px; color: #2a2d38; }
+.blk-card p { color: #666; font-size: 13px; line-height: 1.8; }
+.blk-help { margin-top: 20px; padding: 12px; border-radius: 5px; background: #f2f4fb; color: #3c4a9e; font-size: 12px; }
+.blk-code { margin-top: 16px; color: #b6bbc9; font-size: 11px; }
+
 /* intranet login */
 .lg { min-height: 100%; background: #f4f5f9; }
 .lg-hero { padding: 42px 20px 96px; text-align: center; color: #fff; background: #4a5ee0 radial-gradient(circle at 18% 30%, rgba(255,255,255,.14) 2px, transparent 2px) 0 0/38px 38px; }

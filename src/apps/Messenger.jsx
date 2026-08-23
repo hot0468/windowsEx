@@ -45,6 +45,7 @@ export default function Messenger({ source }) {
   const seen = useGame((s) => s.seenThreads)
   const markThreadSeen = useGame((s) => s.markThreadSeen)
   const setTyping = useGame((s) => s.setTyping)
+  const grant = useGame((s) => s.grant)
   const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
@@ -137,6 +138,7 @@ export default function Messenger({ source }) {
     if (right) {
       setAsks((a) => ({ ...a, [thread.id]: null }))
       if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
+      if (ask.grants) grant(ask.grants)
     }
     speak(right ? ask.ok : ask.no)
   }

@@ -56,6 +56,7 @@ function Login({ site, onOk }) {
 export default function Browser() {
   const scenario = useGame((s) => s.scenario)
   const unlocked = useGame((s) => s.unlocked)
+  const grants = useGame((s) => s.grants)
   const unlockSite = useGame((s) => s.unlockSite)
   const [addr, setAddr] = useState('')
   const [page, setPage] = useState({ kind: 'home' })
@@ -76,7 +77,10 @@ export default function Browser() {
   }
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
-  const locked = Boolean(site?.login) && !unlocked[site.url]
+  // Approval first, credentials second — the site can't even show a login form
+  // to a machine it doesn't recognise.
+  const blocked = Boolean(site?.requiresIp) && !grants.ip
+  const locked = !blocked && Boolean(site?.login) && !unlocked[site.url]
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
 
   return (
@@ -116,7 +120,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + (site && (locked || site.layout) ? ' bleed' : '')}>
+      <div className={'page' + (site && (blocked || locked || site.layout) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -151,6 +155,20 @@ export default function Browser() {
           </div>
         )}
 
+        {blocked && (
+          <div className="blk">
+            <div className="blk-card">
+              <Lock size={30} strokeWidth={1.6} />
+              <h2>승인되지 않은 IP입니다</h2>
+              <p>
+                이 PC는 사내 시스템 접근 승인 목록에 없습니다.<br />
+                장기 미접속 계정은 IP 승인이 만료될 수 있습니다.
+              </p>
+              <div className="blk-help">한빛톡 &gt; <b>정보보안팀</b> 으로 문의해 주세요.</div>
+              <div className="blk-code">HANBIT-SEC-403 · {site.url}</div>
+            </div>
+          </div>
+        )}
         {locked && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
 
         {site && !locked && (
