@@ -220,6 +220,9 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .mw-quota { margin-left: auto; color: #aaa; font-size: 12px; }
 .mw-drop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 54px; padding: 10px 14px; border: 1px dashed #cfd3dc; border-radius: 4px; }
 .mw-drop-empty { color: #aab; font-size: 12px; margin: auto; }
+.mw-drop.over { border-color: #0067c0; border-style: solid; background: #f0f7ff; }
+.mg-conv.drop { outline: 2px dashed #0067c0; outline-offset: -6px; }
+.desktop-icon.drop { background: rgba(255,255,255,.3); outline: 2px dashed #fff; }
 .mw-tools { display: flex; align-items: center; gap: 3px; padding: 7px 14px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; background: #fafafc; flex-shrink: 0; }
 .mw-tools select { padding: 4px 6px; border: 1px solid #dcdce2; border-radius: 3px; background: #fff; font: inherit; font-size: 12px; }
 .mw-sep { width: 1px; height: 18px; margin: 0 6px; background: #e2e2e8; }

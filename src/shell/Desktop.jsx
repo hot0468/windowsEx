@@ -1,5 +1,6 @@
 import { useGame, fsWithPinned } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
+import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
 const SHORTCUTS = [
   { label: '내 문서', icon: 'folder', app: 'explorer', props: { startFolder: '문서' } },
@@ -15,7 +16,9 @@ export default function Desktop() {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
   const openWindow = useGame((s) => s.openWindow)
+  const pinFile = useGame((s) => s.pinFile)
   const desktop = fsWithPinned(scenario.fs, pinned)['바탕화면']
+  const work = useFileDrop(pinFile)
   return (
     <div className="desktop-icons">
       {SHORTCUTS.map((s) => (
@@ -25,13 +28,13 @@ export default function Desktop() {
         </button>
       ))}
       {desktop.map((e) => (e.children ? (
-        <button key={e.name} className="desktop-icon"
+        <button key={e.name} className={'desktop-icon' + (work.over ? ' drop' : '')} {...work.dropProps}
                 onDoubleClick={() => openWindow('explorer', { startFolder: ['바탕화면', e.name] })}>
           <div className="glyph"><Icon name="folder" size={38} /></div>{e.name}
           {e.children.length > 0 && <span className="di-count">{e.children.length}</span>}
         </button>
       ) : (
-        <button key={e.id} className="desktop-icon"
+        <button key={e.id} className="desktop-icon" {...fileDragProps(e)}
                 onDoubleClick={() => openWindow('notepad', { fileId: e.id })}>
           <div className="glyph"><Icon name="doc" size={38} /></div>{e.name}
         </button>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useGame, WORK_FOLDER } from '../engine/store.js'
+import { useGame, WORK_FOLDER, findFile } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
+import { useFileDrop } from './dragFile.js'
 import { faceOf, photoOf } from '../assets/photos.js'
 import {
   BellOff, ChevronDown, MessageSquare,
@@ -39,6 +40,7 @@ const Row = ({ t, preview, unread, selected, onOpen }) => (
 
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
+  const fs = useGame((s) => s.scenario.fs)
   const liveMessages = useGame((s) => s.scenario.messenger)
   const msgCount = useGame((s) => s.msgCount)
   const openId = useGame((s) => s.openThread[source] ?? null)
@@ -75,6 +77,10 @@ export default function Messenger({ source }) {
   const mine = thread ? replies[thread.id] ?? [] : []
   const say = (entry) =>
     setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), entry] }))
+  const drop = useFileDrop((id) => {
+    const file = findFile(fs, id)
+    if (file && thread && !busy) say({ file: file.name })
+  })
 
   return (
     <div className="mg">
@@ -136,7 +142,7 @@ export default function Messenger({ source }) {
         </div>
       </div>
 
-      <div className="mg-conv">
+      <div className={'mg-conv' + (drop.over && thread ? ' drop' : '')} {...drop.dropProps}>
         {!thread && <div className="mg-none">왼쪽에서 대화 상대를 선택하세요</div>}
         {thread && (
           <>

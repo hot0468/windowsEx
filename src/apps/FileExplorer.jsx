@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGame, WORK_FOLDER, entriesAt, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
+import { fileDragProps } from './dragFile.js'
 import Icon from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 
@@ -77,7 +78,8 @@ export default function FileExplorer({ startFolder }) {
             <div className="ex-hits-head">'{q.trim()}' 검색 결과 {hits.length}건 — {here} 및 하위 폴더</div>
             {hits.length === 0 && <div className="ex-empty">일치하는 파일이 없습니다</div>}
             {hits.map(({ file, trail }) => (
-              <button key={file.id} className="ex-hit" onContextMenu={onContext(file)}
+              <button key={file.id} className="ex-hit" {...fileDragProps(file)}
+                      onContextMenu={onContext(file)}
                       onDoubleClick={() => openWindow('notepad', { fileId: file.id })}>
                 <Icon name="doc" size={26} />
                 <span className="ex-hit-mid">
@@ -97,7 +99,8 @@ export default function FileExplorer({ startFolder }) {
               </button>
             ))}
             {files.map((f) => (
-              <button key={f.id} className="ex-file" onContextMenu={onContext(f)}
+              <button key={f.id} className="ex-file" {...fileDragProps(f)}
+                      onContextMenu={onContext(f)}
                       onDoubleClick={() => openWindow('notepad', { fileId: f.id })}>
                 <div className="glyph"><Icon name="doc" size={36} /></div>{f.name}
               </button>

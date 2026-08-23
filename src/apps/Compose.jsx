@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useGame, WORK_FOLDER, findFile } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
+import { useFileDrop } from './dragFile.js'
 import {
   AlignCenter, AlignLeft, Bold, ClearFormat, Italic, List,
   Paperclip, Send, Strikethrough, Underline, X
@@ -31,6 +32,7 @@ export default function Compose({ mail, onSend, onCancel }) {
   const [font, setFont] = useState(FONTS[0])
   const [size, setSize] = useState(SIZES[1])
   const body = useRef(null)
+  const drop = useFileDrop(setAtt)
 
   const attached = att ? findFile(fs, att) : null
   const run = (cmd) => {
@@ -67,8 +69,12 @@ export default function Compose({ mail, onSend, onCancel }) {
               <button className="attach" onClick={() => setPicking(true)}>내 PC</button>
               <span className="mw-quota">일반 {attached ? '1개' : '0KB'}/10MB</span>
             </div>
-            <div className="mw-drop">
-              {!attached && <span className="mw-drop-empty">'내 PC'를 눌러 첨부할 파일을 선택하세요</span>}
+            <div className={'mw-drop' + (drop.over ? ' over' : '')} {...drop.dropProps}>
+              {!attached && (
+                <span className="mw-drop-empty">
+                  파일을 마우스로 끌어 오거나 '내 PC'를 누르세요
+                </span>
+              )}
               {attached && (
                 <span className="attach-chip">
                   <Paperclip size={13} strokeWidth={1.9} />{attached.name}
