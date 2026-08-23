@@ -30,8 +30,8 @@ function Toast() {
   }, [toast, clearToast])
   if (!toast) return null
   return (
-    <div className="toast" onClick={() => { openWindow('messenger'); clearToast() }}>
-      <b>💬 한빛톡 — {toast.from}</b>
+    <div className="toast" onClick={() => { openWindow(toast.app ?? 'messenger'); clearToast() }}>
+      <b>{(toast.app === 'mail' ? '✉️ 메일' : '💬 한빛톡') + ' — '}{toast.from}</b>
       {toast.text}
     </div>
   )

@@ -52,7 +52,7 @@ export default function Mail() {
             <div className="md-meta">{mail.from} · {mail.date}</div>
             <pre className="md-body">{mail.body}</pre>
             {mail.canReply && (
-              <button className="btn-primary" onClick={() => setComposing(true)}>↩ 회신</button>
+              <button className="btn-primary" onClick={() => { setComposing(true); setSent(false) }}>↩ 회신</button>
             )}
           </>
         )}
@@ -61,10 +61,10 @@ export default function Mail() {
             <div className="md-meta">받는 사람: {mail.from}</div>
             <div className="md-meta">제목: RE: {mail.subject}</div>
             <textarea value={body} onChange={(e) => setBody(e.target.value)}
-                      placeholder="본문을 입력하세요" />
+                      placeholder="본문을 입력하세요" aria-label="메일 본문" />
             <div className="compose-row">
               <span>📎</span>
-              <select value={att} onChange={(e) => setAtt(e.target.value)}>
+              <select value={att} onChange={(e) => setAtt(e.target.value)} aria-label="첨부 파일 선택">
                 <option value="">첨부 없음</option>
                 {allFiles(scenario.fs).map((f) => (
                   <option key={f.id} value={f.id}>{f.name}</option>

@@ -11,7 +11,7 @@ export default function Browser() {
   const [pwError, setPwError] = useState(false)
 
   const go = (u) => {
-    const clean = u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')
+    const clean = u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
     setUrl(clean)
     setCurrent(clean || null)
     setPw('')

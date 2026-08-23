@@ -1,4 +1,4 @@
-﻿const norm = (s) => String(s ?? '').replace(/[,\s]/g, '')
+const norm = (s) => String(s ?? '').replace(/[,\s]/g, '')
 
 export function checkGoal(goal, { attachmentId, body }) {
   if (attachmentId !== goal.requiredAttachment) {

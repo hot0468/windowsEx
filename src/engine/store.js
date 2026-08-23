@@ -53,8 +53,16 @@ export const useGame = create((set, get) => ({
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, minimized: true } : w)) })),
   toggleMaximize: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, maximized: !w.maximized } : w)) })),
-  moveWindow: (id, x, y) =>
-    set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, x, y } : w)) })),
+  moveWindow: (id, x, y) => {
+    const maxX = (typeof window !== 'undefined' ? window.innerWidth : 1920) - 60
+    const maxY = (typeof window !== 'undefined' ? window.innerHeight : 1080) - 90
+    set((s) => ({
+      windows: s.windows.map((w) =>
+        w.id === id
+          ? { ...w, x: Math.max(-500, Math.min(x, maxX)), y: Math.max(0, Math.min(y, maxY)) }
+          : w)
+    }))
+  },
 
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
@@ -74,6 +82,7 @@ export const useGame = create((set, get) => ({
           body: verdict.reply
         }]
       }))
+      set({ toast: { from: original.from, text: '새 메일이 도착했습니다: ' + 'RE: ' + original.subject, app: 'mail' } })
       if (verdict.ok) setTimeout(() => set({ cleared: true }), 2500)
     }, 1800)
     return verdict.ok
