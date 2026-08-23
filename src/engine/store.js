@@ -15,6 +15,7 @@ export const useGame = create((set, get) => ({
   extraMails: [],
   wikiUnlocked: false,
   cleared: false,
+  scratch: '',
 
   setBooted: () => set({ booted: true }),
   showToast: (toast) => set({ toast }),
@@ -66,6 +67,7 @@ export const useGame = create((set, get) => ({
 
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
+  setScratch: (scratch) => set({ scratch }),
 
   sendReply: ({ attachmentId, body }) => {
     const s = get()

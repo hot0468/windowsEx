@@ -5,8 +5,10 @@ const SHORTCUTS = [
   { label: '내 문서', icon: 'folder', app: 'explorer', props: { startFolder: '문서' } },
   { label: '휴지통', icon: 'trash', app: 'explorer', props: { startFolder: '휴지통' } },
   { label: '브라우저', icon: 'globe', app: 'browser' },
+  { label: '메일', icon: 'mail', app: 'mail' },
   { label: '한빛톡', icon: 'workchat', app: 'messenger' },
-  { label: '톡톡', icon: 'chat', app: 'chat' }
+  { label: '톡톡', icon: 'chat', app: 'chat' },
+  { label: '메모장', icon: 'notepad', app: 'notepad' }
 ]
 
 export default function Desktop() {

@@ -18,11 +18,10 @@ export default function Taskbar() {
     return () => clearInterval(t)
   }, [])
 
-  const clickApp = (key) => {
-    const win = windows.find((w) => w.app === key)
-    if (!win) return openWindow(key)
-    if (!win.minimized && win.z === nextZ - 1) minimizeWindow(win.id)
-    else focusWindow(win.id)
+  // Clicking the button of the frontmost window minimizes it; anything else comes forward.
+  const clickWindow = (w) => {
+    if (!w.minimized && w.z === nextZ - 1) minimizeWindow(w.id)
+    else focusWindow(w.id)
   }
 
   return (
@@ -45,10 +44,11 @@ export default function Taskbar() {
           <button className="tb-icon" title="시작" onClick={() => setStartOpen(!startOpen)}>
             <LayoutGrid size={19} strokeWidth={1.8} />
           </button>
-          {Object.entries(APPS).map(([key, a]) => (
-            <button key={key} className="tb-icon" title={a.title} onClick={() => clickApp(key)}>
-              <Icon name={a.icon} size={23} />
-              {windows.some((w) => w.app === key) && <span className="dot" />}
+          {windows.map((w) => (
+            <button key={w.id} className="tb-icon" title={APPS[w.app].title}
+                    onClick={() => clickWindow(w)}>
+              <Icon name={APPS[w.app].icon} size={23} />
+              <span className="dot" />
             </button>
           ))}
         </div>

@@ -68,6 +68,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .notepad { height: 100%; display: flex; flex-direction: column; }
 .np-name { padding: 6px 12px; font-size: 12px; color: #666; border-bottom: 1px solid #eee; }
 .np-body { flex: 1; padding: 14px; font-family: Consolas, monospace; font-size: 13px; white-space: pre-wrap; overflow: auto; user-select: text; }
+.np-edit { border: none; outline: none; resize: none; background: none; }
 
 /* browser */
 .browser { height: 100%; display: flex; flex-direction: column; }
