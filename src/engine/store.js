@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'wikiUnlocked', 'cleared', 'scratch']
+  'starred', 'wikiUnlocked', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -66,6 +66,7 @@ export const useGame = create((set, get) => ({
   nextZ: restored?.nextZ ?? 10,
   msgCount: restored?.msgCount ?? 0,
   readMails: restored?.readMails ?? {},
+  starred: restored?.starred ?? {},
   // Which conversation each messenger is showing, and how much of it has been read.
   // Both live here so a toast can open a thread in an already-running window.
   openThread: {},
@@ -153,7 +154,9 @@ export const useGame = create((set, get) => ({
   resizeWindow: (id, rect) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, ...rect } : w)) })),
 
-  markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
+  markMailRead: (id, read = true) =>
+    set((s) => ({ readMails: { ...s.readMails, [id]: read } })),
+  toggleStar: (id) => set((s) => ({ starred: { ...s.starred, [id]: !s.starred[id] } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>

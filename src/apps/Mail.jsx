@@ -1,26 +1,39 @@
 import { useState } from 'react'
 import { useGame } from '../engine/store.js'
 import Compose from './Compose.jsx'
-import { Reply, Send } from '../icons/line.jsx'
+import { ChevronDown, ChevronUp, Search, Send, Star } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
   const extraMails = useGame((s) => s.extraMails)
   const readMails = useGame((s) => s.readMails)
+  const starred = useGame((s) => s.starred)
   const markMailRead = useGame((s) => s.markMailRead)
+  const toggleStar = useGame((s) => s.toggleStar)
   const sendReply = useGame((s) => s.sendReply)
   const [selected, setSelected] = useState(null)
   const [composing, setComposing] = useState(false)
   const [sent, setSent] = useState(false)
+  const [q, setQ] = useState('')
 
-  const mails = [...scenario.mails, ...extraMails]
-  const mail = mails.find((m) => m.id === selected)
+  const all = [...scenario.mails, ...extraMails]
+  const term = q.trim().toLowerCase()
+  const mails = term
+    ? all.filter((m) => `${m.subject} ${m.from} ${m.body}`.toLowerCase().includes(term))
+    : all
+  const mail = all.find((m) => m.id === selected)
+  const at = mails.findIndex((m) => m.id === selected)
+  const unread = all.filter((m) => !readMails[m.id]).length
 
   const open = (m) => {
     setSelected(m.id)
     setComposing(false)
     setSent(false)
     markMailRead(m.id)
+  }
+  const step = (by) => {
+    const next = mails[at + by]
+    if (next) open(next)
   }
   const send = (draft) => {
     sendReply(draft)
@@ -36,6 +49,15 @@ export default function Mail() {
   return (
     <div className="mail-layout">
       <div className="mail-list">
+        <div className="ml-head">
+          <div className="ml-title">받은메일함 <b>{unread}</b> / {all.length}</div>
+          <div className="ml-search">
+            <Search size={14} strokeWidth={1.9} />
+            <input value={q} onChange={(e) => setQ(e.target.value)}
+                   placeholder="메일 검색" aria-label="메일 검색" spellCheck={false} />
+          </div>
+        </div>
+        {mails.length === 0 && <div className="ml-none">검색 결과가 없습니다</div>}
         {mails.map((m) => (
           <div key={m.id}
                className={'mail-item' + (readMails[m.id] ? '' : ' unread') + (selected === m.id ? ' sel' : '')}
@@ -46,23 +68,51 @@ export default function Mail() {
           </div>
         ))}
       </div>
+
       <div className="mail-detail">
-        {sent && (
-          <div className="mail-sent">
-            <Send size={15} strokeWidth={1.8} />메일을 보냈습니다. 곧 답장이 올지도 모릅니다…
+        {!mail && (
+          <div className="mail-empty">
+            {sent ? '메일을 보냈습니다. 곧 답장이 올지도 모릅니다…' : '메일을 선택하세요'}
           </div>
         )}
-        {!mail && !sent && <div className="mail-empty">메일을 선택하세요</div>}
-        {mail && !composing && (
+        {mail && (
           <>
-            <h3>{mail.subject}</h3>
-            <div className="md-meta">{mail.from} · {mail.date}</div>
-            <pre className="md-body">{mail.body}</pre>
-            {mail.canReply && (
-              <button className="btn-primary" onClick={() => { setComposing(true); setSent(false) }}>
-                <Reply size={15} strokeWidth={1.8} />회신
+            <div className="md-bar">
+              {mail.canReply && (
+                <button className="md-act" onClick={() => { setComposing(true); setSent(false) }}>답장</button>
+              )}
+              <button className="md-act"
+                      onClick={() => { markMailRead(mail.id, false); setSelected(null) }}>안읽음</button>
+              <span className="md-bar-gap" />
+              <button className="md-nav" onClick={() => step(-1)} disabled={at <= 0} title="이전 메일">
+                <ChevronUp size={16} strokeWidth={1.9} />
               </button>
+              <button className="md-nav" onClick={() => step(1)}
+                      disabled={at < 0 || at >= mails.length - 1} title="다음 메일">
+                <ChevronDown size={16} strokeWidth={1.9} />
+              </button>
+            </div>
+
+            {sent && (
+              <div className="mail-sent">
+                <Send size={15} strokeWidth={1.8} />메일을 보냈습니다. 곧 답장이 올지도 모릅니다…
+              </div>
             )}
+
+            <div className="md-head">
+              <button className={'md-star' + (starred[mail.id] ? ' on' : '')}
+                      onClick={() => toggleStar(mail.id)}
+                      title={starred[mail.id] ? '중요 표시 해제' : '중요 표시'}>
+                <Star size={18} strokeWidth={1.8} />
+              </button>
+              <h3>{mail.subject}</h3>
+            </div>
+            <div className="md-sender">
+              <span className="md-sender-label">보낸사람</span>
+              <span className="md-chip">{mail.from}</span>
+            </div>
+            <div className="md-date">{mail.date}</div>
+            <pre className="md-body">{mail.body}</pre>
           </>
         )}
       </div>

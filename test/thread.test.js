@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useGame } from '../src/engine/store.js'
 
-beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {}, typing: {} }))
+beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {}, typing: {}, readMails: {}, starred: {} }))
 
 describe('typing indicator', () => {
   it('marks only the thread whose sender is writing', () => {
@@ -49,5 +49,21 @@ describe('thread selection', () => {
     const before = useGame.getState().seenThreads
     useGame.getState().markThreadSeen('boss', 3)
     expect(useGame.getState().seenThreads).toBe(before)
+  })
+})
+
+describe('mail flags', () => {
+  it('can put a mail back to unread', () => {
+    useGame.getState().markMailRead('mail_client')
+    expect(useGame.getState().readMails.mail_client).toBe(true)
+    useGame.getState().markMailRead('mail_client', false)
+    expect(useGame.getState().readMails.mail_client).toBe(false)
+  })
+
+  it('toggles the star both ways', () => {
+    useGame.getState().toggleStar('mail_client')
+    expect(useGame.getState().starred.mail_client).toBe(true)
+    useGame.getState().toggleStar('mail_client')
+    expect(useGame.getState().starred.mail_client).toBe(false)
   })
 })
