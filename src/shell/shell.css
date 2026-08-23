@@ -105,6 +105,12 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 /* clear overlay */
 .clear-overlay { position: absolute; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10,25,60,.88); backdrop-filter: blur(8px); color: #fff; text-align: center; padding: 24px; }
 .clear-overlay .big { display: flex; }
+.clear-overlay.fail { background: rgba(48,14,14,.9); }
+.clear-overlay.fail .big { opacity: .5; filter: grayscale(1); }
+.clear-overlay.fail p { color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.9; }
+.fail-row { display: flex; gap: 10px; margin-top: 12px; }
+.fail-row .sm-cancel { background: rgba(255,255,255,.14); color: #fff; }
+.fail-row .sm-cancel:hover { background: rgba(255,255,255,.24); }
 
 /* explorer */
 .explorer { display: flex; height: 100%; }

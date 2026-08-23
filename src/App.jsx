@@ -71,6 +71,23 @@ function WindowLayer() {
   })
 }
 
+function FailOverlay() {
+  const fail = useGame((s) => s.scenario.goal.failure)
+  const newGame = useGame((s) => s.newGame)
+  const loadGame = useGame((s) => s.loadGame)
+  return (
+    <div className="clear-overlay fail">
+      <div className="big"><Icon name="mail" size={64} /></div>
+      <h1>{fail.title}</h1>
+      {fail.lines.map((line, i) => <p key={i}>{line}</p>)}
+      <div className="fail-row">
+        <button className="btn-primary" onClick={newGame}>처음부터 다시</button>
+        <button className="sm-cancel" onClick={loadGame}>저장한 시점으로</button>
+      </div>
+    </div>
+  )
+}
+
 function ClearOverlay() {
   const scenario = useGame((s) => s.scenario)
   const newGame = useGame((s) => s.newGame)
@@ -88,6 +105,7 @@ function ClearOverlay() {
 export default function App() {
   const booted = useGame((s) => s.booted)
   const cleared = useGame((s) => s.cleared)
+  const failed = useGame((s) => s.failed)
 
   useEffect(() => {
     if (!booted) return
@@ -118,6 +136,7 @@ export default function App() {
       <Toast />
       <Taskbar />
       {cleared && <ClearOverlay />}
+      {failed && !cleared && <FailOverlay />}
     </div>
   )
 }

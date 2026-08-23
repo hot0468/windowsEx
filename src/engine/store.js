@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'cleared', 'scratch']
+  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'misses', 'failed', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -77,6 +77,8 @@ export const useGame = create((set, get) => ({
   extraMessages: restored?.extraMessages ?? {},
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
+  misses: restored?.misses ?? 0,
+  failed: restored?.failed ?? false,
   cleared: restored?.cleared ?? false,
   scratch: restored?.scratch ?? '',
 
@@ -195,22 +197,26 @@ export const useGame = create((set, get) => ({
       if (verdict.ok) setTimeout(() => set({ cleared: true }), 2500)
     }, 1800)
 
+    if (verdict.ok) return verdict.ok
+
     // A bad reply reaches the client before it reaches you, so the complaint
     // comes back through the boss a moment after their reply lands.
     const c = goal.complain
-    const lines = (!verdict.ok && c?.[verdict.reason]) || []
-    if (lines.length) {
-      setTimeout(() => {
-        get().setTyping(c.thread, true)
-        lines.forEach((text, i) => setTimeout(() => {
-          get().pushMessage(c.thread, { from: c.from, text })
-          if (i === lines.length - 1) {
-            get().setTyping(c.thread, false)
-            get().showToast({ from: c.from, text, app: 'messenger', source: c.source, thread: c.thread })
-          }
-        }, i * 1600))
-      }, 3600)
-    }
+    const misses = s.misses + 1
+    const { spent, lines } = complaintFor(goal, verdict.reason, misses)
+    set({ misses })
+
+    setTimeout(() => {
+      get().setTyping(c.thread, true)
+      lines.forEach((text, i) => setTimeout(() => {
+        get().pushMessage(c.thread, { from: c.from, text })
+        if (i === lines.length - 1) {
+          get().setTyping(c.thread, false)
+          get().showToast({ from: c.from, text, app: 'messenger', source: c.source, thread: c.thread })
+          if (spent) setTimeout(() => set({ failed: true }), 2600)
+        }
+      }, i * 1600))
+    }, 3600)
     return verdict.ok
   }
 }))
@@ -271,6 +277,16 @@ export const fileOpener = (file) =>
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
+}
+
+// What the boss says after a bad reply, and whether that was the last straw.
+// `misses` is the count including the one that just happened.
+export function complaintFor(goal, reason, misses) {
+  const c = goal.complain
+  const limit = goal.attempts ?? 3
+  if (misses >= limit) return { spent: true, lines: c.final }
+  const warn = misses === limit - 1 ? [c.lastChance] : []
+  return { spent: false, lines: [...c[reason], ...warn] }
 }
 
 // Exactly one state per visited site: no approval means no login form, no login
