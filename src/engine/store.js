@@ -401,30 +401,28 @@ export function siteView(site, { grants, unlocked }) {
 
 // Local listings for the portal's search: matched on name and tags so a broad
 // term like 맥주 brings back every candidate, not just the one that matters.
-export function searchPlaces(places, q) {
+export const searchPlaces = (places, q) => searchIn(places, q, ['name', 'category', 'tags'])
+
+// One matcher for every kind of portal result. Each caller names the fields it
+// wants searched, which is also how a locked page keeps its contents private.
+export function searchIn(items = [], q, fields) {
   const term = q.trim().toLowerCase()
   if (!term) return []
-  return places.filter((p) =>
-    p.name.toLowerCase().includes(term) ||
-    p.category.toLowerCase().includes(term) ||
-    p.tags.some((t) => t.toLowerCase().includes(term)))
+  return items.filter((item) =>
+    fields
+      .map((f) => (Array.isArray(item[f]) ? item[f].join(' ') : item[f] ?? ''))
+      .join(' ')
+      .toLowerCase()
+      .includes(term))
 }
 
-export function searchBlogs(blogs, q) {
-  const term = q.trim().toLowerCase()
-  if (!term) return []
-  return blogs.filter((b) =>
-    `${b.title} ${b.excerpt}`.toLowerCase().includes(term) ||
-    b.tags.some((t) => t.toLowerCase().includes(term)))
-}
+export const searchBlogs = (blogs, q) => searchIn(blogs, q, ['title', 'excerpt', 'tags'])
+export const searchNews = (news, q) => searchIn(news, q, ['title', 'summary', 'tags', 'press'])
+export const searchQna = (qna, q) => searchIn(qna, q, ['q', 'a', 'tags'])
 
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
-export function searchSites(sites, q) {
-  const term = q.trim().toLowerCase()
-  if (!term) return []
-  return sites.filter((s) => `${s.title} ${s.url}`.toLowerCase().includes(term))
-}
+export const searchSites = (sites, q) => searchIn(sites, q, ['title', 'url'])
 
 // path is ['문서', '업무자료', '2026'] — the first name picks the root drive.
 export function entriesAt(fs, path) {

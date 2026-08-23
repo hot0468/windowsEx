@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useGame, searchBlogs, searchPlaces, searchSites, siteView } from '../engine/store.js'
+import {
+  useGame, searchBlogs, searchNews, searchPlaces, searchQna, searchSites, siteView
+} from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
@@ -96,6 +98,8 @@ export default function Browser() {
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
+  const articles = page.kind === 'search' ? searchNews(scenario.news, page.q) : []
+  const answers = page.kind === 'search' ? searchQna(scenario.qna, page.q) : []
 
   return (
     <div className="browser">
@@ -140,7 +144,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || (view && view !== 'error')) ? ' bleed' : '')}>
+      <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -157,7 +161,7 @@ export default function Browser() {
         {page.kind === 'search' && (
           <div className="results">
             <p className="results-head">
-              '{page.q}' 검색 결과 {spots.length + posts.length + hits.length}건
+              '{page.q}' 검색 결과 {spots.length + articles.length + answers.length + posts.length + hits.length}건
             </p>
 
             {spots.length > 0 && (
@@ -180,6 +184,33 @@ export default function Browser() {
                     <div className="place-addr">{p.address}</div>
                     <div className="place-note">{p.note}</div>
                     </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {articles.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">뉴스</h3>
+                {articles.map((a) => (
+                  <div key={a.id} className="news"
+                       onClick={() => nav.go({ kind: 'news', id: a.id })}>
+                    <div className="news-title">{a.title}</div>
+                    <div className="news-by">{a.press} · {a.date}</div>
+                    <div className="news-summary">{a.summary}</div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {answers.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">지식Q&amp;A</h3>
+                {answers.map((k) => (
+                  <div key={k.id} className="qna">
+                    <div className="qna-q"><b>Q.</b> {k.q}</div>
+                    <div className="qna-by">{k.asker} · {k.date} · 답변 {k.answers}</div>
+                    <div className="qna-a"><b>A.</b> {k.a}</div>
                   </div>
                 ))}
               </section>
@@ -214,11 +245,23 @@ export default function Browser() {
               </section>
             )}
 
-            {spots.length + posts.length + hits.length === 0 && (
+            {spots.length + articles.length + answers.length + posts.length + hits.length === 0 && (
               <p className="results-none">검색 결과가 없습니다.</p>
             )}
           </div>
         )}
+
+        {page.kind === 'news' && (() => {
+          const a = scenario.news.find((x) => x.id === page.id)
+          return (
+            <article className="art">
+              <div className="art-press">{a.press}</div>
+              <h1>{a.title}</h1>
+              <div className="art-by">{a.date} · {a.reporter}</div>
+              {a.body.map((para, i) => <p key={i}>{para}</p>)}
+            </article>
+          )
+        })()}
 
         {page.kind === 'place' && (
           <Place place={scenario.places.find((p) => p.name === page.name)} />
