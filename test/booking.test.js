@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import scenario from '../src/scenarios/ep1.json'
+import scenario from '../src/scenarios/workday.json'
 import { answerFits, searchPlaces } from '../src/engine/store.js'
 
 const chain = (ask) => (ask ? [ask, ...chain(ask.then)] : [])

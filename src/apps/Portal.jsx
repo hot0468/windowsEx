@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useGame } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 
@@ -36,7 +37,11 @@ const Post = ({ post, onBack }) => (
 )
 
 export default function Portal({ site }) {
-  const p = site.portal
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  // the board moves on with the days
+  const today = scenario.days[day - 1]?.portal
+  const p = { ...site.portal, ...(today ?? {}) }
   const [post, setPost] = useState(null)
   return (
     <div className="pt">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import scenario from '../src/scenarios/ep1.json'
-import { allFiles, entriesAt, fileOpener, objectiveDone, quickSets, searchSites } from '../src/engine/store.js'
+import scenario from '../src/scenarios/workday.json'
+import { allFiles, entriesAt, fileOpener, objectiveDone, quickSets, searchSites , goalFor } from '../src/engine/store.js'
 import { fileImage } from '../src/assets/photos.js'
 
 const files = allFiles(scenario.fs)
@@ -16,19 +16,19 @@ const offeredBy = (t) => [
   ...asksOf(t).flatMap((a) => a.next ?? [])
 ]
 
-describe('ep1 scenario integrity', () => {
+describe('scenario integrity', () => {
   it('goal attachment file exists in the filesystem', () => {
-    expect(files.some((f) => f.id === scenario.goal.requiredAttachment)).toBe(true)
+    expect(files.some((f) => f.id === goalFor(scenario, 1).requiredAttachment)).toBe(true)
   })
 
   it('goal reply mail exists and is replyable', () => {
-    const m = scenario.mails.find((m) => m.id === scenario.goal.replyToMail)
+    const m = scenario.mails.find((m) => m.id === goalFor(scenario, 1).replyToMail)
     expect(m?.canReply).toBe(true)
   })
 
   it('the locked wiki still carries every keyword the reply needs', () => {
     const wiki = JSON.stringify(scenario.sites.find((s) => s.layout === 'wiki'))
-    for (const k of scenario.goal.requiredKeywords) expect(wiki).toContain(k)
+    for (const k of goalFor(scenario, 1).requiredKeywords) expect(wiki).toContain(k)
   })
 
   it('both intranet sites are behind the company account', () => {
@@ -54,7 +54,7 @@ describe('ep1 scenario integrity', () => {
 
   it('walks nested folders to reach a buried file', () => {
     const deep = entriesAt(scenario.fs, ['문서', '업무자료', '2026', 'A상사'])
-    expect(deep.map((e) => e.id)).toContain(scenario.goal.requiredAttachment)
+    expect(deep.map((e) => e.id)).toContain(goalFor(scenario, 1).requiredAttachment)
   })
 
   it('every folder entry has a name and every file an id', () => {
@@ -72,7 +72,7 @@ describe('ep1 scenario integrity', () => {
   })
 
   it('portal search never leaks a locked page, keeping the password gate meaningful', () => {
-    for (const keyword of scenario.goal.requiredKeywords) {
+    for (const keyword of goalFor(scenario, 1).requiredKeywords) {
       expect(searchSites(scenario.sites, keyword)).toEqual([])
     }
   })
@@ -142,7 +142,7 @@ describe('ep1 scenario integrity', () => {
     // only the page body — credentials live outside it and are what gets checked
     const portal = JSON.stringify(scenario.sites.find((s) => s.layout === 'portal').portal)
     const wiki = scenario.sites.find((s) => s.layout === 'wiki')
-    for (const keyword of scenario.goal.requiredKeywords) expect(portal).not.toContain(keyword)
+    for (const keyword of goalFor(scenario, 1).requiredKeywords) expect(portal).not.toContain(keyword)
     expect(portal).not.toContain(wiki.login.password)
     expect(portal).not.toContain('입사일')   // the hire date belongs on the ID card scan
   })
@@ -241,14 +241,59 @@ describe('ep1 scenario integrity', () => {
 
   it('ties every objective to a state the game can actually reach', () => {
     const urls = new Set(scenario.sites.map((s) => s.url))
-    const granted = new Set(threads.flatMap(asksOf).map((a) => a.grants).filter(Boolean))
+    // three ways to earn a grant: a chat question, a day's mail brief, or a
+    // question a day raises on arrival
+    const granted = new Set([
+      ...threads.flatMap(asksOf).map((a) => a.grants),
+      ...scenario.days.map((d) => d.goal?.grants),
+      ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants)
+    ].filter(Boolean))
     expect(scenario.objectives.length).toBeGreaterThan(0)
     for (const o of scenario.objectives) {
       expect(o.title).toBeTruthy()
       if (o.site) expect(urls.has(o.site)).toBe(true)
       if (o.grant) expect(granted.has(o.grant)).toBe(true)
-      expect(Boolean(o.site) || Boolean(o.grant) || Boolean(o.cleared)).toBe(true)
+      expect(Boolean(o.site) || Boolean(o.grant)).toBe(true)
     }
+  })
+
+  it('gives every day a brief, requests that exist, and a way to clock off', () => {
+    const ids = new Set(scenario.objectives.map((o) => o.id))
+    expect(scenario.days.length).toBeGreaterThan(1)
+    scenario.days.forEach((d, i) => {
+      expect(d.n).toBe(i + 1)
+      expect(d.label && d.date).toBeTruthy()
+      expect(d.requests.length).toBeGreaterThan(0)
+      for (const r of d.requests) expect(ids.has(r)).toBe(true)
+      expect(d.closing.length).toBeGreaterThan(0)
+      expect(d.portal.notice.text).toBeTruthy()
+      expect(d.portal.news.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('never asks for the same request on two different days', () => {
+    const all = scenario.days.flatMap((d) => d.requests)
+    expect(new Set(all).size).toBe(all.length)
+  })
+
+  it('gives each day its own client, file and figure to reply with', () => {
+    const files = new Set(allFiles(scenario.fs).map((f) => f.id))
+    const inbox = new Set([
+      ...scenario.mails.map((m) => m.id),
+      ...scenario.days.flatMap((d) => (d.mails ?? []).map((m) => m.id))
+    ])
+    scenario.days.forEach((d, i) => {
+      const g = goalFor(scenario, i + 1)
+      expect(inbox.has(g.replyToMail)).toBe(true)
+      expect(files.has(g.requiredAttachment)).toBe(true)
+      expect(g.requiredKeywords.length).toBeGreaterThan(0)
+      expect(g.grants).toBeTruthy()
+    })
+  })
+
+  it('moves the notice board on as the days pass', () => {
+    const boards = scenario.days.map((d) => JSON.stringify(d.portal))
+    expect(new Set(boards).size).toBe(boards.length)
   })
 
   it('counts nothing solved at the start and everything at the end', () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame } from './engine/store.js'
+import { useGame, dayDone, objectiveDone, requestsOf } from './engine/store.js'
 import { APPS } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
@@ -90,23 +90,40 @@ function FailOverlay() {
   )
 }
 
-function ClearOverlay() {
+function QuitOverlay() {
   const scenario = useGame((s) => s.scenario)
-  const newGame = useGame((s) => s.newGame)
+  const day = useGame((s) => s.day)
+  const misses = useGame((s) => s.misses)
+  const finishDay = useGame((s) => s.finishDay)
+  const today = scenario.days[day - 1]
+  const last = !scenario.days[day]
+
   return (
-    <div className="clear-overlay">
-      <div className="big"><Icon name="trophy" size={72} /></div>
-      <h1>미션 클리어!</h1>
-      <p>"{scenario.goal.successReply}"</p>
-      <p>— A상사 이수진 과장</p>
-      <button className="btn-primary" onClick={newGame}>다시 하기</button>
+    <div className="clear-overlay quit">
+      <div className="big"><Icon name="trophy" size={64} /></div>
+      <h1>{scenario.quitting.title}</h1>
+      <p className="quit-day">{today.date} · {today.label}</p>
+      <ul className="quit-list">
+        {requestsOf(scenario, day).map((o) => <li key={o.id}>{o.title}</li>)}
+      </ul>
+      <p className="quit-stat">
+        요청 {today.requests.length}건 완료{misses > 0 && ` · 재작업 ${misses}회`}
+      </p>
+      {today.closing?.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
+      {last
+        ? <p className="quit-line">— 여기까지가 지금 준비된 마지막 날입니다 —</p>
+        : <button className="btn-primary" onClick={finishDay}>{scenario.quitting.button}</button>}
     </div>
   )
 }
 
 export default function App() {
   const booted = useGame((s) => s.booted)
-  const cleared = useGame((s) => s.cleared)
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const grants = useGame((s) => s.grants)
+  const unlocked = useGame((s) => s.unlocked)
+  const done = dayDone(scenario, day, { grants, unlocked })
   const failed = useGame((s) => s.failed)
   const crashed = useGame((s) => s.crashed)
 
@@ -139,8 +156,8 @@ export default function App() {
       <WindowLayer />
       <Toast />
       <Taskbar />
-      {cleared && <ClearOverlay />}
-      {failed && !cleared && <FailOverlay />}
+      {done && <QuitOverlay />}
+      {failed && !done && <FailOverlay />}
     </div>
   )
 }

@@ -121,6 +121,14 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .clear-overlay { position: absolute; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10,25,60,.88); backdrop-filter: blur(8px); color: #fff; text-align: center; padding: 24px; }
 .clear-overlay .big { display: flex; }
 .clear-overlay.fail { background: rgba(48,14,14,.9); }
+.clear-overlay.quit { background: rgba(12,26,46,.92); }
+.quit-day { color: #8fd0ff; font-size: 13px; }
+.quit-list { list-style: none; margin: 6px 0 4px; }
+.quit-list li { padding: 3px 0; color: rgba(255,255,255,.7); font-size: 12px; }
+.quit-list li::before { content: '✓ '; color: #2fbf5f; }
+.quit-stat { color: rgba(255,255,255,.55); font-size: 12px; }
+.quit-line { max-width: 460px; color: rgba(255,255,255,.8); font-size: 13px; line-height: 1.9; }
+.pg-date { color: rgba(255,255,255,.5) !important; font-size: 11px !important; padding-bottom: 4px !important; border-bottom: 1px solid rgba(255,255,255,.12); margin-bottom: 4px; }
 .clear-overlay.fail .big { opacity: .5; filter: grayscale(1); }
 .clear-overlay.fail p { color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.9; }
 .fail-row { display: flex; gap: 10px; margin-top: 12px; }

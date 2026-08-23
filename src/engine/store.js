@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import scenario from '../scenarios/ep1.json'
+import scenario from '../scenarios/workday.json'
 import { checkGoal } from './goal.js'
 import { play } from '../shell/sound.js'
 
@@ -10,7 +10,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
-  'misses', 'failed', 'cleared', 'scratch']
+  'day', 'misses', 'failed', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -82,9 +82,9 @@ export const useGame = create((set, get) => ({
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   bookings: restored?.bookings ?? {},
+  day: restored?.day ?? 1,
   misses: restored?.misses ?? 0,
   failed: restored?.failed ?? false,
-  cleared: restored?.cleared ?? false,
   scratch: restored?.scratch ?? '',
 
   setBooted: () => {
@@ -176,6 +176,7 @@ export const useGame = create((set, get) => ({
     play('error')
     set({ crashed: true, toast: null })
   },
+  restart: () => set({ crashed: false, booted: false, windows: [], toast: null }),
   reboot: () => {
     const s = get()
     const after = s.scenario.malware.aftermath
@@ -183,11 +184,35 @@ export const useGame = create((set, get) => ({
       after.lines.forEach((text) => s.pushMessage(after.thread, { from: after.from, text }))
       s.grant('infected')
     }
-    set({ crashed: false, booted: false, windows: [] })
+    s.restart()
     setTimeout(() => get().showToast({
       from: after.from, text: after.lines[0],
       app: 'messenger', source: after.source, thread: after.thread
     }), 3200)
+  },
+
+  // Clocking off restarts the machine and brings tomorrow's work with it.
+  startDay: (n) => {
+    const s = get()
+    const day = s.scenario.days[n - 1]
+    if (!day) return
+    set({ day: n, misses: 0 })
+    if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
+    const beats = [day.opening, ...(day.asks ?? [])].filter(Boolean)
+    beats.forEach((beat, i) => setTimeout(() => {
+      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
+      if (beat.ask) get().setAsk(beat.thread, beat.ask)
+      get().showToast({
+        from: beat.from, text: beat.lines[0],
+        app: 'messenger', source: beat.source, thread: beat.thread
+      })
+    }, 3600 + i * 4200))
+  },
+  finishDay: () => {
+    const s = get()
+    const next = s.day + 1
+    s.restart()
+    if (s.scenario.days[next - 1]) setTimeout(() => get().startDay(next), 100)
   },
 
   markMailRead: (id, read = true) =>
@@ -225,8 +250,8 @@ export const useGame = create((set, get) => ({
 
   sendReply: ({ attachmentId, body }) => {
     const s = get()
-    const goal = s.scenario.goal
-    const original = s.scenario.mails.find((m) => m.id === goal.replyToMail)
+    const goal = goalFor(s.scenario, s.day)
+    const original = [...s.scenario.mails, ...s.extraMails].find((m) => m.id === goal.replyToMail)
     const verdict = checkGoal(goal, { attachmentId, body })
     setTimeout(() => {
       set((st) => ({
@@ -239,7 +264,7 @@ export const useGame = create((set, get) => ({
         }]
       }))
       get().showToast({ from: original.from, text: `새 메일이 도착했습니다: RE: ${original.subject}`, app: 'mail' })
-      if (verdict.ok) setTimeout(() => set({ cleared: true }), 2500)
+      if (verdict.ok) setTimeout(() => get().grant(goal.grants), 2200)
     }, 1800)
 
     if (verdict.ok) return verdict.ok
@@ -316,10 +341,25 @@ export const hintAfter = (ask, wrongs) => {
   return sets[Math.min(wrongs, sets.length - 1)]
 }
 
+// The mail brief in force on a given day: shared rules (attempts, the boss's
+// reaction, the failure screen) plus that day's client and figures.
+export const goalFor = (scenario, day) =>
+  ({ ...scenario.goal, ...(scenario.days[day - 1]?.goal ?? {}) })
+
+// Today's work: the day names which objectives it wants, the objective says
+// which state counts as done.
+export function requestsOf(scenario, day) {
+  const today = scenario.days[day - 1]
+  if (!today) return []
+  return today.requests.map((id) => scenario.objectives.find((o) => o.id === id)).filter(Boolean)
+}
+
+export const dayDone = (scenario, day, state) =>
+  requestsOf(scenario, day).every((o) => objectiveDone(o, state))
+
 // An objective is met when the state it names has been reached — the scenario
 // says which, so adding a goal is a data change.
 export function objectiveDone(objective, state) {
-  if (objective.cleared) return state.cleared
   if (objective.grant) return Boolean(state.grants[objective.grant])
   if (objective.site) return Boolean(state.unlocked[objective.site])
   return false

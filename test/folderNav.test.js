@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { historyInit, historyReduce } from '../src/apps/folderNav.js'
-import scenario from '../src/scenarios/ep1.json'
-import { WORK_FOLDER, entriesAt, fsWithPinned, searchFiles } from '../src/engine/store.js'
+import scenario from '../src/scenarios/workday.json'
+import { WORK_FOLDER, entriesAt, fsWithPinned, searchFiles , goalFor } from '../src/engine/store.js'
 
 const go = (s, ...path) => historyReduce(s, { type: 'go', to: path })
 const back = (s) => historyReduce(s, { type: 'back' })
@@ -36,8 +36,8 @@ describe('folder navigation', () => {
 describe('searchFiles', () => {
   it('reaches files buried in subfolders', () => {
     const hits = searchFiles(scenario.fs, ['문서'], '견적서')
-    expect(hits.map((h) => h.file.id)).toContain(scenario.goal.requiredAttachment)
-    expect(hits.find((h) => h.file.id === scenario.goal.requiredAttachment).trail)
+    expect(hits.map((h) => h.file.id)).toContain(goalFor(scenario, 1).requiredAttachment)
+    expect(hits.find((h) => h.file.id === goalFor(scenario, 1).requiredAttachment).trail)
       .toEqual(['업무자료', '2026', 'A상사'])
   })
 
@@ -54,19 +54,19 @@ describe('work folder', () => {
   const pin = (...ids) => fsWithPinned(scenario.fs, ids)
 
   it('appears on the desktop holding copies of the pinned files', () => {
-    const goal = scenario.goal.requiredAttachment
+    const goal = goalFor(scenario, 1).requiredAttachment
     const work = pin(goal)['바탕화면'].find((e) => e.name === WORK_FOLDER)
     expect(work.children.map((f) => f.id)).toEqual([goal])
   })
 
   it('leaves the original where it was', () => {
-    const goal = scenario.goal.requiredAttachment
+    const goal = goalFor(scenario, 1).requiredAttachment
     expect(entriesAt(pin(goal), ['문서', '업무자료', '2026', 'A상사']).map((e) => e.id))
       .toContain(goal)
   })
 
   it('is reachable as a path once pinned', () => {
-    const goal = scenario.goal.requiredAttachment
+    const goal = goalFor(scenario, 1).requiredAttachment
     expect(entriesAt(pin(goal), ['바탕화면', WORK_FOLDER]).map((f) => f.id)).toEqual([goal])
   })
 

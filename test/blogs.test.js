@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import scenario from '../src/scenarios/ep1.json'
+import scenario from '../src/scenarios/workday.json'
+import { goalFor } from '../src/engine/store.js'
 import { searchBlogs } from '../src/engine/store.js'
 import { shotOf } from '../src/assets/photos.js'
 
@@ -35,7 +36,7 @@ describe('blog search', () => {
     const wiki = scenario.sites.find((s) => s.layout === 'wiki')
     const portal = scenario.sites.find((s) => s.layout === 'portal')
     const secrets = [
-      ...scenario.goal.requiredKeywords,     // the confirmed price
+      ...goalFor(scenario, 1).requiredKeywords,     // the confirmed price
       wiki.login.password,                   // the intranet password
       scenario.network.ip,                   // the approved IP
       portal.portal.footer.address           // the office address 엄마 asks for

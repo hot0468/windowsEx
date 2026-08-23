@@ -1,27 +1,30 @@
 import { useState } from 'react'
-import { useGame, objectiveDone } from '../engine/store.js'
+import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { Check, ChevronDown } from '../icons/line.jsx'
 
 export default function Progress() {
-  const list = useGame((s) => s.scenario.objectives)
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
   const grants = useGame((s) => s.grants)
   const unlocked = useGame((s) => s.unlocked)
-  const cleared = useGame((s) => s.cleared)
   const [open, setOpen] = useState(false)
 
-  const state = { grants, unlocked, cleared }
+  const state = { grants, unlocked }
+  const list = requestsOf(scenario, day)
   const done = list.filter((o) => objectiveDone(o, state))
+  const today = scenario.days[day - 1]
 
   return (
     <div className="pg">
       <button className="pg-badge" onClick={() => setOpen(!open)}
               title="해결한 항목 보기">
-        해결됨 <b>{done.length}</b> / {list.length}
+        {day}일차 · 해결됨 <b>{done.length}</b> / {list.length}
         <ChevronDown size={13} strokeWidth={2.4}
                      style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
         <ul className="pg-list">
+          <li className="pg-date">{today.date} · {today.label}</li>
           {list.map((o) => {
             const ok = objectiveDone(o, state)
             return (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import scenario from '../src/scenarios/ep1.json'
+import scenario from '../src/scenarios/workday.json'
 import { complaintFor } from '../src/engine/store.js'
 
 const goal = scenario.goal
