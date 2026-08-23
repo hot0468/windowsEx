@@ -5,6 +5,7 @@ import Wiki from './Wiki.jsx'
 import { ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
+import { shotOf } from '../assets/photos.js'
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
@@ -163,6 +164,8 @@ export default function Browser() {
                 <h3 className="rs-head"><Icon name="globe" size={15} />장소</h3>
                 {spots.map((p) => (
                   <div key={p.name} className="place">
+                    <img className="place-shot" src={shotOf(p.photo)} alt="" draggable="false" />
+                    <div className="place-body">
                     <div className="place-top">
                       <span className="place-name">{p.name}</span>
                       <span className="place-cat">{p.category}</span>
@@ -174,6 +177,7 @@ export default function Browser() {
                     </div>
                     <div className="place-addr">{p.address}</div>
                     <div className="place-note">{p.note}</div>
+                    </div>
                   </div>
                 ))}
               </section>
@@ -185,9 +189,12 @@ export default function Browser() {
                 {posts.map((b) => (
                   <div key={b.id} className="post"
                        onClick={() => nav.go({ kind: 'blog', id: b.id })}>
-                    <div className="post-title">{b.title}</div>
-                    <div className="post-by">{b.blog} · {b.author} · {b.date}</div>
-                    <div className="post-excerpt">{b.excerpt}</div>
+                    <div className="post-body">
+                      <div className="post-title">{b.title}</div>
+                      <div className="post-by">{b.blog} · {b.author} · {b.date}</div>
+                      <div className="post-excerpt">{b.excerpt}</div>
+                    </div>
+                    <img className="post-shot" src={shotOf(b.photo)} alt="" draggable="false" />
                   </div>
                 ))}
               </section>
@@ -220,7 +227,9 @@ export default function Browser() {
                 <span className="bl-by">{b.author} · {b.date}</span>
               </div>
               <h1>{b.title}</h1>
-              {b.body.map((para, i) => <p key={i}>{para}</p>)}
+              {b.body.map((part, i) => (part.shot
+                ? <img key={i} className="bl-shot" src={shotOf(part.shot)} alt="" draggable="false" />
+                : <p key={i}>{part}</p>))}
               <div className="bl-tags">{b.tags.map((t) => <span key={t}>#{t}</span>)}</div>
             </article>
           )

@@ -19,3 +19,16 @@
 - `cat2.webp` — Reanimated Man X ([Pexels](https://www.pexels.com))
 - `gyul.webp` — Văn Long Bùi ([Pexels](https://www.pexels.com))
 - `idcard.webp` — 직접 제작
+
+## 장소·블로그 사진 (src/assets/shots)
+
+- `pub_beer.webp` — Alp Yıldızlar ([Pexels](https://www.pexels.com))
+- `pub_snack.webp` — Taha Samet Arslan ([Pexels](https://www.pexels.com))
+- `alley.webp` — Eray Karataş ([Pexels](https://www.pexels.com))
+- `bar_inside.webp` — Baku Kerimbekova ([Pexels](https://www.pexels.com))
+- `korean_meal.webp` — Rov Camato ([Pexels](https://www.pexels.com))
+- `soup.webp` — Richard L ([Pexels](https://www.pexels.com))
+- `noodles.webp` — Jasmine Jin-Yu Lin ([Pexels](https://www.pexels.com))
+- `cafe.webp` — Studio Saiz ([Pexels](https://www.pexels.com))
+- `cafe_drink.webp` — Olena Bohovyk ([Pexels](https://www.pexels.com))
+- `cheers.webp` — Ketut Subiyanto ([Pexels](https://www.pexels.com))

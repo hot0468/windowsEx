@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
 import { searchBlogs } from '../src/engine/store.js'
+import { shotOf } from '../src/assets/photos.js'
 
 const blogs = scenario.blogs
 const titles = (q) => searchBlogs(blogs, q).map((b) => b.title)
@@ -45,5 +46,24 @@ describe('blog search', () => {
   it('may name a pub, because naming one does not say which one they went to', () => {
     const beers = blogs.filter((b) => b.tags.includes('맥주'))
     expect(beers.length).toBeGreaterThan(1)
+  })
+})
+
+describe('illustrations', () => {
+  it('gives every place and every post a picture that resolves', () => {
+    for (const p of scenario.places) expect(shotOf(p.photo)).toBeTruthy()
+    for (const b of scenario.blogs) expect(shotOf(b.photo)).toBeTruthy()
+  })
+
+  it('resolves the photos dropped inside post bodies too', () => {
+    const inline = scenario.blogs.flatMap((b) => b.body.filter((part) => part.shot))
+    expect(inline.length).toBeGreaterThan(0)
+    for (const part of inline) expect(shotOf(part.shot)).toBeTruthy()
+  })
+
+  it('keeps every post readable as text between the pictures', () => {
+    for (const b of scenario.blogs) {
+      expect(b.body.filter((part) => typeof part === 'string').length).toBeGreaterThan(2)
+    }
   })
 })

@@ -290,7 +290,9 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .results-none { color: #999; font-size: 13px; }
 .rs-block { margin-bottom: 26px; }
 .rs-head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eceef3; font-size: 13px; color: #333; }
-.place { padding: 13px 14px; margin-bottom: 8px; border: 1px solid #eceef3; border-radius: 8px; }
+.place { display: flex; gap: 14px; padding: 13px 14px; margin-bottom: 8px; border: 1px solid #eceef3; border-radius: 8px; }
+.place-shot { width: 96px; height: 96px; flex-shrink: 0; border-radius: 6px; object-fit: cover; }
+.place-body { flex: 1; min-width: 0; }
 .place:hover { border-color: #d8dce6; background: #fafbfd; }
 .place-top { display: flex; align-items: baseline; gap: 8px; }
 .place-name { font-size: 15px; color: #1a3fa8; }
@@ -299,7 +301,9 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .place-meta b { color: #e8813a; }
 .place-addr { margin-top: 6px; color: #3a8a55; font-size: 12px; }
 .place-note { margin-top: 6px; color: #666; font-size: 12px; line-height: 1.6; }
-.post { padding: 12px 0; border-bottom: 1px solid #f2f3f7; cursor: pointer; }
+.post { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f2f3f7; cursor: pointer; }
+.post-body { flex: 1; min-width: 0; }
+.post-shot { width: 84px; height: 84px; flex-shrink: 0; border-radius: 6px; object-fit: cover; }
 .post:last-child { border-bottom: none; }
 .post:hover .post-title { text-decoration: underline; }
 .post-title { color: #1a3fa8; font-size: 14px; line-height: 1.5; }
@@ -313,6 +317,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .bl-by { color: #aaa; font-size: 11px; }
 .bl h1 { margin: 22px 0 20px; font-size: 20px; line-height: 1.5; color: #222; }
 .bl p { margin-bottom: 16px; color: #333; font-size: 13px; line-height: 2; user-select: text; }
+.bl-shot { display: block; width: 100%; margin: 4px 0 20px; border-radius: 6px; }
 .bl-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding-top: 18px; border-top: 1px solid #eee; }
 .bl-tags span { color: #3a9d5d; font-size: 12px; }
 .bw-menu { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #555; }
