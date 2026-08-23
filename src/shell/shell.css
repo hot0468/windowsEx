@@ -564,6 +564,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .xl-grid td { padding: 5px 9px; border: 1px solid #e4e6ec; color: #222; white-space: nowrap; cursor: cell; user-select: text; }
 .xl-grid td.xl-head { background: #eef4ea; font-weight: 600; }
 .xl-grid td.sel { outline: 2px solid #217346; outline-offset: -2px; }
+.xl-grid td input { width: 100%; min-width: 120px; padding: 0; border: none; outline: none; background: #fff; font: inherit; color: #222; }
 .xl-tabs { display: flex; gap: 2px; padding: 5px 8px; background: #f2f3f6; border-top: 1px solid #d6d9e0; flex-shrink: 0; }
 .xl-tab { padding: 5px 14px; border-radius: 4px 4px 0 0; color: #555; }
 .xl-tab:hover { background: #e6e8ee; }

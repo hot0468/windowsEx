@@ -9,7 +9,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'restored', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
+  'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch']
 
 const snapshot = (s) => {
@@ -72,6 +72,7 @@ export const useGame = create((set, get) => ({
   starred: restored?.starred ?? {},
   pinned: restored?.pinned ?? [],
   restored: restored?.restored ?? {},
+  sheetEdits: restored?.sheetEdits ?? {},
   // Which conversation each messenger is showing, and how much of it has been read.
   // Both live here so a toast can open a thread in an already-running window.
   openThread: {},
@@ -222,6 +223,15 @@ export const useGame = create((set, get) => ({
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
+  // Typing into a cell is the whole interaction; an objective that names that
+  // cell is met the moment the value fits.
+  editCell: (fileId, sheet, r, c, value) => {
+    set((s) => ({ sheetEdits: { ...s.sheetEdits, [cellKey(fileId, sheet, r, c)]: value } }))
+    const { scenario, sheetEdits, grants, grant } = get()
+    scenario.objectives
+      .filter((o) => o.cell && !grants[o.grant] && cellMatches(o, sheetEdits))
+      .forEach((o) => grant(o.grant))
+  },
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => {
     play('ok')
@@ -381,6 +391,14 @@ export function answerFits(ask, text) {
 export const hintAfter = (ask, wrongs) => {
   const sets = lineSets(ask.no)
   return sets[Math.min(wrongs, sets.length - 1)]
+}
+
+// Edited cells are kept flat, one key per cell, on top of the read-only workbook.
+export const cellKey = (fileId, sheet, r, c) => `${fileId}:${sheet}:${r}:${c}`
+
+export const cellMatches = (objective, sheetEdits) => {
+  const { file, sheet, row, col, value } = objective.cell
+  return (sheetEdits[cellKey(file, sheet, row, col)] ?? '').trim() === value.trim()
 }
 
 // The jammed printer wants the wiki's steps in order; a wrong press jams it again.
