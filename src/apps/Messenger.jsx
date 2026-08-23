@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, findFile, quickSets } from '../engine/store.js'
+import { useGame, WORK_FOLDER, findFile, hintAfter, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -55,6 +55,7 @@ export default function Messenger({ source }) {
   const [picking, setPicking] = useState(false)
   const [answeredAt, setAnsweredAt] = useState({})
   const [reacted, setReacted] = useState({})
+  const [wrongs, setWrongs] = useState({})
   const [confirming, setConfirming] = useState(null)
   const [branch, setBranch] = useState({})
   const [asks, setAsks] = useState({})
@@ -159,8 +160,12 @@ export default function Messenger({ source }) {
       setAsks((a) => ({ ...a, [thread.id]: null }))
       if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
       if (ask.grants) grant(ask.grants)
+      speak(ask.ok)
+      return
     }
-    speak(right ? ask.ok : ask.no)
+    const missed = wrongs[thread.id] ?? 0
+    setWrongs((w) => ({ ...w, [thread.id]: missed + 1 }))
+    speak(hintAfter(ask, missed))
   }
 
   const choose = (text) => {

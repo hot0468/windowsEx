@@ -247,13 +247,18 @@ export function allFiles(fs) {
   return out
 }
 
-// A thread's `quick` is one set of reply choices, or several used in order as the
-// conversation moves on. Normalising here keeps both shapes valid in the data.
+// Dialogue fields hold either one set of lines or several used in order, so the
+// data can stay flat where nothing changes and escalate where it should.
 const FALLBACK_QUICK = ['네, 알겠습니다', '감사합니다']
 
-export function quickSets(thread) {
-  const q = thread.quick ?? FALLBACK_QUICK
-  return Array.isArray(q[0]) ? q : [q]
+export const lineSets = (lines) => (Array.isArray(lines?.[0]) ? lines : [lines])
+
+export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
+
+// Wrong answers get a firmer nudge each time, stopping at the clearest one.
+export const hintAfter = (ask, wrongs) => {
+  const sets = lineSets(ask.no)
+  return sets[Math.min(wrongs, sets.length - 1)]
 }
 
 // An objective is met when the state it names has been reached — the scenario
