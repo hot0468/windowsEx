@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
-import Icon from '../icons/Icon.jsx'
+import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 
 export default function FileExplorer({ startFolder }) {
@@ -81,7 +81,7 @@ export default function FileExplorer({ startFolder }) {
               <button key={file.id} className="ex-hit" {...fileDragProps(file)}
                       onContextMenu={onContext(file)}
                       onDoubleClick={() => openWindow(fileOpener(file).app, { fileId: file.id })}>
-                <Icon name={fileOpener(file).icon} size={26} />
+                <FileGlyph file={file} size={26} />
                 <span className="ex-hit-mid">
                   <span>{file.name}</span>
                   <span className="ex-hit-path">{[here, ...trail].join(' › ')}</span>
@@ -102,7 +102,7 @@ export default function FileExplorer({ startFolder }) {
               <button key={f.id} className="ex-file" {...fileDragProps(f)}
                       onContextMenu={onContext(f)}
                       onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
-                <div className="glyph"><Icon name={fileOpener(f).icon} size={36} /></div>{f.name}
+                <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
               </button>
             ))}
           </div>

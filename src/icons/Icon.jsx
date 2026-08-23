@@ -15,8 +15,22 @@ import trophy from './trophy.svg'
 import workchat from './workchat.svg'
 import xls from './xls.svg'
 
+import { fileImage } from '../assets/photos.js'
+import { fileOpener } from '../engine/store.js'
+
 const SRC = { chat, cmd, doc, folder, globe, hwp, image, mail, notepad, phone, ppt, trash, trophy, workchat, xls }
 
 export default function Icon({ name, size = 16 }) {
   return <img className="icon" src={SRC[name]} width={size} height={size} alt="" draggable="false" />
+}
+
+// A picture file shows the picture, the way Explorer does. Falls back to the
+// type icon when the photo itself was never downloaded.
+export function FileGlyph({ file, size = 36, photo = size }) {
+  const shot = file.image && fileImage(file.image)
+  if (!shot) return <Icon name={fileOpener(file).icon} size={size} />
+  return (
+    <img className="thumb" src={shot} width={photo} height={photo}
+         alt="" draggable="false" title={file.name} />
+  )
 }

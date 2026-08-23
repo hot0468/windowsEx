@@ -1,5 +1,5 @@
 import { useGame, fileOpener, fsWithPinned } from '../engine/store.js'
-import Icon from '../icons/Icon.jsx'
+import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
 const SHORTCUTS = [
@@ -36,7 +36,7 @@ export default function Desktop() {
       ) : (
         <button key={e.id} className="desktop-icon" {...fileDragProps(e)}
                 onDoubleClick={() => openWindow(fileOpener(e).app, { fileId: e.id })}>
-          <div className="glyph"><Icon name={fileOpener(e).icon} size={38} /></div>{e.name}
+          <div className="glyph"><FileGlyph file={e} size={38} /></div>{e.name}
         </button>
       )))}
     </div>
