@@ -144,7 +144,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 
 /* browser */
 .browser { height: 100%; display: flex; flex-direction: column; }
-.addr-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #f7f7f7; flex-shrink: 0; }
+.addr-bar { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #f7f7f7; flex-shrink: 0; }
 .addr-bar input { flex: 1; padding: 7px 14px; border: none; border-radius: 15px; background: #fff; box-shadow: inset 0 0 0 1px #ddd; outline: none; font: inherit; }
 .page { flex: 1; overflow: auto; padding: 24px; }
 .bm-bar { display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-bottom: 1px solid #eee; background: #fbfbfd; color: #b0b4bd; flex-shrink: 0; }
@@ -156,8 +156,6 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .portal-logo { font-size: 46px; font-weight: 700; letter-spacing: -1px; color: #2f6fd0; }
 .portal-search { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 480px; margin: 26px 0 34px; padding: 8px 8px 8px 18px; border-radius: 26px; box-shadow: 0 1px 8px rgba(0,0,0,.14); color: #888; }
 .portal-search input { flex: 1; min-width: 0; border: none; outline: none; font: inherit; color: #222; background: none; }
-.portal-recent { width: 100%; max-width: 480px; }
-.portal-recent h4 { margin-bottom: 6px; color: #888; font-size: 12px; }
 
 /* search results */
 .results { max-width: 560px; }
@@ -167,10 +165,16 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .result-title { color: #1a3fa8; font-size: 15px; }
 .result-url { color: #3a8a55; font-size: 12px; margin-top: 2px; }
 .results-none { color: #999; font-size: 13px; }
-.hist { display: flex; align-items: center; gap: 6px; padding: 7px 4px; border-radius: 5px; cursor: pointer; font-size: 13px; }
-.hist:hover { background: #f0f0f0; }
-.hist-url { color: #1a73e8; margin: 0 8px; }
-.hist-date { color: #999; font-size: 12px; }
+.bw-menu { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #555; }
+.bw-menu:hover { background: #eceef3; }
+.bw-pop { position: absolute; right: 8px; top: calc(100% - 2px); z-index: 6; width: 300px; padding: 6px; border-radius: 8px; background: #fff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.22); }
+.bw-pop-head { padding: 8px 10px 6px; color: #888; font-size: 11px; }
+.bw-pop-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px; border-radius: 5px; text-align: left; color: #666; }
+.bw-pop-item:hover { background: #f0f4fb; }
+.bw-pop-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bw-pop-mid > span:first-child { color: #222; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bw-pop-url { color: #3a8a55; font-size: 11px; }
+.bw-pop-date { color: #aaa; font-size: 11px; flex-shrink: 0; }
 .site-error { text-align: center; padding-top: 60px; color: #444; }
 .err-code { color: #999; font-size: 12px; margin-top: 8px; }
 .wiki-lock { max-width: 340px; margin: 60px auto 0; text-align: center; display: flex; flex-direction: column; gap: 10px; }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGame, searchSites } from '../engine/store.js'
-import { Clock, House, Lock, Search, Star } from '../icons/line.jsx'
+import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
@@ -13,6 +13,7 @@ export default function Browser() {
   const [q, setQ] = useState('')
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
+  const [menu, setMenu] = useState(false)
 
   const open = (raw) => {
     const url = clean(raw)
@@ -20,6 +21,7 @@ export default function Browser() {
     setPage(url ? { kind: 'site', url } : { kind: 'home' })
     setPw('')
     setPwError(false)
+    setMenu(false)
   }
 
   const submitSearch = () => {
@@ -39,6 +41,27 @@ export default function Browser() {
         <input value={addr} onChange={(e) => setAddr(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && open(addr)}
                placeholder="주소를 입력하세요" aria-label="주소" spellCheck={false} />
+        <button className="bw-menu" onClick={() => setMenu(!menu)} title="메뉴">
+          <MoreVertical size={17} strokeWidth={2} />
+        </button>
+        {menu && (
+          <>
+            <div className="ctx-catch" onPointerDown={() => setMenu(false)} />
+            <div className="bw-pop">
+              <div className="bw-pop-head">방문 기록</div>
+              {scenario.history.map((h, i) => (
+                <button key={i} className="bw-pop-item" onClick={() => open(h.url)}>
+                  <Clock size={14} strokeWidth={1.7} />
+                  <span className="bw-pop-mid">
+                    <span>{h.title}</span>
+                    <span className="bw-pop-url">{h.url}</span>
+                  </span>
+                  <span className="bw-pop-date">{h.date}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="bm-bar">
@@ -58,15 +81,6 @@ export default function Browser() {
                      onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
                      placeholder="검색어를 입력하세요" aria-label="검색어" spellCheck={false} />
               <button className="btn-primary" onClick={submitSearch}>검색</button>
-            </div>
-            <div className="portal-recent">
-              <h4>최근 방문</h4>
-              {scenario.history.map((h, i) => (
-                <div key={i} className="hist" onClick={() => open(h.url)}>
-                  <Clock size={14} strokeWidth={1.7} />{h.title} <span className="hist-url">{h.url}</span>
-                  <span className="hist-date">{h.date}</span>
-                </div>
-              ))}
             </div>
           </div>
         )}
