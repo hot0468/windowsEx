@@ -76,8 +76,20 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
-  it('every file carries either text or a picture', () => {
-    for (const f of files) expect(Boolean(f.content) || Boolean(f.image)).toBe(true)
+  it('every file carries text, a picture, or slides', () => {
+    for (const f of files) {
+      expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides)).toBe(true)
+    }
+  })
+
+  it('opens every deck in the slide viewer with real slides', () => {
+    const decks = files.filter((f) => f.slides)
+    expect(decks.length).toBeGreaterThan(0)
+    for (const d of decks) {
+      expect(fileOpener(d).app).toBe('slides')
+      expect(d.slides.length).toBeGreaterThan(0)
+      for (const s of d.slides) expect(s.title).toBeTruthy()
+    }
   })
 
   it('every scanned file resolves to a bundled image and opens in the viewer', () => {
@@ -100,7 +112,7 @@ describe('ep1 scenario integrity', () => {
   it('every paperwork file is .hwp and every scribble .txt', () => {
     for (const f of files) {
       if (f.image) continue
-      expect(f.name).toMatch(/\.(hwp|txt)$/)
+      expect(f.name).toMatch(/\.(hwp|txt|pptx)$/)
     }
   })
 
