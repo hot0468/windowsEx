@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '../engine/store.js'
-import { avatarOf } from '../assets/photos.js'
+import { faceOf, photoOf } from '../assets/photos.js'
 import {
   BellOff, ChevronDown, MessageSquare,
   Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
-const QUICK = ['넵, 확인하겠습니다!', '감사합니다 🙇']
+// Fallback only — each thread carries replies in the register that person expects.
+const QUICK = ['네, 알겠습니다', '감사합니다']
 
 const Avatar = ({ t, size }) => {
-  const photo = avatarOf(t.id)
+  const photo = photoOf(t.id)
+  const face = faceOf(t.id)
   return (
     <span className={'mg-av' + (t.room ? ' room' : '')}
           style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
-      {photo ? <img src={photo} alt="" draggable="false" /> : t.name[0]}
+      {photo && <img className="mg-photo" src={photo} alt="" draggable="false" />}
+      {!photo && face && <img className="mg-face" src={face} alt="" draggable="false" />}
+      {!photo && !face && t.name[0]}
       {t.online && <i className="mg-dot" />}
     </span>
   )
@@ -151,7 +155,7 @@ export default function Messenger({ source }) {
               {busy && <div className="typing"><span className="spinner sm" />작성중…</div>}
             </div>
             <div className="quick">
-              {QUICK.map((text) => (
+              {(thread.quick ?? QUICK).map((text) => (
                 <button key={text} disabled={busy} onClick={() => reply(text)}>{text}</button>
               ))}
             </div>

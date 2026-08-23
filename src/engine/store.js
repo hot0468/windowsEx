@@ -2,39 +2,58 @@ import { create } from 'zustand'
 import scenario from '../scenarios/ep1.json'
 import { checkGoal } from './goal.js'
 
-const SAVE_KEY = 'windowsEx.save'
+const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
+const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues where you were
 const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'wikiUnlocked', 'cleared', 'scratch']
 
-function readSave() {
+const snapshot = (s) => {
+  const out = { at: Date.now() }
+  for (const k of PROGRESS) out[k] = s[k]
+  return out
+}
+
+function read(key) {
   try {
-    const save = JSON.parse(localStorage.getItem(SAVE_KEY))
+    const save = JSON.parse(localStorage.getItem(key))
     return save && Array.isArray(save.windows) ? save : null
   } catch {
     return null
   }
 }
 
-export function savedAt() {
-  return readSave()?.at ?? null
-}
-
-// Loading reloads the page (see loadGame) so every app remounts clean; the flag
-// set just before that reload tells this fresh session to start from the save.
-function takePendingSave() {
+function write(key, value) {
   try {
-    if (sessionStorage.getItem(PENDING_KEY) !== '1') return null
-    sessionStorage.removeItem(PENDING_KEY)
-    return readSave()
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
   } catch {
-    return null
+    return false
   }
 }
 
-const restored = takePendingSave()
+export function savedAt() {
+  return read(SAVE_KEY)?.at ?? null
+}
+
+// Normally a fresh page picks up the autosave. Loading the checkpoint reloads the
+// page (see loadGame) so every app remounts clean, and this flag — set just before
+// that reload — tells the new session to start from the checkpoint instead.
+function startingPoint() {
+  try {
+    if (sessionStorage.getItem(PENDING_KEY) === '1') {
+      sessionStorage.removeItem(PENDING_KEY)
+      return read(SAVE_KEY)
+    }
+  } catch {
+    // fall through to the autosave
+  }
+  return read(SESSION_KEY)
+}
+
+const restored = startingPoint()
 
 let winId = Math.max(0, ...(restored?.windows ?? []).map((w) => w.id))
 let toastId = 0
@@ -109,17 +128,12 @@ export const useGame = create((set, get) => ({
 
   saveGame: () => {
     const s = get()
-    const save = { at: Date.now() }
-    for (const k of PROGRESS) save[k] = s[k]
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(save))
-      s.showToast({ from: '게임 저장', text: '현재 진행 상황을 저장했습니다.' })
-    } catch {
-      s.showToast({ from: '게임 저장', text: '저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요.' })
-    }
+    s.showToast(write(SAVE_KEY, snapshot(s))
+      ? { from: '게임 저장', text: '현재 진행 상황을 저장했습니다.' }
+      : { from: '게임 저장', text: '저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요.' })
   },
   loadGame: () => {
-    if (!readSave()) return get().showToast({ from: '불러오기', text: '저장된 게임이 없습니다.' })
+    if (!read(SAVE_KEY)) return get().showToast({ from: '불러오기', text: '저장된 게임이 없습니다.' })
     try {
       sessionStorage.setItem(PENDING_KEY, '1')
     } catch {
@@ -127,7 +141,14 @@ export const useGame = create((set, get) => ({
     }
     location.reload()
   },
-  newGame: () => location.reload(),
+  newGame: () => {
+    try {
+      localStorage.removeItem(SESSION_KEY)
+    } catch {
+      // nothing to clear
+    }
+    location.reload()
+  },
 
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
@@ -160,6 +181,14 @@ export const useGame = create((set, get) => ({
     return verdict.ok
   }
 }))
+
+// Autosave on a trailing debounce: dragging a window fires a state change per
+// pointer move, and localStorage writes are synchronous.
+let autosaveTimer
+useGame.subscribe(() => {
+  clearTimeout(autosaveTimer)
+  autosaveTimer = setTimeout(() => write(SESSION_KEY, snapshot(useGame.getState())), 400)
+})
 
 // An entry with `children` is a folder; anything else is a file.
 export function allFiles(fs) {

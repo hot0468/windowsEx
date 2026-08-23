@@ -183,7 +183,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .mg-none { margin: auto; padding: 40px 20px; text-align: center; color: #aaa; font-size: 13px; }
 .mg-av { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; color: #fff; font-weight: 600; }
 .mg-av.room { border-radius: 30%; }
-.mg-av img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.mg-av .mg-photo { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.mg-av .mg-face { width: 82%; height: 82%; }
 .mg-dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border: 2px solid #fff; border-radius: 50%; background: #2fbf5f; }
 
 /* messenger: conversation */

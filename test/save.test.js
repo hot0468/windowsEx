@@ -17,6 +17,8 @@ beforeEach(() => {
 })
 
 const freshStore = async () => (await import('../src/engine/store.js')).useGame
+// autosave is debounced by 400ms
+const settle = () => new Promise((r) => setTimeout(r, 450))
 
 describe('save / load', () => {
   it('carries progress into the next session', async () => {
@@ -36,13 +38,38 @@ describe('save / load', () => {
     expect(next.windows.map((w) => w.app)).toEqual(['browser'])
   })
 
-  it('starts fresh when no load was requested', async () => {
+  it('picks the autosave up again after a plain refresh', async () => {
+    const useGame = await freshStore()
+    useGame.setState({ wikiUnlocked: true, scratch: '메모' })
+    await settle()
+
+    vi.resetModules()
+    const next = (await freshStore()).getState()
+    expect(next.wikiUnlocked).toBe(true)
+    expect(next.scratch).toBe('메모')
+  })
+
+  it('drops the autosave when a new game starts', async () => {
     const useGame = await freshStore()
     useGame.setState({ wikiUnlocked: true })
-    useGame.getState().saveGame()
+    await settle()
+    globalThis.location = { reload() {} }
+    useGame.getState().newGame()
 
     vi.resetModules()
     expect((await freshStore()).getState().wikiUnlocked).toBe(false)
+  })
+
+  it('prefers the explicit checkpoint over the autosave', async () => {
+    const useGame = await freshStore()
+    useGame.setState({ msgCount: 1 })
+    useGame.getState().saveGame()          // checkpoint at 1
+    useGame.setState({ msgCount: 4 })
+    await settle()                          // autosave at 4
+
+    globalThis.sessionStorage.setItem('windowsEx.pendingLoad', '1')
+    vi.resetModules()
+    expect((await freshStore()).getState().msgCount).toBe(1)
   })
 
   it('ignores a corrupt save instead of crashing', async () => {
