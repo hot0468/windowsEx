@@ -317,7 +317,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 
 /* command prompt */
 .cmd { height: 100%; padding: 8px 10px; background: #0c0c0c; cursor: text; }
-.cmd-out { height: 100%; overflow: auto; color: #cccccc; font-family: 'D2Coding', Consolas, monospace; font-size: 13px; line-height: 1.45; white-space: pre-wrap; user-select: text; }
+.cmd ::selection { background: #3a6ea5; color: #fff; }
+.cmd-out { height: 100%; overflow: auto; color: #cccccc; font-family: 'D2Coding', Consolas, monospace; font-size: 13px; line-height: 1.45; white-space: pre-wrap; user-select: text; cursor: text; }
 .cmd-line { display: flex; gap: 6px; }
 .cmd-line input { flex: 1; min-width: 0; border: none; outline: none; background: none; font: inherit; color: #cccccc; caret-color: #cccccc; }
 

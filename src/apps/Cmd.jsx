@@ -56,8 +56,15 @@ export default function Cmd() {
     setLines((l) => [...l, prompt + ' ' + typed, ...out])
   }
 
+  // Clicking anywhere puts the caret back in the prompt — except right after a
+  // drag, where focusing would wipe the selection the player is trying to copy.
+  const focusPrompt = () => {
+    if (window.getSelection()?.toString()) return
+    field.current.focus()
+  }
+
   return (
-    <div className="cmd" onClick={() => field.current.focus()}>
+    <div className="cmd" onMouseUp={focusPrompt}>
       <div className="cmd-out" ref={box}>
         {lines.map((line, i) => <div key={i}>{line || '\u00a0'}</div>)}
         <div className="cmd-line">
