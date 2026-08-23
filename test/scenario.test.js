@@ -130,10 +130,25 @@ describe('ep1 scenario integrity', () => {
         expect(r.reply.length).toBeGreaterThan(0)
         expect(Boolean(r.files) !== Boolean(r.choice)).toBe(true)   // one trigger, not both
         for (const id of r.files ?? []) expect(known.has(id)).toBe(true)
-        // a reply-triggered reaction must be reachable from that thread's choices
-        if (r.choice) expect(quickSets(t).flat()).toContain(r.choice)
+        // no dead dialogue: a reply trigger must be something the thread can offer,
+        // either up front or through an earlier reaction's follow-up choices
+        if (r.choice) {
+          const offered = new Set([
+            ...quickSets(t).flat(),
+            ...t.reactions.flatMap((x) => x.next ?? [])
+          ])
+          expect(offered.has(r.choice)).toBe(true)
+        }
       }
     }
+  })
+
+  it('hides the pub 지현 asks about in a file the player can dig up', () => {
+    const jihyun = threads.find((t) => t.id === 'jihyun')
+    const asked = jihyun.reactions.find((r) => r.choice && /맥주|호프|치어스/.test(r.choice) && r.next)
+    expect(asked).toBeTruthy()
+    const written = files.filter((f) => f.content?.includes(asked.choice))
+    expect(written.length).toBeGreaterThan(0)   // the answer exists on disk somewhere
   })
 
   it('puts the office address 엄마 asks for somewhere findable', () => {

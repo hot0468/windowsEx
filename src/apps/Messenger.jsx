@@ -54,6 +54,7 @@ export default function Messenger({ source }) {
   const [answeredAt, setAnsweredAt] = useState({})
   const [reacted, setReacted] = useState({})
   const [confirming, setConfirming] = useState(null)
+  const [branch, setBranch] = useState({})
   const pending = useRef([])
   const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
@@ -86,16 +87,22 @@ export default function Messenger({ source }) {
   // other side says something new.
   const arrived = thread ? msgsOf(thread).length + mine.filter((e) => e.from).length : 0
   const spent = thread && answeredAt[thread.id] >= arrived
-  const choices = thread
-    ? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
-    : []
+  // A reaction can hand the conversation a new set of choices; otherwise the
+  // thread's own sets advance as you keep replying.
+  const choices = !thread
+    ? []
+    : branch[thread.id]
+      ?? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
   // Sharing a photo or picking certain replies can prompt a scripted answer —
   // the other side writes for a beat first, like a real conversation.
   const reactTo = (key) => {
     const hit = thread.reactions?.find(
       (r) => r.files?.includes(key) || r.choice === key)
-    if (!hit || reacted[key]) return
-    setReacted((r) => ({ ...r, [key]: true }))
+    // Sharing the same photo twice shouldn't repeat the same gushing; a wrong
+    // answer, on the other hand, has to stay answerable until it's right.
+    if (!hit || (hit.files && reacted[key])) return
+    if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
+    if (hit.next) setBranch((b) => ({ ...b, [thread.id]: hit.next }))
     const id = thread.id
     const who = thread.name
     typingFor.current = id
