@@ -74,6 +74,21 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
+  it('routes each file to the app its extension implies', () => {
+    const apps = Object.fromEntries(files.map((f) => [f.name, fileOpener(f).app]))
+    expect(apps['견적서_최종_진짜최종.hwp']).toBe('hwp')
+    expect(apps['휴가신청서_사본.hwp']).toBe('hwp')
+    expect(apps['메모.txt']).toBe('notepad')
+    expect(apps['사원증_스캔.jpg']).toBe('viewer')
+  })
+
+  it('every paperwork file is .hwp and every scribble .txt', () => {
+    for (const f of files) {
+      if (f.image) continue
+      expect(f.name).toMatch(/\.(hwp|txt)$/)
+    }
+  })
+
   it('file ids are unique', () => {
     const ids = files.map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)
