@@ -40,6 +40,7 @@ export default function Messenger({ source }) {
   const setOpenThread = useGame((s) => s.setOpenThread)
   const seen = useGame((s) => s.seenThreads)
   const markThreadSeen = useGame((s) => s.markThreadSeen)
+  const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
   const [tab, setTab] = useState('friends')
@@ -63,6 +64,7 @@ export default function Messenger({ source }) {
          selected={t.id === openId} onOpen={() => setOpenThread(source, t.id)} />
   )
 
+  const busy = !!(thread && typing[thread.id])
   const mine = thread ? replies[thread.id] ?? [] : []
   const reply = (text) =>
     setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), text] }))
@@ -146,10 +148,11 @@ export default function Messenger({ source }) {
                 </div>
               ))}
               {mine.map((text, i) => <div key={'r' + i} className="bubble me">{text}</div>)}
+              {busy && <div className="typing"><span className="spinner sm" />작성중…</div>}
             </div>
             <div className="quick">
               {QUICK.map((text) => (
-                <button key={text} onClick={() => reply(text)}>{text}</button>
+                <button key={text} disabled={busy} onClick={() => reply(text)}>{text}</button>
               ))}
             </div>
           </>

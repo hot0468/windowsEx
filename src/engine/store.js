@@ -51,6 +51,7 @@ export const useGame = create((set, get) => ({
   // Both live here so a toast can open a thread in an already-running window.
   openThread: {},
   seenThreads: restored?.seenThreads ?? {},
+  typing: {},
   extraMails: restored?.extraMails ?? [],
   wikiUnlocked: restored?.wikiUnlocked ?? false,
   cleared: restored?.cleared ?? false,
@@ -133,6 +134,8 @@ export const useGame = create((set, get) => ({
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>
     set((s) => ({ openThread: { ...s.openThread, [source]: id } })),
+  setTyping: (id, on) =>
+    set((s) => (!!s.typing[id] === on ? s : { typing: { ...s.typing, [id]: on } })),
   markThreadSeen: (id, count) =>
     set((s) => (s.seenThreads[id] === count ? s : { seenThreads: { ...s.seenThreads, [id]: count } })),
 

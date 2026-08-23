@@ -6,6 +6,9 @@ import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
+
+// How long the sender shows as "작성중…" before each scripted message lands.
+const TYPING_LEAD = 1500
 import { Info, LayoutGrid } from './icons/line.jsx'
 
 function Boot() {
@@ -91,13 +94,16 @@ export default function App() {
     // on the toast lets a click jump straight into that conversation.
     const source = 'workMessenger'
     const live = sc[source].sections.flatMap((s) => s.threads).find((t) => t.live)
-    const timers = sc.messenger.map((m) =>
+    const timers = sc.messenger.flatMap((m) => [
+      setTimeout(() => useGame.getState().setTyping(live.id, true),
+        Math.max(0, m.delay - TYPING_LEAD)),
       setTimeout(() => {
-        useGame.getState().deliverMessage()
-        useGame.getState().showToast({
-          from: m.from, text: m.text, app: 'messenger', source, thread: live.id
-        })
-      }, m.delay))
+        const g = useGame.getState()
+        g.setTyping(live.id, false)
+        g.deliverMessage()
+        g.showToast({ from: m.from, text: m.text, app: 'messenger', source, thread: live.id })
+      }, m.delay)
+    ])
     return () => timers.forEach(clearTimeout)
   }, [booted])
 

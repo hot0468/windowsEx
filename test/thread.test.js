@@ -1,7 +1,28 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useGame } from '../src/engine/store.js'
 
-beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {} }))
+beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {}, typing: {} }))
+
+describe('typing indicator', () => {
+  it('marks only the thread whose sender is writing', () => {
+    useGame.getState().setTyping('boss', true)
+    expect(useGame.getState().typing.boss).toBe(true)
+    expect(useGame.getState().typing.jihyun).toBeUndefined()
+  })
+
+  it('clears when the message lands', () => {
+    useGame.getState().setTyping('boss', true)
+    useGame.getState().setTyping('boss', false)
+    expect(useGame.getState().typing.boss).toBe(false)
+  })
+
+  it('skips the update when the flag has not changed', () => {
+    useGame.getState().setTyping('boss', true)
+    const before = useGame.getState().typing
+    useGame.getState().setTyping('boss', true)
+    expect(useGame.getState().typing).toBe(before)
+  })
+})
 
 describe('thread selection', () => {
   it('keeps each messenger on its own conversation', () => {
