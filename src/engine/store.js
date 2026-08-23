@@ -357,6 +357,9 @@ export const hintAfter = (ask, wrongs) => {
   return sets[Math.min(wrongs, sets.length - 1)]
 }
 
+// The jammed printer wants the wiki's steps in order; a wrong press jams it again.
+export const printerStep = (steps, done, id) => (steps[done] === id ? done + 1 : 0)
+
 // The mail brief in force on a given day: shared rules (attempts, the boss's
 // reaction, the failure screen) plus that day's client and figures.
 export const goalFor = (scenario, day) =>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, findFile, printerStep } from '../engine/store.js'
+import { play } from '../shell/sound.js'
 
 const ZOOMS = [100, 125, 150]
 
@@ -7,7 +8,11 @@ export default function Hwp({ fileId }) {
   const fs = useGame((s) => s.scenario.fs)
   const spec = useGame((s) => s.scenario.hangul)
   const installed = useGame((s) => Boolean(s.grants.hangul))
+  const p = useGame((s) => s.scenario.printer)
   const [zoom, setZoom] = useState(0)
+  const [printing, setPrinting] = useState(false)
+  const [done, setDone] = useState(0)
+  const printed = done === p.steps.length
   const file = findFile(fs, fileId)
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
@@ -30,6 +35,7 @@ export default function Hwp({ fileId }) {
       <div className="hwp-bar">
         <span className="hwp-name">{file.name}</span>
         <span className="hwp-badge">한글 문서</span>
+        <button className="hwp-print" onClick={() => { setDone(0); setPrinting(true) }}>인쇄</button>
         <button className="hwp-zoom" onClick={() => setZoom((z) => (z + 1) % ZOOMS.length)}
                 title="확대/축소">
           {ZOOMS[zoom]}%
@@ -42,6 +48,35 @@ export default function Hwp({ fileId }) {
           <div className="hwp-pageno">- 1 -</div>
         </div>
       </div>
+
+      {printing && (
+        <div className="pr-back" onPointerDown={() => setPrinting(false)}>
+          <div className="pr" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="pr-head">인쇄 — {p.name}</div>
+            {printed ? (
+              <div className="pr-ok">
+                {p.done.map((l) => <p key={l}>{l}</p>)}
+                <div className="pr-receipt">접수번호 <b>{p.receipt}</b></div>
+              </div>
+            ) : (
+              <>
+                <div className="pr-err"><b>{p.error.code}</b> {p.error.text}<span>{p.error.help}</span></div>
+                <div className="pr-steps">{p.steps.map((_, i) => <i key={i} className={i < done ? 'on' : ''} />)}</div>
+                <div className="pr-btns">
+                  {p.buttons.map((b) => (
+                    <button key={b.id} onClick={() => {
+                      const next = printerStep(p.steps, done, b.id)
+                      play(next === 0 ? 'error' : next === p.steps.length ? 'ok' : 'click')
+                      setDone(next)
+                    }}>{b.label}</button>
+                  ))}
+                </div>
+              </>
+            )}
+            <button className="pr-close" onClick={() => setPrinting(false)}>닫기</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

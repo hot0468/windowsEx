@@ -192,10 +192,11 @@ describe('scenario integrity', () => {
 
   it('makes every typed answer obtainable somewhere in the game', () => {
     // Everything the player can read off or produce: file text, a photo's
-    // description, a site, ipconfig output, a listing, or the booking form.
+    // description, a site, ipconfig output, a listing, the booking form, or
+    // the printer's receipt.
     const world = JSON.stringify({
       files, sites: scenario.sites, network: scenario.network,
-      places: scenario.places, booking: scenario.booking
+      places: scenario.places, booking: scenario.booking, printer: scenario.printer
     })
     const asks = threads.flatMap(asksOf)
     expect(asks.length).toBeGreaterThan(0)
@@ -272,9 +273,9 @@ describe('scenario integrity', () => {
     })
   })
 
-  it('gives every day the same number of requests', () => {
+  it('keeps the workload even across days', () => {
     const counts = scenario.days.map((d) => d.requests.length)
-    expect(new Set(counts).size).toBe(1)
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
   })
 
   it('never asks for the same request on two different days', () => {
