@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, searchSites } from '../engine/store.js'
+import { useGame, searchSites, siteView } from '../engine/store.js'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
 import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
@@ -77,10 +77,7 @@ export default function Browser() {
   }
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
-  // Approval first, credentials second — the site can't even show a login form
-  // to a machine it doesn't recognise.
-  const blocked = Boolean(site?.requiresIp) && !grants.ip
-  const locked = !blocked && Boolean(site?.login) && !unlocked[site.url]
+  const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
 
   return (
@@ -120,7 +117,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + (site && (blocked || locked || site.layout) ? ' bleed' : '')}>
+      <div className={'page' + (view && view !== 'error' ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -147,7 +144,7 @@ export default function Browser() {
           </div>
         )}
 
-        {page.kind === 'site' && !site && (
+        {view === 'error' && (
           <div className="site-error">
             <h2>사이트에 연결할 수 없음</h2>
             <p>{page.url} 의 서버 IP 주소를 찾을 수 없습니다.</p>
@@ -155,7 +152,7 @@ export default function Browser() {
           </div>
         )}
 
-        {blocked && (
+        {view === 'blocked' && (
           <div className="blk">
             <div className="blk-card">
               <Lock size={30} strokeWidth={1.6} />
@@ -169,9 +166,9 @@ export default function Browser() {
             </div>
           </div>
         )}
-        {locked && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
+        {view === 'login' && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
 
-        {site && !locked && (
+        {view === 'ready' && (
           site.layout === 'portal' ? <Portal site={site} />
             : site.layout === 'wiki' ? <Wiki site={site} />
               : (

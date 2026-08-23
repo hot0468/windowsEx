@@ -251,6 +251,15 @@ export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
 }
 
+// Exactly one state per visited site: no approval means no login form, no login
+// means no content. Returning a single value keeps them mutually exclusive.
+export function siteView(site, { grants, unlocked }) {
+  if (!site) return 'error'
+  if (site.requiresIp && !grants.ip) return 'blocked'
+  if (site.login && !unlocked[site.url]) return 'login'
+  return 'ready'
+}
+
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
 export function searchSites(sites, q) {
