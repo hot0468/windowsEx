@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   useGame, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
-  searchSites, siteView
+  searchSites, searchTerms, siteView
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
@@ -102,6 +102,7 @@ export default function Browser() {
   const articles = page.kind === 'search' ? searchNews(scenario.news, page.q) : []
   const answers = page.kind === 'search' ? searchQna(scenario.qna, page.q) : []
   const firms = page.kind === 'search' ? searchCompanies(scenario.companies, page.q) : []
+  const words = page.kind === 'search' ? searchTerms(scenario.terms, page.q) : []
 
   return (
     <div className="browser">
@@ -163,7 +164,7 @@ export default function Browser() {
         {page.kind === 'search' && (
           <div className="results">
             <p className="results-head">
-              '{page.q}' 검색 결과 {spots.length + firms.length + articles.length + answers.length + posts.length + hits.length}건
+              '{page.q}' 검색 결과 {spots.length + firms.length + words.length + articles.length + answers.length + posts.length + hits.length}건
             </p>
 
             {spots.length > 0 && (
@@ -201,8 +202,23 @@ export default function Browser() {
                       <span className="firm-en">{c.en}</span>
                     </div>
                     <div className="firm-meta">{c.field} · {c.since}년 설립 · {c.size}</div>
-                    <div className="firm-addr">{c.address}</div>
+                    <div className="firm-addr">소재지 {c.address}</div>
                     <div className="firm-tel">대표번호 {c.tel}</div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {words.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">용어사전</h3>
+                {words.map((w) => (
+                  <div key={w.id} className="dict">
+                    <div className="dict-top">
+                      <span className="dict-word">{w.word}</span>
+                      <span className="dict-read">{w.reading}</span>
+                    </div>
+                    <p className="dict-body">{w.body}</p>
                   </div>
                 ))}
               </section>
@@ -264,7 +280,7 @@ export default function Browser() {
               </section>
             )}
 
-            {spots.length + firms.length + articles.length + answers.length + posts.length + hits.length === 0 && (
+            {spots.length + firms.length + words.length + articles.length + answers.length + posts.length + hits.length === 0 && (
               <p className="results-none">검색 결과가 없습니다.</p>
             )}
           </div>

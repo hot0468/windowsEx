@@ -389,6 +389,12 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pl-none { padding: 30px; }
 .place { cursor: pointer; }
 
+.dict { padding: 13px 14px; margin-bottom: 8px; background: #f8f9fc; border-radius: 8px; }
+.dict-top { display: flex; align-items: baseline; gap: 8px; }
+.dict-word { color: #1a3fa8; font-size: 15px; }
+.dict-read { color: #999; font-size: 11px; }
+.dict-body { margin: 7px 0 0; color: #444; font-size: 13px; line-height: 1.65; }
+
 .firm { padding: 13px 14px; margin-bottom: 8px; border: 1px solid #eceef3; border-radius: 8px; }
 .firm-top { display: flex; align-items: baseline; gap: 8px; }
 .firm-name { color: #1a3fa8; font-size: 15px; }

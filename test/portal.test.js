@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import {
-  goalFor, searchBlogs, searchCompanies, searchIn, searchNews, searchPlaces, searchQna, searchSites
+  goalFor, searchBlogs, searchCompanies, searchIn, searchNews, searchPlaces, searchQna,
+  searchSites, searchTerms
 } from '../src/engine/store.js'
 
 describe('searchIn', () => {
@@ -42,14 +43,28 @@ describe('portal news and Q&A', () => {
   })
 
   it('points the way without handing over any answer', () => {
-    const text = JSON.stringify({ news: scenario.news, qna: scenario.qna })
     const wiki = scenario.sites.find((s) => s.layout === 'wiki')
     const portal = scenario.sites.find((s) => s.layout === 'portal')
+    const answers = scenario.days.flatMap((d) => d.asks ?? []).flatMap((a) => a.ask.accept.flat())
+    // a shop's name is meant to be looked up in the shop listing — that is the puzzle.
+    // a price, a password, an address or a colleague's mail address is not.
+    const lookupOnly = answers.filter((a) => scenario.places.some((p) => p.name.includes(a)))
     const secrets = [
       ...scenario.days.flatMap((_, i) => goalFor(scenario, i + 1).requiredKeywords),
+      ...answers.filter((a) => !lookupOnly.includes(a)),
       wiki.login.password, scenario.network.ip, portal.portal.footer.address
     ]
-    for (const secret of secrets) expect(text).not.toContain(secret)
+
+    // background reading: it may point the way, but it carries no answer at all
+    const background = JSON.stringify({
+      news: scenario.news, qna: scenario.qna,
+      terms: scenario.terms, companies: scenario.companies
+    })
+    for (const secret of [...secrets, ...lookupOnly]) expect(background).not.toContain(secret)
+
+    // the shop listing and its reviews are where a shop is found, and nothing more
+    const lookup = JSON.stringify({ blogs: scenario.blogs, places: scenario.places })
+    for (const secret of secrets) expect(lookup).not.toContain(secret)
   })
 
   it('still keeps the contents of a locked site out of results', () => {
@@ -71,7 +86,22 @@ const TERMS = [
   '한빛', 'A상사', 'B물산', 'C테크',
   '날씨', '워크숍', '회식', '카페', '냉면', '순대국', '해장',
   '결재', '품의', '휴가', '연차', '보안', '피싱', '악성코드',
-  'hwp', '엑셀', '파워포인트', '야근', '커피', '지하철', '주차'
+  'hwp', '엑셀', '파워포인트', '야근', '커피', '지하철', '주차',
+  // 사무 행정
+  '회의록', '보고서', '기안', '반려', '회의실', '명함', '프린터', '인쇄', '복사기',
+  '비품', '경비', '법인카드', '세금계산서', '계약서', '발주', '납기',
+  // IT
+  '와이파이', 'wifi', 'VPN', '방화벽', '로그인', '이메일',
+  '압축', 'zip', '캡처', '스크린샷', '단축키', '재부팅',
+  // 회사 근처 생활
+  '배달', '야식', '소주', '치킨', '편의점', '은행', '약국', '헬스장', '술',
+  // 인사·복지
+  '월급', '급여', '연봉', '인사', '채용', '퇴사', '이직', '복지',
+  '건강검진', '재택근무', '출퇴근', '워라밸',
+  // 주인공이 다녀온 휴가
+  '제주도', '제주', '여행', '항공권', '렌터카', '게스트하우스', '귤', '고양이', '사진',
+  // 그 밖
+  '택배', '우편', '등기', '명절', '회의', '메모'
 ]
 
 const found = (q) => [
@@ -80,7 +110,8 @@ const found = (q) => [
   ...searchBlogs(scenario.blogs, q),
   ...searchNews(scenario.news, q),
   ...searchQna(scenario.qna, q),
-  ...searchCompanies(scenario.companies, q)
+  ...searchCompanies(scenario.companies, q),
+  ...searchTerms(scenario.terms, q)
 ]
 
 describe('search coverage', () => {
