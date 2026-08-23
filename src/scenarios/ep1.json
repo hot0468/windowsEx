@@ -356,7 +356,8 @@
                   ],
                   "next": [
                     "ㅇㅋ 이따 봐 👋"
-                  ]
+                  ],
+                  "grants": "pub"
                 }
               },
               {
@@ -422,7 +423,8 @@
               ],
               "next": [
                 "고마워 엄마 ㅎㅎ"
-              ]
+              ],
+              "grants": "address"
             }
           },
           {
@@ -1023,5 +1025,37 @@
     "ip": "192.168.10.47",
     "mask": "255.255.255.0",
     "gateway": "192.168.10.1"
-  }
+  },
+  "objectives": [
+    {
+      "id": "ip",
+      "title": "사내 시스템 IP 승인 받기",
+      "grant": "ip"
+    },
+    {
+      "id": "portal",
+      "title": "한빛 포털 접속하기",
+      "site": "portal.hanbit.co.kr"
+    },
+    {
+      "id": "wiki",
+      "title": "사내위키에서 확정 단가 확인하기",
+      "site": "wiki.hanbit.co.kr"
+    },
+    {
+      "id": "address",
+      "title": "엄마에게 회사 주소 알려주기",
+      "grant": "address"
+    },
+    {
+      "id": "pub",
+      "title": "지현이에게 맥주집 이름 알려주기",
+      "grant": "pub"
+    },
+    {
+      "id": "reply",
+      "title": "A상사에 견적서 최종본 회신하기",
+      "cleared": true
+    }
+  ]
 }

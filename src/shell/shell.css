@@ -33,6 +33,17 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .desktop-icon { position: relative; }
 .di-count { position: absolute; top: 6px; right: 12px; min-width: 17px; padding: 0 4px; border-radius: 9px; background: #0067c0; color: #fff; font-size: 10px; line-height: 17px; text-shadow: none; }
 
+/* solved counter */
+.pg { position: absolute; top: 16px; right: 16px; z-index: 500; width: 260px; }
+.pg-badge { display: flex; align-items: center; gap: 7px; margin-left: auto; padding: 8px 14px; border-radius: 18px; background: rgba(20,28,52,.55); backdrop-filter: blur(14px); color: #fff; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.pg-badge:hover { background: rgba(20,28,52,.72); }
+.pg-badge b { font-size: 14px; color: #8fd0ff; }
+.pg-list { list-style: none; margin-top: 8px; padding: 8px; border-radius: 10px; background: rgba(20,28,52,.62); backdrop-filter: blur(14px); }
+.pg-list li { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px; color: rgba(255,255,255,.62); font-size: 12px; line-height: 1.5; }
+.pg-list li.ok { color: #fff; }
+.pg-mark { display: flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-top: 1px; flex-shrink: 0; border-radius: 4px; border: 1px solid rgba(255,255,255,.35); }
+.pg-list li.ok .pg-mark { background: #2fbf5f; border-color: #2fbf5f; color: #fff; }
+
 /* window */
 .window { position: absolute; display: flex; flex-direction: column; background: #f9f9f9; border-radius: 8px; border: 1px solid rgba(0,0,0,.25); box-shadow: 0 16px 40px rgba(0,0,0,.35); overflow: hidden; }
 .window.minimized { display: none; }

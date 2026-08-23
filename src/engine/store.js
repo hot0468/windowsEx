@@ -228,6 +228,15 @@ export function quickSets(thread) {
   return Array.isArray(q[0]) ? q : [q]
 }
 
+// An objective is met when the state it names has been reached — the scenario
+// says which, so adding a goal is a data change.
+export function objectiveDone(objective, state) {
+  if (objective.cleared) return state.cleared
+  if (objective.grant) return Boolean(state.grants[objective.grant])
+  if (objective.site) return Boolean(state.unlocked[objective.site])
+  return false
+}
+
 const ROOT_ICONS = { 휴지통: 'trash', 휴대폰: 'phone' }
 export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
 

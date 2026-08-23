@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
-import { allFiles, entriesAt, fileOpener, quickSets, searchSites } from '../src/engine/store.js'
+import { allFiles, entriesAt, fileOpener, objectiveDone, quickSets, searchSites } from '../src/engine/store.js'
 import { fileImage } from '../src/assets/photos.js'
 
 const files = allFiles(scenario.fs)
@@ -170,6 +170,30 @@ describe('ep1 scenario integrity', () => {
         }
       }
     }
+  })
+
+  it('ties every objective to a state the game can actually reach', () => {
+    const urls = new Set(scenario.sites.map((s) => s.url))
+    const granted = new Set(threads.flatMap(asksOf).map((a) => a.grants).filter(Boolean))
+    expect(scenario.objectives.length).toBeGreaterThan(0)
+    for (const o of scenario.objectives) {
+      expect(o.title).toBeTruthy()
+      if (o.site) expect(urls.has(o.site)).toBe(true)
+      if (o.grant) expect(granted.has(o.grant)).toBe(true)
+      expect(Boolean(o.site) || Boolean(o.grant) || Boolean(o.cleared)).toBe(true)
+    }
+  })
+
+  it('counts nothing solved at the start and everything at the end', () => {
+    const fresh = { grants: {}, unlocked: {}, cleared: false }
+    expect(scenario.objectives.filter((o) => objectiveDone(o, fresh))).toEqual([])
+
+    const finished = {
+      cleared: true,
+      grants: Object.fromEntries(scenario.objectives.filter((o) => o.grant).map((o) => [o.grant, true])),
+      unlocked: Object.fromEntries(scenario.objectives.filter((o) => o.site).map((o) => [o.site, true]))
+    }
+    expect(scenario.objectives.every((o) => objectiveDone(o, finished))).toBe(true)
   })
 
   it('file ids are unique', () => {

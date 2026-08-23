@@ -4,6 +4,7 @@ import { APPS } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
+import Progress from './shell/Progress.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
@@ -112,6 +113,7 @@ export default function App() {
   return (
     <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
       <Desktop />
+      <Progress />
       <WindowLayer />
       <Toast />
       <Taskbar />

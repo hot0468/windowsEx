@@ -83,6 +83,8 @@ export const Sliders = (p) => (
   </S>
 )
 
+export const Check = (p) => <S {...p}><path d="M20 6L9 17l-5-5" /></S>
+
 export const ChevronDown = (p) => <S {...p}><path d="m6 9l6 6l6-6" /></S>
 
 export const ChevronUp = (p) => <S {...p}><path d="m18 15l-6-6l-6 6" /></S>
