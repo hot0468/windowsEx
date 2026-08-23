@@ -52,6 +52,18 @@ function WindowLayer() {
 
 export default function App() {
   const booted = useGame((s) => s.booted)
+
+  useEffect(() => {
+    if (!booted) return
+    const sc = useGame.getState().scenario
+    const timers = sc.messenger.map((m) =>
+      setTimeout(() => {
+        useGame.getState().deliverMessage()
+        useGame.getState().showToast({ from: m.from, text: m.text })
+      }, m.delay))
+    return () => timers.forEach(clearTimeout)
+  }, [booted])
+
   if (!booted) return <Boot />
   return (
     <div className="desktop">

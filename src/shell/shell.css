@@ -88,3 +88,15 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .wiki-lock input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font: inherit; }
 .pw-error { color: #c42b1c; font-size: 13px; }
 .site-body { white-space: pre-wrap; font-family: inherit; line-height: 1.7; margin-top: 12px; user-select: text; }
+
+/* messenger */
+.messenger { height: 100%; display: flex; flex-direction: column; background: #eef3f8; }
+.msg-list { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.bubble { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+.bubble b { display: block; font-size: 11px; color: #556; margin-bottom: 3px; }
+.bubble.them { align-self: flex-start; background: #fff; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.bubble.me { align-self: flex-end; background: #0067c0; color: #fff; border-top-right-radius: 4px; }
+.msg-empty { color: #99a; text-align: center; margin-top: 40px; }
+.quick { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #dde; }
+.quick button { flex: 1; padding: 8px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #cdd; font-size: 12px; }
+.quick button:hover { background: #e5f1fb; }
