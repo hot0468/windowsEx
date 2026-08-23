@@ -52,3 +52,19 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 /* clear overlay */
 .clear-overlay { position: absolute; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10,25,60,.88); backdrop-filter: blur(8px); color: #fff; text-align: center; padding: 24px; }
 .clear-overlay .big { font-size: 48px; }
+
+/* explorer */
+.explorer { display: flex; height: 100%; }
+.ex-side { width: 160px; border-right: 1px solid #eee; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.ex-folder { text-align: left; padding: 7px 10px; border-radius: 5px; }
+.ex-folder:hover { background: #f0f0f0; }
+.ex-folder.sel { background: #e5f1fb; }
+.ex-main { flex: 1; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+.ex-file { width: 96px; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; word-break: break-all; }
+.ex-file:hover { background: #e5f1fb; }
+.ex-file .glyph { font-size: 34px; }
+
+/* notepad */
+.notepad { height: 100%; display: flex; flex-direction: column; }
+.np-name { padding: 6px 12px; font-size: 12px; color: #666; border-bottom: 1px solid #eee; }
+.np-body { flex: 1; padding: 14px; font-family: Consolas, monospace; font-size: 13px; white-space: pre-wrap; overflow: auto; user-select: text; }
