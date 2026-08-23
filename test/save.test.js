@@ -23,7 +23,7 @@ const settle = () => new Promise((r) => setTimeout(r, 450))
 describe('save / load', () => {
   it('carries progress into the next session', async () => {
     const useGame = await freshStore()
-    useGame.setState({ wikiUnlocked: true, msgCount: 3, scratch: '입사일 0412', readMails: { mail_client: true } })
+    useGame.setState({ unlocked: { 'wiki.hanbit.co.kr': true }, msgCount: 3, scratch: '입사일 0412', readMails: { mail_client: true } })
     useGame.getState().openWindow('browser')
     useGame.getState().saveGame()
 
@@ -31,7 +31,7 @@ describe('save / load', () => {
     vi.resetModules()
     const next = (await freshStore()).getState()
 
-    expect(next.wikiUnlocked).toBe(true)
+    expect(next.unlocked['wiki.hanbit.co.kr']).toBe(true)
     expect(next.msgCount).toBe(3)
     expect(next.scratch).toBe('입사일 0412')
     expect(next.readMails).toEqual({ mail_client: true })
@@ -40,24 +40,24 @@ describe('save / load', () => {
 
   it('picks the autosave up again after a plain refresh', async () => {
     const useGame = await freshStore()
-    useGame.setState({ wikiUnlocked: true, scratch: '메모' })
+    useGame.setState({ unlocked: { 'wiki.hanbit.co.kr': true }, scratch: '메모' })
     await settle()
 
     vi.resetModules()
     const next = (await freshStore()).getState()
-    expect(next.wikiUnlocked).toBe(true)
+    expect(next.unlocked['wiki.hanbit.co.kr']).toBe(true)
     expect(next.scratch).toBe('메모')
   })
 
   it('drops the autosave when a new game starts', async () => {
     const useGame = await freshStore()
-    useGame.setState({ wikiUnlocked: true })
+    useGame.setState({ unlocked: { 'wiki.hanbit.co.kr': true } })
     await settle()
     globalThis.location = { reload() {} }
     useGame.getState().newGame()
 
     vi.resetModules()
-    expect((await freshStore()).getState().wikiUnlocked).toBe(false)
+    expect((await freshStore()).getState().unlocked).toEqual({})
   })
 
   it('prefers the explicit checkpoint over the autosave', async () => {
@@ -77,7 +77,7 @@ describe('save / load', () => {
     globalThis.sessionStorage.setItem('windowsEx.pendingLoad', '1')
     const state = (await freshStore()).getState()
 
-    expect(state.wikiUnlocked).toBe(false)
+    expect(state.unlocked).toEqual({})
     expect(state.windows).toEqual([])
   })
 

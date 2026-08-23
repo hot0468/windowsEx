@@ -287,6 +287,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .quick button { flex: 1; padding: 8px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #cdd; font-size: 12px; }
 .quick button:hover:not(:disabled) { background: #e5f1fb; }
 .quick button:disabled { opacity: .45; cursor: default; }
+.quick-done { flex: 1; align-self: center; text-align: center; color: #99a; font-size: 12px; }
 .quick-att { flex: 0 0 auto !important; display: flex; align-items: center; justify-content: center; width: 36px; color: #667; }
 .bubble.me.file { display: flex; align-items: center; gap: 7px; }
 

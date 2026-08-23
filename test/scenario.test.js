@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
-import { allFiles, entriesAt, fileOpener, searchSites } from '../src/engine/store.js'
+import { allFiles, entriesAt, fileOpener, quickSets, searchSites } from '../src/engine/store.js'
 import { fileImage } from '../src/assets/photos.js'
 
 const files = allFiles(scenario.fs)
@@ -18,8 +18,15 @@ describe('ep1 scenario integrity', () => {
   })
 
   it('the locked wiki still carries every keyword the reply needs', () => {
-    const wiki = JSON.stringify(scenario.sites.find((s) => s.password))
+    const wiki = JSON.stringify(scenario.sites.find((s) => s.layout === 'wiki'))
     for (const k of scenario.goal.requiredKeywords) expect(wiki).toContain(k)
+  })
+
+  it('both intranet sites are behind the company account', () => {
+    for (const site of scenario.sites) {
+      expect(site.login.password).toBeTruthy()
+      expect(site.login.hint).toBeTruthy()
+    }
   })
 
   it('every messenger thread has either live delivery or its own messages', () => {
@@ -52,7 +59,7 @@ describe('ep1 scenario integrity', () => {
 
   it('portal search finds a site by name', () => {
     expect(searchSites(scenario.sites, '위키').map((s) => s.url))
-      .toEqual([scenario.sites.find((s) => s.password).url])
+      .toEqual([scenario.sites.find((s) => s.layout === 'wiki').url])
   })
 
   it('portal search never leaks a locked page, keeping the password gate meaningful', () => {
@@ -90,11 +97,28 @@ describe('ep1 scenario integrity', () => {
   })
 
   it('the intranet portal never states what the puzzle makes you look up', () => {
-    const portal = JSON.stringify(scenario.sites.find((s) => s.layout === 'portal'))
-    const wiki = scenario.sites.find((s) => s.password)
+    // only the page body — credentials live outside it and are what gets checked
+    const portal = JSON.stringify(scenario.sites.find((s) => s.layout === 'portal').portal)
+    const wiki = scenario.sites.find((s) => s.layout === 'wiki')
     for (const keyword of scenario.goal.requiredKeywords) expect(portal).not.toContain(keyword)
-    expect(portal).not.toContain(wiki.password)
+    expect(portal).not.toContain(wiki.login.password)
     expect(portal).not.toContain('입사일')   // the hire date belongs on the ID card scan
+  })
+
+  it('offers every thread at least one usable set of reply choices', () => {
+    for (const t of threads) {
+      const sets = quickSets(t)
+      expect(sets.length).toBeGreaterThan(0)
+      for (const set of sets) {
+        expect(set.length).toBeGreaterThan(0)
+        for (const line of set) expect(typeof line).toBe('string')
+      }
+    }
+  })
+
+  it('walks the briefing thread through changing choices', () => {
+    const boss = threads.find((t) => t.live)
+    expect(quickSets(boss).length).toBeGreaterThan(1)
   })
 
   it('file ids are unique', () => {

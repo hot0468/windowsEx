@@ -6,23 +6,45 @@ import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.js
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
+function Login({ site, onOk }) {
+  const { idLabel, id, password, hint } = site.login
+  const [who, setWho] = useState('')
+  const [pw, setPw] = useState('')
+  const [bad, setBad] = useState(false)
+
+  const submit = () =>
+    (pw === password && (!id || who.trim().toUpperCase() === id) ? onOk() : setBad(true))
+  const onKey = (e) => e.key === 'Enter' && submit()
+
+  return (
+    <div className="wiki-lock">
+      <h2><Lock size={22} strokeWidth={1.8} /> {site.title}</h2>
+      <p>{hint}</p>
+      {id && (
+        <input value={who} onChange={(e) => setWho(e.target.value)} onKeyDown={onKey}
+               placeholder={idLabel} aria-label={idLabel} spellCheck={false} />
+      )}
+      <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={onKey}
+             placeholder="비밀번호" aria-label="비밀번호" />
+      <button className="btn-primary" onClick={submit}>로그인</button>
+      {bad && <p className="pw-error">로그인 정보가 올바르지 않습니다.</p>}
+    </div>
+  )
+}
+
 export default function Browser() {
   const scenario = useGame((s) => s.scenario)
-  const wikiUnlocked = useGame((s) => s.wikiUnlocked)
-  const unlockWiki = useGame((s) => s.unlockWiki)
+  const unlocked = useGame((s) => s.unlocked)
+  const unlockSite = useGame((s) => s.unlockSite)
   const [addr, setAddr] = useState('')
   const [page, setPage] = useState({ kind: 'home' })
   const [q, setQ] = useState('')
-  const [pw, setPw] = useState('')
-  const [pwError, setPwError] = useState(false)
   const [menu, setMenu] = useState(false)
 
   const open = (raw) => {
     const url = clean(raw)
     setAddr(url)
     setPage(url ? { kind: 'site', url } : { kind: 'home' })
-    setPw('')
-    setPwError(false)
     setMenu(false)
   }
 
@@ -33,7 +55,7 @@ export default function Browser() {
   }
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
-  const locked = Boolean(site?.password) && !wikiUnlocked
+  const locked = Boolean(site?.login) && !unlocked[site.url]
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
 
   return (
@@ -108,20 +130,7 @@ export default function Browser() {
           </div>
         )}
 
-        {locked && (
-          <div className="wiki-lock">
-            <h2><Lock size={22} strokeWidth={1.8} /> {site.title}</h2>
-            <p>{site.passwordHint}</p>
-            <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && (pw === site.password ? unlockWiki() : setPwError(true))}
-                   placeholder="비밀번호" aria-label="비밀번호" />
-            <button className="btn-primary"
-                    onClick={() => (pw === site.password ? unlockWiki() : setPwError(true))}>
-              로그인
-            </button>
-            {pwError && <p className="pw-error">비밀번호가 올바르지 않습니다.</p>}
-          </div>
-        )}
+        {locked && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
 
         {site && !locked && (
           site.layout === 'portal' ? <Portal site={site} />

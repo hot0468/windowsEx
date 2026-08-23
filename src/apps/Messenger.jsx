@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame, WORK_FOLDER, findFile } from '../engine/store.js'
+import { useGame, WORK_FOLDER, findFile, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, photoOf } from '../assets/photos.js'
@@ -7,9 +7,6 @@ import {
   BellOff, ChevronDown, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
-
-// Fallback only — each thread carries replies in the register that person expects.
-const QUICK = ['네, 알겠습니다', '감사합니다']
 
 const Avatar = ({ t, size }) => {
   const photo = photoOf(t.id)
@@ -53,6 +50,7 @@ export default function Messenger({ source }) {
   const [tab, setTab] = useState('friends')
   const [q, setQ] = useState('')
   const [picking, setPicking] = useState(false)
+  const [answeredAt, setAnsweredAt] = useState({})
   const pinned = useGame((s) => s.pinned)
 
   // A live thread's messages arrive on the scenario's timer; the rest are already there.
@@ -79,6 +77,18 @@ export default function Messenger({ source }) {
   const mine = thread ? replies[thread.id] ?? [] : []
   const say = (entry) =>
     setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), entry] }))
+  // One pick per batch of incoming messages: the choices go quiet until the
+  // other side says something new.
+  const arrived = thread ? msgsOf(thread).length : 0
+  const spent = thread && answeredAt[thread.id] >= arrived
+  const choices = thread
+    ? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
+    : []
+  const choose = (text) => {
+    say({ text })
+    setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
+  }
+
   const drop = useFileDrop((id) => {
     const file = findFile(fs, id)
     if (file && thread && !busy) say({ file: file.name })
@@ -186,9 +196,11 @@ export default function Messenger({ source }) {
                       onClick={() => setPicking(true)}>
                 <Paperclip size={16} strokeWidth={1.9} />
               </button>
-              {(thread.quick ?? QUICK).map((text) => (
-                <button key={text} disabled={busy} onClick={() => say({ text })}>{text}</button>
-              ))}
+              {spent
+                ? <span className="quick-done">답장을 보냈습니다</span>
+                : choices.map((text) => (
+                    <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
+                  ))}
             </div>
             {picking && (
               <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}

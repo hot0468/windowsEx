@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'wikiUnlocked', 'cleared', 'scratch']
+  'starred', 'pinned', 'unlocked', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -74,7 +74,7 @@ export const useGame = create((set, get) => ({
   seenThreads: restored?.seenThreads ?? {},
   typing: {},
   extraMails: restored?.extraMails ?? [],
-  wikiUnlocked: restored?.wikiUnlocked ?? false,
+  unlocked: restored?.unlocked ?? {},
   cleared: restored?.cleared ?? false,
   scratch: restored?.scratch ?? '',
 
@@ -160,7 +160,7 @@ export const useGame = create((set, get) => ({
   toggleStar: (id) => set((s) => ({ starred: { ...s.starred, [id]: !s.starred[id] } })),
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
-  unlockWiki: () => set({ wikiUnlocked: true }),
+  unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>
     set((s) => ({ openThread: { ...s.openThread, [source]: id } })),
@@ -215,6 +215,15 @@ export function allFiles(fs) {
     entries.forEach((e) => (e.children ? walk(e.children) : out.push(e)))
   Object.values(fs).forEach(walk)
   return out
+}
+
+// A thread's `quick` is one set of reply choices, or several used in order as the
+// conversation moves on. Normalising here keeps both shapes valid in the data.
+const FALLBACK_QUICK = ['네, 알겠습니다', '감사합니다']
+
+export function quickSets(thread) {
+  const q = thread.quick ?? FALLBACK_QUICK
+  return Array.isArray(q[0]) ? q : [q]
 }
 
 // Which app opens a file, decided by its name the way an OS does it.
