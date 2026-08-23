@@ -7,9 +7,10 @@ import Taskbar from './shell/Taskbar.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
-// How long the sender shows as "작성중…" before each scripted message lands.
-const TYPING_LEAD = 1500
 import { Info, LayoutGrid } from './icons/line.jsx'
+
+// How long the sender shows as "작성중…" before each scripted message lands.
+const TYPING_LEAD = 900
 
 function Boot() {
   const setBooted = useGame((s) => s.setBooted)
