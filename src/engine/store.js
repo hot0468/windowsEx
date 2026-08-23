@@ -65,6 +65,7 @@ export const useGame = create((set, get) => ({
   booted: false,
   toast: null,
   crashed: false,
+  locked: false,
   windows: restored?.windows ?? [],
   nextZ: restored?.nextZ ?? 10,
   msgCount: restored?.msgCount ?? 0,
@@ -178,7 +179,13 @@ export const useGame = create((set, get) => ({
     play('error')
     set({ crashed: true, toast: null })
   },
-  restart: () => set({ crashed: false, booted: false, windows: [], toast: null }),
+  restart: () => set({ crashed: false, booted: false, windows: [], toast: null, locked: false }),
+  // Windows keep running behind the lock screen; only the screen is covered.
+  lock: () => set({ locked: true, toast: null }),
+  unlock: () => {
+    play('ok')
+    set({ locked: false })
+  },
   reboot: () => {
     const s = get()
     const after = s.scenario.malware.aftermath

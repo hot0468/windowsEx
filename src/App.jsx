@@ -6,6 +6,7 @@ import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Progress from './shell/Progress.jsx'
 import Crash from './shell/Crash.jsx'
+import Lock from './shell/Lock.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
@@ -126,6 +127,36 @@ export default function App() {
   const done = dayDone(scenario, day, { grants, unlocked })
   const failed = useGame((s) => s.failed)
   const crashed = useGame((s) => s.crashed)
+  const locked = useGame((s) => s.locked)
+
+  // Ctrl+Alt+L locks on the spot; leaving the machine alone locks it too.
+  useEffect(() => {
+    if (!booted) return
+    const { idleMs } = useGame.getState().scenario.lock
+    let idle
+    const arm = () => {
+      clearTimeout(idle)
+      idle = setTimeout(() => {
+        const g = useGame.getState()
+        if (g.booted && !g.crashed && !g.locked) g.lock()
+      }, idleMs)
+    }
+    const onKey = (e) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault()
+        useGame.getState().lock()
+      }
+      arm()
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', arm)
+    arm()
+    return () => {
+      clearTimeout(idle)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', arm)
+    }
+  }, [booted])
 
   useEffect(() => {
     if (!booted) return
@@ -156,6 +187,7 @@ export default function App() {
       <WindowLayer />
       <Toast />
       <Taskbar />
+      {locked && <Lock />}
       {done && <QuitOverlay />}
       {failed && !done && <FailOverlay />}
     </div>

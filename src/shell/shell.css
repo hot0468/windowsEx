@@ -122,6 +122,18 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .clear-overlay .big { display: flex; }
 .clear-overlay.fail { background: rgba(48,14,14,.9); }
 .clear-overlay.quit { background: rgba(12,26,46,.92); }
+.lock { position: absolute; inset: 0; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; background: rgba(8,18,40,.78); backdrop-filter: blur(14px); color: #fff; }
+.lock-clock { text-align: center; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+.lock-time { font-size: 72px; font-weight: 300; line-height: 1; }
+.lock-date { margin-top: 10px; font-size: 18px; opacity: .85; }
+.lock-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lock-face { display: flex; align-items: center; justify-content: center; width: 88px; height: 88px; border-radius: 50%; background: rgba(255,255,255,.16); }
+.lock-name { font-size: 20px; font-weight: 600; }
+.lock-card input { width: 260px; padding: 9px 12px; border: 1px solid rgba(255,255,255,.4); border-radius: 3px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: 14px; outline: none; }
+.lock-card input:focus { border-color: #fff; }
+.lock-card input::placeholder { color: rgba(255,255,255,.6); }
+.lock-err { font-size: 12px; color: #ffb4a8; text-align: center; }
+.lock-err span { display: block; margin-top: 4px; color: rgba(255,255,255,.75); }
 .quit-day { color: #8fd0ff; font-size: 13px; }
 .quit-list { list-style: none; margin: 6px 0 4px; }
 .quit-list li { padding: 3px 0; color: rgba(255,255,255,.7); font-size: 12px; }

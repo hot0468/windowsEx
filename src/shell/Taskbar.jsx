@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useGame, savedAt } from '../engine/store.js'
 import { APPS } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
-import { FolderOpen, LayoutGrid, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
+import { FolderOpen, LayoutGrid, Lock, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
 import { isMuted, play, setMuted } from './sound.js'
 
 const when = (at) =>
@@ -22,6 +22,7 @@ export default function Taskbar() {
   const saveGame = useGame((s) => s.saveGame)
   const loadGame = useGame((s) => s.loadGame)
   const newGame = useGame((s) => s.newGame)
+  const lock = useGame((s) => s.lock)
   const [startOpen, setStartOpen] = useState(false)
   const [asking, setAsking] = useState(null)
   const [saved, setSaved] = useState(null)
@@ -72,6 +73,10 @@ export default function Taskbar() {
             </div>
           ) : (
             <div className="sm-list">
+              <button className="sm-item" onClick={() => { setStartOpen(false); lock() }}>
+                <Lock size={16} strokeWidth={1.8} />잠금
+                <span className="sm-when">Ctrl+Alt+L</span>
+              </button>
               <button className="sm-item" onClick={() => setAsking('new')}>
                 <RotateCcw size={16} strokeWidth={1.8} />새 게임
               </button>
