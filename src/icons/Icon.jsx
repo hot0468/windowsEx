@@ -7,11 +7,12 @@ import hwp from './hwp.svg'
 import image from './image.svg'
 import mail from './mail.svg'
 import notepad from './notepad.svg'
+import phone from './phone.svg'
 import trash from './trash.svg'
 import trophy from './trophy.svg'
 import workchat from './workchat.svg'
 
-const SRC = { chat, doc, folder, globe, hwp, image, mail, notepad, trash, trophy, workchat }
+const SRC = { chat, doc, folder, globe, hwp, image, mail, notepad, phone, trash, trophy, workchat }
 
 export default function Icon({ name, size = 16 }) {
   return <img className="icon" src={SRC[name]} width={size} height={size} alt="" draggable="false" />

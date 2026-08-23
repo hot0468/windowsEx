@@ -121,6 +121,21 @@ describe('ep1 scenario integrity', () => {
     expect(quickSets(boss).length).toBeGreaterThan(1)
   })
 
+  it('gives 지현 something to say about every photo you can send her', () => {
+    const jihyun = threads.find((t) => t.id === 'jihyun')
+    const known = new Set(files.map((f) => f.id))
+    for (const r of jihyun.reactions) {
+      expect(r.reply.length).toBeGreaterThan(0)
+      for (const id of r.files) expect(known.has(id)).toBe(true)
+    }
+  })
+
+  it('keeps the phone gallery reachable as its own drive', () => {
+    const gallery = entriesAt(scenario.fs, ['휴대폰', '갤러리'])
+    expect(gallery.length).toBeGreaterThan(0)
+    for (const photo of gallery) expect(fileImage(photo.image)).toBeTruthy()
+  })
+
   it('file ids are unique', () => {
     const ids = files.map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)

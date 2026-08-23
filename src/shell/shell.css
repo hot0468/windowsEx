@@ -303,6 +303,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .quick-done { flex: 1; align-self: center; text-align: center; color: #99a; font-size: 12px; }
 .quick-att { flex: 0 0 auto !important; display: flex; align-items: center; justify-content: center; width: 36px; color: #667; }
 .bubble.me.file { display: flex; align-items: center; gap: 7px; }
+.bubble.me.file:has(.bubble-img) { padding: 5px; }
+.bubble-img { display: block; width: 190px; max-width: 100%; border-radius: 9px; }
 
 /* mail */
 .mail-layout { display: flex; height: 100%; }

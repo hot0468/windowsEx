@@ -226,6 +226,9 @@ export function quickSets(thread) {
   return Array.isArray(q[0]) ? q : [q]
 }
 
+const ROOT_ICONS = { 휴지통: 'trash', 휴대폰: 'phone' }
+export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
+
 // Which app opens a file, decided by its name the way an OS does it.
 export const fileOpener = (file) =>
   file.image ? { app: 'viewer', icon: 'image' }

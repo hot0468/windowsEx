@@ -12,3 +12,10 @@
 - `avatars/jihyun.jpg` — John Ric  Cabatuan ([Pexels](https://www.pexels.com/photo/close-up-shot-of-woman-smiling-4967239/))
 - `avatars/mom.jpg` — Christine Blanchet ([Pexels](https://www.pexels.com/photo/elderly-woman-in-traditional-vietnamese-attire-36287434/))
 - `avatars/guesthouse.jpg` — DoDo PHANTHAMALY ([Pexels](https://www.pexels.com/photo/woman-picking-plant-on-field-916406/))
+
+## 게임 내 파일 이미지 (src/assets/files)
+
+- `cat1.webp` — 花 狸 ([Pexels](https://www.pexels.com))
+- `cat2.webp` — Reanimated Man X ([Pexels](https://www.pexels.com))
+- `gyul.webp` — Văn Long Bùi ([Pexels](https://www.pexels.com))
+- `idcard.webp` — 직접 제작

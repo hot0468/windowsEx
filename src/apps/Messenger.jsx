@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGame, WORK_FOLDER, findFile, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
-import { faceOf, photoOf } from '../assets/photos.js'
+import { faceOf, fileImage, photoOf } from '../assets/photos.js'
 import {
   BellOff, ChevronDown, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
@@ -44,6 +44,7 @@ export default function Messenger({ source }) {
   const setOpenThread = useGame((s) => s.setOpenThread)
   const seen = useGame((s) => s.seenThreads)
   const markThreadSeen = useGame((s) => s.markThreadSeen)
+  const setTyping = useGame((s) => s.setTyping)
   const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
@@ -51,6 +52,9 @@ export default function Messenger({ source }) {
   const [q, setQ] = useState('')
   const [picking, setPicking] = useState(false)
   const [answeredAt, setAnsweredAt] = useState({})
+  const [reacted, setReacted] = useState({})
+  const pending = useRef([])
+  const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
 
   // A live thread's messages arrive on the scenario's timer; the rest are already there.
@@ -89,9 +93,35 @@ export default function Messenger({ source }) {
     setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
   }
 
+  // Sending a photo can prompt a scripted reply — she writes for a beat first.
+  const sendFile = (file) => {
+    say({ file: file.name, image: file.image })
+    const hit = thread.reactions?.find((r) => r.files.includes(file.id))
+    if (!hit || reacted[file.id]) return
+    setReacted((r) => ({ ...r, [file.id]: true }))
+    const id = thread.id
+    const who = thread.name
+    typingFor.current = id
+    setTyping(id, true)
+    hit.reply.forEach((text, i) => {
+      pending.current.push(setTimeout(() => {
+        setReplies((r) => ({ ...r, [id]: [...(r[id] ?? []), { from: who, text }] }))
+        if (i === hit.reply.length - 1) {
+          setTyping(id, false)
+          typingFor.current = null
+        }
+      }, 1200 + i * 1500))
+    })
+  }
+
+  useEffect(() => () => {
+    pending.current.forEach(clearTimeout)
+    if (typingFor.current) setTyping(typingFor.current, false)
+  }, [])
+
   const drop = useFileDrop((id) => {
     const file = findFile(fs, id)
-    if (file && thread && !busy) say({ file: file.name })
+    if (file && thread && !busy) sendFile(file)
   })
 
   return (
@@ -179,11 +209,22 @@ export default function Messenger({ source }) {
                   </div>
                 )
               })}
-              {mine.map((sent, i) => (
-                <div key={'r' + i} className={'bubble me' + (sent.file ? ' file' : '')}>
-                  {sent.file ? <><Paperclip size={13} strokeWidth={2} />{sent.file}</> : sent.text}
+              {mine.map((sent, i) => (sent.from ? (
+                <div key={'r' + i} className="msg-row">
+                  <span className="msg-av"><Avatar t={thread} size={32} /></span>
+                  <div className="bubble them"><b>{sent.from}</b>{sent.text}</div>
                 </div>
-              ))}
+              ) : (
+                <div key={'r' + i} className={'bubble me' + (sent.file ? ' file' : '')}>
+                  {!sent.file && sent.text}
+                  {sent.file && sent.image && (
+                    <img className="bubble-img" src={fileImage(sent.image)} alt={sent.file} />
+                  )}
+                  {sent.file && !sent.image && (
+                    <><Paperclip size={13} strokeWidth={2} />{sent.file}</>
+                  )}
+                </div>
+              )))}
               {busy && (
                 <div className="msg-row">
                   <span className="msg-av"><Avatar t={thread} size={32} /></span>
@@ -204,7 +245,7 @@ export default function Messenger({ source }) {
             </div>
             {picking && (
               <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
-                          onPick={(f) => { say({ file: f.name }); setPicking(false) }}
+                          onPick={(f) => { sendFile(f); setPicking(false) }}
                           onClose={() => setPicking(false)} />
             )}
           </>

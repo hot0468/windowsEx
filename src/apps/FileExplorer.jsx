@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, WORK_FOLDER, entriesAt, fileOpener, fsWithPinned, searchFiles } from '../engine/store.js'
+import { useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
 import Icon from '../icons/Icon.jsx'
@@ -39,7 +39,7 @@ export default function FileExplorer({ startFolder }) {
         {roots.map((name) => (
           <button key={name} className={'ex-folder' + (nav.path[0] === name ? ' sel' : '')}
                   onClick={() => goTo([name])}>
-            <Icon name={name === '휴지통' ? 'trash' : 'folder'} size={17} />{name}
+            <Icon name={rootIcon(name)} size={17} />{name}
           </button>
         ))}
       </div>
