@@ -419,6 +419,8 @@ export function searchIn(items = [], q, fields) {
 export const searchBlogs = (blogs, q) => searchIn(blogs, q, ['title', 'excerpt', 'tags'])
 export const searchNews = (news, q) => searchIn(news, q, ['title', 'summary', 'tags', 'press'])
 export const searchQna = (qna, q) => searchIn(qna, q, ['q', 'a', 'tags'])
+export const searchCompanies = (list, q) =>
+  searchIn(list, q, ['name', 'en', 'field', 'tags'])
 
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.

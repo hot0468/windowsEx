@@ -389,6 +389,14 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pl-none { padding: 30px; }
 .place { cursor: pointer; }
 
+.firm { padding: 13px 14px; margin-bottom: 8px; border: 1px solid #eceef3; border-radius: 8px; }
+.firm-top { display: flex; align-items: baseline; gap: 8px; }
+.firm-name { color: #1a3fa8; font-size: 15px; }
+.firm-en { color: #aaa; font-size: 11px; }
+.firm-meta { margin-top: 6px; color: #666; font-size: 12px; }
+.firm-addr { margin-top: 5px; color: #3a8a55; font-size: 12px; }
+.firm-tel { margin-top: 4px; color: #888; font-size: 12px; }
+
 .news { padding: 12px 0; border-bottom: 1px solid #f2f3f7; cursor: pointer; }
 .news:last-child { border-bottom: none; }
 .news:hover .news-title { text-decoration: underline; }

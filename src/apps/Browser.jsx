@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, searchBlogs, searchNews, searchPlaces, searchQna, searchSites, siteView
+  useGame, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
+  searchSites, siteView
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
@@ -100,6 +101,7 @@ export default function Browser() {
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
   const articles = page.kind === 'search' ? searchNews(scenario.news, page.q) : []
   const answers = page.kind === 'search' ? searchQna(scenario.qna, page.q) : []
+  const firms = page.kind === 'search' ? searchCompanies(scenario.companies, page.q) : []
 
   return (
     <div className="browser">
@@ -161,7 +163,7 @@ export default function Browser() {
         {page.kind === 'search' && (
           <div className="results">
             <p className="results-head">
-              '{page.q}' 검색 결과 {spots.length + articles.length + answers.length + posts.length + hits.length}건
+              '{page.q}' 검색 결과 {spots.length + firms.length + articles.length + answers.length + posts.length + hits.length}건
             </p>
 
             {spots.length > 0 && (
@@ -184,6 +186,23 @@ export default function Browser() {
                     <div className="place-addr">{p.address}</div>
                     <div className="place-note">{p.note}</div>
                     </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {firms.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">기업정보</h3>
+                {firms.map((c) => (
+                  <div key={c.id} className="firm">
+                    <div className="firm-top">
+                      <span className="firm-name">{c.name}</span>
+                      <span className="firm-en">{c.en}</span>
+                    </div>
+                    <div className="firm-meta">{c.field} · {c.since}년 설립 · {c.size}</div>
+                    <div className="firm-addr">{c.address}</div>
+                    <div className="firm-tel">대표번호 {c.tel}</div>
                   </div>
                 ))}
               </section>
@@ -245,7 +264,7 @@ export default function Browser() {
               </section>
             )}
 
-            {spots.length + articles.length + answers.length + posts.length + hits.length === 0 && (
+            {spots.length + firms.length + articles.length + answers.length + posts.length + hits.length === 0 && (
               <p className="results-none">검색 결과가 없습니다.</p>
             )}
           </div>
