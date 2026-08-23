@@ -789,7 +789,8 @@
           {
             "id": "file_idcard",
             "name": "사원증_스캔.jpg",
-            "image": "idcard"
+            "image": "idcard",
+            "alt": "한빛상사 사원증 스캔본. 김한별, 영업1팀, 사번 HB-2104, 입사일 2021년 04월 12일."
           },
           {
             "id": "file_vacation",
@@ -891,17 +892,20 @@
           {
             "id": "file_cat1",
             "name": "IMG_2087.jpg",
-            "image": "cat1"
+            "image": "cat1",
+            "alt": "몸을 동그랗게 말고 자는 고양이 사진."
           },
           {
             "id": "file_cat2",
             "name": "IMG_2091.jpg",
-            "image": "cat2"
+            "image": "cat2",
+            "alt": "주황색 고양이를 가까이서 찍은 사진."
           },
           {
             "id": "file_gyul",
             "name": "IMG_2103.jpg",
-            "image": "gyul"
+            "image": "gyul",
+            "alt": "귤이 열린 밭 사진."
           }
         ]
       },
@@ -910,13 +914,15 @@
         "children": [
           {
             "id": "file_ticket",
-            "name": "탑승권_캡처.txt",
-            "content": "[모바일 탑승권 캡처]\n\n김포 → 제주\n2026-07-24 08:20\n좌석 21A\n\n(돌아오는 편 캡처는 어디 갔지)"
+            "name": "탑승권_캡처.jpg",
+            "image": "ticket",
+            "alt": "김포(GMP) → 제주(CJU) 탑승권. 2026-07-24 08:20 출발, 좌석 21A, KE1205."
           },
           {
             "id": "file_receipt",
-            "name": "영수증_0723.txt",
-            "content": "[영수증 캡처]\n\n역전할머니맥주 강남점\n2026-07-23 21:48\n\n생맥주 500  x4     16,000\n노가리          x2      8,000\n골뱅이무침      x1     14,000\n-----------------------------\n합계                  38,000\n\n(지현이랑 반씩 나눠 냄. 휴가 가기 전날)"
+            "name": "영수증_0723.jpg",
+            "image": "receipt",
+            "alt": "역전할머니맥주 강남점 영수증. 2026-07-23 21:48, 생맥주·노가리·골뱅이무침, 합계 38,000원."
           }
         ]
       }

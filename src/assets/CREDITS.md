@@ -19,6 +19,8 @@
 - `cat2.webp` — Reanimated Man X ([Pexels](https://www.pexels.com))
 - `gyul.webp` — Văn Long Bùi ([Pexels](https://www.pexels.com))
 - `idcard.webp` — 직접 제작
+- `receipt.webp` — 직접 제작
+- `ticket.webp` — 직접 제작
 
 ## 장소·블로그 사진 (src/assets/shots)
 

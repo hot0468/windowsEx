@@ -76,6 +76,12 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
+  it('describes every picture, so what it shows is not lost', () => {
+    for (const f of files.filter((f) => f.image)) {
+      expect(f.alt?.length).toBeGreaterThan(5)
+    }
+  })
+
   it('every file carries text, a picture, or slides', () => {
     for (const f of files) {
       expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides)).toBe(true)
@@ -158,6 +164,7 @@ describe('ep1 scenario integrity', () => {
   })
 
   it('makes every typed answer findable somewhere in the game', () => {
+    // a picture counts: its description says what the player can read off it
     const world = JSON.stringify({ files, sites: scenario.sites, network: scenario.network })
     const asks = threads.flatMap(asksOf)
     expect(asks.length).toBeGreaterThan(0)

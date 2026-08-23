@@ -21,7 +21,7 @@ export default function Viewer({ fileId }) {
         </button>
       </div>
       <div className="vw-canvas">
-        <img src={src} alt={file.name} style={{ width: `${ZOOMS[zoom] * 100}%` }} />
+        <img src={src} alt={file.alt ?? file.name} style={{ width: `${ZOOMS[zoom] * 100}%` }} />
       </div>
     </div>
   )
