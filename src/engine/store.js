@@ -150,6 +150,9 @@ export const useGame = create((set, get) => ({
     location.reload()
   },
 
+  resizeWindow: (id, rect) =>
+    set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, ...rect } : w)) })),
+
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
   setScratch: (scratch) => set({ scratch }),
@@ -217,6 +220,27 @@ export function entriesAt(fs, path) {
     (entries, name) => entries.find((e) => e.name === name)?.children ?? [],
     fs[path[0]] ?? []
   )
+}
+
+// Smallest a window may be dragged down to, in px.
+export const MIN_SIZE = { w: 360, h: 220 }
+
+// New rect for a resize drag. `dir` names the edges being pulled ('se', 'n', …).
+// Dragging a left or top edge moves the window's corner, but only by as much as
+// the window actually shrank — so it stops dead once it hits the minimum.
+export function resizeRect(start, dir, dx, dy, min = MIN_SIZE) {
+  const rect = { x: start.x, y: start.y, w: start.w, h: start.h }
+  if (dir.includes('e')) rect.w = Math.max(min.w, start.w + dx)
+  if (dir.includes('s')) rect.h = Math.max(min.h, start.h + dy)
+  if (dir.includes('w')) {
+    rect.w = Math.max(min.w, start.w - dx)
+    rect.x = start.x + (start.w - rect.w)
+  }
+  if (dir.includes('n')) {
+    rect.h = Math.max(min.h, start.h - dy)
+    rect.y = start.y + (start.h - rect.h)
+  }
+  return rect
 }
 
 // Pull a window up when its cascade offset would push its bottom past the taskbar,

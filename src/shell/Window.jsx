@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { useGame, fitY } from '../engine/store.js'
+import { useGame, fitY, resizeRect } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { Minus, Square, X } from '../icons/line.jsx'
 
 const TASKBAR = 48
+const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
 
 export default function Window({ win, title, icon, width = 640, height = 440, children }) {
   const focusWindow = useGame((s) => s.focusWindow)
@@ -11,10 +12,16 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
   const minimizeWindow = useGame((s) => s.minimizeWindow)
   const toggleMaximize = useGame((s) => s.toggleMaximize)
   const moveWindow = useGame((s) => s.moveWindow)
+  const resizeWindow = useGame((s) => s.resizeWindow)
   const drag = useRef(null)
+  const grab = useRef(null)
+
+  // A window keeps the app's default size until the player resizes it.
+  const w = win.w ?? width
+  const h = win.h ?? height
 
   useEffect(() => {
-    const y = fitY(win.y, height, window.innerHeight)
+    const y = fitY(win.y, h, window.innerHeight)
     if (y !== win.y) moveWindow(win.id, win.x, y)
   }, [])
 
@@ -29,12 +36,23 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
   }
   const onPointerUp = () => { drag.current = null }
 
+  const startResize = (dir) => (e) => {
+    grab.current = { dir, x0: e.clientX, y0: e.clientY, rect: { x: win.x, y: win.y, w, h } }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const onResizeMove = (e) => {
+    const g = grab.current
+    if (!g) return
+    resizeWindow(win.id, resizeRect(g.rect, g.dir, e.clientX - g.x0, e.clientY - g.y0))
+  }
+  const endResize = () => { grab.current = null }
+
   const style = win.maximized
     ? { left: 0, top: 0, width: '100%', height: `calc(100% - ${TASKBAR}px)`, zIndex: win.z }
     : {
         left: win.x, top: win.y, zIndex: win.z,
-        width: `min(${width}px, 100%)`,
-        height: `min(${height}px, calc(100% - ${TASKBAR}px))`
+        width: `min(${w}px, 100%)`,
+        height: `min(${h}px, calc(100% - ${TASKBAR}px))`
       }
 
   return (
@@ -51,6 +69,10 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
         </div>
       </div>
       <div className="win-body">{children}</div>
+      {!win.maximized && HANDLES.map((dir) => (
+        <span key={dir} className={`rz rz-${dir}`} onPointerDown={startResize(dir)}
+              onPointerMove={onResizeMove} onPointerUp={endResize} />
+      ))}
     </div>
   )
 }
