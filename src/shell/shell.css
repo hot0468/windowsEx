@@ -389,6 +389,41 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pl-none { padding: 30px; }
 .place { cursor: pointer; }
 
+/* hwp with nothing installed to open it */
+.hwp-missing { display: flex; align-items: center; justify-content: center;
+  height: 100%; padding: 24px; background: #f3f3f3; }
+.hwp-missing-card { max-width: 400px; text-align: center; }
+.hwp-missing-file { display: inline-block; max-width: 100%; margin-bottom: 16px;
+  padding: 7px 13px; background: #fff; border: 1px solid #dcdcdc; border-radius: 6px;
+  color: #444; font-size: 12px; word-break: break-all; }
+.hwp-missing-card h2 { margin: 0 0 12px; color: #222; font-size: 17px; font-weight: 600; }
+.hwp-missing-card p { margin: 0 0 7px; color: #555; font-size: 13px; line-height: 1.7; }
+.hwp-missing-code { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e2e2;
+  color: #999; font-size: 11px; font-family: Consolas, monospace; }
+
+/* setup wizard */
+.ins { display: flex; flex-direction: column; height: 100%; background: #fff; }
+.ins-head { display: flex; align-items: baseline; gap: 9px;
+  padding: 13px 18px; background: linear-gradient(180deg, #1f5aa8, #17457f); color: #fff; }
+.ins-product { font-size: 14px; font-weight: 600; }
+.ins-pub { color: #c8dcf3; font-size: 11px; }
+.ins-panel { flex: 1; display: flex; flex-direction: column; padding: 22px 24px; }
+.ins-panel.stop .ins-title { color: #b3261e; }
+.ins-panel.ok .ins-title { color: #1a7a3c; }
+.ins-title { margin: 0 0 13px; font-size: 16px; font-weight: 600; }
+.ins-line { margin: 0 0 7px; color: #444; font-size: 13px; line-height: 1.7; }
+.ins-code { margin-top: 14px; padding: 9px 12px; background: #f6f6f6; border-radius: 5px;
+  color: #888; font-size: 11px; font-family: Consolas, monospace; }
+.ins-meta { margin: 16px 0 0; display: grid; gap: 7px; }
+.ins-meta > div { display: flex; gap: 10px; font-size: 12px; }
+.ins-meta dt { width: 68px; color: #888; }
+.ins-meta dd { margin: 0; color: #333; }
+.ins-bar { margin-top: 18px; height: 8px; background: #e6e6e6; border-radius: 4px; overflow: hidden; }
+.ins-bar i { display: block; height: 100%; background: #1f5aa8; border-radius: 4px;
+  transition: width .5s ease; }
+.ins-pct { margin-top: 8px; color: #666; font-size: 12px; text-align: right; }
+.ins-foot { margin-top: auto; padding-top: 18px; display: flex; gap: 8px; justify-content: flex-end; }
+
 .dict { padding: 13px 14px; margin-bottom: 8px; background: #f8f9fc; border-radius: 8px; }
 .dict-top { display: flex; align-items: baseline; gap: 8px; }
 .dict-word { color: #1a3fa8; font-size: 15px; }

@@ -67,7 +67,7 @@ function WindowLayer() {
     return (
       <Window key={win.id} win={win} title={cfg.title} icon={cfg.icon}
               width={cfg.w} height={cfg.h} theme={cfg.theme}>
-        <C {...win.props} />
+        <C {...win.props} winId={win.id} />
       </Window>
     )
   })

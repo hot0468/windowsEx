@@ -5,9 +5,25 @@ const ZOOMS = [100, 125, 150]
 
 export default function Hwp({ fileId }) {
   const fs = useGame((s) => s.scenario.fs)
+  const spec = useGame((s) => s.scenario.hangul)
+  const installed = useGame((s) => Boolean(s.grants.hangul))
   const [zoom, setZoom] = useState(0)
   const file = findFile(fs, fileId)
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
+
+  // Windows can name the file it cannot open, and nothing else about it.
+  if (!installed) {
+    return (
+      <div className="hwp-missing">
+        <div className="hwp-missing-card">
+          <div className="hwp-missing-file">{file.name}</div>
+          <h2>{spec.missing.title}</h2>
+          {spec.missing.lines.map((line) => <p key={line}>{line}</p>)}
+          <div className="hwp-missing-code">{spec.missing.code}</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="hwp">

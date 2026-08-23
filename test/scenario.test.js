@@ -128,13 +128,14 @@ describe('scenario integrity', () => {
     expect(apps['견적서_최종_진짜최종.hwp']).toBe('hwp')
     expect(apps['휴가신청서_사본.hwp']).toBe('hwp')
     expect(apps['메모.txt']).toBe('notepad')
+    expect(apps['한글2024_설치.exe']).toBe('installer')
     expect(apps['사원증_스캔.jpg']).toBe('viewer')
   })
 
   it('every paperwork file is .hwp and every scribble .txt', () => {
     for (const f of files) {
       if (f.image) continue
-      expect(f.name).toMatch(/\.(hwp|txt|pptx|xlsx)$/)
+      expect(f.name).toMatch(/\.(hwp|txt|pptx|xlsx|exe)$/)
     }
   })
 

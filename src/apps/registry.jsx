@@ -8,6 +8,7 @@ import Hwp from './Hwp.jsx'
 import Cmd from './Cmd.jsx'
 import Slides from './Slides.jsx'
 import Sheet from './Sheet.jsx'
+import Installer from './Installer.jsx'
 
 const WorkMessenger = () => <Messenger source="workMessenger" />
 const PrivateMessenger = () => <Messenger source="privateMessenger" />
@@ -23,5 +24,6 @@ export const APPS = {
   slides: { title: '슬라이드', icon: 'ppt', comp: Slides, w: 760, h: 520, theme: '#c43e1c' },
   sheet: { title: '시트', icon: 'xls', comp: Sheet, w: 780, h: 520, theme: '#217346' },
   browser: { title: '브라우저', icon: 'globe', comp: Browser, w: 820, h: 560 },
+  installer: { title: '설치 마법사', icon: 'cmd', comp: Installer, w: 560, h: 400 },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' }
 }

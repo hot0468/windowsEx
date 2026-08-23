@@ -144,6 +144,7 @@ export default function Messenger({ source }) {
     if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
     if (hit.next) setBranch((b) => ({ ...b, [thread.id]: hit.next }))
     if (hit.ask) setAsk(thread.id, hit.ask)
+    if (hit.grants) grant(hit.grants)
     speak(hit.reply)
   }
 
