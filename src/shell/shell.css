@@ -2,6 +2,19 @@
 html, body, #root { height: 100%; overflow: hidden; }
 body { font-family: 'Segoe UI', 'Segoe UI Variable', 'Malgun Gothic', sans-serif; font-size: 14px; user-select: none; }
 button { font: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+
+/* scrollbars: thin, rounded, out of the way until you look for them */
+* { scrollbar-width: thin; scrollbar-color: #c3c8d4 transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c3c8d4; border: 3px solid transparent; border-radius: 8px; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #a2a9ba; background-clip: content-box; }
+::-webkit-scrollbar-thumb:active { background: #8a92a6; background-clip: content-box; }
+/* dark surfaces need the opposite contrast */
+.cmd-out, .vw-canvas, .hwp-canvas { scrollbar-color: #5c6070 transparent; }
+.cmd-out::-webkit-scrollbar-thumb, .vw-canvas::-webkit-scrollbar-thumb, .hwp-canvas::-webkit-scrollbar-thumb { background: #5c6070; background-clip: content-box; }
+.cmd-out::-webkit-scrollbar-thumb:hover, .vw-canvas::-webkit-scrollbar-thumb:hover, .hwp-canvas::-webkit-scrollbar-thumb:hover { background: #767c8e; background-clip: content-box; }
 .btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 5px; background: #0067c0; color: #fff; }
 .btn-primary:hover { background: #1976d2; }
 

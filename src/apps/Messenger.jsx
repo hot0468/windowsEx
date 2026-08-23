@@ -58,6 +58,8 @@ export default function Messenger({ source }) {
   const [branch, setBranch] = useState({})
   const [asks, setAsks] = useState({})
   const [draft, setDraft] = useState('')
+  const list = useRef(null)
+  const stick = useRef(true)
   const pending = useRef([])
   const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
@@ -76,6 +78,20 @@ export default function Messenger({ source }) {
     const t = threads.find((x) => x.id === openId)
     if (t) markThreadSeen(t.id, msgsOf(t).length)
   }, [openId, msgCount])
+
+  // Follow new messages down, but don't yank the view away from someone who has
+  // scrolled up to re-read something.
+  const toBottom = () => {
+    if (list.current) list.current.scrollTop = list.current.scrollHeight
+  }
+  const onScroll = () => {
+    const el = list.current
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  }
+  useEffect(() => {
+    stick.current = true
+    toBottom()
+  }, [openId])
 
   const row = (t, preview) => (
     <Row key={t.id} t={t} preview={preview} unread={unreadOf(t)}
@@ -160,6 +176,10 @@ export default function Messenger({ source }) {
   }, [])
 
   // A drop is easy to do by accident and sending can't be undone, so it asks first.
+  useEffect(() => {
+    if (stick.current) toBottom()
+  }, [thread ? msgsOf(thread).length : 0, mine.length, busy])
+
   const drop = useFileDrop((id) => {
     const file = findFile(fs, id)
     if (file && thread && !busy) setConfirming(file)
@@ -236,7 +256,7 @@ export default function Messenger({ source }) {
                 <div className="mg-chat-sub">{thread.sub}</div>
               </div>
             </div>
-            <div className="msg-list">
+            <div className="msg-list" ref={list} onScroll={onScroll}>
               {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
               {msgsOf(thread).map((msg, i, all) => {
                 if (msg.me) return <div key={i} className="bubble me">{msg.text}</div>
