@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '../engine/store.js'
+import { avatarOf } from '../assets/photos.js'
 import {
   BellOff, ChevronDown, MessageSquare,
   Search, Settings, Sliders, UserPlus, Users
@@ -7,13 +8,16 @@ import {
 
 const QUICK = ['넵, 확인하겠습니다!', '감사합니다 🙇']
 
-const Avatar = ({ t, size }) => (
-  <span className={'mg-av' + (t.room ? ' room' : '')}
-        style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
-    {t.name[0]}
-    {t.online && <i className="mg-dot" />}
-  </span>
-)
+const Avatar = ({ t, size }) => {
+  const photo = avatarOf(t.id)
+  return (
+    <span className={'mg-av' + (t.room ? ' room' : '')}
+          style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
+      {photo ? <img src={photo} alt="" draggable="false" /> : t.name[0]}
+      {t.online && <i className="mg-dot" />}
+    </span>
+  )
+}
 
 const Row = ({ t, preview, unread, selected, onOpen }) => (
   <button className={'mg-row' + (selected ? ' sel' : '')} onClick={onOpen}>
@@ -88,7 +92,7 @@ export default function Messenger({ source }) {
 
         <div className="mg-list">
           <div className="mg-me">
-            <Avatar t={{ name: m.me.name, color: m.me.color, online: true }} size={42} />
+            <Avatar t={{ id: 'me', name: m.me.name, color: m.me.color, online: true }} size={42} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>
               <span className="mg-row-sub">{m.me.sub}</span>

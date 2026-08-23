@@ -5,6 +5,7 @@ import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Icon from './icons/Icon.jsx'
+import { wallpaper } from './assets/photos.js'
 import { LayoutGrid } from './icons/line.jsx'
 
 function Boot() {
@@ -85,7 +86,7 @@ export default function App() {
 
   if (!booted) return <Boot />
   return (
-    <div className="desktop">
+    <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
       <Desktop />
       <WindowLayer />
       <Toast />
