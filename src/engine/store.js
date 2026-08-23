@@ -185,7 +185,16 @@ export const useGame = create((set, get) => ({
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
-  grant: (key) => set((s) => ({ grants: { ...s.grants, [key]: true } })),
+  grant: (key) => {
+    set((s) => ({ grants: { ...s.grants, [key]: true } }))
+    // some mail only shows up once the player has got somewhere
+    const mw = get().scenario.malware
+    if (mw.after !== key || get().extraMails.some((m) => m.id === mw.mail.id)) return
+    setTimeout(() => {
+      set((s) => ({ extraMails: [...s.extraMails, mw.mail] }))
+      get().showToast({ from: mw.mail.from, text: mw.notice, app: 'mail' })
+    }, mw.delay)
+  },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details } })),
   pushMessage: (threadId, msg) =>
