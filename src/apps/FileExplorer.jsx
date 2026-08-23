@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useGame } from '../engine/store.js'
 
-export default function FileExplorer() {
+export default function FileExplorer({ startFolder }) {
   const scenario = useGame((s) => s.scenario)
   const openWindow = useGame((s) => s.openWindow)
   const folders = Object.keys(scenario.fs)
-  const [folder, setFolder] = useState(folders[0])
+  const [folder, setFolder] = useState(startFolder ?? folders[0])
   return (
     <div className="explorer">
       <div className="ex-side">

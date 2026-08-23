@@ -24,7 +24,7 @@ export const useGame = create((set, get) => ({
 
   openWindow: (app, props = {}) =>
     set((s) => {
-      const key = app + (props.fileId ?? '')
+      const key = app + JSON.stringify(props)
       const existing = s.windows.find((w) => w.key === key)
       if (existing) {
         return {

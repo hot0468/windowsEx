@@ -23,6 +23,14 @@ describe('window management', () => {
     expect(useGame.getState().windows).toHaveLength(2)
   })
 
+  it('explorer windows for different start folders are separate', () => {
+    useGame.getState().openWindow('explorer', { startFolder: '문서' })
+    useGame.getState().openWindow('explorer', { startFolder: '휴지통' })
+    expect(useGame.getState().windows).toHaveLength(2)
+    useGame.getState().openWindow('explorer', { startFolder: '문서' })
+    expect(useGame.getState().windows).toHaveLength(2)
+  })
+
   it('focus unminimizes and raises z', () => {
     useGame.getState().openWindow('mail')
     const id = useGame.getState().windows[0].id
