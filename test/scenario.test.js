@@ -32,7 +32,7 @@ describe('scenario integrity', () => {
   })
 
   it('both intranet sites are behind the company account', () => {
-    for (const site of scenario.sites) {
+    for (const site of scenario.sites.filter((s) => s.login)) {
       expect(site.login.password).toBeTruthy()
       expect(site.login.hint).toBeTruthy()
     }
@@ -208,7 +208,7 @@ describe('scenario integrity', () => {
   })
 
   it('gates the intranet on an IP approval exactly one thread can grant', () => {
-    for (const site of scenario.sites) expect(site.requiresIp).toBe(true)
+    for (const site of scenario.sites.filter((s) => s.login)) expect(site.requiresIp).toBe(true)
     const granting = threads.flatMap(asksOf).filter((a) => a.grants === 'ip')
     expect(granting).toHaveLength(1)
     expect(granting[0].accept).toContain(scenario.network.ip)

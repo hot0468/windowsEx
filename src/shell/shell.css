@@ -332,6 +332,31 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pt-foot { padding: 22px 20px 26px; border-top: 1px solid #e2e6f0; color: #98a0b8; font-size: 11px; line-height: 1.9; }
 .pt-foot-name { color: #6a7590; }
 
+/* 퇴근길 — outside community board */
+.bd { min-height: 100%; background: #f7f7f9; font-size: 12px; }
+.bd-top { display: flex; align-items: baseline; gap: 10px; padding: 14px 20px; background: #fff; border-bottom: 1px solid #e8e8ee; }
+.bd-logo { padding: 0; background: none; font-size: 17px; font-weight: 800; color: #e9542f; }
+.bd-tag { color: #999; font-size: 11px; }
+.bd-list { max-width: 680px; margin: 12px auto; background: #fff; border: 1px solid #e8e8ee; border-radius: 8px; overflow: hidden; }
+.bd-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-bottom: 1px solid #f0f0f4; background: none; text-align: left; font: inherit; }
+.bd-row:last-child { border-bottom: none; }
+.bd-row:hover { background: #fafafc; }
+.bd-co { flex-shrink: 0; padding: 2px 7px; border-radius: 4px; background: #fff0eb; color: #e9542f; font-size: 10px; }
+.bd-title { flex: 1; min-width: 0; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bd-n { display: flex; align-items: center; gap: 3px; color: #999; font-size: 11px; }
+.bd-time { color: #bbb; font-size: 11px; white-space: nowrap; }
+.bd-post { max-width: 680px; margin: 12px auto 30px; padding: 20px 24px; background: #fff; border: 1px solid #e8e8ee; border-radius: 8px; }
+.bd-back { display: flex; align-items: center; gap: 2px; padding: 0; background: none; color: #888; font: inherit; }
+.bd-back:hover { color: #e9542f; }
+.bd-post h1 { margin: 10px 0 6px; font-size: 17px; color: #222; line-height: 1.5; }
+.bd-meta { display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #eee; color: #999; font-size: 11px; }
+.bd-likes { display: flex; align-items: center; gap: 3px; margin-left: auto; color: #e9542f; }
+.bd-post p { margin-top: 12px; color: #333; font-size: 13px; line-height: 1.9; user-select: text; }
+.bd-cm-head { margin: 22px 0 8px; font-weight: 600; color: #444; }
+.bd-cm { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-top: 1px solid #f0f0f4; }
+.bd-cm-who { flex-shrink: 0; color: #e9542f; font-size: 11px; }
+.bd-cm-text { flex: 1; color: #333; line-height: 1.6; user-select: text; }
+
 /* search results */
 .results { max-width: 620px; margin: 0 auto; }
 .results-head { margin-bottom: 16px; color: #888; font-size: 12px; }

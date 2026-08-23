@@ -6,6 +6,7 @@ import {
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
+import Board from './Board.jsx'
 import { ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
@@ -346,6 +347,7 @@ export default function Browser() {
         {view === 'ready' && (
           site.layout === 'portal' ? <Portal site={site} />
             : site.layout === 'wiki' ? <Wiki site={site} />
+              : site.layout === 'board' ? <Board site={site} />
               : (
                 <div className="site">
                   <h2>{site.title}</h2>
