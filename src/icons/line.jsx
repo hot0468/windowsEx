@@ -144,6 +144,28 @@ export const Info = (p) => (
   </S>
 )
 
+export const Bold = (p) => <S {...p}><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" /></S>
+
+export const Italic = (p) => <S {...p}><path d="M19 4h-9m4 16H5M15 4L9 20" /></S>
+
+export const Underline = (p) => <S {...p}><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16" /></S>
+
+export const Strikethrough = (p) => (
+  <S {...p}><path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6m-2-8h16" /></S>
+)
+
+export const List = (p) => (
+  <S {...p}><path d="M3 5h.01M3 12h.01M3 19h.01M8 5h13M8 12h13M8 19h13" /></S>
+)
+
+export const AlignLeft = (p) => <S {...p}><path d="M15 12H3m14 6H3M21 6H3" /></S>
+
+export const AlignCenter = (p) => <S {...p}><path d="M17 12H7m12 6H5M21 6H3" /></S>
+
+export const ClearFormat = (p) => (
+  <S {...p}><path d="M4 7V4h16v3M5 20h6m2-16L8 20m7-5l5 5m0-5l-5 5" /></S>
+)
+
 export const Send = (p) => (
   <S {...p}>
     <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11zm7.318-19.539l-10.94 10.939" />

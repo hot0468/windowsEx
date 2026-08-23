@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useGame, allFiles } from '../engine/store.js'
-import { Paperclip, Reply, Send } from '../icons/line.jsx'
+import { useGame } from '../engine/store.js'
+import Compose from './Compose.jsx'
+import { Reply, Send } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
@@ -10,8 +11,6 @@ export default function Mail() {
   const sendReply = useGame((s) => s.sendReply)
   const [selected, setSelected] = useState(null)
   const [composing, setComposing] = useState(false)
-  const [body, setBody] = useState('')
-  const [att, setAtt] = useState('')
   const [sent, setSent] = useState(false)
 
   const mails = [...scenario.mails, ...extraMails]
@@ -23,12 +22,15 @@ export default function Mail() {
     setSent(false)
     markMailRead(m.id)
   }
-  const send = () => {
-    sendReply({ attachmentId: att || null, body })
+  const send = (draft) => {
+    sendReply(draft)
     setSent(true)
     setComposing(false)
-    setBody('')
-    setAtt('')
+  }
+
+  // Composing takes over the window, the way webmail does.
+  if (mail && composing) {
+    return <Compose mail={mail} onSend={send} onCancel={() => setComposing(false)} />
   }
 
   return (
@@ -62,24 +64,6 @@ export default function Mail() {
               </button>
             )}
           </>
-        )}
-        {mail && composing && (
-          <div className="compose">
-            <div className="md-meta">받는 사람: {mail.from}</div>
-            <div className="md-meta">제목: RE: {mail.subject}</div>
-            <textarea value={body} onChange={(e) => setBody(e.target.value)}
-                      placeholder="본문을 입력하세요" aria-label="메일 본문" />
-            <div className="compose-row">
-              <Paperclip size={16} strokeWidth={1.8} />
-              <select value={att} onChange={(e) => setAtt(e.target.value)} aria-label="첨부 파일 선택">
-                <option value="">첨부 없음</option>
-                {allFiles(scenario.fs).map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-              <button className="btn-primary" onClick={send}>보내기</button>
-            </div>
-          </div>
         )}
       </div>
     </div>
