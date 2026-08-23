@@ -1,17 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { useGame } from '../engine/store.js'
+import { useGame, fitY } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { Minus, Square, X } from '../icons/line.jsx'
 
 const TASKBAR = 48
-
-// Pull a window up when its cascade offset would push its bottom past the taskbar,
-// so a tall window opens anchored to the top instead of hanging off a short screen.
-export function fitY(y, height, viewportH, taskbar = TASKBAR) {
-  const avail = viewportH - taskbar
-  const shown = Math.min(height, avail)
-  return y + shown > avail ? Math.max(0, avail - shown) : y
-}
 
 export default function Window({ win, title, icon, width = 640, height = 440, children }) {
   const focusWindow = useGame((s) => s.focusWindow)

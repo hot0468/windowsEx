@@ -102,3 +102,11 @@ export function findFile(fs, fileId) {
 export function allFiles(fs) {
   return Object.values(fs).flat()
 }
+
+// Pull a window up when its cascade offset would push its bottom past the taskbar,
+// so a tall window opens anchored to the top instead of hanging off a short screen.
+export function fitY(y, height, viewportH, taskbar = 48) {
+  const avail = viewportH - taskbar
+  const shown = Math.min(height, avail)
+  return y + shown > avail ? Math.max(0, avail - shown) : y
+}

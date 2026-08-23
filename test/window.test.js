@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitY } from '../src/shell/Window.jsx'
+import { fitY } from '../src/engine/store.js'
 
 // viewportH 900 → 852 usable above the 48px taskbar
 describe('fitY', () => {
