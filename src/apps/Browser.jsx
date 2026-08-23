@@ -10,24 +10,45 @@ function Login({ site, onOk }) {
   const { idLabel, id, password, hint } = site.login
   const [who, setWho] = useState('')
   const [pw, setPw] = useState('')
-  const [bad, setBad] = useState(false)
+  const [misses, setMisses] = useState(0)
+  const [asked, setAsked] = useState(false)
 
   const submit = () =>
-    (pw === password && (!id || who.trim().toUpperCase() === id) ? onOk() : setBad(true))
+    (pw === password && (!id || who.trim().toUpperCase() === id)
+      ? onOk()
+      : setMisses((n) => n + 1))
   const onKey = (e) => e.key === 'Enter' && submit()
+  // Shown on request, and offered unprompted once someone is clearly stuck.
+  const showHint = asked || misses >= 2
 
   return (
-    <div className="wiki-lock">
-      <h2><Lock size={22} strokeWidth={1.8} /> {site.title}</h2>
-      <p>{hint}</p>
-      {id && (
-        <input value={who} onChange={(e) => setWho(e.target.value)} onKeyDown={onKey}
-               placeholder={idLabel} aria-label={idLabel} spellCheck={false} />
-      )}
-      <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={onKey}
-             placeholder="비밀번호" aria-label="비밀번호" />
-      <button className="btn-primary" onClick={submit}>로그인</button>
-      {bad && <p className="pw-error">로그인 정보가 올바르지 않습니다.</p>}
+    <div className="lg">
+      <div className="lg-hero">
+        <h1>로그인</h1>
+        <p>{site.title}에 오신 것을 환영합니다.</p>
+      </div>
+
+      <div className="lg-card">
+        {id && (
+          <label className="lg-field">
+            <span>{idLabel}</span>
+            <input value={who} onChange={(e) => setWho(e.target.value)} onKeyDown={onKey}
+                   placeholder={`${idLabel}를 입력해주세요.`} spellCheck={false} />
+          </label>
+        )}
+        <label className="lg-field">
+          <span>비밀번호</span>
+          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
+                 onKeyDown={onKey} placeholder="비밀번호를 입력해주세요." />
+        </label>
+
+        <button className="lg-forgot" onClick={() => setAsked(true)}>비밀번호를 잊으셨나요?</button>
+        {showHint && <p className="lg-hint"><Lock size={13} strokeWidth={2} />{hint}</p>}
+        {misses > 0 && <p className="pw-error">로그인 정보가 올바르지 않습니다.</p>}
+
+        <button className="lg-submit" onClick={submit}>로그인</button>
+        <p className="lg-foot">계정 문의: 정보전략팀 내선 1234</p>
+      </div>
     </div>
   )
 }
@@ -95,7 +116,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + (site && !locked && site.layout ? ' bleed' : '')}>
+      <div className={'page' + (site && (locked || site.layout) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>

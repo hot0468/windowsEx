@@ -265,10 +265,23 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .bw-pop-date { color: #aaa; font-size: 11px; flex-shrink: 0; }
 .site-error { text-align: center; padding-top: 60px; color: #444; }
 .err-code { color: #999; font-size: 12px; margin-top: 8px; }
-.wiki-lock { max-width: 340px; margin: 60px auto 0; text-align: center; display: flex; flex-direction: column; gap: 10px; }
-.wiki-lock h2 { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.wiki-lock input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font: inherit; }
-.pw-error { color: #c42b1c; font-size: 13px; }
+/* intranet login */
+.lg { min-height: 100%; background: #f4f5f9; }
+.lg-hero { padding: 42px 20px 96px; text-align: center; color: #fff; background: #4a5ee0 radial-gradient(circle at 18% 30%, rgba(255,255,255,.14) 2px, transparent 2px) 0 0/38px 38px; }
+.lg-hero h1 { font-size: 26px; letter-spacing: 4px; }
+.lg-hero p { margin-top: 10px; font-size: 12px; opacity: .8; }
+.lg-card { width: min(360px, 88%); margin: -70px auto 40px; padding: 32px 30px 24px; border-radius: 4px; background: #fff; box-shadow: 0 10px 34px rgba(40,50,110,.16); }
+.lg-field { display: block; margin-bottom: 18px; }
+.lg-field span { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; color: #333; }
+.lg-field input { width: 100%; padding: 11px 13px; border: 1px solid #dfe1ea; border-radius: 3px; font: inherit; font-size: 13px; outline: none; }
+.lg-field input:focus { border-color: #4a5ee0; }
+.lg-forgot { display: block; margin: -8px 0 16px; color: #7b83a8; font-size: 12px; }
+.lg-forgot:hover { color: #4a5ee0; text-decoration: underline; }
+.lg-hint { display: flex; align-items: center; gap: 7px; padding: 10px 12px; margin-bottom: 14px; border-radius: 4px; background: #eef1fc; color: #3c4a9e; font-size: 12px; line-height: 1.6; }
+.lg-submit { width: 100%; padding: 13px; border-radius: 3px; background: #4a5ee0; color: #fff; font-size: 14px; }
+.lg-submit:hover { background: #3b4ecb; }
+.lg-foot { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f1f5; text-align: center; color: #aab; font-size: 11px; }
+.pw-error { margin-bottom: 12px; color: #c42b1c; font-size: 12px; }
 .site-body { white-space: pre-wrap; font-family: inherit; line-height: 1.7; margin-top: 12px; user-select: text; }
 
 /* messenger */
