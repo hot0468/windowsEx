@@ -1,4 +1,4 @@
-import { useGame } from '../engine/store.js'
+import { useGame, fsWithPinned } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 
 const SHORTCUTS = [
@@ -13,7 +13,9 @@ const SHORTCUTS = [
 
 export default function Desktop() {
   const scenario = useGame((s) => s.scenario)
+  const pinned = useGame((s) => s.pinned)
   const openWindow = useGame((s) => s.openWindow)
+  const desktop = fsWithPinned(scenario.fs, pinned)['바탕화면']
   return (
     <div className="desktop-icons">
       {SHORTCUTS.map((s) => (
@@ -22,12 +24,18 @@ export default function Desktop() {
           <div className="glyph"><Icon name={s.icon} size={38} /></div>{s.label}
         </button>
       ))}
-      {scenario.fs['바탕화면'].map((f) => (
-        <button key={f.id} className="desktop-icon"
-                onDoubleClick={() => openWindow('notepad', { fileId: f.id })}>
-          <div className="glyph"><Icon name="doc" size={38} /></div>{f.name}
+      {desktop.map((e) => (e.children ? (
+        <button key={e.name} className="desktop-icon"
+                onDoubleClick={() => openWindow('explorer', { startFolder: ['바탕화면', e.name] })}>
+          <div className="glyph"><Icon name="folder" size={38} /></div>{e.name}
+          {e.children.length > 0 && <span className="di-count">{e.children.length}</span>}
         </button>
-      ))}
+      ) : (
+        <button key={e.id} className="desktop-icon"
+                onDoubleClick={() => openWindow('notepad', { fileId: e.id })}>
+          <div className="glyph"><Icon name="doc" size={38} /></div>{e.name}
+        </button>
+      )))}
     </div>
   )
 }

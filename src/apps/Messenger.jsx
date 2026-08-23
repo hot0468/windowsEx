@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { useGame, WORK_FOLDER } from '../engine/store.js'
+import FileDialog from './FileDialog.jsx'
 import { faceOf, photoOf } from '../assets/photos.js'
 import {
   BellOff, ChevronDown, MessageSquare,
-  Search, Settings, Sliders, UserPlus, Users
+  Paperclip, Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
 // Fallback only — each thread carries replies in the register that person expects.
@@ -49,6 +50,8 @@ export default function Messenger({ source }) {
   const [collapsed, setCollapsed] = useState({})
   const [tab, setTab] = useState('friends')
   const [q, setQ] = useState('')
+  const [picking, setPicking] = useState(false)
+  const pinned = useGame((s) => s.pinned)
 
   // A live thread's messages arrive on the scenario's timer; the rest are already there.
   const msgsOf = (t) => (t.live ? liveMessages.slice(0, msgCount) : t.messages)
@@ -70,8 +73,8 @@ export default function Messenger({ source }) {
 
   const busy = !!(thread && typing[thread.id])
   const mine = thread ? replies[thread.id] ?? [] : []
-  const reply = (text) =>
-    setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), text] }))
+  const say = (entry) =>
+    setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), entry] }))
 
   return (
     <div className="mg">
@@ -151,14 +154,27 @@ export default function Messenger({ source }) {
                   {!msg.me && <b>{msg.from}</b>}{msg.text}
                 </div>
               ))}
-              {mine.map((text, i) => <div key={'r' + i} className="bubble me">{text}</div>)}
+              {mine.map((m, i) => (
+                <div key={'r' + i} className={'bubble me' + (m.file ? ' file' : '')}>
+                  {m.file ? <><Paperclip size={13} strokeWidth={2} />{m.file}</> : m.text}
+                </div>
+              ))}
               {busy && <div className="typing"><span className="spinner sm" />작성중…</div>}
             </div>
             <div className="quick">
+              <button className="quick-att" disabled={busy} title="파일 보내기"
+                      onClick={() => setPicking(true)}>
+                <Paperclip size={16} strokeWidth={1.9} />
+              </button>
               {(thread.quick ?? QUICK).map((text) => (
-                <button key={text} disabled={busy} onClick={() => reply(text)}>{text}</button>
+                <button key={text} disabled={busy} onClick={() => say({ text })}>{text}</button>
               ))}
             </div>
+            {picking && (
+              <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
+                          onPick={(f) => { say({ file: f.name }); setPicking(false) }}
+                          onClose={() => setPicking(false)} />
+            )}
           </>
         )}
       </div>

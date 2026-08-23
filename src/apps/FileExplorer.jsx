@@ -1,24 +1,36 @@
 import { useState } from 'react'
-import { useGame, entriesAt, searchFiles } from '../engine/store.js'
+import { useGame, WORK_FOLDER, entriesAt, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 
 export default function FileExplorer({ startFolder }) {
   const scenario = useGame((s) => s.scenario)
+  const pinned = useGame((s) => s.pinned)
   const openWindow = useGame((s) => s.openWindow)
-  const roots = Object.keys(scenario.fs)
-  const nav = useFolderNav(startFolder ?? roots[0])
+  const pinFile = useGame((s) => s.pinFile)
+  const unpinFile = useGame((s) => s.unpinFile)
   const [q, setQ] = useState('')
+  const [menu, setMenu] = useState(null)
+
+  const fs = fsWithPinned(scenario.fs, pinned)
+  const roots = Object.keys(fs)
+  const nav = useFolderNav(startFolder ?? roots[0])
 
   const here = nav.path[nav.path.length - 1]
+  const inWork = here === WORK_FOLDER
   const searching = Boolean(q.trim())
-  const hits = searching ? searchFiles(scenario.fs, nav.path, q) : []
-  const entries = entriesAt(scenario.fs, nav.path)
+  const hits = searching ? searchFiles(fs, nav.path, q) : []
+  const entries = entriesAt(fs, nav.path)
   const folders = entries.filter((e) => e.children)
   const files = entries.filter((e) => !e.children)
 
-  const goTo = (path) => { setQ(''); nav.goTo(path) }
+  const goTo = (path) => { setQ(''); setMenu(null); nav.goTo(path) }
+  const onContext = (file) => (e) => {
+    e.preventDefault()
+    const box = e.currentTarget.closest('.ex-body').getBoundingClientRect()
+    setMenu({ file, x: e.clientX - box.left, y: e.clientY - box.top })
+  }
 
   return (
     <div className="explorer">
@@ -65,7 +77,7 @@ export default function FileExplorer({ startFolder }) {
             <div className="ex-hits-head">'{q.trim()}' 검색 결과 {hits.length}건 — {here} 및 하위 폴더</div>
             {hits.length === 0 && <div className="ex-empty">일치하는 파일이 없습니다</div>}
             {hits.map(({ file, trail }) => (
-              <button key={file.id} className="ex-hit"
+              <button key={file.id} className="ex-hit" onContextMenu={onContext(file)}
                       onDoubleClick={() => openWindow('notepad', { fileId: file.id })}>
                 <Icon name="doc" size={26} />
                 <span className="ex-hit-mid">
@@ -85,12 +97,33 @@ export default function FileExplorer({ startFolder }) {
               </button>
             ))}
             {files.map((f) => (
-              <button key={f.id} className="ex-file"
+              <button key={f.id} className="ex-file" onContextMenu={onContext(f)}
                       onDoubleClick={() => openWindow('notepad', { fileId: f.id })}>
                 <div className="glyph"><Icon name="doc" size={36} /></div>{f.name}
               </button>
             ))}
           </div>
+        )}
+
+        {menu && (
+          <>
+            <div className="ctx-catch" onPointerDown={() => setMenu(null)}
+                 onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} />
+            <div className="ctx" style={{ left: menu.x, top: menu.y }}>
+              <button onClick={() => { openWindow('notepad', { fileId: menu.file.id }); setMenu(null) }}>
+                열기
+              </button>
+              {inWork ? (
+                <button onClick={() => { unpinFile(menu.file.id); setMenu(null) }}>
+                  {WORK_FOLDER}에서 빼기
+                </button>
+              ) : (
+                <button onClick={() => { pinFile(menu.file.id); setMenu(null) }}>
+                  {WORK_FOLDER}에 복사
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useGame, entriesAt, searchFiles } from '../engine/store.js'
+import { useGame, entriesAt, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../icons/line.jsx'
 
 // Windows' "열기" dialog, over the whole desktop like the real one.
 export default function FileDialog({ start = '문서', onPick, onClose }) {
-  const fs = useGame((s) => s.scenario.fs)
+  const scenarioFs = useGame((s) => s.scenario.fs)
+  const pinned = useGame((s) => s.pinned)
+  const fs = fsWithPinned(scenarioFs, pinned)
   const roots = Object.keys(fs)
-  const nav = useFolderNav(roots.includes(start) ? start : roots[0])
+  const nav = useFolderNav(start)
   const [selected, setSelected] = useState(null)
   const [name, setName] = useState('')
   const [q, setQ] = useState('')

@@ -1,6 +1,7 @@
 import { useReducer } from 'react'
 
-export const navInit = (start) => ({ path: [start], back: [], fwd: [] })
+export const navInit = (start) =>
+  ({ path: Array.isArray(start) ? start : [start], back: [], fwd: [] })
 
 // Explorer's back/forward semantics: going somewhere new drops the forward trail.
 export function navReduce(s, action) {

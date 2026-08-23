@@ -17,6 +17,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .desktop-icon { width: 88px; padding: 8px 4px; border-radius: 4px; color: #fff; text-align: center; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .desktop-icon:hover { background: rgba(255,255,255,.15); }
 .desktop-icon .glyph { display: flex; justify-content: center; margin-bottom: 3px; }
+.desktop-icon { position: relative; }
+.di-count { position: absolute; top: 6px; right: 12px; min-width: 17px; padding: 0 4px; border-radius: 9px; background: #0067c0; color: #fff; font-size: 10px; line-height: 17px; text-shadow: none; }
 
 /* window */
 .window { position: absolute; display: flex; flex-direction: column; background: #f9f9f9; border-radius: 8px; border: 1px solid rgba(0,0,0,.25); box-shadow: 0 16px 40px rgba(0,0,0,.35); overflow: hidden; }
@@ -101,6 +103,10 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .ex-hit-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ex-hit-mid > span:first-child { font-size: 13px; }
 .ex-hit-path { color: #999; font-size: 11px; }
+.ctx-catch { position: absolute; inset: 0; z-index: 20; }
+.ctx { position: absolute; z-index: 21; min-width: 168px; padding: 5px; border-radius: 7px; background: #fbfbfd; box-shadow: 0 8px 26px rgba(0,0,0,.28); border: 1px solid rgba(0,0,0,.08); }
+.ctx button { display: block; width: 100%; padding: 8px 12px; border-radius: 4px; text-align: left; font-size: 13px; }
+.ctx button:hover { background: #e5f1fb; }
 .ex-main { flex: 1; overflow: auto; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
 .ex-file { width: 96px; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; word-break: break-all; }
 .ex-file:hover { background: #e5f1fb; }
@@ -162,6 +168,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .quick button { flex: 1; padding: 8px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #cdd; font-size: 12px; }
 .quick button:hover:not(:disabled) { background: #e5f1fb; }
 .quick button:disabled { opacity: .45; cursor: default; }
+.quick-att { flex: 0 0 auto !important; display: flex; align-items: center; justify-content: center; width: 36px; color: #667; }
+.bubble.me.file { display: flex; align-items: center; gap: 7px; }
 
 /* mail */
 .mail-layout { display: flex; height: 100%; }

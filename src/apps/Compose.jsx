@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, WORK_FOLDER, findFile } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import {
   AlignCenter, AlignLeft, Bold, ClearFormat, Italic, List,
@@ -25,6 +25,7 @@ const TOOLS = [
 export default function Compose({ mail, onSend, onCancel }) {
   const fs = useGame((s) => s.scenario.fs)
   const me = useGame((s) => s.scenario.player)
+  const pinned = useGame((s) => s.pinned)
   const [att, setAtt] = useState('')
   const [picking, setPicking] = useState(false)
   const [font, setFont] = useState(FONTS[0])
@@ -104,7 +105,8 @@ export default function Compose({ mail, onSend, onCancel }) {
            style={{ fontFamily: font, fontSize: size }} />
 
       {picking && (
-        <FileDialog onPick={(f) => { setAtt(f.id); setPicking(false) }}
+        <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
+                    onPick={(f) => { setAtt(f.id); setPicking(false) }}
                     onClose={() => setPicking(false)} />
       )}
     </div>

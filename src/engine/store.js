@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'wikiUnlocked', 'cleared', 'scratch']
+  'starred', 'pinned', 'wikiUnlocked', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -67,6 +67,7 @@ export const useGame = create((set, get) => ({
   msgCount: restored?.msgCount ?? 0,
   readMails: restored?.readMails ?? {},
   starred: restored?.starred ?? {},
+  pinned: restored?.pinned ?? [],
   // Which conversation each messenger is showing, and how much of it has been read.
   // Both live here so a toast can open a thread in an already-running window.
   openThread: {},
@@ -157,6 +158,8 @@ export const useGame = create((set, get) => ({
   markMailRead: (id, read = true) =>
     set((s) => ({ readMails: { ...s.readMails, [id]: read } })),
   toggleStar: (id) => set((s) => ({ starred: { ...s.starred, [id]: !s.starred[id] } })),
+  pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
+  unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockWiki: () => set({ wikiUnlocked: true }),
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>
@@ -195,6 +198,15 @@ useGame.subscribe(() => {
   clearTimeout(autosaveTimer)
   autosaveTimer = setTimeout(() => write(SESSION_KEY, snapshot(useGame.getState())), 400)
 })
+
+// A staging folder on the desktop holding copies of files the player pinned, so
+// attaching them later is one click instead of a dig through the tree.
+export const WORK_FOLDER = '작업 폴더'
+
+export function fsWithPinned(fs, pinned) {
+  const copies = pinned.map((id) => findFile(fs, id)).filter(Boolean)
+  return { ...fs, 바탕화면: [...fs['바탕화면'], { name: WORK_FOLDER, children: copies }] }
+}
 
 // An entry with `children` is a folder; anything else is a file.
 export function allFiles(fs) {

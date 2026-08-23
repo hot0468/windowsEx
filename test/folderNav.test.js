@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { navInit, navReduce } from '../src/apps/folderNav.js'
 import scenario from '../src/scenarios/ep1.json'
-import { searchFiles } from '../src/engine/store.js'
+import { WORK_FOLDER, entriesAt, fsWithPinned, searchFiles } from '../src/engine/store.js'
 
 const go = (s, ...path) => navReduce(s, { type: 'go', path })
 const back = (s) => navReduce(s, { type: 'back' })
@@ -47,5 +47,36 @@ describe('searchFiles', () => {
 
   it('returns nothing for a blank term', () => {
     expect(searchFiles(scenario.fs, ['문서'], '   ')).toEqual([])
+  })
+})
+
+describe('work folder', () => {
+  const pin = (...ids) => fsWithPinned(scenario.fs, ids)
+
+  it('appears on the desktop holding copies of the pinned files', () => {
+    const goal = scenario.goal.requiredAttachment
+    const work = pin(goal)['바탕화면'].find((e) => e.name === WORK_FOLDER)
+    expect(work.children.map((f) => f.id)).toEqual([goal])
+  })
+
+  it('leaves the original where it was', () => {
+    const goal = scenario.goal.requiredAttachment
+    expect(entriesAt(pin(goal), ['문서', '업무자료', '2026', 'A상사']).map((e) => e.id))
+      .toContain(goal)
+  })
+
+  it('is reachable as a path once pinned', () => {
+    const goal = scenario.goal.requiredAttachment
+    expect(entriesAt(pin(goal), ['바탕화면', WORK_FOLDER]).map((f) => f.id)).toEqual([goal])
+  })
+
+  it('shows up empty rather than missing when nothing is pinned', () => {
+    const work = pin()['바탕화면'].find((e) => e.name === WORK_FOLDER)
+    expect(work.children).toEqual([])
+  })
+
+  it('ignores ids that no longer resolve to a file', () => {
+    const work = pin('does_not_exist')['바탕화면'].find((e) => e.name === WORK_FOLDER)
+    expect(work.children).toEqual([])
   })
 })
