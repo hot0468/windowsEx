@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { useGame, savedAt } from '../engine/store.js'
 import { APPS } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
-import { LayoutGrid } from '../icons/line.jsx'
+import { FolderOpen, LayoutGrid, RotateCcw, Save } from '../icons/line.jsx'
+
+const when = (at) =>
+  new Date(at).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+const CONFIRM = {
+  new: '진행 중인 게임을 버리고 처음부터 시작합니다. 저장한 게임은 그대로 남습니다.',
+  load: '저장한 시점으로 되돌아갑니다. 지금까지의 진행 상황은 사라집니다.'
+}
 
 export default function Taskbar() {
   const windows = useGame((s) => s.windows)
@@ -10,8 +18,19 @@ export default function Taskbar() {
   const openWindow = useGame((s) => s.openWindow)
   const focusWindow = useGame((s) => s.focusWindow)
   const minimizeWindow = useGame((s) => s.minimizeWindow)
+  const saveGame = useGame((s) => s.saveGame)
+  const loadGame = useGame((s) => s.loadGame)
+  const newGame = useGame((s) => s.newGame)
   const [startOpen, setStartOpen] = useState(false)
+  const [asking, setAsking] = useState(null)
+  const [saved, setSaved] = useState(null)
   const [now, setNow] = useState(new Date())
+
+  const toggleStart = () => {
+    if (!startOpen) setSaved(savedAt())
+    setAsking(null)
+    setStartOpen(!startOpen)
+  }
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30000)
@@ -37,11 +56,38 @@ export default function Taskbar() {
               </button>
             ))}
           </div>
+
+          <h3 className="sm-h2">게임</h3>
+          {asking ? (
+            <div className="sm-confirm">
+              <p>{CONFIRM[asking]}</p>
+              <div className="sm-confirm-row">
+                <button className="btn-primary" onClick={() => (asking === 'new' ? newGame() : loadGame())}>
+                  예
+                </button>
+                <button className="sm-cancel" onClick={() => setAsking(null)}>아니오</button>
+              </div>
+            </div>
+          ) : (
+            <div className="sm-list">
+              <button className="sm-item" onClick={() => setAsking('new')}>
+                <RotateCcw size={16} strokeWidth={1.8} />새 게임
+              </button>
+              <button className="sm-item"
+                      onClick={() => { saveGame(); setSaved(Date.now()); setStartOpen(false) }}>
+                <Save size={16} strokeWidth={1.8} />저장
+              </button>
+              <button className="sm-item" disabled={!saved} onClick={() => setAsking('load')}>
+                <FolderOpen size={16} strokeWidth={1.8} />불러오기
+                <span className="sm-when">{saved ? when(saved) : '저장된 게임 없음'}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
       <div className="taskbar">
         <div className="tb-center">
-          <button className="tb-icon" title="시작" onClick={() => setStartOpen(!startOpen)}>
+          <button className="tb-icon" title="시작" onClick={toggleStart}>
             <LayoutGrid size={19} strokeWidth={1.8} />
           </button>
           {windows.map((w) => (

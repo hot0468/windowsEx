@@ -2,21 +2,55 @@ import { create } from 'zustand'
 import scenario from '../scenarios/ep1.json'
 import { checkGoal } from './goal.js'
 
-let winId = 0
+const SAVE_KEY = 'windowsEx.save'
+const PENDING_KEY = 'windowsEx.pendingLoad'
+
+// The fields worth carrying across sessions: progress, not view state.
+const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'extraMails',
+  'wikiUnlocked', 'cleared', 'scratch']
+
+function readSave() {
+  try {
+    const save = JSON.parse(localStorage.getItem(SAVE_KEY))
+    return save && Array.isArray(save.windows) ? save : null
+  } catch {
+    return null
+  }
+}
+
+export function savedAt() {
+  return readSave()?.at ?? null
+}
+
+// Loading reloads the page (see loadGame) so every app remounts clean; the flag
+// set just before that reload tells this fresh session to start from the save.
+function takePendingSave() {
+  try {
+    if (sessionStorage.getItem(PENDING_KEY) !== '1') return null
+    sessionStorage.removeItem(PENDING_KEY)
+    return readSave()
+  } catch {
+    return null
+  }
+}
+
+const restored = takePendingSave()
+
+let winId = Math.max(0, ...(restored?.windows ?? []).map((w) => w.id))
 let toastId = 0
 
 export const useGame = create((set, get) => ({
   scenario,
   booted: false,
-  windows: [],
-  nextZ: 10,
   toast: null,
-  msgCount: 0,
-  readMails: {},
-  extraMails: [],
-  wikiUnlocked: false,
-  cleared: false,
-  scratch: '',
+  windows: restored?.windows ?? [],
+  nextZ: restored?.nextZ ?? 10,
+  msgCount: restored?.msgCount ?? 0,
+  readMails: restored?.readMails ?? {},
+  extraMails: restored?.extraMails ?? [],
+  wikiUnlocked: restored?.wikiUnlocked ?? false,
+  cleared: restored?.cleared ?? false,
+  scratch: restored?.scratch ?? '',
 
   setBooted: () => set({ booted: true }),
   // The id lets the view remount each toast so its entrance animation replays,
@@ -67,6 +101,28 @@ export const useGame = create((set, get) => ({
           : w)
     }))
   },
+
+  saveGame: () => {
+    const s = get()
+    const save = { at: Date.now() }
+    for (const k of PROGRESS) save[k] = s[k]
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+      s.showToast({ from: '게임 저장', text: '현재 진행 상황을 저장했습니다.' })
+    } catch {
+      s.showToast({ from: '게임 저장', text: '저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요.' })
+    }
+  },
+  loadGame: () => {
+    if (!readSave()) return get().showToast({ from: '불러오기', text: '저장된 게임이 없습니다.' })
+    try {
+      sessionStorage.setItem(PENDING_KEY, '1')
+    } catch {
+      return get().showToast({ from: '불러오기', text: '불러오지 못했습니다. 브라우저 저장공간을 확인해 주세요.' })
+    }
+    location.reload()
+  },
+  newGame: () => location.reload(),
 
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),

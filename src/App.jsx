@@ -6,7 +6,7 @@ import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
-import { LayoutGrid } from './icons/line.jsx'
+import { Info, LayoutGrid } from './icons/line.jsx'
 
 function Boot() {
   const setBooted = useGame((s) => s.setBooted)
@@ -35,12 +35,13 @@ function Toast() {
     return () => { clearTimeout(out); clearTimeout(gone) }
   }, [toast, clearToast])
   if (!toast) return null
+  const app = APPS[toast.app]
   return (
     <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
-         onClick={() => { openWindow(toast.app ?? 'messenger'); clearToast() }}>
+         onClick={() => { if (app) openWindow(toast.app); clearToast() }}>
       <b>
-        <Icon name={toast.app === 'mail' ? 'mail' : 'workchat'} size={15} />
-        {(toast.app === 'mail' ? '메일' : '한빛톡') + ' — '}{toast.from}
+        {app ? <Icon name={app.icon} size={15} /> : <Info size={15} strokeWidth={1.9} />}
+        {app ? `${app.title} — ${toast.from}` : toast.from}
       </b>
       {toast.text}
     </div>
@@ -62,13 +63,14 @@ function WindowLayer() {
 
 function ClearOverlay() {
   const scenario = useGame((s) => s.scenario)
+  const newGame = useGame((s) => s.newGame)
   return (
     <div className="clear-overlay">
       <div className="big"><Icon name="trophy" size={72} /></div>
       <h1>미션 클리어!</h1>
       <p>"{scenario.goal.successReply}"</p>
       <p>— A상사 이수진 과장</p>
-      <button className="btn-primary" onClick={() => location.reload()}>다시 하기</button>
+      <button className="btn-primary" onClick={newGame}>다시 하기</button>
     </div>
   )
 }
@@ -83,7 +85,7 @@ export default function App() {
     const timers = sc.messenger.map((m) =>
       setTimeout(() => {
         useGame.getState().deliverMessage()
-        useGame.getState().showToast({ from: m.from, text: m.text })
+        useGame.getState().showToast({ from: m.from, text: m.text, app: 'messenger' })
       }, m.delay))
     return () => timers.forEach(clearTimeout)
   }, [booted])
