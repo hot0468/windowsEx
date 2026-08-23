@@ -100,3 +100,23 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .quick { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #dde; }
 .quick button { flex: 1; padding: 8px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #cdd; font-size: 12px; }
 .quick button:hover { background: #e5f1fb; }
+
+/* mail */
+.mail-layout { display: flex; height: 100%; }
+.mail-list { width: 280px; flex-shrink: 0; border-right: 1px solid #eee; overflow: auto; }
+.mail-item { padding: 10px 14px; border-bottom: 1px solid #f2f2f2; cursor: pointer; }
+.mail-item:hover { background: #f7f9fc; }
+.mail-item.sel { background: #e5f1fb; }
+.mail-item.unread .mi-subject { font-weight: 700; }
+.mi-from { font-size: 12px; color: #333; }
+.mi-subject { font-size: 13px; margin: 2px 0; }
+.mi-date { font-size: 11px; color: #999; }
+.mail-detail { flex: 1; padding: 18px 22px; overflow: auto; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.md-meta { font-size: 12px; color: #666; }
+.md-body { white-space: pre-wrap; font-family: inherit; line-height: 1.7; user-select: text; }
+.mail-empty { color: #99a; margin: auto; }
+.mail-sent { background: #e7f4e8; color: #1b5e20; padding: 10px 14px; border-radius: 6px; font-size: 13px; }
+.compose { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.compose textarea { height: 180px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font: inherit; resize: none; }
+.compose select { padding: 7px; border: 1px solid #ccc; border-radius: 5px; font: inherit; }
+.compose-row { display: flex; gap: 8px; align-items: center; }

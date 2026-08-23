@@ -50,8 +50,22 @@ function WindowLayer() {
   })
 }
 
+function ClearOverlay() {
+  const scenario = useGame((s) => s.scenario)
+  return (
+    <div className="clear-overlay">
+      <div className="big">🎉</div>
+      <h1>미션 클리어!</h1>
+      <p>"{scenario.goal.successReply}"</p>
+      <p>— A상사 이수진 과장</p>
+      <button className="btn-primary" onClick={() => location.reload()}>다시 하기</button>
+    </div>
+  )
+}
+
 export default function App() {
   const booted = useGame((s) => s.booted)
+  const cleared = useGame((s) => s.cleared)
 
   useEffect(() => {
     if (!booted) return
@@ -71,6 +85,7 @@ export default function App() {
       <WindowLayer />
       <Toast />
       <Taskbar />
+      {cleared && <ClearOverlay />}
     </div>
   )
 }
