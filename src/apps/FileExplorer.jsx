@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame } from '../engine/store.js'
+import Icon from '../icons/Icon.jsx'
 
 export default function FileExplorer({ startFolder }) {
   const scenario = useGame((s) => s.scenario)
@@ -12,7 +13,7 @@ export default function FileExplorer({ startFolder }) {
         {folders.map((name) => (
           <button key={name} className={'ex-folder' + (folder === name ? ' sel' : '')}
                   onClick={() => setFolder(name)}>
-            📁 {name}
+            <Icon name={name === '휴지통' ? 'trash' : 'folder'} size={17} />{name}
           </button>
         ))}
       </div>
@@ -20,7 +21,7 @@ export default function FileExplorer({ startFolder }) {
         {scenario.fs[folder].map((f) => (
           <button key={f.id} className="ex-file"
                   onDoubleClick={() => openWindow('notepad', { fileId: f.id })}>
-            <div className="glyph">📄</div>{f.name}
+            <div className="glyph"><Icon name="doc" size={36} /></div>{f.name}
           </button>
         ))}
       </div>

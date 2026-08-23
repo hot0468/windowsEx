@@ -1,5 +1,7 @@
 import { useRef } from 'react'
 import { useGame } from '../engine/store.js'
+import Icon from '../icons/Icon.jsx'
+import { Minus, Square, X } from '../icons/line.jsx'
 
 export default function Window({ win, title, icon, width = 640, height = 440, children }) {
   const focusWindow = useGame((s) => s.focusWindow)
@@ -30,11 +32,11 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
       <div className="titlebar" onPointerDown={onPointerDown}
            onPointerMove={onPointerMove} onPointerUp={onPointerUp}
            onDoubleClick={() => toggleMaximize(win.id)}>
-        <span className="title">{icon} {title}</span>
+        <span className="title"><Icon name={icon} size={16} />{title}</span>
         <div className="win-buttons">
-          <button onClick={() => minimizeWindow(win.id)} title="최소화">─</button>
-          <button onClick={() => toggleMaximize(win.id)} title="최대화">▢</button>
-          <button className="close" onClick={() => closeWindow(win.id)} title="닫기">✕</button>
+          <button onClick={() => minimizeWindow(win.id)} title="최소화"><Minus size={13} strokeWidth={1.5} /></button>
+          <button onClick={() => toggleMaximize(win.id)} title="최대화"><Square size={11} strokeWidth={1.7} /></button>
+          <button className="close" onClick={() => closeWindow(win.id)} title="닫기"><X size={13} strokeWidth={1.5} /></button>
         </div>
       </div>
       <div className="win-body">{children}</div>

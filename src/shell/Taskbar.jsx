@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '../engine/store.js'
 import { APPS } from '../apps/registry.jsx'
+import Icon from '../icons/Icon.jsx'
+import { LayoutGrid } from '../icons/line.jsx'
 
 export default function Taskbar() {
   const windows = useGame((s) => s.windows)
@@ -32,7 +34,7 @@ export default function Taskbar() {
             {Object.entries(APPS).map(([key, a]) => (
               <button key={key} className="sm-app"
                       onClick={() => { openWindow(key); setStartOpen(false) }}>
-                <div className="glyph">{a.icon}</div>{a.title}
+                <div className="glyph"><Icon name={a.icon} size={30} /></div>{a.title}
               </button>
             ))}
           </div>
@@ -40,10 +42,12 @@ export default function Taskbar() {
       )}
       <div className="taskbar">
         <div className="tb-center">
-          <button className="tb-icon" title="시작" onClick={() => setStartOpen(!startOpen)}>⊞</button>
+          <button className="tb-icon" title="시작" onClick={() => setStartOpen(!startOpen)}>
+            <LayoutGrid size={19} strokeWidth={1.8} />
+          </button>
           {Object.entries(APPS).map(([key, a]) => (
             <button key={key} className="tb-icon" title={a.title} onClick={() => clickApp(key)}>
-              {a.icon}
+              <Icon name={a.icon} size={23} />
               {windows.some((w) => w.app === key) && <span className="dot" />}
             </button>
           ))}

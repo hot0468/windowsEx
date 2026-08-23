@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame } from '../engine/store.js'
+import { Clock, House, Lock, Star } from '../icons/line.jsx'
 
 export default function Browser() {
   const scenario = useGame((s) => s.scenario)
@@ -23,7 +24,7 @@ export default function Browser() {
   return (
     <div className="browser">
       <div className="addr-bar">
-        <button onClick={() => go('')} title="홈">🏠</button>
+        <button onClick={() => go('')} title="홈"><House size={17} strokeWidth={1.7} /></button>
         <input value={url} onChange={(e) => setUrl(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && go(url)}
                placeholder="주소를 입력하세요" spellCheck={false} />
@@ -35,13 +36,15 @@ export default function Browser() {
             <h4>즐겨찾기</h4>
             <div className="tiles">
               {scenario.bookmarks.map((b) => (
-                <button key={b.url} className="tile" onClick={() => go(b.url)}>⭐ {b.title}</button>
+                <button key={b.url} className="tile" onClick={() => go(b.url)}>
+                  <Star size={15} strokeWidth={1.7} />{b.title}
+                </button>
               ))}
             </div>
             <h4>방문 기록</h4>
             {scenario.history.map((h, i) => (
               <div key={i} className="hist" onClick={() => go(h.url)}>
-                🕘 {h.title} <span className="hist-url">{h.url}</span>
+                <Clock size={14} strokeWidth={1.7} />{h.title} <span className="hist-url">{h.url}</span>
                 <span className="hist-date">{h.date}</span>
               </div>
             ))}
@@ -56,7 +59,7 @@ export default function Browser() {
         )}
         {site && site.password && !wikiUnlocked && (
           <div className="wiki-lock">
-            <h2>🔒 {site.title}</h2>
+            <h2><Lock size={22} strokeWidth={1.8} /> {site.title}</h2>
             <p>{site.passwordHint}</p>
             <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
                    onKeyDown={(e) => e.key === 'Enter' && tryLogin(site)} placeholder="비밀번호" />

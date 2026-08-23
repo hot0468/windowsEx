@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame, allFiles } from '../engine/store.js'
+import { Paperclip, Reply, Send } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
@@ -44,7 +45,11 @@ export default function Mail() {
         ))}
       </div>
       <div className="mail-detail">
-        {sent && <div className="mail-sent">📨 메일을 보냈습니다. 곧 답장이 올지도 모릅니다…</div>}
+        {sent && (
+          <div className="mail-sent">
+            <Send size={15} strokeWidth={1.8} />메일을 보냈습니다. 곧 답장이 올지도 모릅니다…
+          </div>
+        )}
         {!mail && !sent && <div className="mail-empty">메일을 선택하세요</div>}
         {mail && !composing && (
           <>
@@ -52,7 +57,9 @@ export default function Mail() {
             <div className="md-meta">{mail.from} · {mail.date}</div>
             <pre className="md-body">{mail.body}</pre>
             {mail.canReply && (
-              <button className="btn-primary" onClick={() => { setComposing(true); setSent(false) }}>↩ 회신</button>
+              <button className="btn-primary" onClick={() => { setComposing(true); setSent(false) }}>
+                <Reply size={15} strokeWidth={1.8} />회신
+              </button>
             )}
           </>
         )}
@@ -63,7 +70,7 @@ export default function Mail() {
             <textarea value={body} onChange={(e) => setBody(e.target.value)}
                       placeholder="본문을 입력하세요" aria-label="메일 본문" />
             <div className="compose-row">
-              <span>📎</span>
+              <Paperclip size={16} strokeWidth={1.8} />
               <select value={att} onChange={(e) => setAtt(e.target.value)} aria-label="첨부 파일 선택">
                 <option value="">첨부 없음</option>
                 {allFiles(scenario.fs).map((f) => (

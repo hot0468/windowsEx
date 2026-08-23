@@ -4,6 +4,8 @@ import { APPS } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
+import Icon from './icons/Icon.jsx'
+import { LayoutGrid } from './icons/line.jsx'
 
 function Boot() {
   const setBooted = useGame((s) => s.setBooted)
@@ -13,7 +15,7 @@ function Boot() {
   }, [setBooted])
   return (
     <div className="boot">
-      <div className="logo">⊞</div>
+      <div className="logo"><LayoutGrid size={68} strokeWidth={1.4} /></div>
       <div className="spinner" />
     </div>
   )
@@ -31,7 +33,10 @@ function Toast() {
   if (!toast) return null
   return (
     <div className="toast" onClick={() => { openWindow(toast.app ?? 'messenger'); clearToast() }}>
-      <b>{(toast.app === 'mail' ? '✉️ 메일' : '💬 한빛톡') + ' — '}{toast.from}</b>
+      <b>
+        <Icon name={toast.app === 'mail' ? 'mail' : 'workchat'} size={15} />
+        {(toast.app === 'mail' ? '메일' : '한빛톡') + ' — '}{toast.from}
+      </b>
       {toast.text}
     </div>
   )
@@ -54,7 +59,7 @@ function ClearOverlay() {
   const scenario = useGame((s) => s.scenario)
   return (
     <div className="clear-overlay">
-      <div className="big">🎉</div>
+      <div className="big"><Icon name="trophy" size={72} /></div>
       <h1>미션 클리어!</h1>
       <p>"{scenario.goal.successReply}"</p>
       <p>— A상사 이수진 과장</p>
