@@ -203,6 +203,14 @@ export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
 }
 
+// Titles and addresses only. Matching page contents would surface the wiki's
+// price table in results and let a player skip its password gate entirely.
+export function searchSites(sites, q) {
+  const term = q.trim().toLowerCase()
+  if (!term) return []
+  return sites.filter((s) => `${s.title} ${s.url}`.toLowerCase().includes(term))
+}
+
 // path is ['문서', '업무자료', '2026'] — the first name picks the root drive.
 export function entriesAt(fs, path) {
   return path.slice(1).reduce(

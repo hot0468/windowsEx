@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
-import { allFiles, entriesAt } from '../src/engine/store.js'
+import { allFiles, entriesAt, searchSites } from '../src/engine/store.js'
 
 const files = allFiles(scenario.fs)
 const threads = [scenario.workMessenger, scenario.privateMessenger]
@@ -47,6 +47,17 @@ describe('ep1 scenario integrity', () => {
       else expect(e.id).toBeTruthy()
     })
     Object.values(scenario.fs).forEach(walk)
+  })
+
+  it('portal search finds a site by name', () => {
+    expect(searchSites(scenario.sites, '위키').map((s) => s.url))
+      .toEqual([scenario.sites.find((s) => s.password).url])
+  })
+
+  it('portal search never leaks a locked page, keeping the password gate meaningful', () => {
+    for (const keyword of scenario.goal.requiredKeywords) {
+      expect(searchSites(scenario.sites, keyword)).toEqual([])
+    }
   })
 
   it('file ids are unique', () => {

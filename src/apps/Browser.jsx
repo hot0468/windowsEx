@@ -1,73 +1,113 @@
 import { useState } from 'react'
-import { useGame } from '../engine/store.js'
-import { Clock, House, Lock, Star } from '../icons/line.jsx'
+import { useGame, searchSites } from '../engine/store.js'
+import { Clock, House, Lock, Search, Star } from '../icons/line.jsx'
+
+const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
 export default function Browser() {
   const scenario = useGame((s) => s.scenario)
   const wikiUnlocked = useGame((s) => s.wikiUnlocked)
   const unlockWiki = useGame((s) => s.unlockWiki)
-  const [url, setUrl] = useState('')
-  const [current, setCurrent] = useState(null)
+  const [addr, setAddr] = useState('')
+  const [page, setPage] = useState({ kind: 'home' })
+  const [q, setQ] = useState('')
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
 
-  const go = (u) => {
-    const clean = u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
-    setUrl(clean)
-    setCurrent(clean || null)
+  const open = (raw) => {
+    const url = clean(raw)
+    setAddr(url)
+    setPage(url ? { kind: 'site', url } : { kind: 'home' })
     setPw('')
     setPwError(false)
   }
-  const tryLogin = (site) => (pw === site.password ? unlockWiki() : setPwError(true))
-  const site = current ? scenario.sites.find((s) => s.url === current) : null
+
+  const submitSearch = () => {
+    if (!q.trim()) return
+    setAddr('')
+    setPage({ kind: 'search', q: q.trim() })
+  }
+
+  const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
+  const locked = Boolean(site?.password) && !wikiUnlocked
+  const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
 
   return (
     <div className="browser">
       <div className="addr-bar">
-        <button onClick={() => go('')} title="홈"><House size={17} strokeWidth={1.7} /></button>
-        <input value={url} onChange={(e) => setUrl(e.target.value)}
-               onKeyDown={(e) => e.key === 'Enter' && go(url)}
-               placeholder="주소를 입력하세요" spellCheck={false} />
+        <button onClick={() => open('')} title="홈"><House size={17} strokeWidth={1.7} /></button>
+        <input value={addr} onChange={(e) => setAddr(e.target.value)}
+               onKeyDown={(e) => e.key === 'Enter' && open(addr)}
+               placeholder="주소를 입력하세요" aria-label="주소" spellCheck={false} />
       </div>
+
+      <div className="bm-bar">
+        <Star size={13} strokeWidth={1.9} />
+        {scenario.bookmarks.map((b) => (
+          <button key={b.url} className="bm" onClick={() => open(b.url)}>{b.title}</button>
+        ))}
+      </div>
+
       <div className="page">
-        {!current && (
-          <div className="newtab">
-            <h2>새 탭</h2>
-            <h4>즐겨찾기</h4>
-            <div className="tiles">
-              {scenario.bookmarks.map((b) => (
-                <button key={b.url} className="tile" onClick={() => go(b.url)}>
-                  <Star size={15} strokeWidth={1.7} />{b.title}
-                </button>
+        {page.kind === 'home' && (
+          <div className="portal">
+            <div className="portal-logo">{scenario.portal.name}</div>
+            <div className="portal-search">
+              <Search size={18} strokeWidth={1.9} />
+              <input value={q} onChange={(e) => setQ(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
+                     placeholder="검색어를 입력하세요" aria-label="검색어" spellCheck={false} />
+              <button className="btn-primary" onClick={submitSearch}>검색</button>
+            </div>
+            <div className="portal-recent">
+              <h4>최근 방문</h4>
+              {scenario.history.map((h, i) => (
+                <div key={i} className="hist" onClick={() => open(h.url)}>
+                  <Clock size={14} strokeWidth={1.7} />{h.title} <span className="hist-url">{h.url}</span>
+                  <span className="hist-date">{h.date}</span>
+                </div>
               ))}
             </div>
-            <h4>방문 기록</h4>
-            {scenario.history.map((h, i) => (
-              <div key={i} className="hist" onClick={() => go(h.url)}>
-                <Clock size={14} strokeWidth={1.7} />{h.title} <span className="hist-url">{h.url}</span>
-                <span className="hist-date">{h.date}</span>
-              </div>
-            ))}
           </div>
         )}
-        {current && !site && (
+
+        {page.kind === 'search' && (
+          <div className="results">
+            <p className="results-head">'{page.q}' 검색 결과 {hits.length}건</p>
+            {hits.map((s) => (
+              <div key={s.url} className="result" onClick={() => open(s.url)}>
+                <div className="result-title">{s.title}</div>
+                <div className="result-url">{s.url}</div>
+              </div>
+            ))}
+            {hits.length === 0 && <p className="results-none">검색 결과가 없습니다.</p>}
+          </div>
+        )}
+
+        {page.kind === 'site' && !site && (
           <div className="site-error">
             <h2>사이트에 연결할 수 없음</h2>
-            <p>{current} 의 서버 IP 주소를 찾을 수 없습니다.</p>
+            <p>{page.url} 의 서버 IP 주소를 찾을 수 없습니다.</p>
             <p className="err-code">ERR_NAME_NOT_RESOLVED</p>
           </div>
         )}
-        {site && site.password && !wikiUnlocked && (
+
+        {locked && (
           <div className="wiki-lock">
             <h2><Lock size={22} strokeWidth={1.8} /> {site.title}</h2>
             <p>{site.passwordHint}</p>
             <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && tryLogin(site)} placeholder="비밀번호" />
-            <button className="btn-primary" onClick={() => tryLogin(site)}>로그인</button>
+                   onKeyDown={(e) => e.key === 'Enter' && (pw === site.password ? unlockWiki() : setPwError(true))}
+                   placeholder="비밀번호" aria-label="비밀번호" />
+            <button className="btn-primary"
+                    onClick={() => (pw === site.password ? unlockWiki() : setPwError(true))}>
+              로그인
+            </button>
             {pwError && <p className="pw-error">비밀번호가 올바르지 않습니다.</p>}
           </div>
         )}
-        {site && (!site.password || wikiUnlocked) && (
+
+        {site && !locked && (
           <div className="site">
             <h2>{site.title}</h2>
             <pre className="site-body">{site.content}</pre>
