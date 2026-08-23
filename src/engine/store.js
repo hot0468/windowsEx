@@ -8,7 +8,8 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'misses', 'failed', 'cleared', 'scratch']
+  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'bookings',
+  'misses', 'failed', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -77,6 +78,7 @@ export const useGame = create((set, get) => ({
   extraMessages: restored?.extraMessages ?? {},
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
+  bookings: restored?.bookings ?? {},
   misses: restored?.misses ?? 0,
   failed: restored?.failed ?? false,
   cleared: restored?.cleared ?? false,
@@ -166,6 +168,8 @@ export const useGame = create((set, get) => ({
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => set((s) => ({ grants: { ...s.grants, [key]: true } })),
+  book: (place, details) =>
+    set((s) => ({ bookings: { ...s.bookings, [place]: details } })),
   pushMessage: (threadId, msg) =>
     set((s) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }
@@ -255,6 +259,16 @@ export const lineSets = (lines) => (Array.isArray(lines?.[0]) ? lines : [lines])
 
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
+// Loose match: spacing and case are forgiven. An entry may be an array, in
+// which case every part of it has to appear — a pasted receipt has to carry both
+// the place and the time, not just one of them.
+const loose = (v) => v.replace(/\s/g, '').toLowerCase()
+
+export function answerFits(ask, text) {
+  return ask.accept.some((entry) =>
+    (Array.isArray(entry) ? entry : [entry]).every((part) => loose(text).includes(loose(part))))
+}
+
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
 export const hintAfter = (ask, wrongs) => {
   const sets = lineSets(ask.no)
@@ -306,13 +320,15 @@ export function siteView(site, { grants, unlocked }) {
 
 // Local listings for the portal's search: matched on name and tags so a broad
 // term like 맥주 brings back every candidate, not just the one that matters.
-export function searchPlaces(places, q) {
+export function searchPlaces(places, q, grants = {}) {
   const term = q.trim().toLowerCase()
   if (!term) return []
   return places.filter((p) =>
-    p.name.toLowerCase().includes(term) ||
-    p.category.toLowerCase().includes(term) ||
-    p.tags.some((t) => t.toLowerCase().includes(term)))
+    // some listings only surface once the player has been told about them
+    (!p.hiddenUntil || grants[p.hiddenUntil]) &&
+    (p.name.toLowerCase().includes(term) ||
+      p.category.toLowerCase().includes(term) ||
+      p.tags.some((t) => t.toLowerCase().includes(term))))
 }
 
 export function searchBlogs(blogs, q) {

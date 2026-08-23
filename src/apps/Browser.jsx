@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGame, searchBlogs, searchPlaces, searchSites, siteView } from '../engine/store.js'
+import Place from './Place.jsx'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
 import { ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
@@ -93,7 +94,7 @@ export default function Browser() {
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
   const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
-  const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
+  const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q, grants) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
 
   return (
@@ -139,7 +140,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + ((page.kind === 'blog' || (view && view !== 'error')) ? ' bleed' : '')}>
+      <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -163,7 +164,8 @@ export default function Browser() {
               <section className="rs-block">
                 <h3 className="rs-head"><Icon name="globe" size={15} />장소</h3>
                 {spots.map((p) => (
-                  <div key={p.name} className="place">
+                  <div key={p.name} className="place"
+                       onClick={() => nav.go({ kind: 'place', name: p.name })}>
                     <img className="place-shot" src={shotOf(p.photo)} alt="" draggable="false" />
                     <div className="place-body">
                     <div className="place-top">
@@ -216,6 +218,10 @@ export default function Browser() {
               <p className="results-none">검색 결과가 없습니다.</p>
             )}
           </div>
+        )}
+
+        {page.kind === 'place' && (
+          <Place place={scenario.places.find((p) => p.name === page.name)} />
         )}
 
         {page.kind === 'blog' && (() => {

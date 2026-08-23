@@ -3,7 +3,7 @@ import scenario from '../src/scenarios/ep1.json'
 import { searchPlaces } from '../src/engine/store.js'
 
 const places = scenario.places
-const names = (q) => searchPlaces(places, q).map((p) => p.name)
+const names = (q, grants) => searchPlaces(places, q, grants).map((p) => p.name)
 
 describe('portal place search', () => {
   it('answers the two terms the player is most likely to try', () => {
@@ -24,13 +24,13 @@ describe('portal place search', () => {
     expect(searchPlaces(places, '우주선')).toEqual([])
   })
 
-  it('never lists the pub they went to — that answer lives on the receipt', () => {
-    const pub = scenario.privateMessenger.sections
-      .flatMap((s) => s.threads)
-      .flatMap((t) => (t.reactions ?? []).map((r) => r.ask))
-      .find((a) => a?.grants === 'pub')
-    const listed = JSON.stringify(scenario.places)
-    for (const accepted of pub.accept) expect(listed).not.toContain(accepted)
+  it('hides the pub until 지현 has been told its name', () => {
+    const pub = scenario.places.find((p) => p.hiddenUntil === 'pub')
+    expect(pub).toBeTruthy()
+    // before: searching cannot hand over the answer she is asking for
+    expect(searchPlaces(places, '맥주').map((p) => p.name)).not.toContain(pub.name)
+    // after: it is listed, because now it has to be bookable
+    expect(searchPlaces(places, '맥주', { pub: true }).map((p) => p.name)).toContain(pub.name)
   })
 
   it('still shows other pubs, so 맥주 is a real search', () => {

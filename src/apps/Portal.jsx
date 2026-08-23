@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { faceOf } from '../assets/photos.js'
-import { Bell, ChevronRight, Search } from '../icons/line.jsx'
+import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 
 const Face = ({ id, size }) => {
   const src = faceOf(id)
@@ -22,8 +23,21 @@ const Panel = ({ title, more, children }) => (
 
 const State = ({ value }) => <span className={'pt-state s-' + value}>{value}</span>
 
+// The notice banner and every 사내 소식 item are board posts you can open.
+const Post = ({ post, onBack }) => (
+  <article className="pt-post">
+    <button className="pt-back" onClick={onBack}>
+      <ChevronLeft size={13} strokeWidth={2.2} />목록
+    </button>
+    <h1>{post.title}</h1>
+    <div className="pt-post-meta">{post.author} · {post.date}</div>
+    {post.body.map((line, i) => <p key={i}>{line}</p>)}
+  </article>
+)
+
 export default function Portal({ site }) {
   const p = site.portal
+  const [post, setPost] = useState(null)
   return (
     <div className="pt">
       <div className="pt-top">
@@ -35,6 +49,7 @@ export default function Portal({ site }) {
         </span>
       </div>
 
+      {post ? <Post post={post} onBack={() => setPost(null)} /> : (
       <div className="pt-grid">
         <aside className="pt-me">
           <Face id={p.me.id} size={64} />
@@ -49,11 +64,11 @@ export default function Portal({ site }) {
         </aside>
 
         <main className="pt-main">
-          <div className="pt-notice">
+          <button className="pt-notice" onClick={() => setPost(p.notice)}>
             <Bell size={14} strokeWidth={2} />
             <span>{p.notice.text}</span>
             <em>{p.notice.meta}</em>
-          </div>
+          </button>
 
           <div className="pt-cols">
             <Panel title="내문서" more="결재작성">
@@ -80,7 +95,12 @@ export default function Portal({ site }) {
 
           <Panel title="사내 소식">
             <ul className="pt-news">
-              {p.news.map((n, i) => <li key={i}>{n}</li>)}
+              {p.news.map((n, i) => (
+                <li key={i}>
+                  <button onClick={() => setPost(n)}>{n.title}</button>
+                  <span className="pt-row-date">{n.date}</span>
+                </li>
+              ))}
             </ul>
           </Panel>
         </main>
@@ -110,6 +130,7 @@ export default function Portal({ site }) {
           </Panel>
         </aside>
       </div>
+      )}
 
       <footer className="pt-foot">
         <div className="pt-foot-name">{p.footer.company}</div>

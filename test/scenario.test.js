@@ -8,7 +8,8 @@ const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
 
 // every question that expects typed input, and every line the player can click
-const asksOf = (t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].filter(Boolean)
+const chain = (ask) => (ask ? [ask, ...chain(ask.then)] : [])
+const asksOf = (t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].flatMap(chain)
 const offeredBy = (t) => [
   ...quickSets(t).flat(),
   ...(t.reactions ?? []).flatMap((r) => r.next ?? []),
@@ -146,6 +147,16 @@ describe('ep1 scenario integrity', () => {
     expect(portal).not.toContain('입사일')   // the hire date belongs on the ID card scan
   })
 
+  it('every portal board post opens onto something worth reading', () => {
+    const portal = scenario.sites.find((s) => s.layout === 'portal').portal
+    for (const post of [portal.notice, ...portal.news]) {
+      expect(post.title.length).toBeGreaterThan(5)
+      expect(post.author).toBeTruthy()
+      expect(post.date).toMatch(/^\d{4}\.\d{2}\.\d{2}$/)
+      expect(post.body.length).toBeGreaterThan(1)
+    }
+  })
+
   it('offers every thread at least one usable set of reply choices', () => {
     for (const t of threads) {
       const sets = quickSets(t)
@@ -178,14 +189,19 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
-  it('makes every typed answer findable somewhere in the game', () => {
-    // a picture counts: its description says what the player can read off it
-    const world = JSON.stringify({ files, sites: scenario.sites, network: scenario.network })
+  it('makes every typed answer obtainable somewhere in the game', () => {
+    // Everything the player can read off or produce: file text, a photo's
+    // description, a site, ipconfig output, a listing, or the booking form.
+    const world = JSON.stringify({
+      files, sites: scenario.sites, network: scenario.network,
+      places: scenario.places, booking: scenario.booking
+    })
     const asks = threads.flatMap(asksOf)
     expect(asks.length).toBeGreaterThan(0)
     for (const a of asks) {
       expect(a.accept.length).toBeGreaterThan(0)
-      for (const accepted of a.accept) expect(world).toContain(accepted)
+      // an entry may be several parts that all have to appear in the answer
+      for (const entry of a.accept.flat()) expect(world).toContain(entry)
     }
   })
 

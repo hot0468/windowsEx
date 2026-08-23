@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, findFile, hintAfter, quickSets } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, findFile, hintAfter, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -149,15 +149,14 @@ export default function Messenger({ source }) {
   // Anything the player has to look up gets typed in, so picking from a list
   // can't stand in for actually finding it.
   const ask = thread ? (thread.id in asks ? asks[thread.id] : thread.ask ?? null) : null
-  const loose = (v) => v.replace(/\s/g, '').toLowerCase()
   const answer = () => {
     const text = draft.trim()
     if (!text) return
     say({ text })
     setDraft('')
-    const right = ask.accept.some((a) => loose(text).includes(loose(a)))
-    if (right) {
-      setAsks((a) => ({ ...a, [thread.id]: null }))
+    if (answerFits(ask, text)) {
+      // a question may hand straight over to the next one
+      setAsks((a) => ({ ...a, [thread.id]: ask.then ?? null }))
       if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
       if (ask.grants) grant(ask.grants)
       speak(ask.ok)
