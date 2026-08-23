@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useGame, entriesAt, fileOpener, rootIcon, fsWithPinned, searchFiles } from '../engine/store.js'
+import { useGame, entriesAt, fileOpener, rootIcon, fsView, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../icons/line.jsx'
@@ -9,8 +9,10 @@ import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../ic
 export default function FileDialog({ start = '문서', onPick, onClose }) {
   const scenarioFs = useGame((s) => s.scenario.fs)
   const pinned = useGame((s) => s.pinned)
-  const fs = fsWithPinned(scenarioFs, pinned)
-  const roots = Object.keys(fs)
+  const restored = useGame((s) => s.restored)
+  const fs = fsView(scenarioFs, { pinned, restored })
+  // a binned file is not a file you can attach
+  const roots = Object.keys(fs).filter((r) => r !== '휴지통')
   const nav = useFolderNav(start)
   const [selected, setSelected] = useState(null)
   const [name, setName] = useState('')

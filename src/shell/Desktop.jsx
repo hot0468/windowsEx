@@ -1,4 +1,4 @@
-import { useGame, fileOpener, fsWithPinned } from '../engine/store.js'
+import { useGame, fileOpener, fsView } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 

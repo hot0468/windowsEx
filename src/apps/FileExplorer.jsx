@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsWithPinned, searchFiles } from '../engine/store.js'
+import { useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsView, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
@@ -8,18 +8,22 @@ import { ArrowUp, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 export default function FileExplorer({ startFolder }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
+  const restored = useGame((s) => s.restored)
   const openWindow = useGame((s) => s.openWindow)
   const pinFile = useGame((s) => s.pinFile)
   const unpinFile = useGame((s) => s.unpinFile)
+  const restoreFile = useGame((s) => s.restoreFile)
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
 
-  const fs = fsWithPinned(scenario.fs, pinned)
+  const fs = fsView(scenario.fs, { pinned, restored })
   const roots = Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 
   const here = nav.path[nav.path.length - 1]
   const inWork = here === WORK_FOLDER
+  // Nothing leaves the bin by drag or copy — it has to be restored first.
+  const inTrash = nav.path[0] === '휴지통'
   const searching = Boolean(q.trim())
   const hits = searching ? searchFiles(fs, nav.path, q) : []
   const entries = entriesAt(fs, nav.path)
@@ -78,7 +82,7 @@ export default function FileExplorer({ startFolder }) {
             <div className="ex-hits-head">'{q.trim()}' 검색 결과 {hits.length}건 — {here} 및 하위 폴더</div>
             {hits.length === 0 && <div className="ex-empty">일치하는 파일이 없습니다</div>}
             {hits.map(({ file, trail }) => (
-              <button key={file.id} className="ex-hit" {...fileDragProps(file)}
+              <button key={file.id} className="ex-hit" {...(inTrash ? {} : fileDragProps(file))}
                       onContextMenu={onContext(file)}
                       onDoubleClick={() => openWindow(fileOpener(file).app, { fileId: file.id })}>
                 <FileGlyph file={file} size={26} />
@@ -99,7 +103,7 @@ export default function FileExplorer({ startFolder }) {
               </button>
             ))}
             {files.map((f) => (
-              <button key={f.id} className="ex-file" {...fileDragProps(f)}
+              <button key={f.id} className="ex-file" {...(inTrash ? {} : fileDragProps(f))}
                       onContextMenu={onContext(f)}
                       onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
                 <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
@@ -116,7 +120,11 @@ export default function FileExplorer({ startFolder }) {
               <button onClick={() => { openWindow(fileOpener(menu.file).app, { fileId: menu.file.id }); setMenu(null) }}>
                 열기
               </button>
-              {inWork ? (
+              {inTrash ? (
+                menu.file.deleted && (
+                  <button onClick={() => { restoreFile(menu.file.id); setMenu(null) }}>복원</button>
+                )
+              ) : inWork ? (
                 <button onClick={() => { unpinFile(menu.file.id); setMenu(null) }}>
                   {WORK_FOLDER}에서 빼기
                 </button>
