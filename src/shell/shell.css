@@ -357,6 +357,14 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .mw-drop-empty { color: #aab; font-size: 12px; margin: auto; }
 .mw-drop.over { border-color: #0067c0; border-style: solid; background: #f0f7ff; }
 .mg-conv.drop { outline: 2px dashed #0067c0; outline-offset: -6px; }
+.mg-conv { position: relative; }
+.mg-ask { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20,25,40,.35); }
+.mg-ask-card { width: min(280px, 100%); padding: 18px; border-radius: 10px; background: #fff; box-shadow: 0 14px 36px rgba(0,0,0,.3); text-align: center; }
+.mg-ask-img { display: block; width: 100%; max-height: 170px; object-fit: cover; border-radius: 7px; margin-bottom: 14px; }
+.mg-ask-file { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 14px 10px; margin-bottom: 14px; border-radius: 7px; background: #f2f4f9; font-size: 12px; word-break: break-all; }
+.mg-ask-card p { font-size: 13px; line-height: 1.6; color: #333; }
+.mg-ask-row { display: flex; gap: 8px; margin-top: 16px; }
+.mg-ask-row button { flex: 1; justify-content: center; }
 .desktop-icon.drop { background: rgba(255,255,255,.3); outline: 2px dashed #fff; }
 .mw-tools { display: flex; align-items: center; gap: 3px; padding: 7px 14px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; background: #fafafc; flex-shrink: 0; }
 .mw-tools select { padding: 4px 6px; border: 1px solid #dcdce2; border-radius: 3px; background: #fff; font: inherit; font-size: 12px; }

@@ -53,6 +53,7 @@ export default function Messenger({ source }) {
   const [picking, setPicking] = useState(false)
   const [answeredAt, setAnsweredAt] = useState({})
   const [reacted, setReacted] = useState({})
+  const [confirming, setConfirming] = useState(null)
   const pending = useRef([])
   const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
@@ -119,9 +120,10 @@ export default function Messenger({ source }) {
     if (typingFor.current) setTyping(typingFor.current, false)
   }, [])
 
+  // A drop is easy to do by accident and sending can't be undone, so it asks first.
   const drop = useFileDrop((id) => {
     const file = findFile(fs, id)
-    if (file && thread && !busy) sendFile(file)
+    if (file && thread && !busy) setConfirming(file)
   })
 
   return (
@@ -243,6 +245,23 @@ export default function Messenger({ source }) {
                     <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
                   ))}
             </div>
+            {confirming && (
+              <div className="mg-ask">
+                <div className="mg-ask-card">
+                  {confirming.image
+                    ? <img className="mg-ask-img" src={fileImage(confirming.image)} alt={confirming.name} />
+                    : <div className="mg-ask-file"><Paperclip size={15} strokeWidth={2} />{confirming.name}</div>}
+                  <p><b>{thread.name}</b>님에게 이 파일을 전송하시겠습니까?</p>
+                  <div className="mg-ask-row">
+                    <button className="btn-primary"
+                            onClick={() => { sendFile(confirming); setConfirming(null) }}>
+                      보내기
+                    </button>
+                    <button className="sm-cancel" onClick={() => setConfirming(null)}>취소</button>
+                  </div>
+                </div>
+              </div>
+            )}
             {picking && (
               <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
                           onPick={(f) => { sendFile(f); setPicking(false) }}
