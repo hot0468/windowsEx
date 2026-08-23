@@ -38,8 +38,8 @@ describe('payslips', () => {
       ...[scenario.workMessenger, scenario.privateMessenger]
         .flatMap((m) => m.sections.flatMap((s) => s.threads))
         .flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)])
-        .filter(Boolean).flatMap((a) => a.accept.flat()),
-      ...scenario.days.flatMap((d) => d.asks ?? []).flatMap((a) => a.ask.accept.flat())
+        .filter(Boolean).flatMap((a) => a.accept?.flat() ?? []),
+      ...scenario.days.flatMap((d) => d.asks ?? []).flatMap((a) => a.ask?.accept?.flat() ?? [])
     ].filter((a) => a.length > 2)
     const paper = slips.map((s) => s.content).join('\n')
     for (const answer of new Set(answers)) expect(paper).not.toContain(answer)

@@ -7,7 +7,7 @@ const threads = [scenario.workMessenger, scenario.privateMessenger]
 const bots = threads.filter((t) => t.bot)
 
 // everything the player ever has to type in, wherever the question lives
-const accepted = (ask) => (ask ? ask.accept.flat() : [])
+const accepted = (ask) => ask?.accept?.flat() ?? []
 const answers = [
   ...threads.flatMap((t) => [
     ...accepted(t.ask), ...(t.reactions ?? []).flatMap((r) => accepted(r.ask))

@@ -207,6 +207,16 @@ describe('scenario integrity', () => {
     }
   })
 
+  it('every question wants either typed text or a real file, never neither', () => {
+    const known = new Set(files.map((f) => f.id))
+    const asks = [...threads.flatMap(asksOf), ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask)))]
+    expect(asks.some((a) => a.files)).toBe(true)
+    for (const a of asks) {
+      expect(Boolean(a.accept?.length) !== Boolean(a.files?.length)).toBe(true)
+      for (const id of a.files ?? []) expect(known.has(id)).toBe(true)
+    }
+  })
+
   it('gates the intranet on an IP approval exactly one thread can grant', () => {
     for (const site of scenario.sites.filter((s) => s.login)) expect(site.requiresIp).toBe(true)
     const granting = threads.flatMap(asksOf).filter((a) => a.grants === 'ip')
@@ -234,7 +244,7 @@ describe('scenario integrity', () => {
   it('never hands a typed answer over as a clickable choice', () => {
     for (const t of threads) {
       for (const a of asksOf(t)) {
-        for (const accepted of a.accept) {
+        for (const accepted of a.accept ?? []) {
           expect(offeredBy(t).some((c) => c.includes(accepted))).toBe(false)
         }
       }
@@ -243,18 +253,25 @@ describe('scenario integrity', () => {
 
   it('ties every objective to a state the game can actually reach', () => {
     const urls = new Set(scenario.sites.map((s) => s.url))
-    // three ways to earn a grant: a chat question, a day's mail brief, or a
-    // question a day raises on arrival
+    // five ways to earn a grant: a chat question, a day's mail brief, a
+    // question a day raises on arrival, a document fetched by mail, or
+    // fixing the cell an objective names
     const granted = new Set([
       ...threads.flatMap(asksOf).map((a) => a.grants),
       ...scenario.days.map((d) => d.goal?.grants),
-      ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants)
+      ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants),
+      ...scenario.days.map((d) => d.fetch?.grants),
+      ...scenario.objectives.filter((o) => o.cell).map((o) => o.grant)
     ].filter(Boolean))
     expect(scenario.objectives.length).toBeGreaterThan(0)
     for (const o of scenario.objectives) {
       expect(o.title).toBeTruthy()
       if (o.site) expect(urls.has(o.site)).toBe(true)
       if (o.grant) expect(granted.has(o.grant)).toBe(true)
+      if (o.cell) {
+        const sheet = files.find((f) => f.id === o.cell.file)?.sheets?.find((s) => s.name === o.cell.sheet)
+        expect(sheet?.rows[o.cell.row]?.[o.cell.col]).toBeTruthy()
+      }
       expect(Boolean(o.site) || Boolean(o.grant)).toBe(true)
     }
   })

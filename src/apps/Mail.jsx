@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { sortMails, useGame } from '../engine/store.js'
 import Compose from './Compose.jsx'
-import { ChevronDown, ChevronUp, Paperclip, Search, Send, Star } from '../icons/line.jsx'
+import { ChevronDown, ChevronUp, Paperclip, PenLine, Search, Send, Star } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
@@ -11,6 +11,9 @@ export default function Mail() {
   const markMailRead = useGame((s) => s.markMailRead)
   const toggleStar = useGame((s) => s.toggleStar)
   const sendReply = useGame((s) => s.sendReply)
+  const sendMail = useGame((s) => s.sendMail)
+  const restored = useGame((s) => s.restored)
+  const restoreFile = useGame((s) => s.restoreFile)
   const crash = useGame((s) => s.crash)
   const [selected, setSelected] = useState(null)
   const [composing, setComposing] = useState(false)
@@ -37,13 +40,14 @@ export default function Mail() {
     if (next) open(next)
   }
   const send = (draft) => {
-    sendReply(draft)
+    if (mail) sendReply(draft)
+    else sendMail(draft)
     setSent(true)
     setComposing(false)
   }
 
   // Composing takes over the window, the way webmail does.
-  if (mail && composing) {
+  if (composing) {
     return <Compose mail={mail} onSend={send} onCancel={() => setComposing(false)} />
   }
 
@@ -51,6 +55,9 @@ export default function Mail() {
     <div className="mail-layout">
       <div className="mail-list">
         <div className="ml-head">
+          <button className="ml-write" onClick={() => { setSelected(null); setComposing(true); setSent(false) }}>
+            <PenLine size={14} strokeWidth={2} />메일쓰기
+          </button>
           <div className="ml-title">받은메일함 <b>{unread}</b> / {all.length}</div>
           <div className="ml-search">
             <Search size={14} strokeWidth={1.9} />
@@ -122,10 +129,16 @@ export default function Mail() {
                 <div className="md-attach-row">
                   <span className="md-attach-name">{mail.attach.name}</span>
                   <span className="md-attach-size">{mail.attach.size}</span>
-                  <button className="md-attach-run"
-                          onClick={() => mail.attach.danger && crash()}>
-                    실행
-                  </button>
+                  {mail.attach.fileId ? (
+                    <button className="md-attach-run" disabled={!!restored[mail.attach.fileId]}
+                            onClick={() => restoreFile(mail.attach.fileId)}>
+                      {restored[mail.attach.fileId] ? '다운로드 폴더에 저장됨' : '저장'}
+                    </button>
+                  ) : (
+                    <button className="md-attach-run" onClick={() => mail.attach.danger && crash()}>
+                      실행
+                    </button>
+                  )}
                 </div>
               </div>
             )}

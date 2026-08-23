@@ -29,7 +29,7 @@ describe('퇴근길 board', () => {
     const answers = [
       ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(chain),
       ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask)))
-    ].flatMap((a) => a.accept.flat())
+    ].flatMap((a) => a.accept?.flat() ?? [])
     const secrets = [
       ...answers,
       ...scenario.days.flatMap((d) => d.goal.requiredKeywords),

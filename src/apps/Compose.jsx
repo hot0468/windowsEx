@@ -28,6 +28,9 @@ export default function Compose({ mail, onSend, onCancel }) {
   const me = useGame((s) => s.scenario.player)
   const pinned = useGame((s) => s.pinned)
   const [att, setAtt] = useState('')
+  // a fresh mail needs an address and a subject typed in; a reply already has both
+  const [to, setTo] = useState('')
+  const [subject, setSubject] = useState('')
   const [picking, setPicking] = useState(false)
   const [font, setFont] = useState(FONTS[0])
   const [size, setSize] = useState(SIZES[1])
@@ -43,7 +46,8 @@ export default function Compose({ mail, onSend, onCancel }) {
   return (
     <div className="mw">
       <div className="mw-actions">
-        <button className="btn-primary" onClick={() => onSend({ attachmentId: att || null, body: body.current.innerText })}>
+        <button className="btn-primary" disabled={!mail && !to.trim()}
+                onClick={() => onSend({ to: to.trim(), subject: subject.trim() || '(제목 없음)', attachmentId: att || null, body: body.current.innerText })}>
           <Send size={15} strokeWidth={1.8} />보내기
         </button>
         <button className="sm-cancel" onClick={onCancel}>취소</button>
@@ -56,11 +60,17 @@ export default function Compose({ mail, onSend, onCancel }) {
         </div>
         <div className="mw-row">
           <span className="mw-label">받는사람</span>
-          <span className="mw-value">{mail.from}</span>
+          {mail ? <span className="mw-value">{mail.from}</span> : (
+            <input className="mw-input" value={to} onChange={(e) => setTo(e.target.value)}
+                   placeholder="받는 사람의 메일 주소" aria-label="받는사람" spellCheck={false} />
+          )}
         </div>
         <div className="mw-row">
           <span className="mw-label">제목</span>
-          <span className="mw-value">RE: {mail.subject}</span>
+          {mail ? <span className="mw-value">RE: {mail.subject}</span> : (
+            <input className="mw-input" value={subject} onChange={(e) => setSubject(e.target.value)}
+                   placeholder="제목" aria-label="제목" spellCheck={false} />
+          )}
         </div>
         <div className="mw-row mw-attach">
           <span className="mw-label">파일첨부</span>

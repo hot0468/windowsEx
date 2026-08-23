@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
-import { checkGoal } from './goal.js'
+import { checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
@@ -278,6 +278,13 @@ export const useGame = create((set, get) => ({
     const { spent, lines } = complaintFor(goal, verdict.reason, misses)
     set({ misses })
 
+    get().nag(lines, () => spent && setTimeout(() => set({ failed: true }), 2600))
+    return verdict.ok
+  },
+
+  // The boss types a moment after the client's reply lands, one line at a time.
+  nag: (lines, after) => {
+    const c = get().scenario.goal.complain
     setTimeout(() => {
       get().setTyping(c.thread, true)
       lines.forEach((text, i) => setTimeout(() => {
@@ -285,10 +292,27 @@ export const useGame = create((set, get) => ({
         if (i === lines.length - 1) {
           get().setTyping(c.thread, false)
           get().showToast({ from: c.from, text, app: 'messenger', source: c.source, thread: c.thread })
-          if (spent) setTimeout(() => set({ failed: true }), 2600)
+          after?.()
         }
       }, i * 1600))
     }, 3600)
+  },
+
+  // A mail the player starts. Only the day's brief knows which address is real;
+  // everything else bounces. `{to}` and `{subject}` in the reply are filled in.
+  sendMail: ({ to, subject, body }) => {
+    const s = get()
+    const fetch = s.scenario.days[s.day - 1]?.fetch
+    const verdict = checkOutbound(fetch, { to, body })
+    const fill = (t = '') => t.replace('{to}', to).replace('{subject}', subject)
+    const reply = verdict.reply ?? s.scenario.goal.bounce
+    setTimeout(() => {
+      const mail = { ...reply, id: 'in_' + Date.now(), date: '방금', subject: fill(reply.subject), body: fill(reply.body) }
+      set((st) => ({ extraMails: [...st.extraMails, mail] }))
+      get().showToast({ from: mail.from, text: `새 메일이 도착했습니다: ${mail.subject}`, app: 'mail' })
+      if (verdict.ok) setTimeout(() => get().grant(fetch.grants), 2200)
+      if (verdict.reason === 'rude') get().nag(fetch.rude)
+    }, 1800)
     return verdict.ok
   }
 }))
@@ -317,6 +341,8 @@ export function fsView(fs, { pinned = [], restored = {} } = {}) {
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
     if (e.deleted && !restored[e.id]) { binned.push(e); return [] }
+    // a mail attachment is nowhere until it is saved from the mail
+    if (e.attached && !restored[e.id]) return []
     return [e]
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))

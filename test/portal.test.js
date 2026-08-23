@@ -45,7 +45,7 @@ describe('portal news and Q&A', () => {
   it('points the way without handing over any answer', () => {
     const wiki = scenario.sites.find((s) => s.layout === 'wiki')
     const portal = scenario.sites.find((s) => s.layout === 'portal')
-    const answers = scenario.days.flatMap((d) => d.asks ?? []).flatMap((a) => a.ask.accept.flat())
+    const answers = scenario.days.flatMap((d) => d.asks ?? []).flatMap((a) => a.ask?.accept?.flat() ?? [])
     // a shop's name is meant to be looked up in the shop listing — that is the puzzle.
     // a price, a password, an address or a colleague's mail address is not.
     const lookupOnly = answers.filter((a) => scenario.places.some((p) => p.name.includes(a)))
