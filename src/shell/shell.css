@@ -156,6 +156,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .portal-logo { font-size: 46px; font-weight: 700; letter-spacing: -1px; color: #2f6fd0; }
 .portal-search { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 480px; margin: 26px 0 34px; padding: 8px 8px 8px 18px; border-radius: 26px; box-shadow: 0 1px 8px rgba(0,0,0,.14); color: #888; }
 .portal-search input { flex: 1; min-width: 0; border: none; outline: none; font: inherit; color: #222; background: none; }
+.portal-search .btn-primary { padding: 8px 22px; border-radius: 18px; }
 
 /* search results */
 .results { max-width: 560px; }
