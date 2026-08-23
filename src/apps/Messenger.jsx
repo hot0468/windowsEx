@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '../engine/store.js'
 import {
-  BellOff, ChevronDown, ChevronLeft, MessageSquare,
+  BellOff, ChevronDown, MessageSquare,
   Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
 const QUICK = ['넵, 확인하겠습니다!', '감사합니다 🙇']
 
-const Row = ({ t, preview, unread, onOpen }) => (
-  <button className="mg-row" onClick={onOpen}>
+const Avatar = ({ t, size }) => (
+  <span className={'mg-av' + (t.room ? ' room' : '')}
+        style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
+    {t.name[0]}
+    {t.online && <i className="mg-dot" />}
+  </span>
+)
+
+const Row = ({ t, preview, unread, selected, onOpen }) => (
+  <button className={'mg-row' + (selected ? ' sel' : '')} onClick={onOpen}>
     <Avatar t={t} size={40} />
     <span className="mg-row-mid">
       <span className="mg-row-name">
@@ -18,14 +26,6 @@ const Row = ({ t, preview, unread, onOpen }) => (
     </span>
     {unread > 0 && <span className="mg-badge">{unread}</span>}
   </button>
-)
-
-const Avatar = ({ t, size }) => (
-  <span className={'mg-av' + (t.room ? ' room' : '')}
-        style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
-    {t.name[0]}
-    {t.online && <i className="mg-dot" />}
-  </span>
 )
 
 export default function Messenger({ source }) {
@@ -44,53 +44,22 @@ export default function Messenger({ source }) {
   const threads = m.sections.flatMap((s) => s.threads)
   const unreadOf = (t) => msgsOf(t).length - (seen[t.id] ?? 0)
   const thread = threads.find((t) => t.id === openId)
+  const matches = (t) => !q.trim() || t.name.includes(q.trim())
+  const totalUnread = threads.reduce((n, t) => n + unreadOf(t), 0)
 
   useEffect(() => {
     const t = threads.find((x) => x.id === openId)
     if (t) setSeen((s) => ({ ...s, [t.id]: msgsOf(t).length }))
   }, [openId, msgCount])
 
-  if (thread) {
-    const msgs = msgsOf(thread)
-    const mine = replies[thread.id] ?? []
-    const reply = (text) =>
-      setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), text] }))
-    return (
-      <div className="messenger">
-        <div className="mg-chat-top">
-          <button onClick={() => setOpenId(null)} title="목록으로">
-            <ChevronLeft size={19} strokeWidth={1.9} />
-          </button>
-          <Avatar t={thread} size={32} />
-          <div className="mg-chat-who">
-            <div className="mg-chat-name">{thread.name}</div>
-            <div className="mg-chat-sub">{thread.sub}</div>
-          </div>
-        </div>
-        <div className="msg-list">
-          {msgs.length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
-          {msgs.map((msg, i) => (
-            <div key={i} className={'bubble ' + (msg.me ? 'me' : 'them')}>
-              {!msg.me && <b>{msg.from}</b>}{msg.text}
-            </div>
-          ))}
-          {mine.map((text, i) => <div key={'r' + i} className="bubble me">{text}</div>)}
-        </div>
-        <div className="quick">
-          {QUICK.map((text) => (
-            <button key={text} onClick={() => reply(text)}>{text}</button>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const matches = (t) => !q.trim() || t.name.includes(q.trim())
-  const totalUnread = threads.reduce((n, t) => n + unreadOf(t), 0)
-
   const row = (t, preview) => (
-    <Row key={t.id} t={t} preview={preview} unread={unreadOf(t)} onOpen={() => setOpenId(t.id)} />
+    <Row key={t.id} t={t} preview={preview} unread={unreadOf(t)}
+         selected={t.id === openId} onOpen={() => setOpenId(t.id)} />
   )
+
+  const mine = thread ? replies[thread.id] ?? [] : []
+  const reply = (text) =>
+    setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), text] }))
 
   return (
     <div className="mg">
@@ -108,7 +77,7 @@ export default function Messenger({ source }) {
         <span className="mg-rail-btn off" title="설정"><Settings size={19} strokeWidth={1.8} /></span>
       </div>
 
-      <div className="mg-main">
+      <div className="mg-side">
         <div className="mg-top">
           <Search size={17} strokeWidth={1.9} />
           <input value={q} onChange={(e) => setQ(e.target.value)}
@@ -150,6 +119,35 @@ export default function Messenger({ source }) {
             return list.map((t) => row(t, msgsOf(t).slice(-1)[0].text))
           })()}
         </div>
+      </div>
+
+      <div className="mg-conv">
+        {!thread && <div className="mg-none">왼쪽에서 대화 상대를 선택하세요</div>}
+        {thread && (
+          <>
+            <div className="mg-chat-top">
+              <Avatar t={thread} size={32} />
+              <div className="mg-chat-who">
+                <div className="mg-chat-name">{thread.name}</div>
+                <div className="mg-chat-sub">{thread.sub}</div>
+              </div>
+            </div>
+            <div className="msg-list">
+              {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
+              {msgsOf(thread).map((msg, i) => (
+                <div key={i} className={'bubble ' + (msg.me ? 'me' : 'them')}>
+                  {!msg.me && <b>{msg.from}</b>}{msg.text}
+                </div>
+              ))}
+              {mine.map((text, i) => <div key={'r' + i} className="bubble me">{text}</div>)}
+            </div>
+            <div className="quick">
+              {QUICK.map((text) => (
+                <button key={text} onClick={() => reply(text)}>{text}</button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
