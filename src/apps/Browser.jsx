@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { useGame, searchPlaces, searchSites, siteView } from '../engine/store.js'
+import { useEffect, useState } from 'react'
+import { useGame, searchBlogs, searchPlaces, searchSites, siteView } from '../engine/store.js'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
-import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
+import { ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
+import { useHistory } from './folderNav.js'
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
@@ -60,31 +61,49 @@ export default function Browser() {
   const grants = useGame((s) => s.grants)
   const unlockSite = useGame((s) => s.unlockSite)
   const [addr, setAddr] = useState('')
-  const [page, setPage] = useState({ kind: 'home' })
+  const nav = useHistory({ kind: 'home' })
+  const page = nav.at
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(false)
 
   const open = (raw) => {
     const url = clean(raw)
     setAddr(url)
-    setPage(url ? { kind: 'site', url } : { kind: 'home' })
+    nav.go(url ? { kind: 'site', url } : { kind: 'home' })
     setMenu(false)
   }
 
   const submitSearch = () => {
     if (!q.trim()) return
     setAddr('')
-    setPage({ kind: 'search', q: q.trim() })
+    nav.go({ kind: 'search', q: q.trim() })
   }
+
+  // Stepping through history has to bring the address bar along with it.
+  const step = (move) => () => {
+    setMenu(false)
+    move()
+  }
+
+  useEffect(() => {
+    setAddr(page.kind === 'site' ? page.url : '')
+  }, [page])
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
   const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
+  const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
 
   return (
     <div className="browser">
       <div className="addr-bar">
+        <button onClick={step(nav.back)} disabled={!nav.canBack} title="뒤로">
+          <ChevronLeft size={18} strokeWidth={1.9} />
+        </button>
+        <button onClick={step(nav.forward)} disabled={!nav.canForward} title="앞으로">
+          <ChevronRight size={18} strokeWidth={1.9} />
+        </button>
         <button onClick={() => open('')} title="홈"><House size={17} strokeWidth={1.7} /></button>
         <input value={addr} onChange={(e) => setAddr(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && open(addr)}
@@ -119,7 +138,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className={'page' + (view && view !== 'error' ? ' bleed' : '')}>
+      <div className={'page' + ((page.kind === 'blog' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -136,7 +155,7 @@ export default function Browser() {
         {page.kind === 'search' && (
           <div className="results">
             <p className="results-head">
-              '{page.q}' 검색 결과 {spots.length + hits.length}건
+              '{page.q}' 검색 결과 {spots.length + posts.length + hits.length}건
             </p>
 
             {spots.length > 0 && (
@@ -160,6 +179,20 @@ export default function Browser() {
               </section>
             )}
 
+            {posts.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">블로그</h3>
+                {posts.map((b) => (
+                  <div key={b.id} className="post"
+                       onClick={() => nav.go({ kind: 'blog', id: b.id })}>
+                    <div className="post-title">{b.title}</div>
+                    <div className="post-by">{b.blog} · {b.author} · {b.date}</div>
+                    <div className="post-excerpt">{b.excerpt}</div>
+                  </div>
+                ))}
+              </section>
+            )}
+
             {hits.length > 0 && (
               <section className="rs-block">
                 <h3 className="rs-head">사이트</h3>
@@ -172,11 +205,26 @@ export default function Browser() {
               </section>
             )}
 
-            {spots.length + hits.length === 0 && (
+            {spots.length + posts.length + hits.length === 0 && (
               <p className="results-none">검색 결과가 없습니다.</p>
             )}
           </div>
         )}
+
+        {page.kind === 'blog' && (() => {
+          const b = scenario.blogs.find((x) => x.id === page.id)
+          return (
+            <article className="bl">
+              <div className="bl-head">
+                <span className="bl-blog">{b.blog}</span>
+                <span className="bl-by">{b.author} · {b.date}</span>
+              </div>
+              <h1>{b.title}</h1>
+              {b.body.map((para, i) => <p key={i}>{para}</p>)}
+              <div className="bl-tags">{b.tags.map((t) => <span key={t}>#{t}</span>)}</div>
+            </article>
+          )
+        })()}
 
         {view === 'error' && (
           <div className="site-error">

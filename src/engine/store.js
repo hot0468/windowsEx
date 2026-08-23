@@ -309,6 +309,14 @@ export function searchPlaces(places, q) {
     p.tags.some((t) => t.toLowerCase().includes(term)))
 }
 
+export function searchBlogs(blogs, q) {
+  const term = q.trim().toLowerCase()
+  if (!term) return []
+  return blogs.filter((b) =>
+    `${b.title} ${b.excerpt}`.toLowerCase().includes(term) ||
+    b.tags.some((t) => t.toLowerCase().includes(term)))
+}
+
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
 export function searchSites(sites, q) {

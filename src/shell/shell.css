@@ -299,6 +299,22 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .place-meta b { color: #e8813a; }
 .place-addr { margin-top: 6px; color: #3a8a55; font-size: 12px; }
 .place-note { margin-top: 6px; color: #666; font-size: 12px; line-height: 1.6; }
+.post { padding: 12px 0; border-bottom: 1px solid #f2f3f7; cursor: pointer; }
+.post:last-child { border-bottom: none; }
+.post:hover .post-title { text-decoration: underline; }
+.post-title { color: #1a3fa8; font-size: 14px; line-height: 1.5; }
+.post-by { margin-top: 5px; color: #999; font-size: 11px; }
+.post-excerpt { margin-top: 6px; color: #555; font-size: 12px; line-height: 1.7; }
+
+/* blog post */
+.bl { max-width: 620px; margin: 0 auto; padding: 30px 26px 50px; }
+.bl-head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 14px; border-bottom: 2px solid #3a9d5d; }
+.bl-blog { font-size: 14px; font-weight: 700; color: #3a9d5d; }
+.bl-by { color: #aaa; font-size: 11px; }
+.bl h1 { margin: 22px 0 20px; font-size: 20px; line-height: 1.5; color: #222; }
+.bl p { margin-bottom: 16px; color: #333; font-size: 13px; line-height: 2; user-select: text; }
+.bl-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding-top: 18px; border-top: 1px solid #eee; }
+.bl-tags span { color: #3a9d5d; font-size: 12px; }
 .bw-menu { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #555; }
 .bw-menu:hover { background: #eceef3; }
 .bw-pop { position: absolute; right: 8px; top: calc(100% - 2px); z-index: 6; width: 300px; padding: 6px; border-radius: 8px; background: #fff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.22); }
@@ -495,6 +511,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 /* icons */
 .icon { display: block; flex-shrink: 0; }
 .addr-bar button { display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; color: #555; }
+.addr-bar button:disabled { opacity: .3; cursor: default; }
 
 /* messenger: friend list */
 .mg { display: flex; height: 100%; background: #fff; }
