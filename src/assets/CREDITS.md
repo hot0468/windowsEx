@@ -21,6 +21,7 @@
 - `idcard.webp` — 직접 제작
 - `receipt.webp` — 직접 제작
 - `ticket.webp` — 직접 제작
+- `scan1.webp`, `scan2.webp` — 직접 제작 (판독 불가 문서 소품)
 
 ## 장소·블로그 사진 (src/assets/shots)
 
