@@ -55,6 +55,8 @@ export default function Messenger({ source }) {
   const [reacted, setReacted] = useState({})
   const [confirming, setConfirming] = useState(null)
   const [branch, setBranch] = useState({})
+  const [asks, setAsks] = useState({})
+  const [draft, setDraft] = useState('')
   const pending = useRef([])
   const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
@@ -93,8 +95,23 @@ export default function Messenger({ source }) {
     ? []
     : branch[thread.id]
       ?? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
-  // Sharing a photo or picking certain replies can prompt a scripted answer —
-  // the other side writes for a beat first, like a real conversation.
+  // The other side writes for a beat, then the lines land one after another.
+  const speak = (lines) => {
+    const id = thread.id
+    const who = thread.name
+    typingFor.current = id
+    setTyping(id, true)
+    lines.forEach((text, i) => {
+      pending.current.push(setTimeout(() => {
+        setReplies((r) => ({ ...r, [id]: [...(r[id] ?? []), { from: who, text }] }))
+        if (i === lines.length - 1) {
+          setTyping(id, false)
+          typingFor.current = null
+        }
+      }, 1200 + i * 1500))
+    })
+  }
+
   const reactTo = (key) => {
     const hit = thread.reactions?.find(
       (r) => r.files?.includes(key) || r.choice === key)
@@ -103,19 +120,25 @@ export default function Messenger({ source }) {
     if (!hit || (hit.files && reacted[key])) return
     if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
     if (hit.next) setBranch((b) => ({ ...b, [thread.id]: hit.next }))
-    const id = thread.id
-    const who = thread.name
-    typingFor.current = id
-    setTyping(id, true)
-    hit.reply.forEach((text, i) => {
-      pending.current.push(setTimeout(() => {
-        setReplies((r) => ({ ...r, [id]: [...(r[id] ?? []), { from: who, text }] }))
-        if (i === hit.reply.length - 1) {
-          setTyping(id, false)
-          typingFor.current = null
-        }
-      }, 1200 + i * 1500))
-    })
+    if (hit.ask) setAsks((a) => ({ ...a, [thread.id]: hit.ask }))
+    speak(hit.reply)
+  }
+
+  // Anything the player has to look up gets typed in, so picking from a list
+  // can't stand in for actually finding it.
+  const ask = thread ? (thread.id in asks ? asks[thread.id] : thread.ask ?? null) : null
+  const loose = (v) => v.replace(/\s/g, '').toLowerCase()
+  const answer = () => {
+    const text = draft.trim()
+    if (!text) return
+    say({ text })
+    setDraft('')
+    const right = ask.accept.some((a) => loose(text).includes(loose(a)))
+    if (right) {
+      setAsks((a) => ({ ...a, [thread.id]: null }))
+      if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
+    }
+    speak(right ? ask.ok : ask.no)
   }
 
   const choose = (text) => {
@@ -253,11 +276,22 @@ export default function Messenger({ source }) {
                       onClick={() => setPicking(true)}>
                 <Paperclip size={16} strokeWidth={1.9} />
               </button>
-              {spent
-                ? <span className="quick-done">답장을 보냈습니다</span>
-                : choices.map((text) => (
-                    <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
-                  ))}
+              {ask ? (
+                <>
+                  <input className="quick-input" value={draft} disabled={busy}
+                         onChange={(e) => setDraft(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && !busy && answer()}
+                         placeholder={ask.placeholder} aria-label={ask.placeholder} />
+                  <button className="quick-send" disabled={busy || !draft.trim()}
+                          onClick={answer}>전송</button>
+                </>
+              ) : spent ? (
+                <span className="quick-done">답장을 보냈습니다</span>
+              ) : (
+                choices.map((text) => (
+                  <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
+                ))
+              )}
             </div>
             {confirming && (
               <div className="mg-ask">

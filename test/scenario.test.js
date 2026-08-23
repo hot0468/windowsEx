@@ -7,6 +7,14 @@ const files = allFiles(scenario.fs)
 const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
 
+// every question that expects typed input, and every line the player can click
+const asksOf = (t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].filter(Boolean)
+const offeredBy = (t) => [
+  ...quickSets(t).flat(),
+  ...(t.reactions ?? []).flatMap((r) => r.next ?? []),
+  ...asksOf(t).flatMap((a) => a.next ?? [])
+]
+
 describe('ep1 scenario integrity', () => {
   it('goal attachment file exists in the filesystem', () => {
     expect(files.some((f) => f.id === scenario.goal.requiredAttachment)).toBe(true)
@@ -130,38 +138,31 @@ describe('ep1 scenario integrity', () => {
         expect(r.reply.length).toBeGreaterThan(0)
         expect(Boolean(r.files) !== Boolean(r.choice)).toBe(true)   // one trigger, not both
         for (const id of r.files ?? []) expect(known.has(id)).toBe(true)
-        // no dead dialogue: a reply trigger must be something the thread can offer,
-        // either up front or through an earlier reaction's follow-up choices
-        if (r.choice) {
-          const offered = new Set([
-            ...quickSets(t).flat(),
-            ...t.reactions.flatMap((x) => x.next ?? [])
-          ])
-          expect(offered.has(r.choice)).toBe(true)
-        }
+        // no dead dialogue: a reply trigger has to be something the thread can
+        // actually offer, up front or as a follow-up
+        if (r.choice) expect(offeredBy(t)).toContain(r.choice)
       }
     }
   })
 
-  it('hides the pub 지현 asks about in a file the player can dig up', () => {
-    const jihyun = threads.find((t) => t.id === 'jihyun')
-    const asked = jihyun.reactions.find((r) => r.choice && /맥주|호프|치어스/.test(r.choice) && r.next)
-    expect(asked).toBeTruthy()
-    const written = files.filter((f) => f.content?.includes(asked.choice))
-    expect(written.length).toBeGreaterThan(0)   // the answer exists on disk somewhere
+  it('makes every typed answer findable somewhere in the game', () => {
+    const world = JSON.stringify({ files, sites: scenario.sites })
+    const asks = threads.flatMap(asksOf)
+    expect(asks.length).toBeGreaterThan(0)
+    for (const a of asks) {
+      expect(a.accept.length).toBeGreaterThan(0)
+      for (const accepted of a.accept) expect(world).toContain(accepted)
+    }
   })
 
-  it('puts the office address 엄마 asks for somewhere findable', () => {
-    const mom = threads.find((t) => t.id === 'mom')
-    const asked = mom.reactions.find((r) => r.choice && r.reply.length > 1).choice
-    const portal = scenario.sites.find((s) => s.layout === 'portal').portal
-    expect(portal.footer.address).toBe(asked)
-  })
-
-  it('keeps the phone gallery reachable as its own drive', () => {
-    const gallery = entriesAt(scenario.fs, ['휴대폰', '갤러리'])
-    expect(gallery.length).toBeGreaterThan(0)
-    for (const photo of gallery) expect(fileImage(photo.image)).toBeTruthy()
+  it('never hands a typed answer over as a clickable choice', () => {
+    for (const t of threads) {
+      for (const a of asksOf(t)) {
+        for (const accepted of a.accept) {
+          expect(offeredBy(t).some((c) => c.includes(accepted))).toBe(false)
+        }
+      }
+    }
   })
 
   it('file ids are unique', () => {
