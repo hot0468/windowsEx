@@ -174,6 +174,23 @@ describe('ep1 scenario integrity', () => {
     expect(granting[0].accept).toContain(scenario.network.ip)
   })
 
+  it('always lets a conversation end instead of looping', () => {
+    for (const t of threads) {
+      const reactions = t.reactions ?? []
+      // choices handed out by a branch are only offered again if that branch
+      // never changes — so any reaction answering one must move the state on
+      const branched = new Set([
+        ...reactions.flatMap((r) => r.next ?? []),
+        ...asksOf(t).flatMap((a) => a.next ?? [])
+      ])
+      for (const r of reactions) {
+        if (r.choice && branched.has(r.choice)) {
+          expect(Array.isArray(r.next)).toBe(true)
+        }
+      }
+    }
+  })
+
   it('never hands a typed answer over as a clickable choice', () => {
     for (const t of threads) {
       for (const a of asksOf(t)) {

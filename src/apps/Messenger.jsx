@@ -307,6 +307,8 @@ export default function Messenger({ source }) {
                   <button className="quick-send" disabled={busy || !draft.trim()}
                           onClick={answer}>전송</button>
                 </>
+              ) : choices.length === 0 ? (
+                <span className="quick-done">대화가 끝났습니다</span>
               ) : spent ? (
                 <span className="quick-done">답장을 보냈습니다</span>
               ) : (
