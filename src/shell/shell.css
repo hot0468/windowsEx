@@ -281,7 +281,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pt-foot-name { color: #6a7590; }
 
 /* search results */
-.results { max-width: 560px; }
+.results { max-width: 620px; margin: 0 auto; }
 .results-head { margin-bottom: 16px; color: #888; font-size: 12px; }
 .result { padding: 10px 12px; margin-left: -12px; border-radius: 6px; cursor: pointer; }
 .result:hover { background: #f5f7fb; }

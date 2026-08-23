@@ -24,13 +24,16 @@ describe('portal place search', () => {
     expect(searchPlaces(places, '우주선')).toEqual([])
   })
 
-  it('offers several pubs so search cannot replace reading the receipt', () => {
+  it('never lists the pub they went to — that answer lives on the receipt', () => {
     const pub = scenario.privateMessenger.sections
       .flatMap((s) => s.threads)
       .flatMap((t) => (t.reactions ?? []).map((r) => r.ask))
       .find((a) => a?.grants === 'pub')
-    const beers = names('맥주')
-    expect(beers.some((n) => n.includes(pub.accept[0]))).toBe(true)
-    expect(beers.length).toBeGreaterThan(2)   // and it is not the only candidate
+    const listed = JSON.stringify(scenario.places)
+    for (const accepted of pub.accept) expect(listed).not.toContain(accepted)
+  })
+
+  it('still shows other pubs, so 맥주 is a real search', () => {
+    expect(names('맥주').length).toBeGreaterThan(1)
   })
 })

@@ -43,9 +43,14 @@ describe('blog search', () => {
     for (const secret of secrets) expect(text).not.toContain(secret)
   })
 
-  it('may name a pub, because naming one does not say which one they went to', () => {
-    const beers = blogs.filter((b) => b.tags.includes('맥주'))
-    expect(beers.length).toBeGreaterThan(1)
+  it('reviews other pubs but never the one they went to', () => {
+    const pub = scenario.privateMessenger.sections
+      .flatMap((s) => s.threads)
+      .flatMap((t) => (t.reactions ?? []).map((r) => r.ask))
+      .find((a) => a?.grants === 'pub')
+    const text = JSON.stringify(blogs)
+    for (const accepted of pub.accept) expect(text).not.toContain(accepted)
+    expect(blogs.filter((b) => b.tags.includes('맥주')).length).toBeGreaterThan(0)
   })
 })
 
