@@ -33,12 +33,12 @@ describe('the booking 지현 asks for', () => {
   })
 
   it('accepts the confirmation the booking screen produces', () => {
-    const pub = scenario.places.find((p) => p.hiddenUntil === 'pub')
+    const pub = scenario.places.find((p) => bookAsk.accept[0].includes(p.name))
     expect(answerFits(bookAsk, ticket(pub.name, '19:00'))).toBe(true)
   })
 
   it('rejects a booking at the wrong time', () => {
-    const pub = scenario.places.find((p) => p.hiddenUntil === 'pub')
+    const pub = scenario.places.find((p) => bookAsk.accept[0].includes(p.name))
     expect(answerFits(bookAsk, ticket(pub.name, '21:00'))).toBe(false)
   })
 
@@ -50,9 +50,9 @@ describe('the booking 지현 asks for', () => {
     expect(form.times).toContain('19:00')
   })
 
-  it('lets you reach the pub page once you know the name', () => {
-    const pub = scenario.places.find((p) => p.hiddenUntil === 'pub')
+  it('lets you reach the pub page and book a table there', () => {
+    const pub = scenario.places.find((p) => bookAsk.accept[0].includes(p.name))
     expect(pub.bookable).toBe(true)
-    expect(searchPlaces(scenario.places, pub.name, { pub: true })).toHaveLength(1)
+    expect(searchPlaces(scenario.places, pub.name)).toHaveLength(1)
   })
 })

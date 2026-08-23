@@ -320,15 +320,13 @@ export function siteView(site, { grants, unlocked }) {
 
 // Local listings for the portal's search: matched on name and tags so a broad
 // term like 맥주 brings back every candidate, not just the one that matters.
-export function searchPlaces(places, q, grants = {}) {
+export function searchPlaces(places, q) {
   const term = q.trim().toLowerCase()
   if (!term) return []
   return places.filter((p) =>
-    // some listings only surface once the player has been told about them
-    (!p.hiddenUntil || grants[p.hiddenUntil]) &&
-    (p.name.toLowerCase().includes(term) ||
-      p.category.toLowerCase().includes(term) ||
-      p.tags.some((t) => t.toLowerCase().includes(term))))
+    p.name.toLowerCase().includes(term) ||
+    p.category.toLowerCase().includes(term) ||
+    p.tags.some((t) => t.toLowerCase().includes(term)))
 }
 
 export function searchBlogs(blogs, q) {

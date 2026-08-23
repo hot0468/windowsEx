@@ -94,7 +94,7 @@ export default function Browser() {
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
   const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
-  const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q, grants) : []
+  const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
 
   return (
