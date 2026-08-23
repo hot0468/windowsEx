@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGame } from '../engine/store.js'
 import Compose from './Compose.jsx'
-import { ChevronDown, ChevronUp, Search, Send, Star } from '../icons/line.jsx'
+import { ChevronDown, ChevronUp, Paperclip, Search, Send, Star } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
@@ -11,6 +11,7 @@ export default function Mail() {
   const markMailRead = useGame((s) => s.markMailRead)
   const toggleStar = useGame((s) => s.toggleStar)
   const sendReply = useGame((s) => s.sendReply)
+  const crash = useGame((s) => s.crash)
   const [selected, setSelected] = useState(null)
   const [composing, setComposing] = useState(false)
   const [sent, setSent] = useState(false)
@@ -113,6 +114,21 @@ export default function Mail() {
             </div>
             <div className="md-date">{mail.date}</div>
             <pre className="md-body">{mail.body}</pre>
+            {mail.attach && (
+              <div className="md-attach">
+                <div className="md-attach-head">
+                  <Paperclip size={13} strokeWidth={2} />첨부파일 1개
+                </div>
+                <div className="md-attach-row">
+                  <span className="md-attach-name">{mail.attach.name}</span>
+                  <span className="md-attach-size">{mail.attach.size}</span>
+                  <button className="md-attach-run"
+                          onClick={() => mail.attach.danger && crash()}>
+                    실행
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -63,6 +63,7 @@ export const useGame = create((set, get) => ({
   scenario,
   booted: false,
   toast: null,
+  crashed: false,
   windows: restored?.windows ?? [],
   nextZ: restored?.nextZ ?? 10,
   msgCount: restored?.msgCount ?? 0,
@@ -160,6 +161,23 @@ export const useGame = create((set, get) => ({
 
   resizeWindow: (id, rect) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, ...rect } : w)) })),
+
+  // Running the phishing attachment takes the machine down. Progress is kept —
+  // what is lost is every open window and whatever was on screen in them.
+  crash: () => set({ crashed: true, toast: null }),
+  reboot: () => {
+    const s = get()
+    const after = s.scenario.malware.aftermath
+    if (!s.grants.infected) {
+      after.lines.forEach((text) => s.pushMessage(after.thread, { from: after.from, text }))
+      s.grant('infected')
+    }
+    set({ crashed: false, booted: false, windows: [] })
+    setTimeout(() => get().showToast({
+      from: after.from, text: after.lines[0],
+      app: 'messenger', source: after.source, thread: after.thread
+    }), 3200)
+  },
 
   markMailRead: (id, read = true) =>
     set((s) => ({ readMails: { ...s.readMails, [id]: read } })),

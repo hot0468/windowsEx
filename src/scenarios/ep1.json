@@ -530,6 +530,18 @@
       "body": "임직원 여러분, 보안 강화를 위해 사내위키(wiki.hanbit.co.kr) 비밀번호가 전체 초기화되었습니다.\n\n초기 비밀번호: 본인 입사일 4자리 (MMDD)\n\n로그인 후 반드시 비밀번호를 변경해 주시기 바랍니다.\n정보전략팀 드림"
     },
     {
+      "id": "mail_fake_vaccine",
+      "from": "한빛 정보보안팀 <security@hanbit-security.co.kr>",
+      "subject": "[필수] 사내 백신 프로그램 긴급 설치 안내 (미설치 시 계정 정지)",
+      "date": "8월 22일 (토) 02:14",
+      "body": "안녕하십니까. 한빛 정보보안팀입니다.\n\n최근 사내망을 대상으로 한 악성코드 유포가 급증하고 있어\n전 임직원 PC에 백신 프로그램을 긴급 배포합니다.\n\n■ 조치 사항\n  - 첨부된 설치 파일을 실행하여 백신을 설치하십시오.\n  - 24시간 내 미설치 시 사내 계정이 자동 정지될 수 있습니다.\n\n■ 문의\n  security@hanbit-security.co.kr\n\n본 메일은 발신 전용입니다.\n한빛 정보보안팀 드림",
+      "attach": {
+        "name": "HanbitVaccine_Setup.exe",
+        "size": "1.4MB",
+        "danger": true
+      }
+    },
+    {
       "id": "mail_notice",
       "from": "총무팀 <ga@hanbit.co.kr>",
       "subject": "[공지] 사내 주차장 도색 공사 안내 (8/25~8/27)",
@@ -2137,5 +2149,24 @@
     ],
     "date": "8월 23일 (일)",
     "template": "[예약 확정] {place}\n{date} {time} · {party}\n예약번호 {code}"
+  },
+  "malware": {
+    "bsod": {
+      "face": ":(",
+      "title": "PC에 문제가 발생했습니다. 다시 시작해야 합니다.",
+      "sub": "오류 정보를 수집하는 중입니다. 완료되면 자동으로 다시 시작합니다.",
+      "code": "중지 코드: MALICIOUS_PROCESS_DETECTED"
+    },
+    "aftermath": {
+      "source": "workMessenger",
+      "thread": "security",
+      "from": "정보보안팀",
+      "lines": [
+        "김한별 대리님, 방금 PC에서 악성코드 실행이 탐지되어 강제 종료했습니다.",
+        "받으신 메일 발신 주소가 hanbit-security.co.kr 이었죠? 저희 공식 도메인은 hanbit.co.kr 입니다.",
+        "그리고 사내에서 .exe 첨부파일을 메일로 배포하는 일은 없습니다. 새벽 2시에 보내는 일도 없고요.",
+        "다행히 자동 차단됐지만, 다음부터는 실행 전에 저희에게 먼저 문의해 주세요."
+      ]
+    }
   }
 }

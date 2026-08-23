@@ -5,6 +5,7 @@ import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Progress from './shell/Progress.jsx'
+import Crash from './shell/Crash.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
@@ -107,6 +108,7 @@ export default function App() {
   const booted = useGame((s) => s.booted)
   const cleared = useGame((s) => s.cleared)
   const failed = useGame((s) => s.failed)
+  const crashed = useGame((s) => s.crashed)
 
   useEffect(() => {
     if (!booted) return
@@ -128,6 +130,7 @@ export default function App() {
     return () => timers.forEach(clearTimeout)
   }, [booted])
 
+  if (crashed) return <Crash />
   if (!booted) return <Boot />
   return (
     <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
