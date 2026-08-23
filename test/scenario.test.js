@@ -82,9 +82,24 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
-  it('every file carries text, a picture, or slides', () => {
+  it('every file carries text, a picture, slides, or sheets', () => {
     for (const f of files) {
-      expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides)).toBe(true)
+      expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides) || Boolean(f.sheets))
+        .toBe(true)
+    }
+  })
+
+  it('opens every workbook in the spreadsheet app with square rows', () => {
+    const books = files.filter((f) => f.sheets)
+    expect(books.length).toBeGreaterThan(0)
+    for (const b of books) {
+      expect(fileOpener(b).app).toBe('sheet')
+      for (const sh of b.sheets) {
+        expect(sh.name).toBeTruthy()
+        expect(sh.columns.length).toBeGreaterThan(0)
+        // every row has to line up with the header, or the grid goes ragged
+        for (const row of sh.rows) expect(row.length).toBe(sh.columns.length)
+      }
     }
   })
 
@@ -118,7 +133,7 @@ describe('ep1 scenario integrity', () => {
   it('every paperwork file is .hwp and every scribble .txt', () => {
     for (const f of files) {
       if (f.image) continue
-      expect(f.name).toMatch(/\.(hwp|txt|pptx)$/)
+      expect(f.name).toMatch(/\.(hwp|txt|pptx|xlsx)$/)
     }
   })
 

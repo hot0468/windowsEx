@@ -13,8 +13,9 @@ import ppt from './ppt.svg'
 import trash from './trash.svg'
 import trophy from './trophy.svg'
 import workchat from './workchat.svg'
+import xls from './xls.svg'
 
-const SRC = { chat, cmd, doc, folder, globe, hwp, image, mail, notepad, phone, ppt, trash, trophy, workchat }
+const SRC = { chat, cmd, doc, folder, globe, hwp, image, mail, notepad, phone, ppt, trash, trophy, workchat, xls }
 
 export default function Icon({ name, size = 16 }) {
   return <img className="icon" src={SRC[name]} width={size} height={size} alt="" draggable="false" />

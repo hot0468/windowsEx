@@ -276,9 +276,10 @@ export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
 // Which app opens a file, decided by its name the way an OS does it.
 export const fileOpener = (file) =>
   file.image ? { app: 'viewer', icon: 'image' }
-    : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
-      : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
-        : { app: 'notepad', icon: 'doc' }
+    : file.name.endsWith('.xlsx') ? { app: 'sheet', icon: 'xls' }
+      : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
+        : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
+          : { app: 'notepad', icon: 'doc' }
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
