@@ -298,6 +298,17 @@ export function siteView(site, { grants, unlocked }) {
   return 'ready'
 }
 
+// Local listings for the portal's search: matched on name and tags so a broad
+// term like 맥주 brings back every candidate, not just the one that matters.
+export function searchPlaces(places, q) {
+  const term = q.trim().toLowerCase()
+  if (!term) return []
+  return places.filter((p) =>
+    p.name.toLowerCase().includes(term) ||
+    p.category.toLowerCase().includes(term) ||
+    p.tags.some((t) => t.toLowerCase().includes(term)))
+}
+
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
 export function searchSites(sites, q) {

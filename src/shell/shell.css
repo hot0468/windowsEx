@@ -288,6 +288,17 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .result-title { color: #1a3fa8; font-size: 15px; }
 .result-url { color: #3a8a55; font-size: 12px; margin-top: 2px; }
 .results-none { color: #999; font-size: 13px; }
+.rs-block { margin-bottom: 26px; }
+.rs-head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eceef3; font-size: 13px; color: #333; }
+.place { padding: 13px 14px; margin-bottom: 8px; border: 1px solid #eceef3; border-radius: 8px; }
+.place:hover { border-color: #d8dce6; background: #fafbfd; }
+.place-top { display: flex; align-items: baseline; gap: 8px; }
+.place-name { font-size: 15px; color: #1a3fa8; }
+.place-cat { color: #999; font-size: 11px; }
+.place-meta { display: flex; gap: 12px; margin-top: 6px; color: #888; font-size: 12px; }
+.place-meta b { color: #e8813a; }
+.place-addr { margin-top: 6px; color: #3a8a55; font-size: 12px; }
+.place-note { margin-top: 6px; color: #666; font-size: 12px; line-height: 1.6; }
 .bw-menu { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #555; }
 .bw-menu:hover { background: #eceef3; }
 .bw-pop { position: absolute; right: 8px; top: calc(100% - 2px); z-index: 6; width: 300px; padding: 6px; border-radius: 8px; background: #fff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.22); }

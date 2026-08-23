@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useGame, searchSites, siteView } from '../engine/store.js'
+import { useGame, searchPlaces, searchSites, siteView } from '../engine/store.js'
 import Portal from './Portal.jsx'
 import Wiki from './Wiki.jsx'
 import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
+import Icon from '../icons/Icon.jsx'
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
@@ -79,6 +80,7 @@ export default function Browser() {
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
   const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
+  const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
 
   return (
     <div className="browser">
@@ -133,14 +135,46 @@ export default function Browser() {
 
         {page.kind === 'search' && (
           <div className="results">
-            <p className="results-head">'{page.q}' 검색 결과 {hits.length}건</p>
-            {hits.map((s) => (
-              <div key={s.url} className="result" onClick={() => open(s.url)}>
-                <div className="result-title">{s.title}</div>
-                <div className="result-url">{s.url}</div>
-              </div>
-            ))}
-            {hits.length === 0 && <p className="results-none">검색 결과가 없습니다.</p>}
+            <p className="results-head">
+              '{page.q}' 검색 결과 {spots.length + hits.length}건
+            </p>
+
+            {spots.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head"><Icon name="globe" size={15} />장소</h3>
+                {spots.map((p) => (
+                  <div key={p.name} className="place">
+                    <div className="place-top">
+                      <span className="place-name">{p.name}</span>
+                      <span className="place-cat">{p.category}</span>
+                    </div>
+                    <div className="place-meta">
+                      <b>★ {p.rating}</b>
+                      <span>리뷰 {p.reviews}</span>
+                      <span>{p.hours}</span>
+                    </div>
+                    <div className="place-addr">{p.address}</div>
+                    <div className="place-note">{p.note}</div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {hits.length > 0 && (
+              <section className="rs-block">
+                <h3 className="rs-head">사이트</h3>
+                {hits.map((s) => (
+                  <div key={s.url} className="result" onClick={() => open(s.url)}>
+                    <div className="result-title">{s.title}</div>
+                    <div className="result-url">{s.url}</div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {spots.length + hits.length === 0 && (
+              <p className="results-none">검색 결과가 없습니다.</p>
+            )}
           </div>
         )}
 
