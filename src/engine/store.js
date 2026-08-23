@@ -150,16 +150,25 @@ export const useGame = create((set, get) => ({
   }
 }))
 
-export function findFile(fs, fileId) {
-  for (const folder of Object.values(fs)) {
-    const f = folder.find((x) => x.id === fileId)
-    if (f) return f
-  }
-  return null
+// An entry with `children` is a folder; anything else is a file.
+export function allFiles(fs) {
+  const out = []
+  const walk = (entries) =>
+    entries.forEach((e) => (e.children ? walk(e.children) : out.push(e)))
+  Object.values(fs).forEach(walk)
+  return out
 }
 
-export function allFiles(fs) {
-  return Object.values(fs).flat()
+export function findFile(fs, fileId) {
+  return allFiles(fs).find((f) => f.id === fileId) ?? null
+}
+
+// path is ['문서', '업무자료', '2026'] — the first name picks the root drive.
+export function entriesAt(fs, path) {
+  return path.slice(1).reduce(
+    (entries, name) => entries.find((e) => e.name === name)?.children ?? [],
+    fs[path[0]] ?? []
+  )
 }
 
 // Pull a window up when its cascade offset would push its bottom past the taskbar,

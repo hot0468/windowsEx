@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
+import { allFiles, entriesAt } from '../src/engine/store.js'
 
-const files = Object.values(scenario.fs).flat()
+const files = allFiles(scenario.fs)
 const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
 
@@ -32,6 +33,20 @@ describe('ep1 scenario integrity', () => {
   it('the one live thread is backed by the timed messenger script', () => {
     expect(threads.filter((t) => t.live)).toHaveLength(1)
     expect(scenario.messenger.length).toBeGreaterThan(0)
+  })
+
+  it('walks nested folders to reach a buried file', () => {
+    const deep = entriesAt(scenario.fs, ['문서', '업무자료', '2026', 'A상사'])
+    expect(deep.map((e) => e.id)).toContain(scenario.goal.requiredAttachment)
+  })
+
+  it('every folder entry has a name and every file an id', () => {
+    const walk = (entries) => entries.forEach((e) => {
+      expect(e.name).toBeTruthy()
+      if (e.children) walk(e.children)
+      else expect(e.id).toBeTruthy()
+    })
+    Object.values(scenario.fs).forEach(walk)
   })
 
   it('file ids are unique', () => {

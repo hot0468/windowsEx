@@ -73,7 +73,17 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .ex-folder { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 5px; }
 .ex-folder:hover { background: #f0f0f0; }
 .ex-folder.sel { background: #e5f1fb; }
-.ex-main { flex: 1; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+.ex-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ex-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+.ex-up { display: flex; padding: 5px; border-radius: 5px; color: #555; }
+.ex-up:hover:not(:disabled) { background: #f0f0f0; }
+.ex-up:disabled { opacity: .3; cursor: default; }
+.ex-crumbs { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; font-size: 12px; color: #999; }
+.ex-crumb { display: flex; align-items: center; }
+.ex-crumb button { padding: 3px 6px; border-radius: 4px; color: #333; }
+.ex-crumb button:hover { background: #f0f0f0; }
+.ex-empty { margin: auto; color: #aaa; font-size: 13px; }
+.ex-main { flex: 1; overflow: auto; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
 .ex-file { width: 96px; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; word-break: break-all; }
 .ex-file:hover { background: #e5f1fb; }
 .ex-file .glyph { display: flex; justify-content: center; margin-bottom: 4px; }

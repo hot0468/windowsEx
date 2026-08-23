@@ -87,6 +87,10 @@ export const ChevronDown = (p) => <S {...p}><path d="m6 9l6 6l6-6" /></S>
 
 export const ChevronLeft = (p) => <S {...p}><path d="m15 18l-6-6l6-6" /></S>
 
+export const ChevronRight = (p) => <S {...p}><path d="m9 18l6-6l-6-6" /></S>
+
+export const ArrowUp = (p) => <S {...p}><path d="m5 12l7-7l7 7m-7 7V5" /></S>
+
 export const Users = (p) => (
   <S {...p}>
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M16 3.128a4 4 0 0 1 0 7.744M22 21v-2a4 4 0 0 0-3-3.87" />
