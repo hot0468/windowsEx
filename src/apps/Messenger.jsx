@@ -175,11 +175,11 @@ export default function Messenger({ source }) {
     if (typingFor.current) setTyping(typingFor.current, false)
   }, [])
 
-  // A drop is easy to do by accident and sending can't be undone, so it asks first.
   useEffect(() => {
     if (stick.current) toBottom()
   }, [thread ? msgsOf(thread).length : 0, mine.length, busy])
 
+  // A drop is easy to do by accident and sending can't be undone, so it asks first.
   const drop = useFileDrop((id) => {
     const file = findFile(fs, id)
     if (file && thread && !busy) setConfirming(file)
