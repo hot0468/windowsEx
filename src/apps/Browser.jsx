@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame, searchSites } from '../engine/store.js'
+import Portal from './Portal.jsx'
 import { Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 
 const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
@@ -71,7 +72,7 @@ export default function Browser() {
         ))}
       </div>
 
-      <div className="page">
+      <div className={'page' + (site && !locked && site.layout === 'portal' ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <div className="portal-logo">{scenario.portal.name}</div>
@@ -121,12 +122,12 @@ export default function Browser() {
           </div>
         )}
 
-        {site && !locked && (
+        {site && !locked && (site.layout === 'portal' ? <Portal site={site} /> : (
           <div className="site">
             <h2>{site.title}</h2>
             <pre className="site-body">{site.content}</pre>
           </div>
-        )}
+        ))}
       </div>
     </div>
   )

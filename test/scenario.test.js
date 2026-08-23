@@ -89,6 +89,14 @@ describe('ep1 scenario integrity', () => {
     }
   })
 
+  it('the intranet portal never states what the puzzle makes you look up', () => {
+    const portal = JSON.stringify(scenario.sites.find((s) => s.layout === 'portal'))
+    const wiki = scenario.sites.find((s) => s.password)
+    for (const keyword of scenario.goal.requiredKeywords) expect(portal).not.toContain(keyword)
+    expect(portal).not.toContain(wiki.password)
+    expect(portal).not.toContain('입사일')   // the hire date belongs on the ID card scan
+  })
+
   it('file ids are unique', () => {
     const ids = files.map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)
