@@ -3,9 +3,11 @@
 const PHOTOS = import.meta.glob('./avatars/*.jpg', { eager: true, query: '?url', import: 'default' })
 const FACES = import.meta.glob('./faces/*.svg', { eager: true, query: '?url', import: 'default' })
 const WALLPAPER = import.meta.glob('./wallpaper.jpg', { eager: true, query: '?url', import: 'default' })
-const FILES = import.meta.glob('./files/*.jpg', { eager: true, query: '?url', import: 'default' })
+// WebP: these are read on screen, so size matters more than the extension the
+// scenario shows the player (a scan is still named .jpg in-game).
+const FILES = import.meta.glob('./files/*.webp', { eager: true, query: '?url', import: 'default' })
 
 export const photoOf = (id) => PHOTOS[`./avatars/${id}.jpg`]
 export const faceOf = (id) => FACES[`./faces/${id}.svg`]
-export const fileImage = (name) => FILES[`./files/${name}.jpg`]
+export const fileImage = (name) => FILES[`./files/${name}.webp`]
 export const wallpaper = WALLPAPER['./wallpaper.jpg']
