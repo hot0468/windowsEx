@@ -23,6 +23,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 /* window */
 .window { position: absolute; display: flex; flex-direction: column; background: #f9f9f9; border-radius: 8px; border: 1px solid rgba(0,0,0,.25); box-shadow: 0 16px 40px rgba(0,0,0,.35); overflow: hidden; }
 .window.minimized { display: none; }
+.window.maximized { border-radius: 0; border-color: transparent; }
 .titlebar { height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding-left: 12px; background: #fff; touch-action: none; }
 .titlebar .title { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .win-buttons { display: flex; }

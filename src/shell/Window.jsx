@@ -56,7 +56,8 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
       }
 
   return (
-    <div className={'window' + (win.minimized ? ' minimized' : '')} style={style}
+    <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '')}
+         style={style}
          onPointerDown={() => focusWindow(win.id)}>
       <div className="titlebar" onPointerDown={onPointerDown}
            onPointerMove={onPointerMove} onPointerUp={onPointerUp}
