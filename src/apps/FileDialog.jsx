@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useGame, entriesAt } from '../engine/store.js'
+import { useGame, entriesAt, searchFiles } from '../engine/store.js'
+import { useFolderNav } from './folderNav.js'
 import Icon from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../icons/line.jsx'
 
@@ -8,30 +9,21 @@ import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../ic
 export default function FileDialog({ start = '문서', onPick, onClose }) {
   const fs = useGame((s) => s.scenario.fs)
   const roots = Object.keys(fs)
-  const [path, setPath] = useState([roots.includes(start) ? start : roots[0]])
-  const [back, setBack] = useState([])
+  const nav = useFolderNav(roots.includes(start) ? start : roots[0])
   const [selected, setSelected] = useState(null)
   const [name, setName] = useState('')
   const [q, setQ] = useState('')
 
-  const goTo = (next) => {
-    setBack([...back, path])
-    setPath(next)
-    setSelected(null)
-    setName('')
-    setQ('')
-  }
-  const goBack = () => {
-    if (!back.length) return
-    setPath(back[back.length - 1])
-    setBack(back.slice(0, -1))
-    setSelected(null)
-  }
+  const here = nav.path[nav.path.length - 1]
+  const searching = Boolean(q.trim())
+  const entries = entriesAt(fs, nav.path)
+  const folders = searching ? [] : entries.filter((e) => e.children)
+  const files = searching
+    ? searchFiles(fs, nav.path, q).map((h) => h.file)
+    : entries.filter((e) => !e.children)
 
-  const entries = entriesAt(fs, path).filter(
-    (e) => !q.trim() || e.name.toLowerCase().includes(q.trim().toLowerCase()))
-  const folders = entries.filter((e) => e.children)
-  const files = entries.filter((e) => !e.children)
+  const move = (fn) => () => { setQ(''); setSelected(null); setName(''); fn() }
+  const goTo = (path) => move(() => nav.goTo(path))()
 
   const pick = (file) => {
     setSelected(file)
@@ -52,24 +44,26 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
         </div>
 
         <div className="fd-nav">
-          <button onClick={goBack} disabled={!back.length} title="뒤로">
+          <button onClick={move(nav.goBack)} disabled={!nav.canBack} title="뒤로">
             <ChevronLeft size={17} strokeWidth={1.9} />
           </button>
-          <button onClick={() => path.length > 1 && goTo(path.slice(0, -1))}
-                  disabled={path.length < 2} title="상위 폴더">
+          <button onClick={move(nav.goForward)} disabled={!nav.canForward} title="앞으로">
+            <ChevronRight size={17} strokeWidth={1.9} />
+          </button>
+          <button onClick={move(nav.goUp)} disabled={!nav.canUp} title="상위 폴더">
             <ArrowUp size={16} strokeWidth={1.9} />
           </button>
           <div className="fd-crumbs">
-            {path.map((part, i) => (
+            {nav.path.map((part, i) => (
               <span key={i} className="ex-crumb">
                 {i > 0 && <ChevronRight size={13} strokeWidth={2} />}
-                <button onClick={() => goTo(path.slice(0, i + 1))}>{part}</button>
+                <button onClick={() => goTo(nav.path.slice(0, i + 1))}>{part}</button>
               </span>
             ))}
           </div>
           <div className="fd-search">
             <input value={q} onChange={(e) => setQ(e.target.value)}
-                   placeholder={`${path[path.length - 1]} 검색`} aria-label="파일 검색" />
+                   placeholder={`${here} 검색`} aria-label="파일 검색" spellCheck={false} />
             <Search size={15} strokeWidth={1.9} />
           </div>
         </div>
@@ -77,7 +71,7 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
         <div className="fd-body">
           <div className="fd-side">
             {roots.map((root) => (
-              <button key={root} className={'fd-root' + (path[0] === root ? ' sel' : '')}
+              <button key={root} className={'fd-root' + (nav.path[0] === root ? ' sel' : '')}
                       onClick={() => goTo([root])}>
                 <Icon name={root === '휴지통' ? 'trash' : 'folder'} size={16} />{root}
               </button>
@@ -85,9 +79,11 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
           </div>
 
           <div className="fd-grid">
-            {entries.length === 0 && <div className="ex-empty">항목이 없습니다</div>}
+            {folders.length + files.length === 0 && (
+              <div className="ex-empty">{searching ? '일치하는 파일이 없습니다' : '항목이 없습니다'}</div>
+            )}
             {folders.map((f) => (
-              <button key={f.name} className="fd-item" onDoubleClick={() => goTo([...path, f.name])}>
+              <button key={f.name} className="fd-item" onDoubleClick={() => goTo([...nav.path, f.name])}>
                 <Icon name="folder" size={44} />{f.name}
               </button>
             ))}

@@ -246,6 +246,22 @@ export function resizeRect(start, dir, dx, dy, min = MIN_SIZE) {
   return rect
 }
 
+// Files under `path` whose name matches, each with the folder trail that leads to
+// it. Explorer searches subfolders too — in a tree this messy that is the point.
+export function searchFiles(fs, path, q) {
+  const term = q.trim().toLowerCase()
+  if (!term) return []
+  const out = []
+  const walk = (entries, trail) => {
+    for (const e of entries) {
+      if (e.children) walk(e.children, [...trail, e.name])
+      else if (e.name.toLowerCase().includes(term)) out.push({ file: e, trail })
+    }
+  }
+  walk(entriesAt(fs, path), [])
+  return out
+}
+
 // Pull a window up when its cascade offset would push its bottom past the taskbar,
 // so a tall window opens anchored to the top instead of hanging off a short screen.
 export function fitY(y, height, viewportH, taskbar = 48) {
