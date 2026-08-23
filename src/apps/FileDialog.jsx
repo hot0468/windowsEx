@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useGame, entriesAt, fsWithPinned, searchFiles } from '../engine/store.js'
+import { useGame, entriesAt, fileOpener, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../icons/line.jsx'
@@ -92,7 +92,7 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
             {files.map((f) => (
               <button key={f.id} className={'fd-item' + (selected?.id === f.id ? ' sel' : '')}
                       onClick={() => pick(f)} onDoubleClick={() => onPick(f)}>
-                <Icon name="doc" size={44} />{f.name}
+                <Icon name={fileOpener(f).icon} size={44} />{f.name}
               </button>
             ))}
           </div>

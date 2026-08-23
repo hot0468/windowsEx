@@ -431,8 +431,8 @@
         "children": [
           {
             "id": "file_idcard",
-            "name": "사원증_스캔.txt",
-            "content": "[한빛상사 사원증 스캔본]\n\n이름: 김한별\n소속: 영업1팀\n사번: HB-2104\n입사일: 2021년 4월 12일"
+            "name": "사원증_스캔.jpg",
+            "image": "idcard"
           },
           {
             "id": "file_vacation",

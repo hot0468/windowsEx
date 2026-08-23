@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, WORK_FOLDER, entriesAt, fsWithPinned, searchFiles } from '../engine/store.js'
+import { useGame, WORK_FOLDER, entriesAt, fileOpener, fsWithPinned, searchFiles } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
 import Icon from '../icons/Icon.jsx'
@@ -80,8 +80,8 @@ export default function FileExplorer({ startFolder }) {
             {hits.map(({ file, trail }) => (
               <button key={file.id} className="ex-hit" {...fileDragProps(file)}
                       onContextMenu={onContext(file)}
-                      onDoubleClick={() => openWindow('notepad', { fileId: file.id })}>
-                <Icon name="doc" size={26} />
+                      onDoubleClick={() => openWindow(fileOpener(file).app, { fileId: file.id })}>
+                <Icon name={fileOpener(file).icon} size={26} />
                 <span className="ex-hit-mid">
                   <span>{file.name}</span>
                   <span className="ex-hit-path">{[here, ...trail].join(' › ')}</span>
@@ -101,8 +101,8 @@ export default function FileExplorer({ startFolder }) {
             {files.map((f) => (
               <button key={f.id} className="ex-file" {...fileDragProps(f)}
                       onContextMenu={onContext(f)}
-                      onDoubleClick={() => openWindow('notepad', { fileId: f.id })}>
-                <div className="glyph"><Icon name="doc" size={36} /></div>{f.name}
+                      onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                <div className="glyph"><Icon name={fileOpener(f).icon} size={36} /></div>{f.name}
               </button>
             ))}
           </div>
@@ -113,7 +113,7 @@ export default function FileExplorer({ startFolder }) {
             <div className="ctx-catch" onPointerDown={() => setMenu(null)}
                  onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} />
             <div className="ctx" style={{ left: menu.x, top: menu.y }}>
-              <button onClick={() => { openWindow('notepad', { fileId: menu.file.id }); setMenu(null) }}>
+              <button onClick={() => { openWindow(fileOpener(menu.file).app, { fileId: menu.file.id }); setMenu(null) }}>
                 열기
               </button>
               {inWork ? (

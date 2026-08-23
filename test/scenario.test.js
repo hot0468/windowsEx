@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/ep1.json'
-import { allFiles, entriesAt, searchSites } from '../src/engine/store.js'
+import { allFiles, entriesAt, fileOpener, searchSites } from '../src/engine/store.js'
+import { fileImage } from '../src/assets/photos.js'
 
 const files = allFiles(scenario.fs)
 const threads = [scenario.workMessenger, scenario.privateMessenger]
@@ -57,6 +58,19 @@ describe('ep1 scenario integrity', () => {
   it('portal search never leaks a locked page, keeping the password gate meaningful', () => {
     for (const keyword of scenario.goal.requiredKeywords) {
       expect(searchSites(scenario.sites, keyword)).toEqual([])
+    }
+  })
+
+  it('every file carries either text or a picture', () => {
+    for (const f of files) expect(Boolean(f.content) || Boolean(f.image)).toBe(true)
+  })
+
+  it('every scanned file resolves to a bundled image and opens in the viewer', () => {
+    const scans = files.filter((f) => f.image)
+    expect(scans.length).toBeGreaterThan(0)
+    for (const f of scans) {
+      expect(fileImage(f.image)).toBeTruthy()
+      expect(fileOpener(f).app).toBe('viewer')
     }
   })
 

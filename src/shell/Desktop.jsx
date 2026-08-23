@@ -1,4 +1,4 @@
-import { useGame, fsWithPinned } from '../engine/store.js'
+import { useGame, fileOpener, fsWithPinned } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
@@ -35,8 +35,8 @@ export default function Desktop() {
         </button>
       ) : (
         <button key={e.id} className="desktop-icon" {...fileDragProps(e)}
-                onDoubleClick={() => openWindow('notepad', { fileId: e.id })}>
-          <div className="glyph"><Icon name="doc" size={38} /></div>{e.name}
+                onDoubleClick={() => openWindow(fileOpener(e).app, { fileId: e.id })}>
+          <div className="glyph"><Icon name={fileOpener(e).icon} size={38} /></div>{e.name}
         </button>
       )))}
     </div>
