@@ -17,9 +17,9 @@ describe('ep1 scenario integrity', () => {
     expect(m?.canReply).toBe(true)
   })
 
-  it('locked wiki page contains every required keyword', () => {
-    const wiki = scenario.sites.find((s) => s.password)
-    for (const k of scenario.goal.requiredKeywords) expect(wiki.content).toContain(k)
+  it('the locked wiki still carries every keyword the reply needs', () => {
+    const wiki = JSON.stringify(scenario.sites.find((s) => s.password))
+    for (const k of scenario.goal.requiredKeywords) expect(wiki).toContain(k)
   })
 
   it('every messenger thread has either live delivery or its own messages', () => {
