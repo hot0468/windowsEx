@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useGame, savedAt } from '../engine/store.js'
 import { APPS } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
-import { FolderOpen, LayoutGrid, RotateCcw, Save } from '../icons/line.jsx'
+import { FolderOpen, LayoutGrid, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
+import { isMuted, play, setMuted } from './sound.js'
 
 const when = (at) =>
   new Date(at).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -25,6 +26,7 @@ export default function Taskbar() {
   const [asking, setAsking] = useState(null)
   const [saved, setSaved] = useState(null)
   const [now, setNow] = useState(new Date())
+  const [quiet, setQuiet] = useState(isMuted())
 
   const toggleStart = () => {
     if (!startOpen) setSaved(savedAt())
@@ -98,6 +100,10 @@ export default function Taskbar() {
             </button>
           ))}
         </div>
+        <button className="tb-tray" title={quiet ? '소리 켜기' : '소리 끄기'}
+                onClick={() => { setMuted(!quiet); setQuiet(!quiet); if (quiet) play('click') }}>
+          {quiet ? <VolumeOff size={16} strokeWidth={1.8} /> : <Volume size={16} strokeWidth={1.8} />}
+        </button>
         <div className="tb-clock">
           {now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}<br />
           {now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}

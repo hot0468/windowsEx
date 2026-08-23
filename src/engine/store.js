@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import scenario from '../scenarios/ep1.json'
 import { checkGoal } from './goal.js'
+import { play } from '../shell/sound.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
 const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues where you were
@@ -8,7 +9,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'bookings',
+  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'misses', 'failed', 'cleared', 'scratch']
 
 const snapshot = (s) => {
@@ -77,6 +78,7 @@ export const useGame = create((set, get) => ({
   typing: {},
   extraMails: restored?.extraMails ?? [],
   extraMessages: restored?.extraMessages ?? {},
+  pendingAsks: restored?.pendingAsks ?? {},
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   bookings: restored?.bookings ?? {},
@@ -85,10 +87,16 @@ export const useGame = create((set, get) => ({
   cleared: restored?.cleared ?? false,
   scratch: restored?.scratch ?? '',
 
-  setBooted: () => set({ booted: true }),
+  setBooted: () => {
+    play('boot')
+    set({ booted: true })
+  },
   // The id lets the view remount each toast so its entrance animation replays,
   // even when two toasts carry identical text.
-  showToast: (toast) => set({ toast: { ...toast, id: ++toastId } }),
+  showToast: (toast) => {
+    play('notify')
+    set({ toast: { ...toast, id: ++toastId } })
+  },
   clearToast: () => set({ toast: null }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
@@ -164,7 +172,10 @@ export const useGame = create((set, get) => ({
 
   // Running the phishing attachment takes the machine down. Progress is kept —
   // what is lost is every open window and whatever was on screen in them.
-  crash: () => set({ crashed: true, toast: null }),
+  crash: () => {
+    play('error')
+    set({ crashed: true, toast: null })
+  },
   reboot: () => {
     const s = get()
     const after = s.scenario.malware.aftermath
@@ -186,6 +197,7 @@ export const useGame = create((set, get) => ({
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => {
+    play('ok')
     set((s) => ({ grants: { ...s.grants, [key]: true } }))
     // some mail only shows up once the player has got somewhere
     const mw = get().scenario.malware
@@ -197,6 +209,8 @@ export const useGame = create((set, get) => ({
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details } })),
+  setAsk: (threadId, ask) =>
+    set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } })),
   pushMessage: (threadId, msg) =>
     set((s) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }

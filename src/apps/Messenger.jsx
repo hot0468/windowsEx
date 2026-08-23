@@ -46,6 +46,8 @@ export default function Messenger({ source }) {
   const seen = useGame((s) => s.seenThreads)
   const markThreadSeen = useGame((s) => s.markThreadSeen)
   const setTyping = useGame((s) => s.setTyping)
+  const pendingAsks = useGame((s) => s.pendingAsks)
+  const setAsk = useGame((s) => s.setAsk)
   const grant = useGame((s) => s.grant)
   const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
@@ -58,7 +60,6 @@ export default function Messenger({ source }) {
   const [wrongs, setWrongs] = useState({})
   const [confirming, setConfirming] = useState(null)
   const [branch, setBranch] = useState({})
-  const [asks, setAsks] = useState({})
   const [draft, setDraft] = useState('')
   const list = useRef(null)
   const stick = useRef(true)
@@ -142,13 +143,13 @@ export default function Messenger({ source }) {
     if (!hit || (hit.files && reacted[key])) return
     if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
     if (hit.next) setBranch((b) => ({ ...b, [thread.id]: hit.next }))
-    if (hit.ask) setAsks((a) => ({ ...a, [thread.id]: hit.ask }))
+    if (hit.ask) setAsk(thread.id, hit.ask)
     speak(hit.reply)
   }
 
   // Anything the player has to look up gets typed in, so picking from a list
   // can't stand in for actually finding it.
-  const ask = thread ? (thread.id in asks ? asks[thread.id] : thread.ask ?? null) : null
+  const ask = thread ? (thread.id in pendingAsks ? pendingAsks[thread.id] : thread.ask ?? null) : null
   const answer = () => {
     const text = draft.trim()
     if (!text) return
@@ -156,7 +157,7 @@ export default function Messenger({ source }) {
     setDraft('')
     if (answerFits(ask, text)) {
       // a question may hand straight over to the next one
-      setAsks((a) => ({ ...a, [thread.id]: ask.then ?? null }))
+      setAsk(thread.id, ask.then ?? null)
       if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
       if (ask.grants) grant(ask.grants)
       speak(ask.ok)
