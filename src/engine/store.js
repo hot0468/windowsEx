@@ -424,6 +424,22 @@ export const searchCompanies = (list, q) =>
 export const searchTerms = (list, q) =>
   searchIn(list, q, ['word', 'reading', 'body', 'tags'])
 
+// mail dates read like "8월 21일 (금) 16:42". a reply the player just sent is
+// dated "방금" — that one belongs at the very top, so it sorts as the latest.
+const JUST_NOW = 1e9
+export function mailTime(date = '') {
+  const day = date.match(/(\d+)월\s*(\d+)일/)
+  if (!day) return JUST_NOW
+  const [, h = 0, m = 0] = date.match(/(\d+):(\d+)/) ?? []
+  return ((+day[1] * 31 + +day[2]) * 24 + +h) * 60 + +m
+}
+
+// newest first; same timestamp falls back to the order they arrived in
+export const sortMails = (mails) => mails
+  .map((m, i) => [m, i])
+  .sort(([a, i], [b, j]) => mailTime(b.date) - mailTime(a.date) || j - i)
+  .map(([m]) => m)
+
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
 export const searchSites = (sites, q) => searchIn(sites, q, ['title', 'url'])

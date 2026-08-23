@@ -83,7 +83,7 @@ describe('work folder', () => {
 
 describe('browser history', () => {
   const home = { kind: 'home' }
-  const site = { kind: 'site', url: 'wiki.hanbit.co.kr' }
+  const site = { kind: 'site', url: 'wiki.ar.co.kr' }
   const found = { kind: 'search', q: '맥주' }
 
   it('walks back through visited pages of any shape', () => {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { sortMails, useGame } from '../engine/store.js'
 import Compose from './Compose.jsx'
 import { ChevronDown, ChevronUp, Paperclip, Search, Send, Star } from '../icons/line.jsx'
 
@@ -17,7 +17,7 @@ export default function Mail() {
   const [sent, setSent] = useState(false)
   const [q, setQ] = useState('')
 
-  const all = [...scenario.mails, ...extraMails]
+  const all = sortMails([...scenario.mails, ...extraMails])
   const term = q.trim().toLowerCase()
   const mails = term
     ? all.filter((m) => `${m.subject} ${m.from} ${m.body}`.toLowerCase().includes(term))

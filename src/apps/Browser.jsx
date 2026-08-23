@@ -336,8 +336,8 @@ export default function Browser() {
                 이 PC는 사내 시스템 접근 승인 목록에 없습니다.<br />
                 장기 미접속 계정은 IP 승인이 만료될 수 있습니다.
               </p>
-              <div className="blk-help">한빛톡 &gt; <b>정보보안팀</b> 으로 문의해 주세요.</div>
-              <div className="blk-code">HANBIT-SEC-403 · {site.url}</div>
+              <div className="blk-help">AR톡 &gt; <b>정보보안팀</b> 으로 문의해 주세요.</div>
+              <div className="blk-code">AR-SEC-403 · {site.url}</div>
             </div>
           </div>
         )}

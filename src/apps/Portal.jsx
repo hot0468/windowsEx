@@ -46,7 +46,7 @@ export default function Portal({ site }) {
   return (
     <div className="pt">
       <div className="pt-top">
-        <span className="pt-logo">HANBIT</span>
+        <span className="pt-logo">AR</span>
         <nav>{p.nav.map((n) => <span key={n}>{n}</span>)}</nav>
         <span className="pt-top-icons">
           <Search size={15} strokeWidth={2} />

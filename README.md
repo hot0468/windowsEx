@@ -11,7 +11,7 @@
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 149 tests
+npm test         # 154 tests
 npm run build
 ```
 
@@ -61,7 +61,7 @@ JSON에 `days` 항목을 하나 더 쓰는 일입니다.
 
 ## 테스트
 
-149개. UI가 아니라 **게임이 깨지는 방식**을 검사합니다.
+154개. UI가 아니라 **게임이 깨지는 방식**을 검사합니다.
 
 - 플레이어가 입력해야 하는 답이 게임 안 어딘가에서 실제로 찾아지는가
 - 그 답이 클릭 가능한 선택지로 새어 나가지 않는가
