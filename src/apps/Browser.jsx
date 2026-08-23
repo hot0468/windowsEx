@@ -5,9 +5,10 @@ import {
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
+import Calendar from './Calendar.jsx'
 import Wiki from './Wiki.jsx'
 import Board from './Board.jsx'
-import { ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
 import { shotOf } from '../assets/photos.js'
@@ -151,6 +152,9 @@ export default function Browser() {
       <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
+            <button className="portal-cal" onClick={() => open('calendar.daon.com')} title="캘린더">
+              <CalendarDays size={16} strokeWidth={1.9} />캘린더
+            </button>
             <div className="portal-logo">{scenario.portal.name}</div>
             <div className="portal-search">
               <Search size={18} strokeWidth={1.9} />
@@ -347,6 +351,7 @@ export default function Browser() {
         {view === 'ready' && (
           site.layout === 'portal' ? <Portal site={site} />
             : site.layout === 'wiki' ? <Wiki site={site} />
+            : site.layout === 'calendar' ? <Calendar site={site} />
               : site.layout === 'board' ? <Board site={site} />
               : (
                 <div className="site">

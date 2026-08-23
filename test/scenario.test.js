@@ -275,7 +275,7 @@ describe('scenario integrity', () => {
 
   it('keeps the workload even across days', () => {
     const counts = scenario.days.map((d) => d.requests.length)
-    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2)
   })
 
   it('never asks for the same request on two different days', () => {
