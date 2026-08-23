@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useGame } from './engine/store.js'
 import { APPS } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
@@ -26,14 +26,18 @@ function Toast() {
   const toast = useGame((s) => s.toast)
   const clearToast = useGame((s) => s.clearToast)
   const openWindow = useGame((s) => s.openWindow)
+  const [leaving, setLeaving] = useState(false)
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(clearToast, 4500)
-    return () => clearTimeout(t)
+    setLeaving(false)
+    const out = setTimeout(() => setLeaving(true), 4200)
+    const gone = setTimeout(clearToast, 4500)
+    return () => { clearTimeout(out); clearTimeout(gone) }
   }, [toast, clearToast])
   if (!toast) return null
   return (
-    <div className="toast" onClick={() => { openWindow(toast.app ?? 'messenger'); clearToast() }}>
+    <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
+         onClick={() => { openWindow(toast.app ?? 'messenger'); clearToast() }}>
       <b>
         <Icon name={toast.app === 'mail' ? 'mail' : 'workchat'} size={15} />
         {(toast.app === 'mail' ? '메일' : '한빛톡') + ' — '}{toast.from}

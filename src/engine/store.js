@@ -3,6 +3,7 @@ import scenario from '../scenarios/ep1.json'
 import { checkGoal } from './goal.js'
 
 let winId = 0
+let toastId = 0
 
 export const useGame = create((set, get) => ({
   scenario,
@@ -18,7 +19,9 @@ export const useGame = create((set, get) => ({
   scratch: '',
 
   setBooted: () => set({ booted: true }),
-  showToast: (toast) => set({ toast }),
+  // The id lets the view remount each toast so its entrance animation replays,
+  // even when two toasts carry identical text.
+  showToast: (toast) => set({ toast: { ...toast, id: ++toastId } }),
   clearToast: () => set({ toast: null }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
@@ -84,7 +87,7 @@ export const useGame = create((set, get) => ({
           body: verdict.reply
         }]
       }))
-      set({ toast: { from: original.from, text: '새 메일이 도착했습니다: ' + 'RE: ' + original.subject, app: 'mail' } })
+      get().showToast({ from: original.from, text: `새 메일이 도착했습니다: RE: ${original.subject}`, app: 'mail' })
       if (verdict.ok) setTimeout(() => set({ cleared: true }), 2500)
     }, 1800)
     return verdict.ok
