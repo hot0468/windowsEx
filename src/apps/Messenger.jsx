@@ -40,6 +40,7 @@ export default function Messenger({ source }) {
   const fs = useGame((s) => s.scenario.fs)
   const liveMessages = useGame((s) => s.scenario.messenger)
   const msgCount = useGame((s) => s.msgCount)
+  const extraMessages = useGame((s) => s.extraMessages)
   const openId = useGame((s) => s.openThread[source] ?? null)
   const setOpenThread = useGame((s) => s.setOpenThread)
   const seen = useGame((s) => s.seenThreads)
@@ -65,7 +66,10 @@ export default function Messenger({ source }) {
   const pinned = useGame((s) => s.pinned)
 
   // A live thread's messages arrive on the scenario's timer; the rest are already there.
-  const msgsOf = (t) => (t.live ? liveMessages.slice(0, msgCount) : t.messages)
+  const msgsOf = (t) => [
+    ...(t.live ? liveMessages.slice(0, msgCount) : t.messages),
+    ...(extraMessages[t.id] ?? [])
+  ]
   const threads = m.sections.flatMap((s) => s.threads)
   const unreadOf = (t) => msgsOf(t).length - (seen[t.id] ?? 0)
   const thread = threads.find((t) => t.id === openId)

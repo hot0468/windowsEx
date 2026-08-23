@@ -8,7 +8,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'unlocked', 'grants', 'cleared', 'scratch']
+  'starred', 'pinned', 'unlocked', 'grants', 'extraMessages', 'cleared', 'scratch']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -74,6 +74,7 @@ export const useGame = create((set, get) => ({
   seenThreads: restored?.seenThreads ?? {},
   typing: {},
   extraMails: restored?.extraMails ?? [],
+  extraMessages: restored?.extraMessages ?? {},
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   cleared: restored?.cleared ?? false,
@@ -163,6 +164,10 @@ export const useGame = create((set, get) => ({
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => set((s) => ({ grants: { ...s.grants, [key]: true } })),
+  pushMessage: (threadId, msg) =>
+    set((s) => ({
+      extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }
+    })),
   setScratch: (scratch) => set({ scratch }),
   setOpenThread: (source, id) =>
     set((s) => ({ openThread: { ...s.openThread, [source]: id } })),
@@ -189,6 +194,23 @@ export const useGame = create((set, get) => ({
       get().showToast({ from: original.from, text: `새 메일이 도착했습니다: RE: ${original.subject}`, app: 'mail' })
       if (verdict.ok) setTimeout(() => set({ cleared: true }), 2500)
     }, 1800)
+
+    // A bad reply reaches the client before it reaches you, so the complaint
+    // comes back through the boss a moment after their reply lands.
+    const c = goal.complain
+    const lines = (!verdict.ok && c?.[verdict.reason]) || []
+    if (lines.length) {
+      setTimeout(() => {
+        get().setTyping(c.thread, true)
+        lines.forEach((text, i) => setTimeout(() => {
+          get().pushMessage(c.thread, { from: c.from, text })
+          if (i === lines.length - 1) {
+            get().setTyping(c.thread, false)
+            get().showToast({ from: c.from, text, app: 'messenger', source: c.source, thread: c.thread })
+          }
+        }, i * 1600))
+      }, 3600)
+    }
     return verdict.ok
   }
 }))

@@ -225,6 +225,16 @@ describe('ep1 scenario integrity', () => {
     expect(scenario.objectives.every((o) => objectiveDone(o, finished))).toBe(true)
   })
 
+  it('has the boss complain about every way the reply can be wrong', () => {
+    const c = scenario.goal.complain
+    const boss = threads.find((t) => t.id === c.thread)
+    expect(boss).toBeTruthy()
+    expect(c.from).toBe(boss.name)
+    for (const reason of ['attachment', 'keyword']) {
+      expect(c[reason].length).toBeGreaterThan(0)
+    }
+  })
+
   it('file ids are unique', () => {
     const ids = files.map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)
