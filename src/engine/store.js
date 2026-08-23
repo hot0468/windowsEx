@@ -6,7 +6,7 @@ const SAVE_KEY = 'windowsEx.save'
 const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
-const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'extraMails',
+const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'wikiUnlocked', 'cleared', 'scratch']
 
 function readSave() {
@@ -47,6 +47,10 @@ export const useGame = create((set, get) => ({
   nextZ: restored?.nextZ ?? 10,
   msgCount: restored?.msgCount ?? 0,
   readMails: restored?.readMails ?? {},
+  // Which conversation each messenger is showing, and how much of it has been read.
+  // Both live here so a toast can open a thread in an already-running window.
+  openThread: {},
+  seenThreads: restored?.seenThreads ?? {},
   extraMails: restored?.extraMails ?? [],
   wikiUnlocked: restored?.wikiUnlocked ?? false,
   cleared: restored?.cleared ?? false,
@@ -127,6 +131,10 @@ export const useGame = create((set, get) => ({
   markMailRead: (id) => set((s) => ({ readMails: { ...s.readMails, [id]: true } })),
   unlockWiki: () => set({ wikiUnlocked: true }),
   setScratch: (scratch) => set({ scratch }),
+  setOpenThread: (source, id) =>
+    set((s) => ({ openThread: { ...s.openThread, [source]: id } })),
+  markThreadSeen: (id, count) =>
+    set((s) => (s.seenThreads[id] === count ? s : { seenThreads: { ...s.seenThreads, [id]: count } })),
 
   sendReply: ({ attachmentId, body }) => {
     const s = get()

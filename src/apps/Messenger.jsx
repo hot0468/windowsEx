@@ -36,8 +36,10 @@ export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
   const liveMessages = useGame((s) => s.scenario.messenger)
   const msgCount = useGame((s) => s.msgCount)
-  const [openId, setOpenId] = useState(null)
-  const [seen, setSeen] = useState({})
+  const openId = useGame((s) => s.openThread[source] ?? null)
+  const setOpenThread = useGame((s) => s.setOpenThread)
+  const seen = useGame((s) => s.seenThreads)
+  const markThreadSeen = useGame((s) => s.markThreadSeen)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
   const [tab, setTab] = useState('friends')
@@ -53,12 +55,12 @@ export default function Messenger({ source }) {
 
   useEffect(() => {
     const t = threads.find((x) => x.id === openId)
-    if (t) setSeen((s) => ({ ...s, [t.id]: msgsOf(t).length }))
+    if (t) markThreadSeen(t.id, msgsOf(t).length)
   }, [openId, msgCount])
 
   const row = (t, preview) => (
     <Row key={t.id} t={t} preview={preview} unread={unreadOf(t)}
-         selected={t.id === openId} onOpen={() => setOpenId(t.id)} />
+         selected={t.id === openId} onOpen={() => setOpenThread(source, t.id)} />
   )
 
   const mine = thread ? replies[thread.id] ?? [] : []

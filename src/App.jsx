@@ -26,6 +26,7 @@ function Toast() {
   const toast = useGame((s) => s.toast)
   const clearToast = useGame((s) => s.clearToast)
   const openWindow = useGame((s) => s.openWindow)
+  const setOpenThread = useGame((s) => s.setOpenThread)
   const [leaving, setLeaving] = useState(false)
   useEffect(() => {
     if (!toast) return
@@ -38,7 +39,11 @@ function Toast() {
   const app = APPS[toast.app]
   return (
     <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
-         onClick={() => { if (app) openWindow(toast.app); clearToast() }}>
+         onClick={() => {
+           if (toast.source) setOpenThread(toast.source, toast.thread)
+           if (app) openWindow(toast.app)
+           clearToast()
+         }}>
       <b>
         {app ? <Icon name={app.icon} size={15} /> : <Info size={15} strokeWidth={1.9} />}
         {app ? `${app.title} — ${toast.from}` : toast.from}
@@ -82,10 +87,16 @@ export default function App() {
   useEffect(() => {
     if (!booted) return
     const sc = useGame.getState().scenario
+    // The timed script belongs to the work messenger's one live thread; naming it
+    // on the toast lets a click jump straight into that conversation.
+    const source = 'workMessenger'
+    const live = sc[source].sections.flatMap((s) => s.threads).find((t) => t.live)
     const timers = sc.messenger.map((m) =>
       setTimeout(() => {
         useGame.getState().deliverMessage()
-        useGame.getState().showToast({ from: m.from, text: m.text, app: 'messenger' })
+        useGame.getState().showToast({
+          from: m.from, text: m.text, app: 'messenger', source, thread: live.id
+        })
       }, m.delay))
     return () => timers.forEach(clearTimeout)
   }, [booted])
