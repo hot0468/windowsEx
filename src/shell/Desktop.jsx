@@ -17,7 +17,8 @@ export default function Desktop() {
   const pinned = useGame((s) => s.pinned)
   const openWindow = useGame((s) => s.openWindow)
   const pinFile = useGame((s) => s.pinFile)
-  const desktop = fsWithPinned(scenario.fs, pinned)['바탕화면']
+  const restored = useGame((s) => s.restored)
+  const desktop = fsView(scenario.fs, { pinned, restored })['바탕화면']
   const work = useFileDrop(pinFile)
   return (
     <div className="desktop-icons">
