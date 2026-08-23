@@ -6,7 +6,7 @@ import { Minus, Square, X } from '../icons/line.jsx'
 const TASKBAR = 48
 const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
 
-export default function Window({ win, title, icon, width = 640, height = 440, children }) {
+export default function Window({ win, title, icon, theme, width = 640, height = 440, children }) {
   const focusWindow = useGame((s) => s.focusWindow)
   const closeWindow = useGame((s) => s.closeWindow)
   const minimizeWindow = useGame((s) => s.minimizeWindow)
@@ -59,7 +59,9 @@ export default function Window({ win, title, icon, width = 640, height = 440, ch
     <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '')}
          style={style}
          onPointerDown={() => focusWindow(win.id)}>
-      <div className="titlebar" onPointerDown={onPointerDown}
+      <div className={'titlebar' + (theme ? ' themed' : '')}
+           style={theme ? { background: theme } : undefined}
+           onPointerDown={onPointerDown}
            onPointerMove={onPointerMove} onPointerUp={onPointerUp}
            onDoubleClick={() => toggleMaximize(win.id)}>
         <span className="title"><Icon name={icon} size={16} />{title}</span>

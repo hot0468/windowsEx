@@ -57,6 +57,10 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .win-buttons button { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 36px; color: #333; }
 .win-buttons button:hover { background: rgba(0,0,0,.06); }
 .win-buttons .close:hover { background: #c42b1c; color: #fff; }
+.titlebar.themed { color: #fff; }
+.titlebar.themed .win-buttons button { color: rgba(255,255,255,.9); }
+.titlebar.themed .win-buttons button:hover { background: rgba(255,255,255,.18); }
+.titlebar.themed .win-buttons .close:hover { background: #c42b1c; }
 .win-body { flex: 1; overflow: auto; background: #fff; }
 .rz { position: absolute; z-index: 5; touch-action: none; }
 .rz-n { top: 0; left: 10px; right: 10px; height: 5px; cursor: ns-resize; }

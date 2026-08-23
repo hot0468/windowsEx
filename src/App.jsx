@@ -64,7 +64,8 @@ function WindowLayer() {
     const cfg = APPS[win.app]
     const C = cfg.comp
     return (
-      <Window key={win.id} win={win} title={cfg.title} icon={cfg.icon} width={cfg.w} height={cfg.h}>
+      <Window key={win.id} win={win} title={cfg.title} icon={cfg.icon}
+              width={cfg.w} height={cfg.h} theme={cfg.theme}>
         <C {...win.props} />
       </Window>
     )
