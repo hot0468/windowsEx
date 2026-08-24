@@ -10,7 +10,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
-  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn']
+  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -103,6 +103,8 @@ export const useGame = create((set, get) => ({
   // Which requests each day drew from the pool. Day one never draws.
   drawn: restored?.drawn ?? {},
   scratch: restored?.scratch ?? '',
+  // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
+  vpn: restored?.vpn ?? false,
 
   setBooted: () => {
     play('boot')
@@ -193,7 +195,7 @@ export const useGame = create((set, get) => ({
     play('error')
     set({ crashed: true, crashSource: source, toast: null })
   },
-  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false }),
+  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false }),
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
   lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
@@ -298,6 +300,7 @@ export const useGame = create((set, get) => ({
       .filter((o) => o.cell && !grants[o.grant] && cellMatches(o, sheetEdits))
       .forEach((o) => grant(o.grant))
   },
+  setVpn: (on) => set({ vpn: on }),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => {
     play('ok')

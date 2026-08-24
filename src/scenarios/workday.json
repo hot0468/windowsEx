@@ -2276,6 +2276,25 @@
         "id": "file_p2_wsplan",
         "name": "워크숍_진행표.hwp",
         "content": "[3분기 전사 워크숍 진행표]\n\n장소: 가평 AR수련원\n일정: 2026년 9월 12일(금) ~ 13일(토)\n\n첫째 날\n  13:00  버스 출발 (회사 정문)\n  15:00  입소 및 배정\n  16:30  상반기 리뷰 세션\n  19:00  저녁 식사\n  21:00  팀별 자유 시간\n\n둘째 날\n  07:30  조식\n  09:00  팀 활동 (해변 걷기)\n  11:30  퇴소\n  13:40  버스 서울 도착 예정\n\n준비물: 편한 복장, 개인 세면도구\n차량 배정 문의: 총무팀"
+      },
+      {
+        "id": "file_vpn_setup",
+        "name": "AR-VPN_Setup.exe",
+        "program": "vpn",
+        "attached": true,
+        "content": "AR 사내망 VPN 클라이언트 설치 파일 (정보전략팀 배포본)"
+      },
+      {
+        "id": "file_vpn_guide",
+        "name": "AR-VPN_설치안내.pdf",
+        "attached": true,
+        "content": "AR 사내망 VPN 접속 안내\n\n정보전략팀 · 2026-08-20 개정\n\n1. 자료실에서 AR-VPN_Setup.exe 를 내려받아 실행합니다.\n2. 설치가 끝나면 바탕화면에 'AR VPN' 아이콘이 생깁니다.\n3. 아이콘을 실행하고 [연결] 을 누릅니다.\n4. 연결되면 창에 표시되는 세션 ID 를 정보보안팀에 알려 주십시오.\n\n[문제 해결]\n※ 사내 배포 PC 일부에서 vpn.ar.local 이름 해석이 되지 않는 경우가 확인되었습니다.\n   이 경우 hosts 파일(C:\\Windows\\System32\\drivers\\etc\\hosts)에 아래 한 줄을 추가하십시오.\n\n   192.168.10.5    vpn.ar.local\n\n※ 세션 ID 는 접속할 때마다 새로 발급되므로 문서에 적어두지 마십시오."
+      },
+      {
+        "id": "file_pledge",
+        "name": "보안서약서_양식.hwp",
+        "attached": true,
+        "content": "[정보보안 서약서]\n\n본인은 AR 주식회사의 정보자산을 업무 목적으로만 사용하며,\n사내 자료를 외부로 반출하지 않을 것을 서약합니다.\n\n소속: ______________\n성명: ______________  (서명)\n일자: 2026년 ____월 ____일\n\n※ 본 양식은 신규 입사자 및 보직 변경자에 한해 제출합니다."
       }
     ],
     "휴지통": [
@@ -6822,6 +6841,37 @@
           "한컴오피스 한글 2024이(가) 이미 설치되어 있습니다."
         ]
       }
+    },
+    "vpn": {
+      "product": "AR 사내망 VPN 클라이언트",
+      "publisher": "AR 주식회사 정보전략팀",
+      "version": "3.1.0",
+      "size": "42MB",
+      "setup": "AR-VPN_Setup.exe",
+      "grant": "vpnInstalled",
+      "shortcut": { "label": "AR VPN", "icon": "vpn", "app": "vpn" },
+      "intro": [
+        "이 마법사를 통해 AR 사내망 VPN 클라이언트를 설치합니다.",
+        "계속하려면 [설치]를 클릭하십시오."
+      ],
+      "steps": [
+        "설치 준비 중…",
+        "가상 네트워크 어댑터를 등록하는 중…",
+        "인증서를 배포하는 중…",
+        "바로가기를 만드는 중…",
+        "설치를 마무리하는 중…"
+      ],
+      "done": {
+        "title": "설치가 완료되었습니다",
+        "lines": [
+          "AR 사내망 VPN 클라이언트 설치가 완료되었습니다.",
+          "바탕화면의 'AR VPN' 에서 연결할 수 있습니다."
+        ]
+      },
+      "already": {
+        "title": "이미 설치되어 있습니다",
+        "lines": ["AR 사내망 VPN 클라이언트가 이미 설치되어 있습니다."]
+      }
     }
   },
   "printer": {
@@ -7877,8 +7927,17 @@
   "hosts": {
     "file": "file_hosts",
     "required": {
-      "drive.ar.local": "192.168.10.21"
+      "drive.ar.local": "192.168.10.21",
+      "vpn.ar.local": "192.168.10.5"
     }
+  },
+  "vpn": {
+    "server": "vpn.ar.local",
+    "account": "hb.kim@ar.co.kr",
+    "ip": "10.8.0.23",
+    "session": "ARV-7K3Q-92XF",
+    "connecting": "사내망에 연결하는 중…",
+    "notFound": "서버 vpn.ar.local 을(를) 찾을 수 없습니다. (DNS 이름을 확인할 수 없음)"
   },
   "pool": {
     "fixed": {
