@@ -11,7 +11,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
-  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor']
+  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -116,6 +116,12 @@ export const useGame = create((set, get) => ({
   // facts that come back later.
   minedSince: restored?.minedSince ?? null,
   bookedFor: restored?.bookedFor ?? null,
+  // How far the player has followed the eighth floor: asked the room about it,
+  // found who went missing, walked in.
+  digging: restored?.digging ?? {},
+  // Following the affair rumour: heard where it leads, traced who wrote it,
+  // and then either told or buried it.
+  rumor: restored?.rumor ?? {},
   scratch: restored?.scratch ?? '',
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
@@ -267,7 +273,32 @@ export const useGame = create((set, get) => ({
   },
   goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
-  askedRoom: () => set((s) => ({ roomQuestions: s.roomQuestions + 1 })),
+  askedRoom: (about) => set((s) => {
+    const next = { roomQuestions: s.roomQuestions + 1 }
+    // pressing the room about the eighth floor is the first step of the trail
+    if (about === 'rumor') {
+      const asked = (s.rumor.asks ?? 0) + 1
+      return { ...next, rumor: { ...s.rumor, asks: asked, heard: s.rumor.heard || asked >= s.scenario.rumor.askThreshold } }
+    }
+    if (about !== 'floor8') return next
+    const asked = (s.digging.asks ?? 0) + 1
+    return {
+      ...next,
+      digging: {
+        ...s.digging,
+        asks: asked,
+        asked: s.digging.asked || asked >= s.scenario.floor8.askThreshold
+      }
+    }
+  }),
+  // Reading the attendance page is what turns a rumour into a name.
+  foundMissing: () => set((s) => (s.digging.found ? s : { digging: { ...s.digging, found: true } })),
+  // The print log names the observer — traced, but not yet acted on.
+  traceObserver: () => set((s) => (s.rumor.traced ? s : { rumor: { ...s.rumor, traced: true } })),
+  // The one choice that decides which way this ends.
+  actOnRumor: (how) => set({ rumor: { ...get().rumor, acted: how }, ended: 'rumor_' + how }),
+  // Walking in is the last thing the player does.
+  enterFloor8: () => set((s) => (s.digging.entered ? s : { digging: { ...s.digging, entered: true } })),
   // Something the player installed starts mining. The machine goes slow and
   // windows fall over until the task is ended.
   startMining: () => {
@@ -580,10 +611,30 @@ const isDigit = (ch) => ch !== undefined && ch >= '0' && ch <= '9'
 // Once the obituary has been opened the ticket is worthless: the dead cannot
 // collect. Until then, a confirmed win is the one way the week ends well.
 // Working late every single night earns the overwork ending on its own.
-export const endingFor = (ending, { grants, locks, overtime = {}, days = 5 }) =>
-  awareOf(ending, grants) ? 'true'
-    : grants.lotto ? 'lotto'
-      : workedEveryNight(overtime, days) || locks === 0 ? 'overwork' : 'plain'
+// Walking into the eighth floor outranks all of it: whatever else the week was,
+// it ends there.
+export const endingFor = (ending, { grants, locks, overtime = {}, days = 5, digging = {}, rumor = {} }) =>
+  wentUp(digging) ? 'missing'
+    : toldRumor(rumor) ? ('rumor_' + rumor.acted)
+    : awareOf(ending, grants) ? 'true'
+      : grants.lotto ? 'lotto'
+        : workedEveryNight(overtime, days) || locks === 0 ? 'overwork' : 'plain'
+
+// The trail has to be walked in order: you cannot open a door you never heard
+// about, and the page will not resolve until the player writes it into hosts.
+export const wentUp = (digging = {}) => Boolean(digging.asked && digging.found && digging.entered)
+
+// The rumour ends the week only once the player has actually chosen what to do
+// with the name — heard it, traced it, acted on it.
+export const toldRumor = (rumor = {}) => Boolean(rumor.heard && rumor.traced && rumor.acted)
+
+// Whether the player has traced the observer but not yet chosen: the moment the
+// choice is offered.
+export const rumorPending = (rumor = {}) => Boolean(rumor.heard && rumor.traced && !rumor.acted)
+
+// How far along the trail the player is, for anything that wants to show it.
+export const digDepth = (scenario, digging = {}) =>
+  scenario.floor8.steps.filter((k) => digging[k]).length
 
 // Five nights out of five, no exceptions.
 export const workedEveryNight = (overtime, days) =>
@@ -603,6 +654,23 @@ export const overtimeOffer = (scenario, day, overtime) =>
 
 // The ticket's serial number, typed off the slip: hyphens and spaces forgiven.
 export const serialFits = (lotto, text) => loose(text) === loose(lotto.serial).replace(/-/g, '') || loose(text) === loose(lotto.serial)
+
+// A feed item tagged with a day exists only from that morning on; untagged
+// items were always there.
+export const visibleByDay = (items = [], day = 1) => items.filter((x) => (x.day ?? 0) <= day)
+
+// A board shows what has arrived so far, newest day floating to the top.
+// The sort is stable, so the authored order inside a day survives.
+export const boardPosts = (posts = [], day = 1) =>
+  [...visibleByDay(posts, day)].sort((a, b) => (b.day ?? 0) - (a.day ?? 0))
+
+// The portal keeps every day's announcements: today's on top, then each
+// earlier day, then what was already pinned before the week began.
+export function portalFeed(scenario, base, day) {
+  const perDay = []
+  for (let n = day; n >= 1; n--) perDay.push(...(scenario.days[n - 1]?.portal?.news ?? []))
+  return [...perDay, ...(base.news ?? [])]
+}
 
 // The front page carries the freshest headlines, newest first.
 export const latestNews = (news, n = 6) =>
@@ -800,6 +868,23 @@ export function hostResolves(scenario, edits, url) {
   const names = hostNames(contentOf(file, edits))
   const wanted = scenario.hosts.required[url]
   return wanted ? names[url] === wanted : Boolean(names[url])
+}
+
+// Which topic a question lands on, so a caller can tell what was asked about.
+export function roomTopic(ask, question) {
+  const q = loose(question)
+  if (!q) return null
+  let hit = null, best = 0
+  for (const topic of ask.topics) {
+    for (const k of topic.keys) {
+      const key = loose(k)
+      if (q.includes(key) && key.length > best) { hit = topic; best = key.length }
+    }
+  }
+  if (!hit) return null
+  if (hit.keys.includes('8층')) return 'floor8'
+  if (hit.keys.includes('불륜')) return 'rumor'
+  return null
 }
 
 // The anonymous room answers by keyword. Whoever replies is picked by how

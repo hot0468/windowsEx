@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { useGame, portalFeed } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 import Download from './Download.jsx'
@@ -42,7 +42,8 @@ export default function Portal({ site }) {
   const day = useGame((s) => s.day)
   // the board moves on with the days
   const today = scenario.days[day - 1]?.portal
-  const p = { ...site.portal, ...(today ?? {}) }
+  // today's banner replaces yesterday's, but the 소식 list keeps piling up
+  const p = { ...site.portal, ...(today ?? {}), news: portalFeed(scenario, site.portal, day) }
   const [post, setPost] = useState(null)
   return (
     <div className="pt">

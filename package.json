@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",
-    "images": "node --env-file=.env scripts/fetch-images.mjs"
+    "images": "node --env-file=.env scripts/fetch-images.mjs",
+    "query": "node scripts/query.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

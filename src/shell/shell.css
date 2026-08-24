@@ -1102,3 +1102,16 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .av-found .btn-primary:hover { background: #a72e18; }
 .av-btn { margin-top: auto; padding: 11px 28px; border-radius: 4px; background: #2f8f5b; color: #fff; font-size: 13px; font-weight: 600; }
 .av-btn:hover { background: #26794c; }
+
+/* the eighth floor */
+.f8 { min-height: 100%; padding: 24px 26px; background: #fff; color: #111; font-family: Consolas, "D2Coding", monospace; font-size: 13px; line-height: 1.75; }
+.f8-head { font-size: 17px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+.f8-body { white-space: pre-wrap; color: #333; }
+.f8-link { display: block; margin: 14px 0; padding: 0; background: none; color: #1a4fa0; font: inherit; text-decoration: underline; cursor: pointer; }
+.f8-link:hover { color: #c2381f; }
+.f8-log { margin-top: 16px; padding: 14px 16px; background: #0c0c0c; color: #cfcfcf; white-space: pre-wrap; border-radius: 3px; }
+.f8-last { margin-top: 10px; color: #c2381f; font-size: 12px; animation: end-in .6s ease; }
+
+/* the rumour choice */
+.clear-overlay.rumor { background: rgba(30,20,26,.95); }
+.clear-overlay.rumor h1 { font-size: 22px; max-width: 460px; line-height: 1.5; }

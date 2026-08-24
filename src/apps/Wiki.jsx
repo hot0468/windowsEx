@@ -7,6 +7,12 @@ export default function Wiki({ site }) {
   const unlockSite = useGame((s) => s.unlockSite)
   // Reaching a host-only page is itself the objective.
   useEffect(() => { if (site.requiresHost) unlockSite(site.url) }, [site.url])
+  const foundMissing = useGame((s) => s.foundMissing)
+  // reading the page that will not let a sixth employee go
+  useEffect(() => { if (id === 'attend') foundMissing() }, [id])
+  const traceObserver = useGame((s) => s.traceObserver)
+  // reading who was on the seventh floor that night
+  useEffect(() => { if (id === 'printlog') traceObserver() }, [id])
   const [id, setId] = useState(w.home)
   const page = w.pages[id]
 

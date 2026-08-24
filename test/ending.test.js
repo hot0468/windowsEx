@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { CLUE, awareOf, endingFor, latestNews, useGame } from '../src/engine/store.js'
+import { CLUE, awareOf, endingFor, latestNews, useGame, visibleByDay } from '../src/engine/store.js'
 
 const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
@@ -68,7 +68,9 @@ describe('the two endings', () => {
   })
 
   it('puts the accident on the search portal front page', () => {
-    const front = latestNews(scenario.news)
+    // the front page as the week opens — later-dated arrivals must not be
+    // allowed to push the one hint that matters off this assertion
+    const front = latestNews(visibleByDay(scenario.news, 1))
     expect(front.map((a) => a.id)).toContain('n_accident')
     for (let i = 1; i < front.length; i++) expect(front[i - 1].date >= front[i].date).toBe(true)
   })

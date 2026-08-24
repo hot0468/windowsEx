@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, MessageSquare, ThumbsUp } from '../icons/line.jsx'
-import { useGame, roomReply } from '../engine/store.js'
+import { useGame, boardPosts, roomReply, roomTopic } from '../engine/store.js'
 
 // An outside community site: a list of posts, one post at a time, nothing to
 // log into. A room with an `ask` block also lets the player post a question.
@@ -10,8 +10,10 @@ export default function Board({ site }) {
   const [draft, setDraft] = useState('')
   const [thread, setThread] = useState([])
   const [waiting, setWaiting] = useState(false)
-  const post = b.posts.find((p) => p.id === id)
+  const post = posts.find((p) => p.id === id)
   const askedRoom = useGame((s) => s.askedRoom)
+  const day = useGame((s) => s.day)
+  const posts = boardPosts(b.posts, day)
 
   const send = () => {
     const question = draft.trim()
@@ -20,7 +22,7 @@ export default function Board({ site }) {
     setThread((t) => [...t, { question, reply: null }])
     setDraft('')
     setWaiting(true)
-    askedRoom()
+    askedRoom(roomTopic(b.ask, question))
     setTimeout(() => {
       setThread((t) => t.map((entry, i) => (i === t.length - 1 ? { ...entry, reply } : entry)))
       setWaiting(false)
@@ -78,7 +80,7 @@ export default function Board({ site }) {
             </div>
           )}
           <div className="bd-list">
-            {b.posts.map((p) => (
+            {posts.map((p) => (
               <button key={p.id} className="bd-row" onClick={() => setId(p.id)}>
                 <span className="bd-co">{p.company}</span>
                 <span className="bd-title">{p.title}</span>

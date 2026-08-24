@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   useGame, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
-  searchSites, searchTerms, siteView, latestNews, hostResolves
+  searchSites, searchTerms, siteView, latestNews, hostResolves, visibleByDay
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
@@ -10,6 +10,7 @@ import Wiki from './Wiki.jsx'
 import Board from './Board.jsx'
 import Gov from './Gov.jsx'
 import Lotto from './Lotto.jsx'
+import Floor8 from './Floor8.jsx'
 import Vendor from './Vendor.jsx'
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
@@ -71,6 +72,9 @@ export default function Browser() {
   const grants = useGame((s) => s.grants)
   const unlockSite = useGame((s) => s.unlockSite)
   const edits = useGame((s) => s.edits)
+  const day = useGame((s) => s.day)
+  // an article dated later in the week has not been written yet
+  const news = visibleByDay(scenario.news, day)
   const vpn = useGame((s) => s.vpn)
   const [addr, setAddr] = useState('')
   const nav = useHistory({ kind: 'home' })
@@ -111,7 +115,7 @@ export default function Browser() {
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
-  const articles = page.kind === 'search' ? searchNews(scenario.news, page.q) : []
+  const articles = page.kind === 'search' ? searchNews(news, page.q) : []
   const answers = page.kind === 'search' ? searchQna(scenario.qna, page.q) : []
   const firms = page.kind === 'search' ? searchCompanies(scenario.companies, page.q) : []
   const words = page.kind === 'search' ? searchTerms(scenario.terms, page.q) : []
@@ -176,7 +180,7 @@ export default function Browser() {
             </div>
             <section className="portal-news">
               <h3>주요 기사</h3>
-              {latestNews(scenario.news).map((a) => (
+              {latestNews(news).map((a) => (
                 <button key={a.id} className="portal-news-row" onClick={() => nav.go({ kind: 'news', id: a.id })}>
                   <span className="portal-news-title">{a.title}</span>
                   <span className="portal-news-by">{a.press} · {a.date}</span>
@@ -323,7 +327,7 @@ export default function Browser() {
         )}
 
         {page.kind === 'news' && (() => {
-          const a = scenario.news.find((x) => x.id === page.id)
+          const a = news.find((x) => x.id === page.id)
           return (
             <article className="art">
               <div className="art-press">{a.press}</div>
@@ -401,6 +405,7 @@ export default function Browser() {
               : site.layout === 'board' ? <Board site={site} />
               : site.layout === 'gov' ? <Gov site={site} />
               : site.layout === 'lotto' ? <Lotto site={site} />
+              : site.layout === 'floor8' ? <Floor8 site={site} />
               : site.layout === 'vendor' ? <Vendor site={site} />
               : (
                 <div className="site">

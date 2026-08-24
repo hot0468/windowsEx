@@ -92,6 +92,28 @@ function FailOverlay() {
   )
 }
 
+// Once you know who wrote the rumour, you have to decide what to do with it.
+// This is not a day boundary — it interrupts the moment you find the name.
+function RumorOverlay() {
+  const c = useGame((s) => s.scenario.rumor.choice)
+  const actOnRumor = useGame((s) => s.actOnRumor)
+  return (
+    <div className="clear-overlay rumor">
+      <h1>{c.prompt}</h1>
+      <div className="lay-picks">
+        <button className="lay-pick" onClick={() => actOnRumor('told')}>
+          <b>{c.tell}</b>
+          <span>글쓴이의 사번과 이름을 소통방에 올립니다.</span>
+        </button>
+        <button className="lay-pick" onClick={() => actOnRumor('buried')}>
+          <b>{c.bury}</b>
+          <span>알아낸 것을 덮어둡니다.</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // A week of wrong answers ends the job, not the day. The choice is which
 // kind of leaving it is called.
 function LayoffOverlay() {
@@ -173,6 +195,7 @@ export default function App() {
   const overtime = useGame((s) => s.overtime)
   const drawn = useGame((s) => s.drawn)
   const ripples = useGame((s) => s.ripples)
+  const rumor = useGame((s) => s.rumor)
   const slips = useGame((s) => s.slips)
   const done = dayDone(scenario, day, { grants, unlocked, overtime, drawn, ripples })
   const cut = laidOff(scenario.ending.layoff, { slips, overtime, drawn }, scenario)
@@ -242,9 +265,10 @@ export default function App() {
       <Toast />
       <Taskbar />
       {locked && <Lock />}
-      {cut && !failed && <LayoffOverlay />}
-      {offer && !cut && <OvertimeOverlay offer={offer} />}
-      {done && !offer && !cut && <QuitOverlay />}
+      {rumorPending(rumor) && !failed && <RumorOverlay />}
+      {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}
+      {offer && !cut && !rumorPending(rumor) && <OvertimeOverlay offer={offer} />}
+      {done && !offer && !cut && !rumorPending(rumor) && <QuitOverlay />}
       {failed && !done && <FailOverlay />}
     </div>
   )
