@@ -265,6 +265,8 @@ describe('scenario integrity', () => {
       ...Object.values(scenario.overtime?.days ?? {})
         .flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants),
       ...(scenario.pool?.requests ?? []).flatMap((r) => chain(r.beat.ask)).map((a) => a.grants),
+      // the antivirus grants this one by cleaning the machine, not by asking
+      'cleanpc',
       ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants),
       ...scenario.days.map((d) => d.fetch?.grants),
       ...scenario.objectives.filter((o) => o.cell).map((o) => o.grant)

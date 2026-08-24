@@ -50,6 +50,7 @@ export default function Messenger({ source }) {
   const setAsk = useGame((s) => s.setAsk)
   const grant = useGame((s) => s.grant)
   const slip = useGame((s) => s.slip)
+  const mercy = useGame((s) => s.mercy)
   const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
@@ -164,7 +165,7 @@ export default function Messenger({ source }) {
     slip()
     const n = wrongs[thread.id] ?? 0
     setWrongs((w) => ({ ...w, [thread.id]: n + 1 }))
-    speak(hintAfter(ask, n))
+    speak(hintAfter(ask, n, mercy))
   }
 
   const answer = () => {

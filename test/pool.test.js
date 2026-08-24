@@ -20,10 +20,22 @@ describe('the pool', () => {
   it('gives every pooled request a real objective and a beat that grants it', () => {
     const ids = new Set(pool.requests.map((r) => r.id))
     expect(ids.size).toBe(pool.requests.length)
+    // A request may take several steps; the last one is what completes it, so
+    // that is the step that has to carry the grant.
+    const lastStep = (ask) => (ask.then ? lastStep(ask.then) : ask)
     for (const r of pool.requests) {
       expect(scenario.objectives.some((o) => o.id === r.id), r.id).toBe(true)
-      expect(r.beat.ask.grants).toBe(r.id)
+      expect(lastStep(r.beat.ask).grants, r.id).toBe(r.id)
       expect(r.beat.lines.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('makes a multi-step request grant nothing until its last step', () => {
+    const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
+    for (const r of pool.requests) {
+      const all = steps(r.beat.ask)
+      // an early step that grants would end the request halfway through
+      for (const step of all.slice(0, -1)) expect(step.grants, r.id).toBeUndefined()
     }
   })
 

@@ -9,10 +9,11 @@ export default function Progress() {
   const unlocked = useGame((s) => s.unlocked)
   const overtime = useGame((s) => s.overtime)
   const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
   const [open, setOpen] = useState(false)
 
   const state = { grants, unlocked }
-  const list = requestsOf(scenario, day, overtime, drawn)
+  const list = requestsOf(scenario, day, overtime, drawn, ripples)
   const done = list.filter((o) => objectiveDone(o, state))
   const today = scenario.days[day - 1]
 

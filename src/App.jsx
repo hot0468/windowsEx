@@ -144,6 +144,7 @@ function QuitOverlay() {
   const finishDay = useGame((s) => s.finishDay)
   const overtime = useGame((s) => s.overtime)
   const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
   const today = scenario.days[day - 1]
 
   return (
@@ -152,10 +153,10 @@ function QuitOverlay() {
       <h1>{scenario.quitting.title}</h1>
       <p className="quit-day">{today.date} · {today.label}</p>
       <ul className="quit-list">
-        {requestsOf(scenario, day, overtime, drawn).map((o) => <li key={o.id}>{o.title}</li>)}
+        {requestsOf(scenario, day, overtime, drawn, ripples).map((o) => <li key={o.id}>{o.title}</li>)}
       </ul>
       <p className="quit-stat">
-        요청 {requestsOf(scenario, day, overtime, drawn).length}건 완료{overtime[day] && ' · 야근'}
+        요청 {requestsOf(scenario, day, overtime, drawn, ripples).length}건 완료{overtime[day] && ' · 야근'}
       </p>
       {today.closing?.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
       <button className="btn-primary" onClick={finishDay}>{scenario.quitting.button}</button>
@@ -171,8 +172,9 @@ export default function App() {
   const unlocked = useGame((s) => s.unlocked)
   const overtime = useGame((s) => s.overtime)
   const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
   const slips = useGame((s) => s.slips)
-  const done = dayDone(scenario, day, { grants, unlocked, overtime, drawn })
+  const done = dayDone(scenario, day, { grants, unlocked, overtime, drawn, ripples })
   const cut = laidOff(scenario.ending.layoff, { slips, overtime, drawn }, scenario)
   const offer = done ? overtimeOffer(scenario, day, overtime) : null
   const failed = useGame((s) => s.failed)

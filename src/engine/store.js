@@ -10,7 +10,8 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
-  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned']
+  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
+  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -106,6 +107,15 @@ export const useGame = create((set, get) => ({
   // is ended, and still installed until the antivirus removes it.
   mining: restored?.mining ?? false,
   cleaned: restored?.cleaned ?? false,
+  // How many questions the anonymous room has been asked, which ripples have
+  // already landed, and whether today's wrong answers are being forgiven.
+  roomQuestions: restored?.roomQuestions ?? 0,
+  ripples: restored?.ripples ?? {},
+  mercy: restored?.mercy ?? false,
+  // The day the miner started and which day a table was booked for — two small
+  // facts that come back later.
+  minedSince: restored?.minedSince ?? null,
+  bookedFor: restored?.bookedFor ?? null,
   scratch: restored?.scratch ?? '',
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
@@ -257,12 +267,13 @@ export const useGame = create((set, get) => ({
   },
   goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
+  askedRoom: () => set((s) => ({ roomQuestions: s.roomQuestions + 1 })),
   // Something the player installed starts mining. The machine goes slow and
   // windows fall over until the task is ended.
   startMining: () => {
     const s = get()
     if (s.mining || s.cleaned) return
-    set({ mining: true })
+    set({ mining: true, minedSince: s.day })
     setTimeout(() => get().showToast({
       from: s.scenario.miner.symptoms.title,
       text: s.scenario.miner.symptoms.lines[0], app: 'taskmgr'
@@ -289,7 +300,7 @@ export const useGame = create((set, get) => ({
   cleanPc: () => {
     const s = get()
     if (s.cleaned) return
-    set({ mining: false, cleaned: true })
+    set({ mining: false, cleaned: true, minedSince: null })
     play('ok')
     s.showToast({ from: s.scenario.antivirus.name, text: s.scenario.antivirus.clean.toast, app: 'antivirus' })
     s.grant('cleanpc')
@@ -306,9 +317,21 @@ export const useGame = create((set, get) => ({
     const day = s.scenario.days[n - 1]
     if (!day) return
     const drawn = s.drawn[n] ?? drawFor(s.scenario, n, s.drawn)
-    set({ day: n, misses: 0, drawn: { ...s.drawn, [n]: drawn } })
+    // What the player did yesterday decides what today says to them.
+    const landing = ripplesFor(s.scenario, n, s)
+    const cost = landing.reduce((n2, r) => n2 + (r.effect?.slipPenalty ?? 0), 0)
+    set({
+      day: n,
+      misses: 0,
+      drawn: { ...s.drawn, [n]: drawn },
+      mercy: landing.some((r) => r.effect?.hintMercy),
+      // what it costs you, counted where the player cannot see it
+      slips: s.slips + cost,
+      ripples: { ...s.ripples, ...Object.fromEntries(landing.map((r) => [r.id, n])) }
+    })
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
-    const beats = [day.opening, ...(day.asks ?? []), ...beatsFor(s.scenario, drawn)].filter(Boolean)
+    const beats = [day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
+      ...beatsFor(s.scenario, drawn)].filter(Boolean)
     beats.forEach((beat, i) => setTimeout(() => {
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
       if (beat.ask) get().queueAsk(beat.thread, beat.ask)
@@ -361,7 +384,13 @@ export const useGame = create((set, get) => ({
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   grant: (key) => {
     play('ok')
-    set((s) => ({ grants: { ...s.grants, [key]: true } }))
+    set((s) => ({
+      grants: { ...s.grants, [key]: true },
+      // the day a watched deed happened, for the consequences that wait
+      ripples: watched(s.scenario, key) && s.ripples['_' + key] === undefined
+        ? { ...s.ripples, ['_' + key]: s.day }
+        : s.ripples
+    }))
     // some mail only shows up once the player has got somewhere
     const mw = get().scenario.malware
     if (mw.after !== key || get().extraMails.some((m) => m.id === mw.mail.id)) return
@@ -371,7 +400,7 @@ export const useGame = create((set, get) => ({
     }, mw.delay)
   },
   book: (place, details) =>
-    set((s) => ({ bookings: { ...s.bookings, [place]: details } })),
+    set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),
   setAsk: (threadId, ask) =>
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } })),
   // A day can raise two questions in the same conversation. The second waits
@@ -526,8 +555,25 @@ const loose = (v) => v.replace(/\s/g, '').toLowerCase()
 
 export function answerFits(ask, text) {
   return ask.accept.some((entry) =>
-    (Array.isArray(entry) ? entry : [entry]).every((part) => loose(text).includes(loose(part))))
+    (Array.isArray(entry) ? entry : [entry]).every((part) => contains(text, part)))
 }
+
+// A loose "does the answer mention this" test, except that a number has to
+// stand on its own. Without the digit boundary, typing the extension 1180
+// would also answer a question whose answer is the stock count 180.
+function contains(text, part) {
+  const hay = loose(text)
+  const needle = loose(part)
+  if (!needle || !hay.includes(needle)) return false
+  // only numbers get the boundary; a word answer may sit inside a sentence
+  if (!/^[\d,.-]+$/.test(needle)) return true
+  for (let at = hay.indexOf(needle); at !== -1; at = hay.indexOf(needle, at + 1)) {
+    if (!isDigit(hay[at - 1]) && !isDigit(hay[at + needle.length])) return true
+  }
+  return false
+}
+
+const isDigit = (ch) => ch !== undefined && ch >= '0' && ch <= '9'
 
 // Which ending the week earned: the truth if the obituary was opened, the
 // overwork variant if the screen never once locked, an ordinary weekend otherwise.
@@ -581,9 +627,10 @@ export const appendAsk = (ask, next) =>
   ask.then ? { ...ask, then: appendAsk(ask.then, next) } : { ...ask, then: next }
 
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
-export const hintAfter = (ask, wrongs) => {
+export const hintAfter = (ask, wrongs, mercy = false) => {
   const sets = lineSets(ask.no)
-  return sets[Math.min(wrongs, sets.length - 1)]
+  // the morning after a late night, nobody makes you work for the hint
+  return sets[Math.min(mercy ? wrongs + 1 : wrongs, sets.length - 1)]
 }
 
 // Edited cells are kept flat, one key per cell, on top of the read-only workbook.
@@ -604,12 +651,63 @@ export const goalFor = (scenario, day) =>
 
 // Today's work: the day names which objectives it wants, the objective says
 // which state counts as done.
-export function requestsOf(scenario, day, overtime = {}, drawn = {}) {
+export function requestsOf(scenario, day, overtime = {}, drawn = {}, ripples = {}) {
   const today = scenario.days[day - 1]
   if (!today) return []
   const extra = overtime[day] ? scenario.overtime?.days?.[day]?.requests ?? [] : []
-  return [...today.requests, ...(drawn[day] ?? []), ...extra]
+  // a consequence can put work on the day that nobody asked for
+  const forced = (scenario.ripples ?? [])
+    .filter((r) => ripples[r.id] === day && r.effect?.extraRequest)
+    .map((r) => r.effect.extraRequest)
+  return [...new Set([...today.requests, ...(drawn[day] ?? []), ...extra, ...forced])]
     .map((id) => scenario.objectives.find((o) => o.id === id)).filter(Boolean)
+}
+
+// Grants a consequence is waiting on, so `grant` only stamps the ones that matter.
+export const watched = (scenario, key) =>
+  (scenario.ripples ?? []).some((r) => r.when.grant === key)
+
+// Which consequences land on the morning of day `n`. A ripple lands once, and
+// only when the state it names is actually true.
+export function ripplesFor(scenario, n, state) {
+  const seen = state.ripples ?? {}
+  return (scenario.ripples ?? []).filter((r) => !(r.id in seen) && rippleHolds(r.when, n, state))
+}
+
+export function rippleHolds(when = {}, n, state) {
+  const {
+    overtime = {}, locks = 0, slips = 0, mining = false, cleaned = false, roomQuestions = 0,
+    grants = {}, minedSince = null, bookedFor = null, ripples = {}
+  } = state
+  if (when.fromDay && n < when.fromDay) return false
+  if (n < 2 && !when.fromDay) return false          // nothing ripples onto day one
+  if (when.overtimeYesterday && !overtime[n - 1]) return false
+  if (when.overtimeStreak) {
+    const run = Array.from({ length: when.overtimeStreak }, (_, i) => overtime[n - 1 - i])
+    if (!run.every(Boolean)) return false
+  }
+  if (when.mining !== undefined && (mining !== when.mining || cleaned)) return false
+  if (when.locks !== undefined && locks !== when.locks) return false
+  if (when.slipsAtLeast !== undefined && slips < when.slipsAtLeast) return false
+  if (when.slipsAtMost !== undefined && slips > when.slipsAtMost) return false
+  if (when.roomQuestions !== undefined && roomQuestions < when.roomQuestions) return false
+  // a machine left mining for this many days running
+  if (when.miningDays && (minedSince === null || n - minedSince < when.miningDays)) return false
+  // something the player did, and something they then did not do
+  if (when.grant && !grants[when.grant]) return false
+  if (when.notGrant && grants[when.notGrant]) return false
+  // the bill comes due a couple of days after the thing itself
+  if (when.afterDays && !doneLongEnough(ripples, when, n)) return false
+  // a table booked, and a night spent at the office instead
+  if (when.bookingKept && bookedFor === null) return false
+  return true
+}
+
+// A consequence with `afterDays` waits that many days after the deed before it
+// lands, so the player has a window in which to put it right.
+const doneLongEnough = (ripples, when, n) => {
+  const at = ripples['_' + when.grant]
+  return at !== undefined && n - at >= when.afterDays
 }
 
 // Days after the first keep a fixed core and draw the rest, so no two weeks
@@ -641,7 +739,7 @@ export const beatsFor = (scenario, ids = []) =>
   ids.map((id) => scenario.pool?.requests.find((r) => r.id === id)?.beat).filter(Boolean)
 
 export const dayDone = (scenario, day, state) =>
-  requestsOf(scenario, day, state.overtime ?? {}, state.drawn ?? {})
+  requestsOf(scenario, day, state.overtime ?? {}, state.drawn ?? {}, state.ripples ?? {})
     .every((o) => objectiveDone(o, state))
 
 // An objective is met when the state it names has been reached — the scenario
