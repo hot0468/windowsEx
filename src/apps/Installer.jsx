@@ -17,15 +17,16 @@ const Panel = ({ kind, title, lines, code, children }) => (
 
 export default function Installer({ fileId, winId }) {
   const fs = useGame((s) => s.scenario.fs)
-  const spec = useGame((s) => s.scenario.hangul)
+  const programs = useGame((s) => s.scenario.programs)
   const grants = useGame((s) => s.grants)
   const grant = useGame((s) => s.grant)
   const close = useGame((s) => s.closeWindow)
   const [step, setStep] = useState(-1)
   const file = findFile(fs, fileId)
+  const spec = programs[file?.program]
 
-  const running = step >= 0 && step < spec.steps.length
-  const finished = step >= spec.steps.length
+  const running = spec && step >= 0 && step < spec.steps.length
+  const finished = spec && step >= spec.steps.length
 
   // the progress bar walks the steps, then the install lands
   useEffect(() => {
@@ -35,14 +36,17 @@ export default function Installer({ fileId, winId }) {
   }, [step, running])
 
   useEffect(() => {
-    if (!finished || grants.hangul) return
-    grant('hangul')
+    if (!finished || grants[spec.grant]) return
+    grant(spec.grant)
     play('ok')
   }, [finished])
 
   const shut = () => close(winId)
 
-  if (grants.hangul && step < 0) {
+  if (!spec) return <div className="ins"><Panel kind="stop" title="실행할 수 없습니다"
+    lines={['이 파일은 실행할 수 있는 프로그램이 아닙니다.']} /></div>
+
+  if (grants[spec.grant] && step < 0) {
     return (
       <div className="ins">
         <Panel kind="ok" title={spec.already.title} lines={spec.already.lines}>
@@ -52,7 +56,7 @@ export default function Installer({ fileId, winId }) {
     )
   }
 
-  if (!grants.hangulOk) {
+  if (spec.needs && !grants[spec.needs]) {
     return (
       <div className="ins">
         <Panel kind="stop" title={spec.blocked.title} lines={spec.blocked.lines} code={spec.blocked.code}>

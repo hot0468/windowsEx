@@ -6,7 +6,7 @@ const ZOOMS = [100, 125, 150]
 
 export default function Hwp({ fileId }) {
   const fs = useGame((s) => s.scenario.fs)
-  const spec = useGame((s) => s.scenario.hangul)
+  const spec = useGame((s) => s.scenario.programs.hangul)
   const installed = useGame((s) => Boolean(s.grants.hangul))
   const p = useGame((s) => s.scenario.printer)
   const [zoom, setZoom] = useState(0)
