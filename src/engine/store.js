@@ -10,7 +10,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
-  'day', 'misses', 'failed', 'scratch']
+  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -65,6 +65,8 @@ export const useGame = create((set, get) => ({
   booted: false,
   toast: null,
   crashed: false,
+  // Which program took the machine down, so the reboot knows who to blame.
+  crashSource: null,
   locked: false,
   windows: restored?.windows ?? [],
   nextZ: restored?.nextZ ?? 10,
@@ -88,6 +90,18 @@ export const useGame = create((set, get) => ({
   day: restored?.day ?? 1,
   misses: restored?.misses ?? 0,
   failed: restored?.failed ?? false,
+  ended: restored?.ended ?? false,
+  locks: restored?.locks ?? 0,
+  // Which days the player chose to stay late on, and whether tonight's offer
+  // has been answered yet.
+  overtime: restored?.overtime ?? {},
+  // Every wrong answer of the week, typed or mailed. Unlike misses this is
+  // never reset: accuracy is judged over the whole week.
+  slips: restored?.slips ?? 0,
+  // Text files the player has typed into, kept by id on top of the scenario.
+  edits: restored?.edits ?? {},
+  // Which requests each day drew from the pool. Day one never draws.
+  drawn: restored?.drawn ?? {},
   scratch: restored?.scratch ?? '',
 
   setBooted: () => {
@@ -173,22 +187,24 @@ export const useGame = create((set, get) => ({
   resizeWindow: (id, rect) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, ...rect } : w)) })),
 
-  // Running the phishing attachment takes the machine down. Progress is kept —
+  // Running a malicious installer takes the machine down. Progress is kept —
   // what is lost is every open window and whatever was on screen in them.
-  crash: () => {
+  crash: (source = null) => {
     play('error')
-    set({ crashed: true, toast: null })
+    set({ crashed: true, crashSource: source, toast: null })
   },
-  restart: () => set({ crashed: false, booted: false, windows: [], toast: null, locked: false }),
+  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false }),
   // Windows keep running behind the lock screen; only the screen is covered.
-  lock: () => set({ locked: true, toast: null }),
+  // Every lock is counted: a week with none means the player never once left.
+  lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
   unlock: () => {
     play('ok')
     set({ locked: false })
   },
   reboot: () => {
     const s = get()
-    const after = s.scenario.malware.aftermath
+    const program = s.scenario.programs[s.crashSource]
+    const after = program?.aftermath ?? s.scenario.malware.aftermath
     if (!s.grants.infected) {
       after.lines.forEach((text) => s.pushMessage(after.thread, { from: after.from, text }))
       s.grant('infected')
@@ -200,14 +216,40 @@ export const useGame = create((set, get) => ({
     }), 3200)
   },
 
+  // Staying late brings three more requests tonight; going home closes the
+  // offer for good. Either way the day can only be finished once.
+  workLate: () => {
+    const s = get()
+    const extra = s.scenario.overtime.days[s.day]
+    if (!extra || s.overtime[s.day]) return
+    set((st) => ({ overtime: { ...st.overtime, [st.day]: true } }))
+    const beats = [extra.opening, ...(extra.asks ?? [])].filter(Boolean)
+    beats.forEach((beat, i) => setTimeout(() => {
+      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
+      if (beat.ask) get().queueAsk(beat.thread, beat.ask)
+      get().showToast({
+        from: beat.from, text: beat.lines[0],
+        app: 'messenger', source: beat.source, thread: beat.thread
+      })
+    }, 1200 + i * 3600))
+  },
+  goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
+  slip: () => set((s) => ({ slips: s.slips + 1 })),
+  // Saving hosts can put a name on the network; the objective is the site
+  // opening, so nothing else has to happen here.
+  editFile: (fileId, text) => set((s) => ({ edits: { ...s.edits, [fileId]: text } })),
+  // The layoff comes as a message, and the answer to it is the ending.
+  layOff: (choice) => set({ ended: 'layoff:' + choice, toast: null, locked: false }),
+
   // Clocking off restarts the machine and brings tomorrow's work with it.
   startDay: (n) => {
     const s = get()
     const day = s.scenario.days[n - 1]
     if (!day) return
-    set({ day: n, misses: 0 })
+    const drawn = s.drawn[n] ?? drawFor(s.scenario, n, s.drawn)
+    set({ day: n, misses: 0, drawn: { ...s.drawn, [n]: drawn } })
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
-    const beats = [day.opening, ...(day.asks ?? [])].filter(Boolean)
+    const beats = [day.opening, ...(day.asks ?? []), ...beatsFor(s.scenario, drawn)].filter(Boolean)
     beats.forEach((beat, i) => setTimeout(() => {
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
       if (beat.ask) get().queueAsk(beat.thread, beat.ask)
@@ -220,8 +262,25 @@ export const useGame = create((set, get) => ({
   finishDay: () => {
     const s = get()
     const next = s.day + 1
+    if (!s.scenario.days[next - 1]) return s.endGame(endingFor(s.scenario.ending, { ...s, days: s.scenario.days.length }))
+    set((st) => ({ overtime: { ...st.overtime } }))
     s.restart()
-    if (s.scenario.days[next - 1]) setTimeout(() => get().startDay(next), 100)
+    setTimeout(() => get().startDay(next), 100)
+  },
+  // The last clock-off brings either a weekend or the truth, depending on
+  // what the player has read along the way.
+  endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
+  // Opening the obituary is the moment the week stops making sense. It is
+  // remembered without a chime, and the boss answers a beat later.
+  witness: () => {
+    const s = get()
+    if (s.grants[CLUE.mail]) return
+    set({ grants: { ...s.grants, [CLUE.mail]: true } })
+    const ev = s.scenario.ending.event
+    setTimeout(() => {
+      ev.lines.forEach((text) => get().pushMessage(ev.thread, { from: ev.from, text }))
+      get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: 'messenger', source: ev.source, thread: ev.thread })
+    }, ev.delay)
   },
 
   markMailRead: (id, read = true) =>
@@ -267,6 +326,14 @@ export const useGame = create((set, get) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }
     })),
   setScratch: (scratch) => set({ scratch }),
+  // A government site verifies you by phone: the code lands in 톡톡, the way
+  // a real SMS would, and the toast points at that conversation.
+  sendCode: (gov) => {
+    const v = gov.verify
+    const text = smsFor(v)
+    get().pushMessage(v.thread, { from: v.from, text })
+    get().showToast({ from: v.from, text: text.split('\n')[0], app: 'chat', source: v.source, thread: v.thread })
+  },
   setOpenThread: (source, id) =>
     set((s) => ({ openThread: { ...s.openThread, [source]: id } })),
   setTyping: (id, on) =>
@@ -299,6 +366,7 @@ export const useGame = create((set, get) => ({
     // comes back through the boss a moment after their reply lands.
     const c = goal.complain
     const misses = s.misses + 1
+    s.slip()
     const { spent, lines } = complaintFor(goal, verdict.reason, misses)
     set({ misses })
 
@@ -401,6 +469,49 @@ export function answerFits(ask, text) {
     (Array.isArray(entry) ? entry : [entry]).every((part) => loose(text).includes(loose(part))))
 }
 
+// Which ending the week earned: the truth if the obituary was opened, the
+// overwork variant if the screen never once locked, an ordinary weekend otherwise.
+// Once the obituary has been opened the ticket is worthless: the dead cannot
+// collect. Until then, a confirmed win is the one way the week ends well.
+// Working late every single night earns the overwork ending on its own.
+export const endingFor = (ending, { grants, locks, overtime = {}, days = 5 }) =>
+  awareOf(ending, grants) ? 'true'
+    : grants.lotto ? 'lotto'
+      : workedEveryNight(overtime, days) || locks === 0 ? 'overwork' : 'plain'
+
+// Five nights out of five, no exceptions.
+export const workedEveryNight = (overtime, days) =>
+  Array.from({ length: days }, (_, i) => overtime[i + 1]).every(Boolean)
+
+// Too many wrong answers over the week and the company stops asking. Counted
+// against every request the week actually raised, overtime included.
+export function laidOff(layoff, { slips = 0, overtime = {}, drawn = {} }, scenario) {
+  const asked = scenario.days.reduce((n, d, i) =>
+    n + requestsOf(scenario, i + 1, overtime, drawn).length, 0)
+  return asked > 0 && slips >= asked * layoff.ratio
+}
+
+// Tonight's extra work, if the day has any and the player has not answered yet.
+export const overtimeOffer = (scenario, day, overtime) =>
+  overtime[day] === undefined && scenario.overtime?.days?.[day] ? scenario.overtime : null
+
+// The ticket's serial number, typed off the slip: hyphens and spaces forgiven.
+export const serialFits = (lotto, text) => loose(text) === loose(lotto.serial).replace(/-/g, '') || loose(text) === loose(lotto.serial)
+
+// The front page carries the freshest headlines, newest first.
+export const latestNews = (news, n = 6) =>
+  [...news].sort((a, b) => b.date.localeCompare(a.date)).slice(0, n)
+
+// The player knows once they have opened their own obituary.
+export const CLUE = { mail: 'clue_mail' }
+export const awareOf = (ending, grants) => Object.keys(ending.clues).every((k) => grants[CLUE[k]])
+
+// The verification text, with the code filled in where the template asks for it.
+export const smsFor = (verify) => verify.sms.replace('{code}', verify.code)
+
+// Six digits typed off a phone screen: spacing is forgiven, nothing else is.
+export const codeFits = (verify, text) => loose(text) === loose(verify.code) && text.trim() !== ''
+
 // A question may want a file instead of typed text; any of the ones it names will do.
 export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
 
@@ -433,14 +544,45 @@ export const goalFor = (scenario, day) =>
 
 // Today's work: the day names which objectives it wants, the objective says
 // which state counts as done.
-export function requestsOf(scenario, day) {
+export function requestsOf(scenario, day, overtime = {}, drawn = {}) {
   const today = scenario.days[day - 1]
   if (!today) return []
-  return today.requests.map((id) => scenario.objectives.find((o) => o.id === id)).filter(Boolean)
+  const extra = overtime[day] ? scenario.overtime?.days?.[day]?.requests ?? [] : []
+  return [...today.requests, ...(drawn[day] ?? []), ...extra]
+    .map((id) => scenario.objectives.find((o) => o.id === id)).filter(Boolean)
 }
 
+// Days after the first keep a fixed core and draw the rest, so no two weeks
+// bring the same work. A request that reads a document from a later day waits
+// for that day; nothing is ever drawn twice.
+export function drawFor(scenario, day, drawn = {}, pick = Math.random) {
+  const pool = scenario.pool
+  if (!pool || day === 1) return []
+  const taken = new Set(Object.values(drawn).flat())
+  const want = pool.sizes[day] - (pool.fixed[day] ?? []).length
+  const ready = pool.requests
+    .filter((r) => !taken.has(r.id) && (pool.after[r.id] ?? 0) <= day)
+    .map((r) => r.id)
+  return shuffle(ready, pick).slice(0, Math.max(0, want))
+}
+
+// Fisher–Yates, with the source of randomness passed in so a test can pin it.
+export function shuffle(list, pick = Math.random) {
+  const out = [...list]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(pick() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+// The messenger beats behind a drawn set, in the order they were drawn.
+export const beatsFor = (scenario, ids = []) =>
+  ids.map((id) => scenario.pool?.requests.find((r) => r.id === id)?.beat).filter(Boolean)
+
 export const dayDone = (scenario, day, state) =>
-  requestsOf(scenario, day).every((o) => objectiveDone(o, state))
+  requestsOf(scenario, day, state.overtime ?? {}, state.drawn ?? {})
+    .every((o) => objectiveDone(o, state))
 
 // An objective is met when the state it names has been reached — the scenario
 // says which, so adding a goal is a data change.
@@ -460,7 +602,8 @@ export const fileOpener = (file) =>
       : file.name.endsWith('.xlsx') ? { app: 'sheet', icon: 'xls' }
       : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
         : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
-          : { app: 'notepad', icon: 'doc' }
+          : file.name.endsWith('.pdf') ? { app: 'pdf', icon: 'pdf' }
+            : { app: 'notepad', icon: 'doc' }
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
@@ -476,10 +619,59 @@ export function complaintFor(goal, reason, misses) {
   return { spent: false, lines: [...c[reason], ...warn] }
 }
 
+// What a file says now: the player's saved text if they have edited it.
+export const contentOf = (file, edits = {}) => (file ? edits[file.id] ?? file.content : '')
+
+// A hosts line is an address, whitespace, a name — comments after # ignored.
+export function hostNames(text = '') {
+  const out = {}
+  for (const raw of text.split('\n')) {
+    const line = raw.split('#')[0].trim()
+    const [ip, ...names] = line.split(/\s+/).filter(Boolean)
+    if (!ip || !names.length) continue
+    for (const name of names) out[name.toLowerCase()] = ip
+  }
+  return out
+}
+
+// A .local name resolves only once it is in the player's hosts file, at the
+// address the request named.
+export function hostResolves(scenario, edits, url) {
+  const file = findFile(scenario.fs, scenario.hosts.file)
+  const names = hostNames(contentOf(file, edits))
+  const wanted = scenario.hosts.required[url]
+  return wanted ? names[url] === wanted : Boolean(names[url])
+}
+
+// The anonymous room answers by keyword. Whoever replies is picked by how
+// many times the player has already asked, so a second ask reads as a second
+// voice rather than the same line twice.
+export function roomReply(ask, question, asked = 0) {
+  const q = loose(question)
+  if (!q) return null
+  // The longest keyword wins, so '빈자리' reaches the rumour topic rather than
+  // the screen-lock one that merely says '자리'.
+  let hit = null, best = 0
+  for (const topic of ask.topics) {
+    for (const k of topic.keys) {
+      const key = loose(k)
+      if (q.includes(key) && key.length > best) { hit = topic; best = key.length }
+    }
+  }
+  const pool = hit ? hit.replies : ask.fallback
+  return pool[asked % pool.length]
+}
+
+// Installing something can leave an icon on the desktop. Which ones are there
+// is a question about grants, so the shell never has to keep its own list.
+export const installedShortcuts = (programs = {}, grants = {}) =>
+  Object.values(programs).filter((p) => p.shortcut && grants[p.grant]).map((p) => p.shortcut)
+
 // Exactly one state per visited site: no approval means no login form, no login
 // means no content. Returning a single value keeps them mutually exclusive.
-export function siteView(site, { grants, unlocked }) {
+export function siteView(site, { grants, unlocked, resolves = true }) {
   if (!site) return 'error'
+  if (site.requiresHost && !resolves) return 'error'
   if (site.requiresIp && !grants.ip) return 'blocked'
   if (site.login && !unlocked[site.url]) return 'login'
   return 'ready'

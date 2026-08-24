@@ -1,4 +1,4 @@
-import { useGame, fileOpener, fsView } from '../engine/store.js'
+import { installedShortcuts, useGame, fileOpener, fsView } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
@@ -15,14 +15,16 @@ const SHORTCUTS = [
 export default function Desktop() {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
+  const grants = useGame((s) => s.grants)
   const openWindow = useGame((s) => s.openWindow)
   const pinFile = useGame((s) => s.pinFile)
   const restored = useGame((s) => s.restored)
   const desktop = fsView(scenario.fs, { pinned, restored })['바탕화면']
   const work = useFileDrop(pinFile)
+  const icons = [...SHORTCUTS, ...installedShortcuts(scenario.programs, grants)]
   return (
     <div className="desktop-icons">
-      {SHORTCUTS.map((s) => (
+      {icons.map((s) => (
         <button key={s.label} className="desktop-icon"
                 onDoubleClick={() => openWindow(s.app, s.props)}>
           <div className="glyph"><Icon name={s.icon} size={38} /></div>{s.label}

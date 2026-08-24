@@ -21,6 +21,7 @@ export default function Installer({ fileId, winId }) {
   const grants = useGame((s) => s.grants)
   const grant = useGame((s) => s.grant)
   const close = useGame((s) => s.closeWindow)
+  const crash = useGame((s) => s.crash)
   const [step, setStep] = useState(-1)
   const file = findFile(fs, fileId)
   const spec = programs[file?.program]
@@ -37,6 +38,7 @@ export default function Installer({ fileId, winId }) {
 
   useEffect(() => {
     if (!finished || grants[spec.grant]) return
+    if (spec.danger) return crash(file.program)
     grant(spec.grant)
     play('ok')
   }, [finished])
