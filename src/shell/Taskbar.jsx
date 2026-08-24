@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGame, savedAt } from '../engine/store.js'
-import { APPS } from '../apps/registry.jsx'
+import { APPS, knownWindows } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
 import { FolderOpen, LayoutGrid, Lock, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
 import { isMuted, play, setMuted } from './sound.js'
@@ -97,7 +97,7 @@ export default function Taskbar() {
           <button className="tb-icon" title="시작" onClick={toggleStart}>
             <LayoutGrid size={19} strokeWidth={1.8} />
           </button>
-          {windows.map((w) => (
+          {knownWindows(windows).map((w) => (
             <button key={w.id} className="tb-icon" title={APPS[w.app].title}
                     onClick={() => clickWindow(w)}>
               <Icon name={APPS[w.app].icon} size={23} />

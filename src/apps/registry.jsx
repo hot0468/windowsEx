@@ -37,3 +37,7 @@ export const APPS = {
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
   vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8' }
 }
+
+// A restored save can name an app this build no longer has. Drawing one throws
+// and takes the whole desktop with it, so drop them before anything renders.
+export const knownWindows = (windows) => windows.filter((w) => APPS[w.app])

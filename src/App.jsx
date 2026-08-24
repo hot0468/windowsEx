@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf } from './engine/store.js'
-import { APPS } from './apps/registry.jsx'
+import {
+  useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending
+} from './engine/store.js'
+import { APPS, knownWindows } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
@@ -63,7 +65,7 @@ function Toast() {
 
 function WindowLayer() {
   const windows = useGame((s) => s.windows)
-  return windows.map((win) => {
+  return knownWindows(windows).map((win) => {
     const cfg = APPS[win.app]
     const C = cfg.comp
     return (
