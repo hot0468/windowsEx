@@ -33,6 +33,18 @@ describe('hidden items', () => {
     for (const f of hidden) expect(f.name.length).toBeGreaterThan(0)
   })
 
+  it('hides everything inside a hidden folder too', () => {
+    // search walks the tree and only looks at each file's own flag, so a plain
+    // file inside a hidden folder would still surface with the switch off
+    const inside = (node) => (node.children ?? []).flatMap(
+      (e) => [e, ...(e.children ? inside(e) : [])])
+    for (const folder of walk(scenario.fs).filter((e) => e.hidden && e.children)) {
+      for (const child of inside(folder)) {
+        expect(child.hidden, folder.name + ' > ' + child.name).toBe(true)
+      }
+    }
+  })
+
   it('never hides an answer a request needs', () => {
     // the switch is off by default, so anything behind it is a soft-lock
     const behind = JSON.stringify(hidden)
