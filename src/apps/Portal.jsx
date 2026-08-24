@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGame } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
+import Download from './Download.jsx'
 
 const Face = ({ id, size }) => {
   const src = faceOf(id)
@@ -108,6 +109,17 @@ export default function Portal({ site }) {
               ))}
             </ul>
           </Panel>
+
+          {site.files && (
+            <Panel title="자료실" more="전체보기">
+              {site.files.map((f) => (
+                <div key={f.download.fileId} className="pt-file">
+                  <p className="pt-file-desc">{f.desc}</p>
+                  <Download item={f.download} />
+                </div>
+              ))}
+            </Panel>
+          )}
         </main>
 
         <aside className="pt-side">

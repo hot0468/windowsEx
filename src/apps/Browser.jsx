@@ -71,6 +71,7 @@ export default function Browser() {
   const grants = useGame((s) => s.grants)
   const unlockSite = useGame((s) => s.unlockSite)
   const edits = useGame((s) => s.edits)
+  const vpn = useGame((s) => s.vpn)
   const [addr, setAddr] = useState('')
   const nav = useHistory({ kind: 'home' })
   const page = nav.at
@@ -102,7 +103,10 @@ export default function Browser() {
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
   const view = page.kind === 'site'
-    ? siteView(site, { grants, unlocked, resolves: !site?.requiresHost || hostResolves(scenario, edits, site.url) })
+    ? siteView(site, {
+      grants, unlocked, vpn,
+      resolves: !site?.requiresHost || hostResolves(scenario, edits, site.url)
+    })
     : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
@@ -344,6 +348,21 @@ export default function Browser() {
             <h2>사이트에 연결할 수 없음</h2>
             <p>{page.url} 의 서버 IP 주소를 찾을 수 없습니다.</p>
             <p className="err-code">ERR_NAME_NOT_RESOLVED</p>
+          </div>
+        )}
+
+        {view === 'vpn' && (
+          <div className="blk">
+            <div className="blk-card">
+              <Lock size={30} strokeWidth={1.6} />
+              <h2>사내망 전용 페이지입니다</h2>
+              <p>
+                이 페이지는 사내망에서만 열람할 수 있습니다.<br />
+                VPN 에 연결한 뒤 다시 시도해 주세요.
+              </p>
+              <div className="blk-help">바탕화면의 <b>AR VPN</b> 에서 연결할 수 있습니다.</div>
+              <div className="blk-code">AR-NET-511 · {site.url}</div>
+            </div>
           </div>
         )}
 

@@ -670,12 +670,14 @@ export function roomReply(ask, question, asked = 0) {
 export const installedShortcuts = (programs = {}, grants = {}) =>
   Object.values(programs).filter((p) => p.shortcut && grants[p.grant]).map((p) => p.shortcut)
 
-// Exactly one state per visited site: no approval means no login form, no login
-// means no content. Returning a single value keeps them mutually exclusive.
-export function siteView(site, { grants, unlocked, resolves = true }) {
+// Exactly one state per visited site: no tunnel means no name, no approval
+// means no login form, no login means no content. Returning a single value
+// keeps them mutually exclusive.
+export function siteView(site, { grants, unlocked, resolves = true, vpn = false }) {
   if (!site) return 'error'
-  if (site.requiresHost && !resolves) return 'error'
   if (site.requiresIp && !grants.ip) return 'blocked'
+  if (site.requiresVpn && !vpn) return 'vpn'
+  if (site.requiresHost && !resolves) return 'error'
   if (site.login && !unlocked[site.url]) return 'login'
   return 'ready'
 }

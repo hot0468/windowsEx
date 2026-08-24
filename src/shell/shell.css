@@ -1024,3 +1024,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .vp-busy { font-size: 12px; color: #7b8089; margin: 0; }
 .vp-err { font-size: 12px; color: #c02626; line-height: 1.6; margin: 0; }
 .vp-foot { margin-top: auto; display: flex; justify-content: flex-end; }
+
+.pt-file { padding: 4px 0 2px; }
+.pt-file + .pt-file { border-top: 1px solid #eceef1; margin-top: 6px; }
+.pt-file-desc { font-size: 12px; color: #5d626b; line-height: 1.6; margin: 8px 0 0; }
+.pt-file .dl { margin: 8px 0 4px; }
