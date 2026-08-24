@@ -8,11 +8,19 @@ import {
   Paperclip, Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
-const Avatar = ({ t, size }) => {
+const Avatar = ({ t, size, onOpen }) => {
   const photo = photoOf(t.id)
   const face = faceOf(t.id)
+  // a row is already a button, so this stays a span rather than nesting one
+  const opens = onOpen && {
+    role: 'button', tabIndex: 0, title: t.name + ' 프로필',
+    onClick: (e) => { e.stopPropagation(); onOpen(t) },
+    onKeyDown: (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onOpen(t) }
+    }
+  }
   return (
-    <span className={'mg-av' + (t.room ? ' room' : '')}
+    <span className={'mg-av' + (t.room ? ' room' : '') + (onOpen ? ' tap' : '')} {...opens}
           style={{ background: t.color, width: size, height: size, fontSize: Math.round(size * 0.42) }}>
       {photo && <img className="mg-photo" src={photo} alt="" draggable="false" />}
       {!photo && face && <img className="mg-face" src={face} alt="" draggable="false" />}
@@ -22,9 +30,9 @@ const Avatar = ({ t, size }) => {
   )
 }
 
-const Row = ({ t, preview, unread, selected, onOpen }) => (
+const Row = ({ t, preview, unread, selected, onOpen, onProfile }) => (
   <button className={'mg-row' + (selected ? ' sel' : '')} onClick={onOpen}>
-    <Avatar t={t} size={40} />
+    <Avatar t={t} size={40} onOpen={onProfile} />
     <span className="mg-row-mid">
       <span className="mg-row-name">
         {t.name}{t.muted && <BellOff size={12} strokeWidth={2.2} />}
@@ -33,6 +41,36 @@ const Row = ({ t, preview, unread, selected, onOpen }) => (
     </span>
     {unread > 0 && <span className="mg-badge">{unread}</span>}
   </button>
+)
+
+// Clicking a face opens the card behind it. Everything on it is already known
+// about the thread — there is no second source of truth to keep in step.
+const ProfileCard = ({ who, team, onChat, onClose }) => (
+  <div className="mg-profile" onPointerDown={onClose}>
+    <div className="mg-profile-card" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="mg-profile-top" style={{ background: who.color }}>
+        <Avatar t={who} size={92} />
+      </div>
+      <div className="mg-profile-body">
+        <div className="mg-profile-name">
+          {who.name}
+          {who.muted && <BellOff size={13} strokeWidth={2.2} />}
+        </div>
+        {who.sub && <div className="mg-profile-sub">{who.sub}</div>}
+        <dl className="mg-profile-meta">
+          {team && <div><dt>소속</dt><dd>{team}</dd></div>}
+          <div>
+            <dt>상태</dt>
+            <dd className={who.online ? 'on' : ''}>{who.online ? '온라인' : '오프라인'}</dd>
+          </div>
+        </dl>
+        <div className="mg-profile-row">
+          {onChat && <button className="btn-primary" onClick={onChat}>대화하기</button>}
+          <button className="sm-cancel" onClick={onClose}>닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
 )
 
 export default function Messenger({ source }) {
@@ -63,6 +101,7 @@ export default function Messenger({ source }) {
   const [confirming, setConfirming] = useState(null)
   const [branch, setBranch] = useState({})
   const [draft, setDraft] = useState('')
+  const [profile, setProfile] = useState(null)
   const list = useRef(null)
   const stick = useRef(true)
   const pending = useRef([])
@@ -75,6 +114,7 @@ export default function Messenger({ source }) {
     ...(extraMessages[t.id] ?? [])
   ]
   const threads = m.sections.flatMap((s) => s.threads)
+  const teamOf = (id) => m.sections.find((sec) => sec.threads.some((t) => t.id === id))?.title
   const unreadOf = (t) => msgsOf(t).length - (seen[t.id] ?? 0)
   const thread = threads.find((t) => t.id === openId)
   // Room messages come from several people, so the sender's name picks the face.
@@ -103,7 +143,8 @@ export default function Messenger({ source }) {
 
   const row = (t, preview) => (
     <Row key={t.id} t={t} preview={preview} unread={unreadOf(t)}
-         selected={t.id === openId} onOpen={() => setOpenThread(source, t.id)} />
+         selected={t.id === openId} onOpen={() => setOpenThread(source, t.id)}
+         onProfile={setProfile} />
   )
 
   const busy = !!(thread && typing[thread.id])
@@ -233,7 +274,8 @@ export default function Messenger({ source }) {
 
         <div className="mg-list">
           <div className="mg-me">
-            <Avatar t={{ id: 'me', name: m.me.name, color: m.me.color, online: true }} size={42} />
+            <Avatar t={{ id: 'me', name: m.me.name, sub: m.me.sub, color: m.me.color, online: true }}
+                    size={42} onOpen={setProfile} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>
               <span className="mg-row-sub">{m.me.sub}</span>
@@ -271,7 +313,7 @@ export default function Messenger({ source }) {
         {thread && (
           <>
             <div className="mg-chat-top">
-              <Avatar t={thread} size={32} />
+              <Avatar t={thread} size={32} onOpen={setProfile} />
               <div className="mg-chat-who">
                 <div className="mg-chat-name">{thread.name}</div>
                 <div className="mg-chat-sub">{thread.sub}</div>
@@ -286,14 +328,14 @@ export default function Messenger({ source }) {
                 const who = people[msg.from] ?? thread
                 return (
                   <div key={i} className="msg-row">
-                    <span className="msg-av">{opens && <Avatar t={who} size={32} />}</span>
+                    <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
                     <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}</div>
                   </div>
                 )
               })}
               {mine.map((sent, i) => (sent.from ? (
                 <div key={'r' + i} className="msg-row">
-                  <span className="msg-av"><Avatar t={thread} size={32} /></span>
+                  <span className="msg-av"><Avatar t={thread} size={32} onOpen={setProfile} /></span>
                   <div className="bubble them"><b>{sent.from}</b>{sent.text}</div>
                 </div>
               ) : (
@@ -309,7 +351,7 @@ export default function Messenger({ source }) {
               )))}
               {busy && (
                 <div className="msg-row">
-                  <span className="msg-av"><Avatar t={thread} size={32} /></span>
+                  <span className="msg-av"><Avatar t={thread} size={32} onOpen={setProfile} /></span>
                   <div className="typing"><span className="spinner sm" />작성중…</div>
                 </div>
               )}
@@ -363,6 +405,14 @@ export default function Messenger({ source }) {
           </>
         )}
       </div>
+
+      {profile && (
+        <ProfileCard who={profile} team={teamOf(profile.id)}
+                     onChat={profile.id !== 'me' && profile.id !== openId
+                       ? () => { setOpenThread(source, profile.id); setProfile(null) }
+                       : null}
+                     onClose={() => setProfile(null)} />
+      )}
     </div>
   )
 }
