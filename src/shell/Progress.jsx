@@ -7,10 +7,12 @@ export default function Progress() {
   const day = useGame((s) => s.day)
   const grants = useGame((s) => s.grants)
   const unlocked = useGame((s) => s.unlocked)
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
   const [open, setOpen] = useState(false)
 
   const state = { grants, unlocked }
-  const list = requestsOf(scenario, day)
+  const list = requestsOf(scenario, day, overtime, drawn)
   const done = list.filter((o) => objectiveDone(o, state))
   const today = scenario.days[day - 1]
 
@@ -24,7 +26,7 @@ export default function Progress() {
       </button>
       {open && (
         <ul className="pg-list">
-          <li className="pg-date">{today.date} · {today.label}</li>
+          <li className="pg-date">{today.date} · {today.label}{overtime[day] && ' · 야근'}</li>
           {list.map((o) => {
             const ok = objectiveDone(o, state)
             return (

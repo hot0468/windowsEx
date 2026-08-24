@@ -27,6 +27,7 @@ export default function Installer({ fileId, winId }) {
   const grant = useGame((s) => s.grant)
   const close = useGame((s) => s.closeWindow)
   const crash = useGame((s) => s.crash)
+  const startMining = useGame((s) => s.startMining)
   const [step, setStep] = useState(-1)
   const file = findFile(fs, fileId)
   const spec = programs[file?.program]
@@ -46,6 +47,8 @@ export default function Installer({ fileId, winId }) {
     if (spec.danger) return crash(file.program)
     grant(spec.grant)
     play('ok')
+    // some installers bring something else along
+    if (spec.bundles) startMining()
   }, [finished])
 
   const shut = () => close(winId)

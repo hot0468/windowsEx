@@ -4,7 +4,7 @@ import { entriesAt } from '../src/engine/store.js'
 
 const slips = entriesAt(scenario.fs, ['문서', '개인', '급여명세서'])
 const august = slips.find((s) => s.name.includes('202608'))
-const payroll = scenario.days.flatMap((d) => d.asks ?? [])
+const payroll = [...scenario.days.flatMap((d) => d.asks ?? []), ...scenario.pool.requests.map((r) => r.beat)]
   .find((a) => a.ask?.grants === 'payroll').ask
 
 // read the amount off the line that starts with a label. building the pattern

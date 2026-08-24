@@ -10,7 +10,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
-  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn']
+  'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -102,6 +102,10 @@ export const useGame = create((set, get) => ({
   edits: restored?.edits ?? {},
   // Which requests each day drew from the pool. Day one never draws.
   drawn: restored?.drawn ?? {},
+  // A miner that came bundled with a security plugin: running until the task
+  // is ended, and still installed until the antivirus removes it.
+  mining: restored?.mining ?? false,
+  cleaned: restored?.cleaned ?? false,
   scratch: restored?.scratch ?? '',
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
@@ -120,8 +124,15 @@ export const useGame = create((set, get) => ({
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
 
-  openWindow: (app, props = {}) =>
-    set((s) => {
+  openWindow: (app, props = {}) => {
+    // A machine pinned at 96% cannot hold a new window: it appears and shuts.
+    // The two ways out of this state are exempt, or the player would be stuck.
+    const s0 = get()
+    if (s0.mining && !opensWhileMining(app)) {
+      play('error')
+      return s0.showToast({ from: s0.scenario.miner.symptoms.title, text: s0.scenario.miner.symptoms.lines[0], app: 'taskmgr' })
+    }
+    return set((s) => {
       const key = app + JSON.stringify(props)
       const existing = s.windows.find((w) => w.key === key)
       if (existing) {
@@ -140,7 +151,8 @@ export const useGame = create((set, get) => ({
         }],
         nextZ: s.nextZ + 1
       }
-    }),
+    })
+  },
   closeWindow: (id) => set((s) => ({ windows: s.windows.filter((w) => w.id !== id) })),
   focusWindow: (id) =>
     set((s) => ({
@@ -245,6 +257,43 @@ export const useGame = create((set, get) => ({
   },
   goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
+  // Something the player installed starts mining. The machine goes slow and
+  // windows fall over until the task is ended.
+  startMining: () => {
+    const s = get()
+    if (s.mining || s.cleaned) return
+    set({ mining: true })
+    setTimeout(() => get().showToast({
+      from: s.scenario.miner.symptoms.title,
+      text: s.scenario.miner.symptoms.lines[0], app: 'taskmgr'
+    }), 4200)
+  },
+  // Ending the task quiets the machine; the program is still on disk, and the
+  // security team says so a moment later.
+  killMiner: () => {
+    const s = get()
+    if (!s.mining) return
+    set({ mining: false })
+    play('ok')
+    s.showToast({ from: '작업 관리자', text: s.scenario.miner.killed.toast, app: 'taskmgr' })
+    const after = s.scenario.miner.after
+    setTimeout(() => {
+      after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
+      get().showToast({
+        from: after.from, text: after.lines[1],
+        app: 'messenger', source: after.source, thread: after.thread
+      })
+    }, 5200)
+  },
+  // The scan removes it for good.
+  cleanPc: () => {
+    const s = get()
+    if (s.cleaned) return
+    set({ mining: false, cleaned: true })
+    play('ok')
+    s.showToast({ from: s.scenario.antivirus.name, text: s.scenario.antivirus.clean.toast, app: 'antivirus' })
+    s.grant('cleanpc')
+  },
   // Saving hosts can put a name on the network; the objective is the site
   // opening, so nothing else has to happen here.
   editFile: (fileId, text) => set((s) => ({ edits: { ...s.edits, [fileId]: text } })),
@@ -678,6 +727,18 @@ export function roomReply(ask, question, asked = 0) {
 // is a question about grants, so the shell never has to keep its own list.
 export const installedShortcuts = (programs = {}, grants = {}) =>
   Object.values(programs).filter((p) => p.shortcut && grants[p.grant]).map((p) => p.shortcut)
+
+// While the miner runs the machine cannot hold a new window open: opening one
+// is what the player sees fail. The task manager and the antivirus are the way
+// out, so they always open.
+export const SAFE_APPS = ['taskmgr', 'antivirus']
+export const opensWhileMining = (app) => SAFE_APPS.includes(app)
+
+// What the task manager lists: the miner first, on top of the ordinary rows.
+export function processList(miner, mining) {
+  const rows = [...miner.processes]
+  return mining ? [{ ...miner.process, miner: true }, ...rows] : rows
+}
 
 // Exactly one state per visited site: no tunnel means no name, no approval
 // means no login form, no login means no content. Returning a single value

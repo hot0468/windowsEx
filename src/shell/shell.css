@@ -1052,3 +1052,53 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .ad-title { font-size: 14px; color: #1a56c4; font-weight: 600; }
 .ad-url { font-size: 11.5px; color: #1a7f37; margin-top: 3px; }
 .ad-desc { font-size: 12.5px; color: #4b5058; line-height: 1.6; margin-top: 4px; }
+
+/* task manager */
+.tm { height: 100%; display: flex; flex-direction: column; background: #f7f7fa; font-size: 12.5px; }
+.tm-tabs { display: flex; gap: 18px; padding: 10px 16px 0; border-bottom: 1px solid #e2e2ea; background: #fff; }
+.tm-tabs span { padding-bottom: 8px; color: #888; }
+.tm-tabs span.on { color: #1f2430; border-bottom: 2px solid #2f6fd0; font-weight: 600; }
+.tm-head, .tm-row { display: grid; grid-template-columns: 1fr 70px 92px 78px; align-items: center; gap: 6px; padding: 7px 16px; }
+.tm-head { color: #888; font-size: 11.5px; border-bottom: 1px solid #e8e8ee; background: #fff; }
+.tm-list { flex: 1; overflow: auto; }
+.tm-row { width: 100%; background: none; border: none; text-align: left; font: inherit; font-size: 12.5px; cursor: pointer; }
+.tm-row:hover { background: #eef2fb; }
+.tm-row.sel { background: #d9e5fa; }
+.tm-row.hot { background: #fdeeea; }
+.tm-row.hot.sel { background: #f8d9d1; }
+.tm-col-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tm-col-name b { font-weight: 500; color: #222; }
+.tm-col-name i { font-style: normal; color: #999; font-size: 11px; }
+.tm-col-n { text-align: right; color: #555; font-variant-numeric: tabular-nums; }
+.tm-col-n.hot { color: #c2381f; font-weight: 700; }
+.tm-note { margin: 0 16px 8px; padding: 10px 12px; border-radius: 5px; background: #e8f5ec; color: #1f6f4a; display: flex; flex-direction: column; gap: 3px; }
+.tm-note b { font-size: 12.5px; }
+.tm-note span { font-size: 11.5px; }
+.tm-foot { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid #e2e2ea; background: #fff; }
+.tm-warn { flex: 1; color: #c2381f; font-size: 11.5px; line-height: 1.6; }
+.tm-foot .btn-primary { margin-left: auto; padding: 7px 16px; border-radius: 4px; font-size: 12.5px; }
+
+/* antivirus */
+.av { height: 100%; display: flex; flex-direction: column; align-items: center; padding: 22px; background: #f4f8f5; font-size: 13px; text-align: center; }
+.av-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
+.av-logo { font-size: 17px; font-weight: 800; color: #1f6f4a; }
+.av-ver { color: #93a89b; font-size: 11px; }
+.av-shield { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #e2f0e7; color: #2f8f5b; font-size: 38px; }
+.av-shield.ok { background: #dcf0e3; }
+.av-shield.bad { background: #fde9e4; color: #c2381f; }
+.av-idle { margin-top: 16px; color: #8b9a90; font-size: 12px; }
+.av-scan { width: 100%; max-width: 320px; margin-top: 18px; }
+.av-scanning { color: #1f6f4a; font-size: 12.5px; }
+.av-bar { height: 6px; margin: 10px 0 8px; border-radius: 3px; background: #dfe8e2; overflow: hidden; }
+.av-bar i { display: block; height: 100%; background: #2f8f5b; transition: width .4s ease; }
+.av-target { color: #8b9a90; font-size: 11.5px; font-family: Consolas, monospace; }
+.av-found { width: 100%; max-width: 340px; margin-top: 18px; }
+.av-found h2 { font-size: 15px; color: #1f2430; margin-bottom: 12px; }
+.av-item { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 6px; background: #fff; border: 1px solid #f0ddd7; }
+.av-item b { color: #c2381f; font-size: 13px; }
+.av-item span { color: #999; font-size: 11px; font-family: Consolas, monospace; word-break: break-all; }
+.av-note { margin-top: 10px; color: #7b8a80; font-size: 11.5px; line-height: 1.7; }
+.av-found .btn-primary { width: 100%; margin-top: 14px; padding: 11px; border-radius: 4px; background: #c2381f; }
+.av-found .btn-primary:hover { background: #a72e18; }
+.av-btn { margin-top: auto; padding: 11px 28px; border-radius: 4px; background: #2f8f5b; color: #fff; font-size: 13px; font-weight: 600; }
+.av-btn:hover { background: #26794c; }

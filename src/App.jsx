@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useGame, dayDone, objectiveDone, requestsOf } from './engine/store.js'
+import { useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf } from './engine/store.js'
 import { APPS } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
 import Progress from './shell/Progress.jsx'
 import Crash from './shell/Crash.jsx'
+import Ending from './shell/Ending.jsx'
 import Lock from './shell/Lock.jsx'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
@@ -91,13 +92,59 @@ function FailOverlay() {
   )
 }
 
+// A week of wrong answers ends the job, not the day. The choice is which
+// kind of leaving it is called.
+function LayoffOverlay() {
+  const layoff = useGame((s) => s.scenario.ending.layoff)
+  const layOff = useGame((s) => s.layOff)
+  const [asked, setAsked] = useState(false)
+  return (
+    <div className="clear-overlay lay">
+      <div className="lay-head">{layoff.notice.from}</div>
+      {layoff.notice.lines.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
+      {!asked
+        ? <button className="btn-primary" onClick={() => setAsked(true)}>어떤 선택이 있습니까</button>
+        : (
+          <div className="lay-picks">
+            {layoff.choices.map((c) => (
+              <button key={c.id} className="lay-pick" onClick={() => layOff(c.id)}>
+                <b>{c.label}</b>
+                <span>{c.note}</span>
+              </button>
+            ))}
+          </div>
+        )}
+    </div>
+  )
+}
+
+// Everything for today is done — but there is always more, if you want it.
+function OvertimeOverlay({ offer }) {
+  const day = useGame((s) => s.day)
+  const workLate = useGame((s) => s.workLate)
+  const goHome = useGame((s) => s.goHome)
+  const nights = useGame((s) => Object.values(s.overtime).filter(Boolean).length)
+  return (
+    <div className="clear-overlay ot">
+      <h1>{offer.title}</h1>
+      {offer.lines.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
+      {nights > 0 && <p className="ot-count">이번 주 야근 {nights}일째</p>}
+      <div className="fail-row">
+        <button className="btn-primary" onClick={workLate}>{offer.stay}</button>
+        <button className="sm-cancel" onClick={goHome}>{offer.leave}</button>
+      </div>
+      <p className="ot-note">{offer.note}</p>
+    </div>
+  )
+}
+
 function QuitOverlay() {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
-  const misses = useGame((s) => s.misses)
   const finishDay = useGame((s) => s.finishDay)
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
   const today = scenario.days[day - 1]
-  const last = !scenario.days[day]
 
   return (
     <div className="clear-overlay quit">
@@ -105,15 +152,13 @@ function QuitOverlay() {
       <h1>{scenario.quitting.title}</h1>
       <p className="quit-day">{today.date} · {today.label}</p>
       <ul className="quit-list">
-        {requestsOf(scenario, day).map((o) => <li key={o.id}>{o.title}</li>)}
+        {requestsOf(scenario, day, overtime, drawn).map((o) => <li key={o.id}>{o.title}</li>)}
       </ul>
       <p className="quit-stat">
-        요청 {today.requests.length}건 완료{misses > 0 && ` · 재작업 ${misses}회`}
+        요청 {requestsOf(scenario, day, overtime, drawn).length}건 완료{overtime[day] && ' · 야근'}
       </p>
       {today.closing?.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
-      {last
-        ? <p className="quit-line">— 여기까지가 지금 준비된 마지막 날입니다 —</p>
-        : <button className="btn-primary" onClick={finishDay}>{scenario.quitting.button}</button>}
+      <button className="btn-primary" onClick={finishDay}>{scenario.quitting.button}</button>
     </div>
   )
 }
@@ -124,10 +169,16 @@ export default function App() {
   const day = useGame((s) => s.day)
   const grants = useGame((s) => s.grants)
   const unlocked = useGame((s) => s.unlocked)
-  const done = dayDone(scenario, day, { grants, unlocked })
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
+  const slips = useGame((s) => s.slips)
+  const done = dayDone(scenario, day, { grants, unlocked, overtime, drawn })
+  const cut = laidOff(scenario.ending.layoff, { slips, overtime, drawn }, scenario)
+  const offer = done ? overtimeOffer(scenario, day, overtime) : null
   const failed = useGame((s) => s.failed)
   const crashed = useGame((s) => s.crashed)
   const locked = useGame((s) => s.locked)
+  const ended = useGame((s) => s.ended)
 
   // Ctrl+Alt+L locks on the spot; leaving the machine alone locks it too.
   useEffect(() => {
@@ -178,6 +229,7 @@ export default function App() {
     return () => timers.forEach(clearTimeout)
   }, [booted])
 
+  if (ended) return <Ending />
   if (crashed) return <Crash />
   if (!booted) return <Boot />
   return (
@@ -188,7 +240,9 @@ export default function App() {
       <Toast />
       <Taskbar />
       {locked && <Lock />}
-      {done && <QuitOverlay />}
+      {cut && !failed && <LayoffOverlay />}
+      {offer && !cut && <OvertimeOverlay offer={offer} />}
+      {done && !offer && !cut && <QuitOverlay />}
       {failed && !done && <FailOverlay />}
     </div>
   )

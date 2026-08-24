@@ -49,6 +49,7 @@ export default function Messenger({ source }) {
   const pendingAsks = useGame((s) => s.pendingAsks)
   const setAsk = useGame((s) => s.setAsk)
   const grant = useGame((s) => s.grant)
+  const slip = useGame((s) => s.slip)
   const typing = useGame((s) => s.typing)
   const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
@@ -160,6 +161,7 @@ export default function Messenger({ source }) {
     speak(ask.ok)
   }
   const missed = () => {
+    slip()
     const n = wrongs[thread.id] ?? 0
     setWrongs((w) => ({ ...w, [thread.id]: n + 1 }))
     speak(hintAfter(ask, n))

@@ -11,6 +11,8 @@ import Cmd from './Cmd.jsx'
 import Slides from './Slides.jsx'
 import Sheet from './Sheet.jsx'
 import Installer from './Installer.jsx'
+import TaskManager from './TaskManager.jsx'
+import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
 
 const WorkMessenger = () => <Messenger source="workMessenger" />
@@ -30,6 +32,8 @@ export const APPS = {
   sheet: { title: '시트', icon: 'xls', comp: Sheet, w: 780, h: 520, theme: '#217346' },
   browser: { title: '브라우저', icon: 'globe', comp: Browser, w: 820, h: 560 },
   installer: { title: '설치 마법사', icon: 'cmd', comp: Installer, w: 560, h: 400 },
+  taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
+  antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
   vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8' }
 }

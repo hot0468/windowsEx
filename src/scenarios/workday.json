@@ -2800,15 +2800,27 @@
       "files": [
         {
           "desc": "사내망 VPN 클라이언트 설치 파일입니다. 8/31 부터 사내 시스템은 VPN 접속만 허용됩니다.",
-          "download": { "fileId": "file_vpn_setup", "name": "AR-VPN_Setup.exe", "size": "42MB" }
+          "download": {
+            "fileId": "file_vpn_setup",
+            "name": "AR-VPN_Setup.exe",
+            "size": "42MB"
+          }
         },
         {
           "desc": "설치 순서와 문제 해결 방법이 정리되어 있습니다. 연결이 안 되면 마지막 장을 보세요.",
-          "download": { "fileId": "file_vpn_guide", "name": "AR-VPN_설치안내.pdf", "size": "0.4MB" }
+          "download": {
+            "fileId": "file_vpn_guide",
+            "name": "AR-VPN_설치안내.pdf",
+            "size": "0.4MB"
+          }
         },
         {
           "desc": "신규 입사자 및 보직 변경자 제출용 양식입니다.",
-          "download": { "fileId": "file_pledge", "name": "보안서약서_양식.hwp", "size": "88KB" }
+          "download": {
+            "fileId": "file_pledge",
+            "name": "보안서약서_양식.hwp",
+            "size": "88KB"
+          }
         }
       ],
       "login": {
@@ -3421,7 +3433,11 @@
           ],
           "recheck": "설치 확인",
           "notReady": "보안 프로그램이 아직 설치되지 않았습니다. 내려받은 파일을 실행해 설치를 완료해 주세요.",
-          "download": { "fileId": "file_anysign", "name": "AnySign4PC_Setup.exe", "size": "18MB" }
+          "download": {
+            "fileId": "file_anysign",
+            "name": "AnySign4PC_Setup.exe",
+            "size": "18MB"
+          }
         }
       }
     },
@@ -3968,7 +3984,12 @@
           "당사가 발송하는 거래조건서·정산서는 파트너 전용 형식(.dcx)으로 제공됩니다.",
           "아래 뷰어를 설치하시면 해당 문서를 열람하실 수 있습니다."
         ],
-        "download": { "fileId": "file_dyviewer", "name": "DYViewer_Setup.exe", "size": "26MB", "label": "뷰어 다운로드" },
+        "download": {
+          "fileId": "file_dyviewer",
+          "name": "DYViewer_Setup.exe",
+          "size": "26MB",
+          "label": "뷰어 다운로드"
+        },
         "notes": [
           "지원 환경: Windows 10 이상",
           "문의: D유통 정보시스템팀 02-777-0200"
@@ -3990,7 +4011,12 @@
           "복잡한 설치 과정 없이 클릭 한 번이면 끝납니다.",
           "지금 바로 아래 버튼을 눌러 주세요!"
         ],
-        "download": { "fileId": "file_fakeviewer", "name": "HwpViewer_Free_Setup.exe", "size": "3MB", "label": "지금 무료 다운로드" },
+        "download": {
+          "fileId": "file_fakeviewer",
+          "name": "HwpViewer_Free_Setup.exe",
+          "size": "3MB",
+          "label": "지금 무료 다운로드"
+        },
         "notes": [
           "본 프로그램은 제휴 프로그램이 함께 설치될 수 있습니다.",
           "고객센터 운영시간: 확인되지 않음"
@@ -5206,7 +5232,15 @@
       "title": "한글 뷰어 무료 다운로드 | hwp 파일 바로 열기",
       "url": "hwpviewer-free.com",
       "desc": "설치 3초, 결제 없음. hwp·hwpx 전부 지원. 지금 바로 무료로 받으세요!",
-      "tags": ["한글", "한글뷰어", "뷰어", "hwp", "무료", "다운로드", "문서"]
+      "tags": [
+        "한글",
+        "한글뷰어",
+        "뷰어",
+        "hwp",
+        "무료",
+        "다운로드",
+        "문서"
+      ]
     }
   ],
   "blogs": [
@@ -5670,7 +5704,9 @@
           ],
           "ask": {
             "placeholder": "VPN 세션 ID를 입력해 주세요",
-            "accept": ["ARV-7K3Q-92XF"],
+            "accept": [
+              "ARV-7K3Q-92XF"
+            ],
             "grants": "vpn",
             "ok": [
               "확인했습니다. 전환 처리해 두겠습니다.",
@@ -7035,7 +7071,9 @@
       },
       "already": {
         "title": "이미 설치되어 있습니다",
-        "lines": ["DY Viewer 파트너 문서 뷰어가 이미 설치되어 있습니다."]
+        "lines": [
+          "DY Viewer 파트너 문서 뷰어가 이미 설치되어 있습니다."
+        ]
       }
     },
     "vpn": {
@@ -7045,7 +7083,11 @@
       "size": "42MB",
       "setup": "AR-VPN_Setup.exe",
       "grant": "vpnInstalled",
-      "shortcut": { "label": "AR VPN", "icon": "vpn", "app": "vpn" },
+      "shortcut": {
+        "label": "AR VPN",
+        "icon": "vpn",
+        "app": "vpn"
+      },
       "intro": [
         "이 마법사를 통해 AR 사내망 VPN 클라이언트를 설치합니다.",
         "계속하려면 [설치]를 클릭하십시오."
@@ -7066,7 +7108,9 @@
       },
       "already": {
         "title": "이미 설치되어 있습니다",
-        "lines": ["AR 사내망 VPN 클라이언트가 이미 설치되어 있습니다."]
+        "lines": [
+          "AR 사내망 VPN 클라이언트가 이미 설치되어 있습니다."
+        ]
       }
     },
     "anysign": {
@@ -7090,13 +7134,17 @@
         "title": "설치가 완료되었습니다",
         "lines": [
           "AnySign4PC 키보드보안 설치가 완료되었습니다.",
-          "정부25 화면으로 돌아가 [설치 확인] 을 눌러 주세요."
+          "정부25 화면으로 돌아가 [설치 확인] 을 눌러 주세요.",
+          "함께 제공되는 최적화 도구도 설치했습니다."
         ]
       },
       "already": {
         "title": "이미 설치되어 있습니다",
-        "lines": ["AnySign4PC 키보드보안이(가) 이미 설치되어 있습니다."]
-      }
+        "lines": [
+          "AnySign4PC 키보드보안이(가) 이미 설치되어 있습니다."
+        ]
+      },
+      "bundles": "miner"
     },
     "fakeviewer": {
       "product": "HWP Viewer Free",
@@ -7117,11 +7165,15 @@
       ],
       "done": {
         "title": "설치가 완료되었습니다",
-        "lines": ["설치가 완료되었습니다."]
+        "lines": [
+          "설치가 완료되었습니다."
+        ]
       },
       "already": {
         "title": "이미 설치되어 있습니다",
-        "lines": ["HWP Viewer Free이(가) 이미 설치되어 있습니다."]
+        "lines": [
+          "HWP Viewer Free이(가) 이미 설치되어 있습니다."
+        ]
       },
       "aftermath": {
         "source": "workMessenger",
@@ -12251,5 +12303,127 @@
         }
       }
     ]
+  },
+  "miner": {
+    "symptoms": {
+      "title": "컴퓨터가 느려졌습니다",
+      "lines": [
+        "마우스가 끊기고, 창을 열면 곧바로 닫힙니다.",
+        "팬 소리가 계속 납니다."
+      ]
+    },
+    "process": {
+      "name": "svchost32.exe",
+      "detail": "Windows 호스트 프로세스",
+      "cpu": 96,
+      "memory": "1,842.6MB",
+      "disk": "0.1MB/s",
+      "warn": "이 프로세스를 끝내면 저장하지 않은 데이터가 손실될 수 있습니다.",
+      "from": "AnySign4PC 설치 시 함께 설치됨 (한국전자인증 아님)"
+    },
+    "processes": [
+      {
+        "name": "탐색기",
+        "detail": "Windows 탐색기",
+        "cpu": 1,
+        "memory": "78.4MB",
+        "disk": "0.1MB/s",
+        "system": true
+      },
+      {
+        "name": "AR톡",
+        "detail": "AR Messenger",
+        "cpu": 2,
+        "memory": "164.2MB",
+        "disk": "0MB/s",
+        "system": true
+      },
+      {
+        "name": "브라우저",
+        "detail": "Web Browser",
+        "cpu": 3,
+        "memory": "412.8MB",
+        "disk": "0.2MB/s",
+        "system": true
+      },
+      {
+        "name": "메모장",
+        "detail": "Notepad",
+        "cpu": 0,
+        "memory": "12.1MB",
+        "disk": "0MB/s",
+        "system": true
+      },
+      {
+        "name": "AnySign4PC",
+        "detail": "키보드보안 (한국전자인증)",
+        "cpu": 1,
+        "memory": "48.6MB",
+        "disk": "0MB/s",
+        "system": true
+      },
+      {
+        "name": "작업 관리자",
+        "detail": "Task Manager",
+        "cpu": 1,
+        "memory": "32.0MB",
+        "disk": "0MB/s",
+        "system": true
+      }
+    ],
+    "killed": {
+      "title": "작업을 끝냈습니다",
+      "lines": [
+        "CPU 사용률이 정상으로 돌아왔습니다.",
+        "마우스와 창 동작이 다시 원활해졌습니다."
+      ],
+      "toast": "svchost32.exe 작업을 끝냈습니다. 시스템이 정상으로 돌아왔습니다."
+    },
+    "after": {
+      "source": "workMessenger",
+      "thread": "security",
+      "from": "정보보안팀",
+      "lines": [
+        "김한별 대리님, 방금 대리님 PC에서 비정상 프로세스 종료 로그가 올라왔습니다.",
+        "svchost32.exe 는 정상 시스템 파일이 아닙니다. 이름만 비슷하게 지은 채굴 프로그램입니다.",
+        "작업을 끝낸 것만으로는 지워지지 않습니다. 재부팅하면 다시 올라옵니다.",
+        "백신으로 전체 검사를 한 번 돌려서 치료까지 마쳐 주세요. 시작 메뉴에 있습니다."
+      ]
+    }
+  },
+  "antivirus": {
+    "name": "AR 백신",
+    "version": "엔진 2026.08.27",
+    "idle": "마지막 검사: 기록 없음",
+    "scanning": "검사 중…",
+    "targets": [
+      "C:\\Windows\\System32",
+      "C:\\Program Files",
+      "C:\\Users\\hanbyul.kim\\Downloads",
+      "C:\\Users\\hanbyul.kim\\Documents",
+      "시작 프로그램",
+      "레지스트리"
+    ],
+    "found": {
+      "title": "악성 프로그램 1개를 발견했습니다",
+      "name": "Trojan.CoinMiner.svchost32",
+      "path": "C:\\Users\\hanbyul.kim\\AppData\\Roaming\\svchost32.exe",
+      "note": "시작 프로그램에 등록되어 있어 재부팅 시 다시 실행됩니다.",
+      "button": "치료 및 삭제"
+    },
+    "clean": {
+      "title": "검사가 완료되었습니다",
+      "lines": [
+        "악성 프로그램 1개를 치료했습니다.",
+        "시작 프로그램 등록도 함께 제거했습니다."
+      ],
+      "toast": "악성 프로그램을 치료했습니다. PC가 깨끗해졌습니다."
+    },
+    "nothing": {
+      "title": "검사가 완료되었습니다",
+      "lines": [
+        "발견된 위협이 없습니다."
+      ]
+    }
   }
 }

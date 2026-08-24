@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronRight, Clock, FolderOpen } from '../icons/line.jsx'
+import { useGame } from '../engine/store.js'
 
 export default function Wiki({ site }) {
   const w = site.wiki
+  const unlockSite = useGame((s) => s.unlockSite)
+  // Reaching a host-only page is itself the objective.
+  useEffect(() => { if (site.requiresHost) unlockSite(site.url) }, [site.url])
   const [id, setId] = useState(w.home)
   const page = w.pages[id]
 
