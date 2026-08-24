@@ -385,10 +385,21 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .bd-meta { display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #eee; color: #999; font-size: 11px; }
 .bd-likes { display: flex; align-items: center; gap: 3px; margin-left: auto; color: #e9542f; }
 .bd-post p { margin-top: 12px; color: #333; font-size: 13px; line-height: 1.9; user-select: text; }
-.bd-cm-head { margin: 22px 0 8px; font-weight: 600; color: #444; }
-.bd-cm { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-top: 1px solid #f0f0f4; }
-.bd-cm-who { flex-shrink: 0; color: #e9542f; font-size: 11px; }
-.bd-cm-text { flex: 1; color: #333; line-height: 1.6; user-select: text; }
+.bd-cm-head { margin: 24px 0 6px; font-weight: 600; color: #444; }
+.bd-cm { padding: 14px 4px 12px; border-top: 1px solid #ececf0; }
+.bd-cm:last-child { border-bottom: 1px solid #ececf0; }
+.bd-cm-top { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.bd-cm-who { color: #3a55a8; font-weight: 600; }
+.bd-cm-time { color: #aaa; }
+.bd-cm-votes { display: flex; align-items: center; gap: 12px; margin-left: auto; color: #888; }
+.bd-cm-votes > span { display: flex; align-items: center; gap: 3px; }
+.bd-cm-votes .up { color: #e0362f; }
+.bd-cm-flag { color: #bbb; }
+.bd-cm-text { margin: 8px 0 10px; color: #222; font-size: 13px; line-height: 1.7; user-select: text; }
+.bd-cm-foot { display: flex; align-items: center; gap: 8px; color: #999; font-size: 12px; }
+.bd-cm-foot span { display: flex; align-items: center; gap: 3px; }
+.bd-cm-foot b { color: #e0362f; font-weight: 600; }
+.bd-cm-foot i { width: 1px; height: 11px; background: #ddd; }
 
 /* search results */
 .results { max-width: 620px; margin: 0 auto; }

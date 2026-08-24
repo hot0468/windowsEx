@@ -20,7 +20,7 @@ describe('퇴근길 board', () => {
     for (const p of site.board.posts) {
       expect(p.title && p.company && p.author && p.time).toBeTruthy()
       expect(p.body.length).toBeGreaterThan(0)
-      for (const c of p.comments) expect(c.author && c.text).toBeTruthy()
+      for (const c of p.comments) expect(c.author && c.text && c.time).toBeTruthy()
     }
   })
 

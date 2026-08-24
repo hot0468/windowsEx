@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, MessageSquare, ThumbsUp } from '../icons/line.jsx'
+import { ChevronLeft, ChevronDown, Flag, MessageSquare, ThumbsDown, ThumbsUp } from '../icons/line.jsx'
 import { useGame, boardPosts, roomReply, roomTopic } from '../engine/store.js'
 
 // An outside community site: a list of posts, one post at a time, nothing to
@@ -50,9 +50,21 @@ export default function Board({ site }) {
           <div className="bd-cm-head">댓글 {post.comments.length}</div>
           {post.comments.map((c, i) => (
             <div key={i} className="bd-cm">
-              <span className="bd-cm-who">{c.author}</span>
-              <span className="bd-cm-text">{c.text}</span>
-              <span className="bd-likes"><ThumbsUp size={11} strokeWidth={2} />{c.likes}</span>
+              <div className="bd-cm-top">
+                <span className="bd-cm-who">{c.author}</span>
+                <span className="bd-cm-time">{c.time}</span>
+                <span className="bd-cm-votes">
+                  <span className="up"><ThumbsUp size={13} strokeWidth={2} />{c.likes}</span>
+                  <span><ThumbsDown size={13} strokeWidth={2} />{c.dislikes ?? 0}</span>
+                  <span className="bd-cm-flag" title="신고"><Flag size={12} strokeWidth={2} /></span>
+                </span>
+              </div>
+              <div className="bd-cm-text">{c.text}</div>
+              <div className="bd-cm-foot">
+                <span>답글 <b>0</b>개<ChevronDown size={12} strokeWidth={2.2} /></span>
+                <i />
+                <span>답글쓰기</span>
+              </div>
             </div>
           ))}
         </article>
