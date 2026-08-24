@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsView, searchFiles } from '../engine/store.js'
+import {
+  useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
+} from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
-import { ArrowUp, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
+import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Monitor, Search } from '../icons/line.jsx'
 
 export default function FileExplorer({ startFolder }) {
   const scenario = useGame((s) => s.scenario)
@@ -13,8 +15,11 @@ export default function FileExplorer({ startFolder }) {
   const pinFile = useGame((s) => s.pinFile)
   const unpinFile = useGame((s) => s.unpinFile)
   const restoreFile = useGame((s) => s.restoreFile)
+  const showHidden = useGame((s) => s.showHidden)
+  const toggleHidden = useGame((s) => s.toggleHidden)
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
+  const [viewOpen, setViewOpen] = useState(false)
 
   const fs = fsView(scenario.fs, { pinned, restored })
   const roots = Object.keys(fs)
@@ -25,8 +30,10 @@ export default function FileExplorer({ startFolder }) {
   // Nothing leaves the bin by drag or copy — it has to be restored first.
   const inTrash = nav.path[0] === '휴지통'
   const searching = Boolean(q.trim())
-  const hits = searching ? searchFiles(fs, nav.path, q) : []
-  const entries = entriesAt(fs, nav.path)
+  const hits = searching
+    ? searchFiles(fs, nav.path, q).filter((h) => showHidden || !h.file.hidden)
+    : []
+  const entries = visible(entriesAt(fs, nav.path), showHidden)
   const folders = entries.filter((e) => e.children)
   const files = entries.filter((e) => !e.children)
 
@@ -70,6 +77,24 @@ export default function FileExplorer({ startFolder }) {
               </span>
             ))}
           </div>
+          <div className="ex-view">
+            <button className={'ex-view-btn' + (viewOpen ? ' on' : '')}
+                    onClick={() => setViewOpen((v) => !v)} aria-expanded={viewOpen}>
+              <Monitor size={15} strokeWidth={1.8} />보기
+              <ChevronDown size={13} strokeWidth={2}
+                           style={{ transform: viewOpen ? 'rotate(180deg)' : 'none' }} />
+            </button>
+            {viewOpen && (
+              <>
+                <div className="ctx-catch" onPointerDown={() => setViewOpen(false)} />
+                <div className="ex-view-pop">
+                  <button onClick={() => { toggleHidden(); setViewOpen(false) }}>
+                    <span className="ex-check">{showHidden ? '✓' : ''}</span>숨긴 항목
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <div className="ex-search">
             <input value={q} onChange={(e) => setQ(e.target.value)}
                    placeholder={`${here} 검색`} aria-label="파일 검색" spellCheck={false} />
@@ -97,7 +122,7 @@ export default function FileExplorer({ startFolder }) {
           <div className="ex-main">
             {entries.length === 0 && <div className="ex-empty">이 폴더는 비어 있습니다</div>}
             {folders.map((f) => (
-              <button key={f.name} className="ex-file"
+              <button key={f.name} className={'ex-file' + (f.hidden ? ' dim' : '')}
                       onDoubleClick={() => goTo([...nav.path, f.name])}>
                 <div className="glyph"><Icon name="folder" size={36} /></div>{f.name}
               </button>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useGame, entriesAt, fileOpener, rootIcon, fsView, searchFiles } from '../engine/store.js'
+import {
+  useGame, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
+} from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../icons/line.jsx'
@@ -10,6 +12,7 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
   const scenarioFs = useGame((s) => s.scenario.fs)
   const pinned = useGame((s) => s.pinned)
   const restored = useGame((s) => s.restored)
+  const showHidden = useGame((s) => s.showHidden)
   const fs = fsView(scenarioFs, { pinned, restored })
   // a binned file is not a file you can attach
   const roots = Object.keys(fs).filter((r) => r !== '휴지통')
@@ -20,10 +23,10 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
 
   const here = nav.path[nav.path.length - 1]
   const searching = Boolean(q.trim())
-  const entries = entriesAt(fs, nav.path)
+  const entries = visible(entriesAt(fs, nav.path), showHidden)
   const folders = searching ? [] : entries.filter((e) => e.children)
   const files = searching
-    ? searchFiles(fs, nav.path, q).map((h) => h.file)
+    ? visible(searchFiles(fs, nav.path, q).map((h) => h.file), showHidden)
     : entries.filter((e) => !e.children)
 
   const move = (fn) => () => { setQ(''); setSelected(null); setName(''); fn() }

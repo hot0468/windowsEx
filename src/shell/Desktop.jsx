@@ -1,4 +1,4 @@
-import { installedShortcuts, useGame, fileOpener, fsView } from '../engine/store.js'
+import { installedShortcuts, useGame, fileOpener, fsView, visible } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
@@ -19,7 +19,8 @@ export default function Desktop() {
   const openWindow = useGame((s) => s.openWindow)
   const pinFile = useGame((s) => s.pinFile)
   const restored = useGame((s) => s.restored)
-  const desktop = fsView(scenario.fs, { pinned, restored })['바탕화면']
+  const showHidden = useGame((st) => st.showHidden)
+  const desktop = visible(fsView(scenario.fs, { pinned, restored })['바탕화면'], showHidden)
   const work = useFileDrop(pinFile)
   const icons = [...SHORTCUTS, ...installedShortcuts(scenario.programs, grants)]
   return (

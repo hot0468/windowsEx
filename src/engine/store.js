@@ -9,7 +9,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
-  'starred', 'pinned', 'restored', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
+  'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor']
 
@@ -76,6 +76,7 @@ export const useGame = create((set, get) => ({
   starred: restored?.starred ?? {},
   pinned: restored?.pinned ?? [],
   restored: restored?.restored ?? {},
+  showHidden: restored?.showHidden ?? false,
   sheetEdits: restored?.sheetEdits ?? {},
   // Which conversation each messenger is showing, and how much of it has been read.
   // Both live here so a toast can open a thread in an already-running window.
@@ -402,6 +403,7 @@ export const useGame = create((set, get) => ({
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
+  toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
   editCell: (fileId, sheet, r, c, value) => {
@@ -413,6 +415,15 @@ export const useGame = create((set, get) => ({
   },
   setVpn: (on) => set({ vpn: on }),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
+  // Credentials typed into the look-alike login page: security notices at once.
+  phished: (after) => {
+    if (get().grants.phished) return
+    get().grant('phished')
+    setTimeout(() => {
+      after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
+      get().showToast({ from: after.from, text: after.lines[0], app: 'messenger', source: after.source, thread: after.thread })
+    }, after.delay ?? 2500)
+  },
   grant: (key) => {
     play('ok')
     set((s) => ({
@@ -870,6 +881,43 @@ export function hostResolves(scenario, edits, url) {
   return wanted ? names[url] === wanted : Boolean(names[url])
 }
 
+// The address bar: protocol and case are forgiven, the first slash splits
+// host from path, and a trailing slash means nothing.
+export function parseAddress(raw = '') {
+  const cleaned = raw.trim().replace(/^https?:\/\//i, '').toLowerCase()
+  const cut = cleaned.indexOf('/')
+  const host = cut < 0 ? cleaned : cleaned.slice(0, cut)
+  const path = cut < 0 ? '' : cleaned.slice(cut).replace(/\/+$/, '')
+  return { host, path }
+}
+
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+
+// A site by its name — or, typed as an address, by whichever name the hosts
+// file (or the names the game hands out) maps to that address.
+export function resolveSite(scenario, edits, host) {
+  const exact = scenario.sites.find((s) => s.url === host)
+  if (exact) return exact
+  if (!IPV4.test(host)) return null
+  const file = findFile(scenario.fs, scenario.hosts.file)
+  const names = { ...scenario.hosts.required, ...hostNames(contentOf(file, edits)) }
+  const name = Object.keys(names).find((n) => names[n] === host)
+  return (name && scenario.sites.find((s) => s.url === name)) ?? null
+}
+
+// Addresses that are pages in their own right, not sites to look up.
+export const specialPage = (host) =>
+  (host === 'about:blank' ? 'blank'
+    : host === 'localhost' || host === '127.0.0.1' ? 'refused'
+      : null)
+
+// A path is a wiki page id or a portal sub-page; anything else on any site is a 404.
+export function pathKnown(site, path = '') {
+  if (!path) return true
+  if (site?.layout === 'wiki') return Boolean(site.wiki.pages[path.slice(1)])
+  return Boolean(site?.pages?.[path])
+}
+
 // Which topic a question lands on, so a caller can tell what was asked about.
 export function roomTopic(ask, question) {
   const q = loose(question)
@@ -985,6 +1033,11 @@ export const searchAds = (ads, q) => searchIn(ads, q, ['title', 'desc', 'tags'])
 export const searchSites = (sites, q) => searchIn(sites.filter((s) => !s.unlisted), q, ['title', 'url'])
 
 // path is ['문서', '업무자료', '2026'] — the first name picks the root drive.
+// Windows keeps hidden items out of every listing until you ask for them, and
+// then draws them faded — one switch, every folder.
+export const visible = (entries, showHidden) =>
+  entries.filter((e) => showHidden || !e.hidden)
+
 export function entriesAt(fs, path) {
   return path.slice(1).reduce(
     (entries, name) => entries.find((e) => e.name === name)?.children ?? [],
