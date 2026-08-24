@@ -1482,13 +1482,19 @@ describe('the partner document', () => {
     expect(terms.attached).toBe(true)
   })
 
-  it('is the only place the approval number is written', () => {
+  it('keeps the approval number out of everything written down in advance', () => {
     expect(terms.content).toContain(APPROVAL)
-    const elsewhere = JSON.stringify({
-      ...scenario,
-      fs: allFiles(scenario.fs).filter((f) => f.id !== 'file_d_terms')
+    const threads = [scenario.workMessenger, scenario.privateMessenger]
+      .flatMap((m) => m.sections.flatMap((s) => s.threads))
+    const beats = scenario.days.flatMap((d) => [d.opening, ...(d.asks ?? [])].filter(Boolean))
+    const said = beats.flatMap((b) => b.lines ?? [])
+    const hints = beats.flatMap((b) => (b.ask?.no ?? []).flat())
+    const mails = [...scenario.mails, ...scenario.days.flatMap((d) => d.mails ?? [])]
+    const others = files.filter((f) => f.id !== 'file_d_terms')
+    const written = JSON.stringify({
+      threads, said, hints, mails, others, sites: scenario.sites, news: scenario.news, qna: scenario.qna
     })
-    expect(elsewhere).not.toContain(APPROVAL)
+    expect(written).not.toContain(APPROVAL)
   })
 
   it('is what the day asks you to quote back', () => {
