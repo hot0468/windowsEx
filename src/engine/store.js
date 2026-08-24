@@ -606,7 +606,8 @@ export const fileOpener = (file) =>
       : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
         : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
           : file.name.endsWith('.pdf') ? { app: 'pdf', icon: 'pdf' }
-            : { app: 'notepad', icon: 'doc' }
+            : file.name.endsWith('.dcx') ? { app: 'dcx', icon: 'doc' }
+              : { app: 'notepad', icon: 'doc' }
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null

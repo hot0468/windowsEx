@@ -132,10 +132,12 @@ describe('scenario integrity', () => {
     expect(apps['사원증_스캔.jpg']).toBe('viewer')
   })
 
-  it('every paperwork file is .hwp and every scribble .txt', () => {
+  it('every paperwork file is .hwp, every scribble .txt, every certificate .pdf', () => {
     for (const f of files) {
       if (f.image) continue
-      expect(f.name).toMatch(/\.(hwp|txt|pptx|xlsx|exe)$/)
+      // hosts is a system file: Windows gives it no extension, and neither do we
+      if (f.name === 'hosts') continue
+      expect(f.name).toMatch(/\.(hwp|txt|pptx|xlsx|exe|pdf|dcx)$/)
     }
   })
 
@@ -260,6 +262,9 @@ describe('scenario integrity', () => {
     const granted = new Set([
       ...threads.flatMap(asksOf).map((a) => a.grants),
       ...scenario.days.map((d) => d.goal?.grants),
+      ...Object.values(scenario.overtime?.days ?? {})
+        .flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants),
+      ...(scenario.pool?.requests ?? []).flatMap((r) => chain(r.beat.ask)).map((a) => a.grants),
       ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))).map((a) => a.grants),
       ...scenario.days.map((d) => d.fetch?.grants),
       ...scenario.objectives.filter((o) => o.cell).map((o) => o.grant)
@@ -291,13 +296,17 @@ describe('scenario integrity', () => {
     })
   })
 
-  it('asks for ten requests a day, every day', () => {
-    for (const d of scenario.days) expect(d.requests).toHaveLength(10)
-  })
-
-  it('keeps the workload even across days', () => {
-    const counts = scenario.days.map((d) => d.requests.length)
-    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2)
+  it('runs five days, growing from five requests to twenty-odd', () => {
+    expect(scenario.days.map((d) => d.n)).toEqual([1, 2, 3, 4, 5])
+    const sizes = scenario.days.map((d) => scenario.pool.sizes[d.n])
+    expect(sizes[0]).toBe(scenario.days[0].requests.length)   // day one is fixed whole
+    for (let i = 1; i < sizes.length; i++) expect(sizes[i]).toBeGreaterThan(sizes[i - 1])
+    // every day can actually be filled: fixed core plus what the pool can offer
+    scenario.days.slice(1).forEach((d) => {
+      const ready = scenario.pool.requests.filter((r) => (scenario.pool.after[r.id] ?? 0) <= d.n)
+      expect(d.requests.length).toBe(scenario.pool.fixed[d.n].length)
+      expect(ready.length).toBeGreaterThanOrEqual(scenario.pool.sizes[d.n] - d.requests.length)
+    })
   })
 
   it('never asks for the same request on two different days', () => {
