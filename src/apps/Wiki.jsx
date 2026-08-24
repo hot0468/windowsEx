@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react'
 import { ChevronRight, Clock, FolderOpen } from '../icons/line.jsx'
 import { useGame } from '../engine/store.js'
 
-export default function Wiki({ site }) {
+export default function Wiki({ site, path = '' }) {
   const w = site.wiki
+  // a path names a page directly — including ones the sidebar never lists
+  const wanted = path && w.pages[path.slice(1)] ? path.slice(1) : null
   const unlockSite = useGame((s) => s.unlockSite)
   // Reaching a host-only page is itself the objective.
   useEffect(() => { if (site.requiresHost) unlockSite(site.url) }, [site.url])
+  const [id, setId] = useState(wanted ?? w.home)
+  useEffect(() => { if (wanted) setId(wanted) }, [wanted])
+  const page = w.pages[id]
   const foundMissing = useGame((s) => s.foundMissing)
   // reading the page that will not let a sixth employee go
   useEffect(() => { if (id === 'attend') foundMissing() }, [id])
   const traceObserver = useGame((s) => s.traceObserver)
   // reading who was on the seventh floor that night
   useEffect(() => { if (id === 'printlog') traceObserver() }, [id])
-  const [id, setId] = useState(w.home)
-  const page = w.pages[id]
 
   return (
     <div className="wk">

@@ -37,7 +37,56 @@ const Post = ({ post, onBack }) => (
   </article>
 )
 
-export default function Portal({ site }) {
+// A sub-page reached by path: the workshop RSVP form. Submitting hands out the
+// receipt number a request will ask for.
+const Events = ({ page, onBack }) => {
+  const [attend, setAttend] = useState(page.attend[0])
+  const [ride, setRide] = useState(page.transport[0])
+  const [sent, setSent] = useState(false)
+  const book = useGame((s) => s.book)
+  const submit = () => {
+    setSent(true)
+    book('workshop', { attend, ride, receipt: page.receipt })
+  }
+  return (
+    <article className="pt-post pt-events">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />포털 홈
+      </button>
+      <h1>{page.title}</h1>
+      <dl className="pt-ev-meta">
+        <div><dt>행사</dt><dd>{page.event.name}</dd></div>
+        <div><dt>일시</dt><dd>{page.event.date}</dd></div>
+        <div><dt>장소</dt><dd>{page.event.place}</dd></div>
+        <div><dt>마감</dt><dd>{page.event.deadline}</dd></div>
+      </dl>
+      {sent ? (
+        <div className="pt-ev-done">
+          <p>{page.done}</p>
+          <div className="pt-ev-receipt">접수번호 <b>{page.receipt}</b></div>
+        </div>
+      ) : (
+        <div className="pt-ev-form">
+          <div className="pt-ev-row">
+            <span>참가 여부</span>
+            {page.attend.map((a) => (
+              <label key={a}><input type="radio" name="attend" checked={attend === a} onChange={() => setAttend(a)} />{a}</label>
+            ))}
+          </div>
+          <div className="pt-ev-row">
+            <span>이동 수단</span>
+            {page.transport.map((t) => (
+              <label key={t}><input type="radio" name="ride" checked={ride === t} onChange={() => setRide(t)} />{t}</label>
+            ))}
+          </div>
+          <button className="btn-primary" onClick={submit}>제출</button>
+        </div>
+      )}
+    </article>
+  )
+}
+
+export default function Portal({ site, path = '', onOpen }) {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
   // the board moves on with the days
@@ -49,14 +98,19 @@ export default function Portal({ site }) {
     <div className="pt">
       <div className="pt-top">
         <span className="pt-logo">AR</span>
-        <nav>{p.nav.map((n) => <span key={n}>{n}</span>)}</nav>
+        <nav>
+          {p.nav.map((n) => (p.navLinks?.[n] && onOpen
+            ? <button key={n} className="pt-nav-link" onClick={() => onOpen(p.navLinks[n])}>{n}</button>
+            : <span key={n}>{n}</span>))}
+        </nav>
         <span className="pt-top-icons">
           <Search size={15} strokeWidth={2} />
           <Bell size={15} strokeWidth={2} />
         </span>
       </div>
 
-      {post ? <Post post={post} onBack={() => setPost(null)} /> : (
+      {site.pages?.[path] ? <Events page={site.pages[path]} onBack={() => onOpen?.('')} />
+        : post ? <Post post={post} onBack={() => setPost(null)} /> : (
       <div className="pt-grid">
         <aside className="pt-me">
           <Face id={p.me.id} size={64} />

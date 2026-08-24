@@ -980,6 +980,8 @@ export function siteView(site, { grants, unlocked, resolves = true, vpn = false 
   if (site.requiresVpn && !vpn) return 'vpn'
   if (site.requiresHost && !resolves) return 'error'
   if (site.login && !unlocked[site.url]) return 'login'
+  // a server fault that stays until the grant it names is earned
+  if (site.down && !grants[site.down]) return 'down'
   return 'ready'
 }
 

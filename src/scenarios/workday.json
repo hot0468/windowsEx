@@ -6595,6 +6595,33 @@
       "layout": "parked",
       "unlisted": true,
       "content": "이 도메인은 만료되었습니다.\n\nemart-corp.co.kr 의 등록 기간이 2026-03-31 부로 종료되어\n현재 도메인 등록 대행사가 보관 중입니다.\n\n도메인 구매 문의: sales@domainpark.kr\n\n※ 해당 도메인은 이전 소유자(E마트 법인)와 더 이상 관련이 없습니다."
+    },
+    {
+      "url": "edu.ar.co.kr",
+      "title": "AR 보안교육센터",
+      "requiresIp": true,
+      "down": "console",
+      "console": [
+        {
+          "level": "log",
+          "text": "[edu] 세션 초기화 시작"
+        },
+        {
+          "level": "warn",
+          "text": "auth.js:17 deprecated: legacySession() 은 2026-06 이후 지원되지 않습니다"
+        },
+        {
+          "level": "error",
+          "text": "Uncaught ReferenceError: sessionToken is not defined",
+          "at": "auth.js:42"
+        },
+        {
+          "level": "error",
+          "text": "GET https://edu.ar.co.kr/api/course/list 500 (Internal Server Error)",
+          "at": "course.js:8"
+        }
+      ],
+      "content": "AR 보안교육센터\n\n2026년 하반기 사내 보안 교육\n대상: 전 임직원 (필수)\n이수 기한: 2026년 9월 30일\n\n과정\n  1. 피싱 메일 식별과 대응  (20분)\n  2. 사내 시스템 접근 통제   (15분)\n  3. 개인정보 취급 수칙      (15분)\n\n김한별 대리님의 이수 현황: 0 / 3\n\n※ 교육은 PC에서만 수강 가능합니다. 문의: 정보보안팀 (AR톡)"
     }
   ],
   "bookmarks": [
@@ -7498,6 +7525,11 @@
       "id": "rsvp",
       "title": "워크숍 참가 표명하고 접수번호 알려주기",
       "grant": "rsvp"
+    },
+    {
+      "id": "console",
+      "title": "정보보안팀에 보안교육 사이트 오류 메시지 전달하기",
+      "grant": "console"
     }
   ],
   "places": [
@@ -11359,7 +11391,8 @@
       "c_server": 3,
       "c_workshop": 4,
       "c_forgery_seen": 4,
-      "c_forgery": 4
+      "c_forgery": 4,
+      "console": 2
     },
     "requests": [
       {
@@ -16348,6 +16381,46 @@
               ]
             ],
             "grants": "rsvp",
+            "next": []
+          }
+        }
+      },
+      {
+        "id": "console",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "security",
+          "from": "차민혁",
+          "lines": [
+            "김한별 대리님, 정보보안팀 차민혁입니다.",
+            "보안교육 사이트(edu.ar.co.kr) 접속 시 500 오류가 난다는 문의가 들어오고 있습니다. 대리님도 이수 대상이시니 접속해 보시겠어요?",
+            "오류가 나면 브라우저 메뉴(⋮) > 개발자 도구, 또는 F12로 콘솔을 열고 빨간색 오류 메시지를 그대로 보내주세요. 원인 파악에 필요합니다."
+          ],
+          "ask": {
+            "placeholder": "콘솔에 표시된 오류 메시지를 입력해 주세요",
+            "accept": [
+              "sessionToken is not defined"
+            ],
+            "grants": "console",
+            "ok": [
+              "감사합니다. 세션 토큰 초기화 쪽 문제네요.",
+              "서버 조치 완료했습니다. 새로고침하시면 정상적으로 열릴 겁니다.",
+              "교육 이수도 잊지 마세요."
+            ],
+            "no": [
+              [
+                "그 내용으로는 원인 파악이 어렵습니다.",
+                "콘솔에 빨간색으로 표시된 오류 줄을 그대로 보내주시겠어요?"
+              ],
+              [
+                "브라우저 오른쪽 위 ⋮ 메뉴에서 '개발자 도구'를 누르거나 F12를 누르면 아래에 콘솔이 열립니다.",
+                "edu.ar.co.kr에 접속한 상태에서 봐주세요."
+              ],
+              [
+                "콘솔에서 'Uncaught ReferenceError'로 시작하는 줄이요.",
+                "그 줄에 적힌 오류 문구를 그대로 보내주시면 됩니다."
+              ]
+            ],
             "next": []
           }
         }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
-  searchSites, searchTerms, siteView, latestNews, hostResolves, visibleByDay
+  hostResolves, latestNews, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
@@ -12,12 +11,14 @@ import Gov from './Gov.jsx'
 import Lotto from './Lotto.jsx'
 import Floor8 from './Floor8.jsx'
 import Vendor from './Vendor.jsx'
+import Router from './Router.jsx'
+import PrinterWeb from './PrinterWeb.jsx'
+import Phish from './Phish.jsx'
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
 import { shotOf } from '../assets/photos.js'
 
-const clean = (u) => u.trim().replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
 
 function Login({ site, onOk }) {
   const { idLabel, id, password, hint } = site.login
@@ -82,10 +83,12 @@ export default function Browser() {
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(false)
 
+  // A path on its own ('/hr/events') stays on the site that is open.
   const open = (raw) => {
-    const url = clean(raw)
-    setAddr(url)
-    nav.go(url ? { kind: 'site', url } : { kind: 'home' })
+    const typed = raw.trim().startsWith('/') && page.kind === 'site' ? page.url + raw.trim() : raw
+    const { host, path } = parseAddress(typed)
+    setAddr(host + path)
+    nav.go(host ? { kind: 'site', url: host, path } : { kind: 'home' })
     setMenu(false)
   }
 
@@ -102,16 +105,20 @@ export default function Browser() {
   }
 
   useEffect(() => {
-    setAddr(page.kind === 'site' ? page.url : '')
+    setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : '')
   }, [page])
 
-  const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
-  const view = page.kind === 'site'
+  const site = page.kind === 'site' ? resolveSite(scenario, edits, page.url) : null
+  const special = page.kind === 'site' ? specialPage(page.url) : null
+  // typed as an address, a host-only site needs no name in the hosts file
+  const byAddress = Boolean(site) && site.url !== page.url
+  const view = page.kind === 'site' && !special
     ? siteView(site, {
       grants, unlocked, vpn,
-      resolves: !site?.requiresHost || hostResolves(scenario, edits, site.url)
+      resolves: byAddress || !site?.requiresHost || hostResolves(scenario, edits, site.url)
     })
     : null
+  const lost = view === 'ready' && !pathKnown(site, page.path)
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
@@ -244,6 +251,7 @@ export default function Browser() {
                     <div className="firm-meta">{c.field} · {c.since}년 설립 · {c.size}</div>
                     <div className="firm-addr">소재지 {c.address}</div>
                     <div className="firm-tel">대표번호 {c.tel}</div>
+                    {c.url && <button className="firm-url" onClick={() => open(c.url)}>{c.url}</button>}
                   </div>
                 ))}
               </section>
@@ -359,11 +367,36 @@ export default function Browser() {
           )
         })()}
 
+        {special === 'refused' && (
+          <div className="site-error">
+            <h2>사이트에 연결할 수 없음</h2>
+            <p>{page.url} 에서 연결을 거부했습니다.</p>
+            <p className="err-code">ERR_CONNECTION_REFUSED</p>
+          </div>
+        )}
+
         {view === 'error' && (
           <div className="site-error">
             <h2>사이트에 연결할 수 없음</h2>
-            <p>{page.url} 의 서버 IP 주소를 찾을 수 없습니다.</p>
-            <p className="err-code">ERR_NAME_NOT_RESOLVED</p>
+            {/^\d+(\.\d+){3}$/.test(page.url) ? (
+              <>
+                <p>{page.url} 의 응답 시간이 너무 깁니다.</p>
+                <p className="err-code">ERR_CONNECTION_TIMED_OUT</p>
+              </>
+            ) : (
+              <>
+                <p>{page.url} 의 서버 IP 주소를 찾을 수 없습니다.</p>
+                <p className="err-code">ERR_NAME_NOT_RESOLVED</p>
+              </>
+            )}
+          </div>
+        )}
+
+        {lost && (
+          <div className="site-error">
+            <h2>404 — 페이지를 찾을 수 없습니다</h2>
+            <p>{page.url}{page.path}</p>
+            <p className="err-hint">{site.notFound ?? '주소를 다시 확인해 주세요.'}</p>
           </div>
         )}
 
@@ -398,15 +431,18 @@ export default function Browser() {
         )}
         {view === 'login' && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
 
-        {view === 'ready' && (
-          site.layout === 'portal' ? <Portal site={site} />
-            : site.layout === 'wiki' ? <Wiki site={site} />
+        {view === 'ready' && !lost && (
+          site.layout === 'portal' ? <Portal site={site} path={page.path} onOpen={(p) => open(site.url + p)} />
+            : site.layout === 'wiki' ? <Wiki site={site} path={page.path} />
             : site.layout === 'calendar' ? <Calendar site={site} />
               : site.layout === 'board' ? <Board site={site} />
               : site.layout === 'gov' ? <Gov site={site} />
               : site.layout === 'lotto' ? <Lotto site={site} />
               : site.layout === 'floor8' ? <Floor8 site={site} />
               : site.layout === 'vendor' ? <Vendor site={site} />
+              : site.layout === 'router' ? <Router site={site} />
+              : site.layout === 'printerweb' ? <PrinterWeb site={site} />
+              : site.layout === 'phish' ? <Phish site={site} />
               : (
                 <div className="site">
                   <h2>{site.title}</h2>
