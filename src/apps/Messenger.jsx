@@ -274,7 +274,8 @@ export default function Messenger({ source }) {
 
         <div className="mg-list">
           <div className="mg-me">
-            <Avatar t={{ id: 'me', name: m.me.name, sub: m.me.sub, color: m.me.color, online: true }}
+            <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.sub,
+                             color: m.me.color, online: true }}
                     size={42} onOpen={setProfile} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>
@@ -408,7 +409,7 @@ export default function Messenger({ source }) {
 
       {profile && (
         <ProfileCard who={profile} team={teamOf(profile.id)}
-                     onChat={profile.id !== 'me' && profile.id !== openId
+                     onChat={profile.id !== openId && threads.some((t) => t.id === profile.id)
                        ? () => { setOpenThread(source, profile.id); setProfile(null) }
                        : null}
                      onClose={() => setProfile(null)} />

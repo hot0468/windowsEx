@@ -521,7 +521,8 @@
     "me": {
       "name": "한별",
       "sub": "제주도 다녀옴 🍊",
-      "color": "#e0a33c"
+      "color": "#e0a33c",
+      "avatar": "me_chat"
     },
     "sections": [
       {
