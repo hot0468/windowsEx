@@ -998,7 +998,7 @@ describe('the day that asks for a session id', () => {
   })
 
   it('puts the installer in the portal 자료실, not in the folder tree', () => {
-    const shelf = site('portal.ar.co.kr').portal.files
+    const shelf = site('portal.ar.co.kr').files
     expect(shelf.some((f) => f.download.fileId === 'file_vpn_setup')).toBe(true)
     for (const f of shelf) {
       const file = files.find((x) => x.id === f.download.fileId)
@@ -1072,14 +1072,17 @@ export function siteView(site, { grants, unlocked, resolves = true, vpn = false 
 
 - [ ] **Step 5: 포털에 자료실을 붙인다**
 
-`src/scenarios/workday.json` 의 `sites` 에서 `portal.ar.co.kr` 항목의 `"portal"` 배열에 `"files"` 를 더하고(`"news"` 앞), 같은 사이트의 `portal` **객체** 쪽 — 최상위 `"portal"` 키가 아니라 사이트 안의 `site.portal` — 은 배열이므로, 실제 자료실 데이터는 `sites` 항목에 `"files"` 키로 나란히 넣는다. 즉 사이트 항목이 다음처럼 된다:
+`portal.ar.co.kr` 사이트 항목에 최상위 키 `"files"` 를 하나 더한다. `site.portal` 은 **객체**이고
+`Portal.jsx` 가 `{ ...site.portal, ...today }` 로 펼쳐 쓰므로, 자료실 데이터를 그 안에 넣으면 안 된다.
+`site.portal` 은 손대지 않는다 — 자료실을 그릴지 말지는 컴포넌트의 `{site.files && …}` 가 정한다.
+즉 사이트 항목이 다음처럼 된다:
 
 ```json
     {
       "url": "portal.ar.co.kr",
       "title": "AR 포털",
       "layout": "portal",
-      "portal": ["nav", "me", "notice", "docs", "tasks", "rooms", "staff", "news", "files", "footer"],
+      "portal": { …지금 파일에 있는 portal 객체를 그대로… },
       "files": [
         {
           "desc": "사내망 VPN 클라이언트 설치 파일입니다. 8/31 부터 사내 시스템은 VPN 접속만 허용됩니다.",
