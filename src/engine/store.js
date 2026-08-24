@@ -207,11 +207,19 @@ export const useGame = create((set, get) => ({
     const s = get()
     const program = s.scenario.programs[s.crashSource]
     const after = program?.aftermath ?? s.scenario.malware.aftermath
-    if (!s.grants.infected) {
+    // Each infection source is tracked on its own key so a second infection
+    // from a DIFFERENT source still delivers its own warning once, while a
+    // repeat from the SAME source stays a no-op. `grants.infected` keeps
+    // meaning "infected at least once" for every other reader of it.
+    const seenKey = `infected:${s.crashSource ?? 'mail'}`
+    const fresh = !s.grants[seenKey]
+    if (fresh) {
       after.lines.forEach((text) => s.pushMessage(after.thread, { from: after.from, text }))
-      s.grant('infected')
+      s.grant(seenKey)
+      if (!s.grants.infected) s.grant('infected')
     }
     s.restart()
+    if (!fresh) return
     setTimeout(() => get().showToast({
       from: after.from, text: after.lines[0],
       app: 'messenger', source: after.source, thread: after.thread

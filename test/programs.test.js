@@ -1,6 +1,7 @@
 ﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import { allFiles, fileOpener, installedShortcuts, useGame } from '../src/engine/store.js'
+import { showsSuccess } from '../src/apps/Installer.jsx'
 
 const files = allFiles(scenario.fs)
 const programs = Object.entries(scenario.programs)
@@ -73,6 +74,77 @@ describe('a program that turns out to be malware', () => {
     const after = scenario.malware.aftermath
     const said = (useGame.getState().extraMessages[after.thread] ?? []).map((m) => m.text)
     expect(said).toEqual(after.lines)
+  })
+
+  it('does not repeat the same source’s lines on a second infection from it', () => {
+    const [id, p] = programs.find(([, x]) => x.danger)
+    useGame.getState().crash(id)
+    useGame.getState().reboot()
+    useGame.getState().crash(id)
+    useGame.getState().reboot()
+    const said = (useGame.getState().extraMessages[p.aftermath.thread] ?? []).map((m) => m.text)
+    expect(said).toEqual(p.aftermath.lines)
+  })
+
+  it('delivers both warnings, each once, when infected from both sources in one playthrough', () => {
+    const [id, p] = programs.find(([, x]) => x.danger)
+    const mailAfter = scenario.malware.aftermath
+
+    // Infect via the fake-viewer install first, then via the phishing mail.
+    useGame.getState().crash(id)
+    useGame.getState().reboot()
+    useGame.getState().crash()
+    vi.runOnlyPendingTimers()
+    useGame.getState().reboot()
+
+    const said = (useGame.getState().extraMessages[p.aftermath.thread] ?? []).map((m) => m.text)
+    expect(said).toEqual([...p.aftermath.lines, ...mailAfter.lines])
+    expect(useGame.getState().grants.infected).toBe(true)
+
+    // The toast fired after the second reboot must quote a line that is
+    // actually present in the thread it opens.
+    vi.runOnlyPendingTimers()
+    const toast = useGame.getState().toast
+    expect(toast).toBeTruthy()
+    expect(said).toContain(toast.text)
+  })
+
+  it('delivers both warnings when the phishing mail comes first', () => {
+    const [id, p] = programs.find(([, x]) => x.danger)
+    const mailAfter = scenario.malware.aftermath
+
+    useGame.getState().crash()
+    useGame.getState().reboot()
+    useGame.getState().crash(id)
+    vi.runOnlyPendingTimers()
+    useGame.getState().reboot()
+
+    const said = (useGame.getState().extraMessages[p.aftermath.thread] ?? []).map((m) => m.text)
+    expect(said).toEqual([...mailAfter.lines, ...p.aftermath.lines])
+
+    vi.runOnlyPendingTimers()
+    const toast = useGame.getState().toast
+    expect(toast).toBeTruthy()
+    expect(said).toContain(toast.text)
+  })
+})
+
+describe('the installer panel a finished run shows', () => {
+  it('never shows the success panel for a program that crashes the machine', () => {
+    const [, danger] = programs.find(([, p]) => p.danger)
+    expect(showsSuccess(true, danger)).toBe(false)
+  })
+
+  it('still shows the success panel for an ordinary finished install', () => {
+    const [, safe] = programs.find(([, p]) => !p.danger)
+    expect(showsSuccess(true, safe)).toBe(true)
+  })
+
+  it('shows nothing before the install has actually finished', () => {
+    const [, danger] = programs.find(([, p]) => p.danger)
+    const [, safe] = programs.find(([, p]) => !p.danger)
+    expect(showsSuccess(false, danger)).toBe(false)
+    expect(showsSuccess(false, safe)).toBe(false)
   })
 })
 

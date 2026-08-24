@@ -4,6 +4,11 @@ import { play } from '../shell/sound.js'
 
 const TICK = 55
 
+// A `danger` program crashes the machine instead of finishing normally — the
+// bluescreen covers the screen today, but the success panel should never be
+// the thing sitting underneath it.
+export const showsSuccess = (finished, spec) => Boolean(finished && !spec?.danger)
+
 // A refused install and a finished one look nothing alike in Windows, so they
 // each get their own panel rather than one screen with a swapped message.
 const Panel = ({ kind, title, lines, code, children }) => (
@@ -98,7 +103,7 @@ export default function Installer({ fileId, winId }) {
         </Panel>
       )}
 
-      {finished && (
+      {showsSuccess(finished, spec) && (
         <Panel kind="ok" title={spec.done.title} lines={spec.done.lines}>
           <div className="ins-foot"><button className="btn-primary" onClick={shut}>마침</button></div>
         </Panel>
