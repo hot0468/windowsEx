@@ -12,7 +12,13 @@
 
 - 모든 UI 문자열·시나리오 데이터는 한국어. 영어 라벨을 쓰지 않는다.
 - 시나리오는 `src/scenarios/workday.json` 하나뿐이다. 새 JSON 파일을 만들지 않는다.
-- 퍼즐 정답(세션 ID `ARV-7K3Q-92XF`, 품의번호 `DY-PR-260826`)은 그것을 담기로 한 파일 **한 곳**에만 존재해야 한다. 다른 정적 텍스트(메신저 대사, 게시판, 위키, 힌트)에 넣으면 테스트가 실패한다.
+- 퍼즐 정답(세션 ID `ARV-7K3Q-92XF`, 품의번호 `DY-PR-260826`)은 **읽는 글**(메신저 대사, 힌트,
+  게시판, 위키, 문서, 뉴스, Q&A) 어디에도 나오면 안 된다. 정답의 출처가 되는 자리와
+  `ask.accept` 배열에는 당연히 들어간다 — `answerFits` 는 문자열을 그대로 비교하고
+  템플릿 기능이 없다. 기존 `printer.receipt`(`P-1042`)가 `scenario.printer` 와
+  `days[2].asks[…].ask.accept` 양쪽에 있는 것과 같은 규약이다. 정답 누출 테스트는
+  `test/gov.test.js` 처럼 **검사할 표면을 좁혀서** 쓴다 — 시나리오 전체를 stringify 하면
+  accept 배열까지 걸려 통과할 수 없는 테스트가 된다.
 - 새 파일은 전부 `attached: true` — 내려받기 전에는 파일 탐색기 어디에도 보이지 않는다.
 - 커밋 메시지는 `feat:` / `test:` / `refactor:` 접두사 + 한 줄 요약. 끝에 다음 두 줄을 붙인다:
   ```
@@ -644,9 +650,16 @@ describe('the VPN client', () => {
     expect(hostResolves(scenario, wrong, 'vpn.ar.local')).toBe(false)
   })
 
-  it('keeps the session id out of every line of the script', () => {
-    const text = JSON.stringify({ ...scenario, vpn: null })
-    expect(text).not.toContain(scenario.vpn.session)
+  it('keeps the session id out of everything written down in advance', () => {
+    const threads = [scenario.workMessenger, scenario.privateMessenger]
+      .flatMap((m) => m.sections.flatMap((s) => s.threads))
+    const beats = scenario.days.flatMap((d) => [d.opening, ...(d.asks ?? [])].filter(Boolean))
+    const said = beats.flatMap((b) => b.lines ?? [])
+    const hints = beats.flatMap((b) => (b.ask?.no ?? []).flat())
+    const written = JSON.stringify({
+      threads, said, hints, files, sites: scenario.sites, news: scenario.news, qna: scenario.qna
+    })
+    expect(written).not.toContain(scenario.vpn.session)
   })
 
   it('puts the hosts line in the guide, where a stuck player can find it', () => {
@@ -2045,4 +2058,6 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   - Task 3 `offers at least one download` → Task 7 (파트너 사이트가 첫 `vendor` 다운로드. 정부25는 `gov.security.download`, 포털 자료실은 `site.files` 라 이 검사에 잡히지 않는다)
   각 Task 의 "테스트를 돌린다" 단계가 무엇이 남아야 정상인지 적어 두었다. 그 목록에 없는 실패가 나오면 멈추고 원인을 찾는다.
 - **`pool.fixed[2]` 와 `days[1].requests` 는 반드시 같이 고친다.** 한쪽만 고치면 `test/pool.test.js` 의 `never pools a request some day already pins` 가 깨진다. `sizes[2]` 는 9 그대로 둔다 — 고정분이 6→7 로 늘고 뽑는 수가 3→2 로 줄 뿐이다.
-- **세션 ID 는 `scenario.vpn.session` 한 곳에만.** 힌트 대사에 절대 적지 않는다. 넷째 날 품의번호도 `file_d_terms.content` 한 곳에만 — 팀장 대사에는 "품의번호" 라는 말만 넣고 번호는 넣지 않는다.
+- **세션 ID 와 품의번호는 힌트 대사에 절대 적지 않는다.** 힌트는 어디를 보라고만 말한다.
+  다만 `ask.accept` 에는 정답 문자열이 그대로 들어간다(엔진에 템플릿이 없다) — 누출 테스트는
+  검사 표면을 좁혀서 쓴다. 팀장 대사에는 "품의번호" 라는 말만 넣고 번호는 넣지 않는다.
