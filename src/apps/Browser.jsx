@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import {
   useGame, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
-  searchSites, searchTerms, siteView
+  searchSites, searchTerms, siteView, latestNews, hostResolves
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
 import Wiki from './Wiki.jsx'
 import Board from './Board.jsx'
+import Gov from './Gov.jsx'
+import Lotto from './Lotto.jsx'
+import Vendor from './Vendor.jsx'
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
@@ -67,6 +70,7 @@ export default function Browser() {
   const unlocked = useGame((s) => s.unlocked)
   const grants = useGame((s) => s.grants)
   const unlockSite = useGame((s) => s.unlockSite)
+  const edits = useGame((s) => s.edits)
   const [addr, setAddr] = useState('')
   const nav = useHistory({ kind: 'home' })
   const page = nav.at
@@ -97,7 +101,9 @@ export default function Browser() {
   }, [page])
 
   const site = page.kind === 'site' ? scenario.sites.find((s) => s.url === page.url) : null
-  const view = page.kind === 'site' ? siteView(site, { grants, unlocked }) : null
+  const view = page.kind === 'site'
+    ? siteView(site, { grants, unlocked, resolves: !site?.requiresHost || hostResolves(scenario, edits, site.url) })
+    : null
   const hits = page.kind === 'search' ? searchSites(scenario.sites, page.q) : []
   const spots = page.kind === 'search' ? searchPlaces(scenario.places, page.q) : []
   const posts = page.kind === 'search' ? searchBlogs(scenario.blogs, page.q) : []
@@ -163,6 +169,15 @@ export default function Browser() {
                      placeholder="검색어를 입력하세요" aria-label="검색어" spellCheck={false} />
               <button className="btn-primary" onClick={submitSearch}>검색</button>
             </div>
+            <section className="portal-news">
+              <h3>주요 기사</h3>
+              {latestNews(scenario.news).map((a) => (
+                <button key={a.id} className="portal-news-row" onClick={() => nav.go({ kind: 'news', id: a.id })}>
+                  <span className="portal-news-title">{a.title}</span>
+                  <span className="portal-news-by">{a.press} · {a.date}</span>
+                </button>
+              ))}
+            </section>
           </div>
         )}
 
@@ -353,6 +368,9 @@ export default function Browser() {
             : site.layout === 'wiki' ? <Wiki site={site} />
             : site.layout === 'calendar' ? <Calendar site={site} />
               : site.layout === 'board' ? <Board site={site} />
+              : site.layout === 'gov' ? <Gov site={site} />
+              : site.layout === 'lotto' ? <Lotto site={site} />
+              : site.layout === 'vendor' ? <Vendor site={site} />
               : (
                 <div className="site">
                   <h2>{site.title}</h2>

@@ -86,3 +86,31 @@ describe('shortcuts a program leaves behind', () => {
       .toEqual([p.shortcut])
   })
 })
+
+describe('everything a site offers to download', () => {
+  const byId = new Map(allFiles(scenario.fs).map((f) => [f.id, f]))
+  const offers = scenario.sites
+    .filter((s) => s.vendor?.download)
+    .map((s) => ({ where: s.url, item: s.vendor.download }))
+
+  it('offers at least one download somewhere', () => {
+    expect(offers.length).toBeGreaterThan(0)
+  })
+
+  it('hands out files that exist and stay hidden until saved', () => {
+    for (const { where, item } of offers) {
+      const file = byId.get(item.fileId)
+      expect(file, where).toBeTruthy()
+      expect(file.name, where).toBe(item.name)
+      expect(file.attached, where).toBe(true)
+    }
+  })
+
+  it('gives every vendor page something to say', () => {
+    for (const s of scenario.sites.filter((x) => x.layout === 'vendor')) {
+      expect(s.vendor.brand, s.url).toBeTruthy()
+      expect(s.vendor.lines.length, s.url).toBeGreaterThan(0)
+      expect(['corp', 'spam']).toContain(s.vendor.theme)
+    }
+  })
+})

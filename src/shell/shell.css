@@ -823,3 +823,187 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .mg-chat-who { min-width: 0; }
 .mg-chat-name { font-size: 13px; }
 .mg-chat-sub { font-size: 11px; color: #999; }
+
+/* pdf viewer */
+.pdf { height: 100%; display: flex; flex-direction: column; background: #4a4a52; }
+.pdf-badge { padding: 2px 8px; border-radius: 3px; background: #fbe9e7; color: #b3261e; font-size: 11px; }
+.pdf-page { position: relative; flex-shrink: 0; min-height: 100%; padding: 64px 56px 44px; background: #fff; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+.pdf-title { margin-bottom: 34px; text-align: center; font-family: '바탕', Batang, serif; font-size: 22px; letter-spacing: 6px; color: #1f2430; }
+.pdf-text { font-family: '바탕', Batang, '맑은 고딕', serif; font-size: 13px; line-height: 2; white-space: pre-wrap; user-select: text; }
+.pdf-seal { position: absolute; right: 60px; bottom: 74px; width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(200,40,30,.75); border-radius: 6px; color: rgba(200,40,30,.75); font-family: '바탕', Batang, serif; font-size: 15px; letter-spacing: 3px; transform: rotate(-8deg); }
+
+/* 정부25 */
+.gov { min-height: 100%; display: flex; flex-direction: column; background: #f3f5f9; font-size: 13px; }
+.gov-top { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #0f2b64; color: #fff; }
+.gov-logo { padding: 0; background: none; font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+.gov-tag { font-size: 11px; opacity: .75; }
+.gov-user { margin-left: auto; font-size: 11px; opacity: .85; }
+.gov-steps { display: flex; gap: 0; margin: 0; padding: 0 20px; list-style: none; background: #fff; border-bottom: 1px solid #e3e6ee; }
+.gov-steps li { display: flex; align-items: center; gap: 8px; padding: 12px 18px 12px 0; color: #9aa1b3; font-size: 12px; }
+.gov-steps li b { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #e3e6ee; color: #9aa1b3; font-size: 11px; }
+.gov-steps li.on { color: #0f2b64; font-weight: 600; }
+.gov-steps li.on b { background: #0f2b64; color: #fff; }
+.gov-steps li.done { color: #4c7a3f; }
+.gov-steps li.done b { background: #dcefd6; color: #4c7a3f; }
+.gov-home { flex: 1; }
+.gov-hero { padding: 36px 20px 30px; text-align: center; color: #fff; background: #1a3f8f linear-gradient(135deg, #1a3f8f, #2e5fc4); }
+.gov-hero h1 { font-size: 20px; margin-bottom: 16px; }
+.gov-search { display: flex; align-items: center; gap: 8px; width: min(460px, 92%); margin: 0 auto; padding: 10px 14px; border-radius: 24px; background: #fff; color: #666; }
+.gov-search input { flex: 1; min-width: 0; border: none; outline: none; font: inherit; font-size: 13px; }
+.gov-h2 { margin: 22px 20px 10px; font-size: 14px; color: #2a2d38; }
+.gov-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding: 0 20px 20px; }
+.gov-card { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: 8px; background: #fff; border: 1px solid #e3e6ee; }
+.gov-card-title { font-size: 14px; font-weight: 600; color: #1f2430; }
+.gov-card-meta { font-size: 11px; color: #8b91a3; }
+.gov-card .gov-btn { align-self: flex-start; margin-top: 8px; }
+.gov-none { grid-column: 1 / -1; padding: 20px; color: #888; text-align: center; }
+.gov-btn { padding: 8px 16px; border-radius: 4px; background: #e8ecf6; color: #0f2b64; font-size: 12px; font-weight: 600; }
+.gov-btn:hover:not(:disabled) { background: #d9e0f2; }
+.gov-btn.primary { background: #0f2b64; color: #fff; }
+.gov-btn.primary:hover:not(:disabled) { background: #1a3f8f; }
+.gov-btn.wide { width: 100%; padding: 12px; margin-bottom: 14px; }
+.gov-btn:disabled { opacity: .55; cursor: default; }
+.gov-panel { width: min(440px, 90%); margin: 24px auto; padding: 28px 30px; border-radius: 8px; background: #fff; box-shadow: 0 8px 28px rgba(15,43,100,.10); }
+.gov-panel h2 { font-size: 18px; color: #1f2430; margin-bottom: 6px; }
+.gov-sub { margin-bottom: 20px; color: #666; font-size: 12px; line-height: 1.7; }
+.gov-note { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; padding: 10px 12px; border-radius: 4px; background: #eef2fb; color: #2c4a8f; font-size: 12px; line-height: 1.6; }
+.gov-back { display: block; margin-top: 8px; padding: 0; background: none; color: #7b83a8; font-size: 12px; }
+.gov-back:hover { color: #0f2b64; text-decoration: underline; }
+.gov-preview { margin-bottom: 18px; padding: 18px 20px; border: 1px solid #e3e6ee; border-radius: 4px; background: #fafbfd; max-height: 260px; overflow: auto; }
+.gov-preview pre { font-family: '바탕', Batang, '맑은 고딕', serif; font-size: 12px; line-height: 1.9; white-space: pre-wrap; }
+.gov-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.gov-saved { font-size: 12px; color: #4c7a3f; }
+.gov-foot { margin-top: auto; padding: 14px 20px; text-align: center; color: #aab; font-size: 11px; }
+
+/* ending */
+.end { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: #050608; color: #d8d9df; cursor: pointer; user-select: none; }
+.end-body { max-width: 560px; width: 100%; animation: end-in .8s ease; }
+@keyframes end-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.end-line { margin: 0 0 14px; font-size: 16px; line-height: 1.9; animation: end-in .6s ease; }
+.end-note { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); color: #9a9ca8; font-size: 13px; line-height: 1.8; animation: end-in 1.2s ease; }
+.end-hint { position: absolute; bottom: 28px; color: rgba(255,255,255,.3); font-size: 12px; }
+.end-who { margin-bottom: 14px; font-size: 12px; letter-spacing: 2px; color: #8b8e9c; text-transform: uppercase; }
+.end-glitch { background: #0067b8; color: #fff; font-family: Consolas, 'D2Coding', monospace; }
+.end-glitch .end-line { font-size: 14px; margin-bottom: 8px; }
+.end-glitch .end-line:last-child { animation: end-flicker 1.2s steps(2) infinite; }
+@keyframes end-flicker { 50% { opacity: .35; } }
+.end-article { background: #f4f1ea; color: #222; }
+.end-art-head { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #222; font-family: '바탕', Batang, serif; }
+.end-art-head span { font-size: 12px; color: #666; margin-right: 12px; }
+.end-art-head h2 { margin-top: 8px; font-size: 22px; line-height: 1.4; }
+.end-article .end-line { font-family: '바탕', Batang, serif; font-size: 15px; }
+.end-chat .end-line { display: inline-block; clear: both; float: left; max-width: 80%; margin-bottom: 10px; padding: 10px 14px; border-radius: 14px 14px 14px 4px; background: #1d1f26; font-size: 14px; line-height: 1.6; }
+.end-chat .end-note { clear: both; float: left; width: 100%; }
+.end-post .end-body { padding: 26px 28px; border-radius: 8px; background: #16171c; border: 1px solid rgba(255,255,255,.08); }
+.end-post .end-line { font-size: 14px; color: #c9cbd3; }
+.end-dark { background: #000; }
+.end-dark .end-line { text-align: center; font-size: 18px; letter-spacing: 1px; }
+.end-final { background: #000; cursor: default; text-align: center; }
+.end-final h1 { font-size: 64px; letter-spacing: 18px; font-weight: 300; margin-left: 18px; animation: end-in 2.4s ease; }
+.end-sub { margin-top: 10px; color: #6c6f7c; font-size: 13px; letter-spacing: 2px; animation: end-in 3s ease; }
+.end-btn { margin-top: 48px; padding: 10px 26px; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; background: none; color: #d8d9df; font-size: 13px; animation: end-in 4s ease; }
+.end-btn:hover { background: rgba(255,255,255,.08); }
+
+/* search portal front page headlines */
+.portal-news { width: 100%; max-width: 480px; text-align: left; }
+.portal-news h3 { margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #888; letter-spacing: 1px; }
+.portal-news-row { display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 9px 4px; border-bottom: 1px solid #eef0f4; background: none; text-align: left; font: inherit; cursor: pointer; }
+.portal-news-row:hover .portal-news-title { color: #2f6fd0; text-decoration: underline; }
+.portal-news-title { font-size: 13.5px; color: #222; line-height: 1.4; }
+.portal-news-by { font-size: 11px; color: #999; }
+
+/* 동행복권 */
+.lt { min-height: 100%; display: flex; flex-direction: column; background: #f6f7fa; font-size: 13px; }
+.lt-top { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: #fff; border-bottom: 3px solid #e8412c; }
+.lt-logo { font-size: 18px; font-weight: 800; color: #e8412c; }
+.lt-nav { font-size: 12px; color: #666; }
+.lt-banner { display: flex; flex-direction: column; gap: 4px; padding: 14px 20px; background: #fff4e5; color: #7a4a00; font-size: 13px; }
+.lt-banner span { font-size: 11px; color: #9a7a4a; }
+.lt-card { width: min(460px, 90%); margin: 24px auto; padding: 28px 30px; border-radius: 8px; background: #fff; box-shadow: 0 8px 28px rgba(60,30,20,.08); }
+.lt-card h2 { font-size: 18px; color: #1f2430; margin-bottom: 6px; }
+.lt-sub { margin-bottom: 18px; color: #666; font-size: 12px; }
+.lt-field { display: block; margin-bottom: 16px; }
+.lt-field > span { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; color: #333; }
+.lt-field input { width: 100%; padding: 10px 12px; border: 1px solid #dfe1ea; border-radius: 3px; font: inherit; font-size: 13px; outline: none; }
+.lt-field input:focus { border-color: #e8412c; }
+.lt-picks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.lt-picks input { text-align: center; font-size: 16px; padding: 10px 4px; }
+.lt-btn { width: 100%; padding: 12px; border-radius: 3px; background: #e8412c; color: #fff; font-size: 14px; font-weight: 600; }
+.lt-btn:hover:not(:disabled) { background: #cf3421; }
+.lt-btn:disabled { opacity: .5; cursor: default; }
+.lt-result { margin-top: 18px; padding: 14px 16px; border-radius: 4px; background: #f3f4f8; color: #444; line-height: 1.8; }
+.lt-result.win { background: #fff4e5; color: #7a4a00; }
+.lt-win { font-size: 20px; font-weight: 800; color: #e8412c; }
+.lt-note { margin-top: 10px; font-size: 12px; color: #8a6a3a; line-height: 1.7; }
+.lt-foot { margin-top: auto; padding: 14px 20px; text-align: center; color: #aab; font-size: 11px; }
+.lt-serial { font-family: Consolas, monospace; letter-spacing: 2px; font-size: 15px; }
+
+/* the overtime offer */
+.clear-overlay.ot { background: rgba(26,18,10,.93); }
+.clear-overlay.ot h1 { font-size: 26px; }
+.ot-count { color: #e0a25e; font-size: 13px; }
+.ot-note { max-width: 420px; margin-top: 10px; color: rgba(255,255,255,.45); font-size: 12px; line-height: 1.8; }
+
+/* the layoff notice */
+.clear-overlay.lay { background: rgba(20,20,24,.95); }
+.lay-head { padding: 4px 14px; border-radius: 12px; background: rgba(255,255,255,.1); color: #cfd2da; font-size: 12px; letter-spacing: 1px; }
+.lay-picks { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+.lay-pick { display: flex; flex-direction: column; gap: 6px; width: 230px; padding: 16px 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; background: rgba(255,255,255,.05); color: #fff; text-align: left; cursor: pointer; }
+.lay-pick:hover { background: rgba(255,255,255,.12); }
+.lay-pick b { font-size: 14px; }
+.lay-pick span { color: rgba(255,255,255,.6); font-size: 12px; line-height: 1.7; }
+
+/* an editable text file */
+.np-name { display: flex; align-items: center; gap: 10px; }
+.np-save { margin-left: auto; padding: 3px 12px; border-radius: 3px; background: #e8e8ee; font-size: 12px; }
+.np-save:hover { background: #dcdce4; }
+.np-saved { color: #2f7a45; font-size: 11px; }
+.np-mono { font-family: Consolas, 'D2Coding', monospace; font-size: 12.5px; line-height: 1.7; white-space: pre; }
+
+/* asking the anonymous room */
+.bd-ask { max-width: 680px; margin: 12px auto 0; padding: 14px 16px; background: #fff; border: 1px solid #e8e8ee; border-radius: 8px; }
+.bd-ask-row { display: flex; gap: 8px; }
+.bd-ask-row input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid #e0e0e8; border-radius: 4px; font: inherit; font-size: 12.5px; outline: none; }
+.bd-ask-row input:focus { border-color: #e9542f; }
+.bd-ask-row .btn-primary { padding: 8px 16px; border-radius: 4px; font-size: 12.5px; }
+.bd-ask-note { margin-top: 7px; color: #aaa; font-size: 11px; }
+.bd-ask-pair { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f2f2f6; }
+.bd-ask-q, .bd-ask-a { display: flex; gap: 8px; padding: 5px 0; font-size: 12.5px; line-height: 1.7; }
+.bd-ask-q span, .bd-ask-a span { flex-shrink: 0; width: 58px; color: #999; font-size: 11px; padding-top: 2px; }
+.bd-ask-a { color: #333; }
+.bd-ask-q { color: #666; }
+.bd-ask-wait { padding: 5px 0 5px 66px; color: #bbb; font-size: 12px; }
+
+/* ── 다운로드 버튼 ─────────────────────────────────────── */
+.dl { display: flex; align-items: center; gap: 12px; margin: 18px 0;
+      padding: 12px 14px; border: 1px solid #d8dbe0; border-radius: 8px; background: #fbfcfd; }
+.dl-mid { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.dl-name { font-size: 13px; font-weight: 600; color: #1b1d21; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-size { font-size: 11px; color: #7b8089; }
+.dl-btn { padding: 8px 16px; border: 0; border-radius: 6px; background: #2a6cf0; color: #fff;
+          font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dl-btn:disabled { background: #e6e8ec; color: #8d9299; cursor: default; }
+
+/* ── 거래처·광고 사이트 ─────────────────────────────────── */
+.vd { height: 100%; overflow: auto; }
+.vd-top { display: flex; align-items: baseline; gap: 12px; padding: 20px 28px; }
+.vd-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+.vd-tag { font-size: 12px; }
+.vd-body { padding: 8px 28px 32px; max-width: 620px; }
+.vd-line { font-size: 13.5px; line-height: 1.85; margin: 0 0 10px; }
+.vd-note { font-size: 11.5px; color: #7b8089; margin: 6px 0 0; }
+
+.vd-corp { background: #fff; color: #23262b; }
+.vd-corp .vd-top { border-bottom: 2px solid #123a7a; }
+.vd-corp .vd-brand { color: #123a7a; }
+.vd-corp .vd-tag { color: #6b7280; }
+
+.vd-spam { background: #fffbe8; color: #2b2b2b; }
+.vd-spam .vd-top { background: linear-gradient(90deg, #ff3d3d, #ff9a00); color: #fff; }
+.vd-spam .vd-brand { color: #fff; text-shadow: 0 1px 0 #0004; }
+.vd-spam .vd-tag { color: #fff; font-weight: 700; }
+.vd-spam .vd-line { font-weight: 600; }
+.vd-spam .dl { border: 2px dashed #ff3d3d; background: #fff4f4; }
+.vd-spam .dl-btn { background: #e01414; font-size: 14px; padding: 11px 22px; animation: dl-blink 1.1s infinite; }
+.vd-spam .dl-btn:disabled { background: #e6e8ec; color: #8d9299; animation: none; }
+@keyframes dl-blink { 50% { background: #ff6a3d; } }
