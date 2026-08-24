@@ -2119,6 +2119,13 @@
         "content": "AnySign4PC 키보드보안 설치 파일 (한국전자인증)"
       },
       {
+        "id": "file_fakeviewer",
+        "name": "HwpViewer_Free_Setup.exe",
+        "program": "fakeviewer",
+        "attached": true,
+        "content": "HWP Viewer Free 설치 파일"
+      },
+      {
         "id": "file_driver",
         "name": "스캐너_드라이버_v3.2.txt",
         "content": "BS-200 스캐너 드라이버 v3.2\n\n거래처 문의 대응용으로 받아둔 파일."
@@ -3967,6 +3974,28 @@
           "문의: D유통 정보시스템팀 02-777-0200"
         ]
       }
+    },
+    {
+      "url": "hwpviewer-free.com",
+      "title": "한글 뷰어 무료 다운로드",
+      "layout": "vendor",
+      "unlisted": true,
+      "vendor": {
+        "brand": "HWP VIEWER FREE",
+        "tagline": "설치 3초! 평생 무료!",
+        "theme": "spam",
+        "lines": [
+          "★ hwp / hwpx 전부 지원! 결제 없이 평생 무료! ★",
+          "오늘만 12,847명이 다운로드했습니다.",
+          "복잡한 설치 과정 없이 클릭 한 번이면 끝납니다.",
+          "지금 바로 아래 버튼을 눌러 주세요!"
+        ],
+        "download": { "fileId": "file_fakeviewer", "name": "HwpViewer_Free_Setup.exe", "size": "3MB", "label": "지금 무료 다운로드" },
+        "notes": [
+          "본 프로그램은 제휴 프로그램이 함께 설치될 수 있습니다.",
+          "고객센터 운영시간: 확인되지 않음"
+        ]
+      }
     }
   ],
   "bookmarks": [
@@ -5169,6 +5198,15 @@
         ]
       ],
       "bookable": true
+    }
+  ],
+  "ads": [
+    {
+      "id": "ad_hwpviewer",
+      "title": "한글 뷰어 무료 다운로드 | hwp 파일 바로 열기",
+      "url": "hwpviewer-free.com",
+      "desc": "설치 3초, 결제 없음. hwp·hwpx 전부 지원. 지금 바로 무료로 받으세요!",
+      "tags": ["한글", "한글뷰어", "뷰어", "hwp", "무료", "다운로드", "문서"]
     }
   ],
   "blogs": [
@@ -7058,6 +7096,43 @@
       "already": {
         "title": "이미 설치되어 있습니다",
         "lines": ["AnySign4PC 키보드보안이(가) 이미 설치되어 있습니다."]
+      }
+    },
+    "fakeviewer": {
+      "product": "HWP Viewer Free",
+      "publisher": "확인되지 않은 게시자",
+      "version": "1.0.0",
+      "size": "3MB",
+      "setup": "HwpViewer_Free_Setup.exe",
+      "grant": "fakeviewerInstalled",
+      "danger": true,
+      "intro": [
+        "이 마법사를 통해 HWP Viewer Free을(를) 설치합니다.",
+        "계속하려면 [설치]를 클릭하십시오."
+      ],
+      "steps": [
+        "설치 준비 중…",
+        "구성 요소를 내려받는 중…",
+        "설치를 마무리하는 중…"
+      ],
+      "done": {
+        "title": "설치가 완료되었습니다",
+        "lines": ["설치가 완료되었습니다."]
+      },
+      "already": {
+        "title": "이미 설치되어 있습니다",
+        "lines": ["HWP Viewer Free이(가) 이미 설치되어 있습니다."]
+      },
+      "aftermath": {
+        "source": "workMessenger",
+        "thread": "security",
+        "from": "정보보안팀",
+        "lines": [
+          "김한별 대리님, 방금 PC에서 악성코드가 탐지되어 강제 종료했습니다.",
+          "hwpviewer-free.com 에서 내려받은 설치 파일이던데, 저희가 배포한 프로그램이 아닙니다.",
+          "검색으로 나오는 무료 뷰어 광고는 대부분 이런 식입니다. 출처가 확인되지 않은 exe 는 실행하지 말아 주세요.",
+          "한글은 사내 배포본이 따로 있습니다. 필요하시면 저희에게 말씀해 주세요."
+        ]
       }
     }
   },

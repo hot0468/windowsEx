@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { allFiles, fileOpener, goalFor, searchSites } from '../src/engine/store.js'
+import { allFiles, fileOpener, goalFor, searchAds, searchSites } from '../src/engine/store.js'
 
 const files = allFiles(scenario.fs)
 const terms = files.find((f) => f.id === 'file_d_terms')
@@ -56,5 +56,30 @@ describe('the viewer that opens it', () => {
     expect(p.setup).toBe(partner.vendor.download.name)
     expect(p.grant).toBe('dviewer')
     expect(p.missing.lines.join(' ')).toContain(partner.url)
+  })
+})
+
+describe('the ad at the top of the results', () => {
+  const spam = scenario.sites.find((s) => s.url === 'hwpviewer-free.com')
+
+  it('turns up when a stuck player searches for a 한글 viewer', () => {
+    const hits = searchAds(scenario.ads, '한글 뷰어')
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits[0].url).toBe(spam.url)
+  })
+
+  it('never turns up as an ordinary site result', () => {
+    for (const q of ['한글', '뷰어', 'hwp', '무료']) {
+      expect(searchSites(scenario.sites, q).map((s) => s.url)).not.toContain(spam.url)
+    }
+  })
+
+  it('hands out a program that takes the machine down', () => {
+    const p = scenario.programs.fakeviewer
+    expect(spam.vendor.download.name).toBe(p.setup)
+    expect(spam.vendor.theme).toBe('spam')
+    expect(p.danger).toBe(true)
+    expect(p.aftermath.thread).toBe('security')
+    expect(p.aftermath.lines.join(' ')).toContain(spam.url)
   })
 })

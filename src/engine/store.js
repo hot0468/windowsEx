@@ -724,9 +724,13 @@ export const sortMails = (mails) => mails
   .sort(([a, i], [b, j]) => mailTime(b.date) - mailTime(a.date) || j - i)
   .map(([m]) => m)
 
+// Sponsored results are not sites the portal indexed — they are bought, so they
+// match on the words the buyer paid for and never show up in a plain site search.
+export const searchAds = (ads, q) => searchIn(ads, q, ['title', 'desc', 'tags'])
+
 // Titles and addresses only. Matching page contents would surface the wiki's
 // price table in results and let a player skip its password gate entirely.
-export const searchSites = (sites, q) => searchIn(sites, q, ['title', 'url'])
+export const searchSites = (sites, q) => searchIn(sites.filter((s) => !s.unlisted), q, ['title', 'url'])
 
 // path is ['문서', '업무자료', '2026'] — the first name picks the root drive.
 export function entriesAt(fs, path) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
+  useGame, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna,
   searchSites, searchTerms, siteView, latestNews, hostResolves
 } from '../engine/store.js'
 import Place from './Place.jsx'
@@ -115,6 +115,7 @@ export default function Browser() {
   const answers = page.kind === 'search' ? searchQna(scenario.qna, page.q) : []
   const firms = page.kind === 'search' ? searchCompanies(scenario.companies, page.q) : []
   const words = page.kind === 'search' ? searchTerms(scenario.terms, page.q) : []
+  const promos = page.kind === 'search' ? searchAds(scenario.ads, page.q) : []
 
   return (
     <div className="browser">
@@ -190,6 +191,17 @@ export default function Browser() {
             <p className="results-head">
               '{page.q}' 검색 결과 {spots.length + firms.length + words.length + articles.length + answers.length + posts.length + hits.length}건
             </p>
+
+            {promos.map((ad) => (
+              <div key={ad.id} className="ad" onClick={() => open(ad.url)}>
+                <div className="ad-top">
+                  <span className="ad-badge">AD</span>
+                  <span className="ad-title">{ad.title}</span>
+                </div>
+                <div className="ad-url">{ad.url}</div>
+                <div className="ad-desc">{ad.desc}</div>
+              </div>
+            ))}
 
             {spots.length > 0 && (
               <section className="rs-block">
