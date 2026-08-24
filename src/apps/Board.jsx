@@ -10,10 +10,10 @@ export default function Board({ site }) {
   const [draft, setDraft] = useState('')
   const [thread, setThread] = useState([])
   const [waiting, setWaiting] = useState(false)
-  const post = posts.find((p) => p.id === id)
   const askedRoom = useGame((s) => s.askedRoom)
   const day = useGame((s) => s.day)
   const posts = boardPosts(b.posts, day)
+  const post = posts.find((p) => p.id === id)
 
   const send = () => {
     const question = draft.trim()
