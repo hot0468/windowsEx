@@ -13,7 +13,9 @@ const asksOf = (t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].flatMap(
 const offeredBy = (t) => [
   ...quickSets(t).flat(),
   ...(t.reactions ?? []).flatMap((r) => r.next ?? []),
-  ...asksOf(t).flatMap((a) => a.next ?? [])
+  ...asksOf(t).flatMap((a) => a.next ?? []),
+  // a consequence may hand the thread buttons of its own the next morning
+  ...(scenario.ripples ?? []).filter((r) => r.beat.thread === t.id).flatMap((r) => r.beat.choices ?? [])
 ]
 
 describe('scenario integrity', () => {

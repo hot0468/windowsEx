@@ -10,12 +10,15 @@ export default function Progress() {
   const overtime = useGame((s) => s.overtime)
   const drawn = useGame((s) => s.drawn)
   const ripples = useGame((s) => s.ripples)
+  const closing = useGame((s) => s.closing)
+  const closeDay = useGame((s) => s.closeDay)
   const [open, setOpen] = useState(false)
 
   const state = { grants, unlocked }
   const list = requestsOf(scenario, day, overtime, drawn, ripples)
   const done = list.filter((o) => objectiveDone(o, state))
   const today = scenario.days[day - 1]
+  const finished = done.length === list.length
 
   return (
     <div className="pg">
@@ -39,6 +42,9 @@ export default function Progress() {
           })}
         </ul>
       )}
+      <button className="pg-close" onClick={closeDay} disabled={!finished || closing}>
+        오늘 업무 마치기
+      </button>
     </div>
   )
 }

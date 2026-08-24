@@ -11,7 +11,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
-  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor']
+  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -70,6 +70,9 @@ export const useGame = create((set, get) => ({
   crashSource: null,
   locked: false,
   windows: restored?.windows ?? [],
+  // what the browser's console and network log show right now; the devtools window draws them
+  browserDev: { console: [], network: [] },
+  setBrowserDev: (dev) => set({ browserDev: dev }),
   nextZ: restored?.nextZ ?? 10,
   msgCount: restored?.msgCount ?? 0,
   readMails: restored?.readMails ?? {},
@@ -85,6 +88,8 @@ export const useGame = create((set, get) => ({
   typing: {},
   extraMails: restored?.extraMails ?? [],
   extraMessages: restored?.extraMessages ?? {},
+  // which small talk has already come, and on what day
+  chatted: restored?.chatted ?? {},
   pendingAsks: restored?.pendingAsks ?? {},
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
@@ -97,6 +102,9 @@ export const useGame = create((set, get) => ({
   // Which days the player chose to stay late on, and whether tonight's offer
   // has been answered yet.
   overtime: restored?.overtime ?? {},
+  // Whether the player has pressed "finish today" — view state, so a reload
+  // simply asks for the click again.
+  closing: false,
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -126,6 +134,8 @@ export const useGame = create((set, get) => ({
   scratch: restored?.scratch ?? '',
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
+  // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
+  routerDown: restored?.routerDown ?? false,
 
   setBooted: () => {
     play('boot')
@@ -224,7 +234,10 @@ export const useGame = create((set, get) => ({
     play('error')
     set({ crashed: true, crashSource: source, toast: null })
   },
-  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false }),
+  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false }),
+  // Finishing the last request does nothing on its own; the player clocks off
+  // from the request list, and only then the evening (offer, then the door) begins.
+  closeDay: () => set({ closing: true }),
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
   lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
@@ -261,11 +274,13 @@ export const useGame = create((set, get) => ({
     const s = get()
     const extra = s.scenario.overtime.days[s.day]
     if (!extra || s.overtime[s.day]) return
-    set((st) => ({ overtime: { ...st.overtime, [st.day]: true } }))
+    set((st) => ({ overtime: { ...st.overtime, [st.day]: true }, closing: false }))
     const beats = [extra.opening, ...(extra.asks ?? [])].filter(Boolean)
     beats.forEach((beat, i) => setTimeout(() => {
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
       if (beat.ask) get().queueAsk(beat.thread, beat.ask)
+      // a question with buttons: the thread's own reactions answer it
+      if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
       get().showToast({
         from: beat.from, text: beat.lines[0],
         app: 'messenger', source: beat.source, thread: beat.thread
@@ -367,6 +382,8 @@ export const useGame = create((set, get) => ({
     beats.forEach((beat, i) => setTimeout(() => {
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
       if (beat.ask) get().queueAsk(beat.thread, beat.ask)
+      // a question with buttons: the thread's own reactions answer it
+      if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
       get().showToast({
         from: beat.from, text: beat.lines[0],
         app: 'messenger', source: beat.source, thread: beat.thread
@@ -415,6 +432,26 @@ export const useGame = create((set, get) => ({
   },
   setVpn: (on) => set({ vpn: on }),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
+  // The router's admin page. Stopping DHCP takes the floor down until it is
+  // started again; changing the default password is the one thing worth doing.
+  breakRouter: () => {
+    const s = get()
+    if (s.routerDown) return
+    set({ routerDown: true })
+    s.grant('router_broke')
+    const o = outageOf(s.scenario)
+    setTimeout(() => {
+      o.down.forEach((text) => get().pushMessage(o.thread, { from: o.from, text }))
+      get().showToast({ from: o.from, text: o.down[0], app: 'messenger', source: o.source, thread: o.thread })
+    }, 2500)
+  },
+  fixRouter: () => {
+    if (!get().routerDown) return
+    set({ routerDown: false })
+    const o = outageOf(get().scenario)
+    setTimeout(() => o.up.forEach((text) => get().pushMessage(o.thread, { from: o.from, text })), 1500)
+  },
+  secureRouter: () => get().grant('router_secured'),
   // Credentials typed into the look-alike login page: security notices at once.
   phished: (after) => {
     if (get().grants.phished) return
@@ -433,6 +470,7 @@ export const useGame = create((set, get) => ({
         ? { ...s.ripples, ['_' + key]: s.day }
         : s.ripples
     }))
+    get().chat(key)
     // some mail only shows up once the player has got somewhere
     const mw = get().scenario.malware
     if (mw.after !== key || get().extraMails.some((m) => m.id === mw.mail.id)) return
@@ -443,6 +481,20 @@ export const useGame = create((set, get) => ({
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),
+  // Small talk lands between the work. A deed that someone was waiting on
+  // brings their reaction; otherwise every other solved request brings one
+  // line of the day's idle chatter, a few a day at most.
+  chat: (key, pick = Math.random) => {
+    const s = get()
+    const chosen = chatterFor(s.scenario, key, s, pick)
+    if (!chosen) return
+    set((st) => ({ chatted: { ...st.chatted, [chosen.id]: st.day } }))
+    setTimeout(() => {
+      const { beat } = chosen
+      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
+      get().showToast({ from: beat.from, text: beat.lines[0], app: 'messenger', source: beat.source, thread: beat.thread })
+    }, 2600)
+  },
   setAsk: (threadId, ask) =>
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } })),
   // A day can raise two questions in the same conversation. The second waits
@@ -452,9 +504,10 @@ export const useGame = create((set, get) => ({
       const waiting = s.pendingAsks[threadId]
       return { pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }
     }),
+  // Every message remembers the day it arrived; the scenario's own are day one.
   pushMessage: (threadId, msg) =>
     set((s) => ({
-      extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), msg] }
+      extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), { day: s.day, ...msg }] }
     })),
   setScratch: (scratch) => set({ scratch }),
   // A government site verifies you by phone: the code lands in 톡톡, the way
@@ -748,6 +801,21 @@ export const watched = (scenario, key) =>
 
 // Which consequences land on the morning of day `n`. A ripple lands once, and
 // only when the state it names is actually true.
+// Which small talk a deed brings: the one waiting on exactly this deed, or
+// else — on every other deed, while the day's quota lasts — one drawn from
+// what the day has to say. Nothing is ever said twice.
+export const CHATTER_A_DAY = 3
+export function chatterFor(scenario, key, state, pick = Math.random) {
+  const { chatted = {}, day, grants = {} } = state
+  const fresh = (scenario.chatter ?? []).filter((c) => !(c.id in chatted))
+  const waiting = fresh.find((c) => c.after === key)
+  if (waiting) return waiting
+  const today = Object.values(chatted).filter((d) => d === day).length
+  if (today >= CHATTER_A_DAY || Object.keys(grants).length % 2) return null
+  const idle = fresh.filter((c) => !c.after && (!c.days || c.days.includes(day)))
+  return idle.length ? idle[Math.floor(pick() * idle.length)] : null
+}
+
 export function ripplesFor(scenario, n, state) {
   const seen = state.ripples ?? {}
   return (scenario.ripples ?? []).filter((r) => !(r.id in seen) && rippleHolds(r.when, n, state))
@@ -756,7 +824,7 @@ export function ripplesFor(scenario, n, state) {
 export function rippleHolds(when = {}, n, state) {
   const {
     overtime = {}, locks = 0, slips = 0, mining = false, cleaned = false, roomQuestions = 0,
-    grants = {}, minedSince = null, bookedFor = null, ripples = {}
+    grants = {}, minedSince = null, bookedFor = null, ripples = {}, edits = {}
   } = state
   if (when.fromDay && n < when.fromDay) return false
   if (n < 2 && !when.fromDay) return false          // nothing ripples onto day one
@@ -779,7 +847,14 @@ export function rippleHolds(when = {}, n, state) {
   if (when.afterDays && !doneLongEnough(ripples, when, n)) return false
   // a table booked, and a night spent at the office instead
   if (when.bookingKept && bookedFor === null) return false
+  // a synced file the player rewrote, and did not put back
+  if (when.edited && !rewritten(state.scenario ?? scenario, edits, when.edited)) return false
   return true
+}
+
+const rewritten = (sc, edits, id) => {
+  const f = findFile(sc.fs, id)
+  return Boolean(f) && edits[id] !== undefined && edits[id] !== f.content
 }
 
 // A consequence with `afterDays` waits that many days after the deed before it
@@ -791,16 +866,22 @@ const doneLongEnough = (ripples, when, n) => {
 
 // Days after the first keep a fixed core and draw the rest, so no two weeks
 // bring the same work. A request that reads a document from a later day waits
-// for that day; nothing is ever drawn twice.
+// for that day (`after`); one that explains itself too kindly for the end of
+// the week stops being drawn (`before`); nothing is ever drawn twice.
 export function drawFor(scenario, day, drawn = {}, pick = Math.random) {
   const pool = scenario.pool
   if (!pool || day === 1) return []
   const taken = new Set(Object.values(drawn).flat())
   const want = pool.sizes[day] - (pool.fixed[day] ?? []).length
   const ready = pool.requests
-    .filter((r) => !taken.has(r.id) && (pool.after[r.id] ?? 0) <= day)
+    .filter((r) => !taken.has(r.id) && (pool.after[r.id] ?? 0) <= day && day <= (pool.before?.[r.id] ?? 9))
     .map((r) => r.id)
-  return shuffle(ready, pick).slice(0, Math.max(0, want))
+  // The work written for this end of the week goes first: the kindly explained
+  // requests early on, the ones that explain nothing late. The rest fills in.
+  const meant = (id) => (day >= 4 ? (pool.after[id] ?? 0) >= 4 : Boolean(pool.before?.[id]))
+  const first = shuffle(ready.filter(meant), pick)
+  const rest = shuffle(ready.filter((id) => !meant(id)), pick)
+  return [...first, ...rest].slice(0, Math.max(0, want))
 }
 
 // Fisher–Yates, with the source of randomness passed in so a test can pin it.
@@ -974,8 +1055,12 @@ export function processList(miner, mining) {
 // Exactly one state per visited site: no tunnel means no name, no approval
 // means no login form, no login means no content. Returning a single value
 // keeps them mutually exclusive.
-export function siteView(site, { grants, unlocked, resolves = true, vpn = false }) {
+const outageOf = (sc) => sc.sites.find((x) => x.layout === 'router').router.outage
+
+export function siteView(site, { grants, unlocked, resolves = true, vpn = false, offline = false }) {
   if (!site) return 'error'
+  // ponytail: only the browser goes dark when the router is down; mail and the VPN app still work
+  if (offline) return 'offline'
   if (site.requiresIp && !grants.ip) return 'blocked'
   if (site.requiresVpn && !vpn) return 'vpn'
   if (site.requiresHost && !resolves) return 'error'

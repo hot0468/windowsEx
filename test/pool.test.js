@@ -78,6 +78,40 @@ describe('drawing a week', () => {
     }
   })
 
+  it('stops drawing a request after the last day it is written for', () => {
+    expect(Object.keys(pool.before).length).toBeGreaterThan(20)
+    for (const [id, latest] of Object.entries(pool.before)) {
+      expect(pool.requests.some((r) => r.id === id), id).toBe(true)
+      for (let run = 0; run < 50; run++) {
+        const drawn = week()
+        for (const n of days) if (drawn[n].includes(id)) expect(n, id).toBeLessThanOrEqual(latest)
+      }
+    }
+  })
+
+  it('keeps the end of the week for the work that explains itself least', () => {
+    // a chain of two or more steps is what the last two days are made of
+    const steps = (ask) => (ask ? 1 + steps(ask.then) : 0)
+    const chains = pool.requests.filter((r) => steps(r.beat.ask) >= 2)
+    expect(chains.length).toBeGreaterThanOrEqual(15)
+    for (const r of chains) expect(pool.after[r.id], r.id).toBeGreaterThanOrEqual(4)
+    // the last two days take that work before anything else
+    const late = pool.requests.filter((r) => (pool.after[r.id] ?? 0) >= 4).length
+    const room = pool.sizes[4] + pool.sizes[5] - pool.fixed[4].length - pool.fixed[5].length
+    for (let run = 0; run < 30; run++) {
+      const drawn = week()
+      const got = [...drawn[4], ...drawn[5]].filter((id) => (pool.after[id] ?? 0) >= 4).length
+      expect(got).toBe(Math.min(late, room))
+      // and the first days take only what explains itself
+      for (const id of [...drawn[2], ...drawn[3]]) expect(pool.before[id], id).toBeDefined()
+    }
+    // and nothing that gets there is spelled out in its opening lines
+    for (const r of pool.requests) {
+      if ((pool.after[r.id] ?? 0) < 4) continue
+      expect(r.beat.lines.join(' '), r.id).not.toMatch(/폴더|\.hwp|\.xlsx|\.pptx|\.pdf|\.txt/)
+    }
+  })
+
   it('brings a different week almost every time', () => {
     const runs = new Set(Array.from({ length: 30 }, () => JSON.stringify(week())))
     expect(runs.size).toBeGreaterThan(25)

@@ -29,7 +29,7 @@ describe('siteView', () => {
   })
 
   it('lands on exactly one state for every site in every situation', () => {
-    const states = ['error', 'blocked', 'vpn', 'login', 'ready']
+    const states = ['error', 'blocked', 'vpn', 'login', 'down', 'ready']
     for (const site of scenario.sites) {
       for (const world of [none, approved, inside]) {
         expect(states).toContain(siteView(site, world))

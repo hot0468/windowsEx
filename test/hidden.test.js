@@ -10,11 +10,12 @@ const hidden = walk(scenario.fs).filter((e) => e.hidden)
 const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
 const threads = [scenario.workMessenger, scenario.privateMessenger]
   .flatMap((m) => m.sections.flatMap((s) => s.threads))
-const answers = [
+const asks = [
   ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(steps),
   ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => steps(a.ask))),
   ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask))
-].filter((a) => a?.accept).flatMap((a) => a.accept.flat()).filter((a) => a.length > 2)
+].filter((a) => a?.accept)
+const answers = asks.flatMap((a) => a.accept.flat()).filter((a) => a.length > 2)
 
 describe('hidden items', () => {
   it('keeps them out of a listing until asked for', () => {
@@ -45,10 +46,20 @@ describe('hidden items', () => {
     }
   })
 
-  it('never hides an answer a request needs', () => {
-    // the switch is off by default, so anything behind it is a soft-lock
+  it('never hides an answer a request needs, unless the request says where the switch is', () => {
+    // the switch is off by default, so anything behind it is a soft-lock —
+    // except when the last hint tells the player to turn it on
     const behind = JSON.stringify(hidden)
-    for (const answer of new Set(answers)) expect(behind).not.toContain(answer)
+    let puzzles = 0
+    for (const ask of asks) {
+      for (const answer of ask.accept.flat()) {
+        if (answer.length <= 2 || !behind.includes(answer)) continue
+        puzzles++
+        expect([ask.no.at(-1)].flat().join(' '), answer).toContain('숨긴 항목')
+      }
+    }
+    expect(puzzles).toBeGreaterThan(0)
+    expect(answers.length).toBeGreaterThan(100)
   })
 
   it('saves the switch with the rest of the game', () => {

@@ -56,6 +56,18 @@ export default function FileExplorer({ startFolder }) {
       </div>
 
       <div className="ex-body">
+        <div className="ex-addr" ref={(el) => { if (el) el.scrollLeft = el.scrollWidth }}>
+          <Monitor size={15} strokeWidth={1.8} />
+          <div className="ex-crumbs">
+            {nav.path.map((name, i) => (
+              <span key={i} className="ex-crumb">
+                <ChevronRight size={13} strokeWidth={2} />
+                <button onClick={() => goTo(nav.path.slice(0, i + 1))}>{name}</button>
+              </span>
+            ))}
+            <ChevronRight size={13} strokeWidth={2} />
+          </div>
+        </div>
         <div className="ex-bar">
           <button className="ex-up" onClick={() => { setQ(''); nav.goBack() }}
                   disabled={!nav.canBack} title="뒤로">
@@ -69,14 +81,7 @@ export default function FileExplorer({ startFolder }) {
                   disabled={!nav.canUp} title="상위 폴더">
             <ArrowUp size={16} strokeWidth={1.9} />
           </button>
-          <div className="ex-crumbs">
-            {nav.path.map((name, i) => (
-              <span key={i} className="ex-crumb">
-                {i > 0 && <ChevronRight size={13} strokeWidth={2} />}
-                <button onClick={() => goTo(nav.path.slice(0, i + 1))}>{name}</button>
-              </span>
-            ))}
-          </div>
+          <div style={{ flex: 1 }} />
           <div className="ex-view">
             <button className={'ex-view-btn' + (viewOpen ? ' on' : '')}
                     onClick={() => setViewOpen((v) => !v)} aria-expanded={viewOpen}>

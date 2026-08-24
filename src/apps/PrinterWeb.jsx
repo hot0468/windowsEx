@@ -1,10 +1,24 @@
+import { useState } from 'react'
 import { useGame } from '../engine/store.js'
 
 // The copier's embedded web page. The receipt number is not here — that
-// only comes out of the copier itself, once it prints.
+// only comes out of the copier itself, once it prints. One queued document
+// was never meant for this floor, and printing it is remembered.
 export default function PrinterWeb({ site }) {
   const printer = useGame((s) => s.scenario.printer)
+  const grants = useGame((s) => s.grants)
+  const grant = useGame((s) => s.grant)
+  const foundMissing = useGame((s) => s.foundMissing)
+  const [shown, setShown] = useState(null)
   const w = site.printerweb
+  const print = (q) => {
+    setShown(q)
+    grant(q.grants)
+    if (q.found) foundMissing()
+  }
+  const stateOf = (q) => !q.printable ? q.state
+    : grants[q.grants] ? w.print.printed
+    : <>{q.state} <button className="pw-print" onClick={() => print(q)}>{w.print.label}</button></>
   return (
     <div className="pw">
       <div className="pw-top">
@@ -24,9 +38,15 @@ export default function PrinterWeb({ site }) {
         <table className="pw-table">
           <thead><tr><th>문서</th><th>보낸 PC</th><th>상태</th></tr></thead>
           <tbody>
-            {w.queue.map((q, i) => <tr key={i}><td>{q.doc}</td><td>{q.from}</td><td>{q.state}</td></tr>)}
+            {w.queue.map((q, i) => <tr key={i}><td>{q.doc}</td><td>{q.from}</td><td>{stateOf(q)}</td></tr>)}
           </tbody>
         </table>
+        {shown && (
+          <>
+            <h3>{w.print.title}</h3>
+            <div className="pw-doc">{shown.pages.map((l, i) => <p key={i}>{l}</p>)}</div>
+          </>
+        )}
         <h3>오류 로그</h3>
         <ul className="pw-log">{w.log.map((l, i) => <li key={i}>{l}</li>)}</ul>
       </div>

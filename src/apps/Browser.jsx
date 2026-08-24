@@ -5,6 +5,7 @@ import {
 import Place from './Place.jsx'
 import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
+import News from './News.jsx'
 import Wiki from './Wiki.jsx'
 import Board from './Board.jsx'
 import Gov from './Gov.jsx'
@@ -14,10 +15,10 @@ import Vendor from './Vendor.jsx'
 import Router from './Router.jsx'
 import PrinterWeb from './PrinterWeb.jsx'
 import Phish from './Phish.jsx'
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, House, Lock, MoreVertical, Search, Star } from '../icons/line.jsx'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Code, House, Lock, Monitor, MoreVertical, Search, Settings, Star } from '../icons/line.jsx'
 import Icon from '../icons/Icon.jsx'
 import { useHistory } from './folderNav.js'
-import { shotOf } from '../assets/photos.js'
+import { newsShot, shotOf } from '../assets/photos.js'
 
 
 function Login({ site, onOk }) {
@@ -77,11 +78,20 @@ export default function Browser() {
   // an article dated later in the week has not been written yet
   const news = visibleByDay(scenario.news, day)
   const vpn = useGame((s) => s.vpn)
+  const routerDown = useGame((s) => s.routerDown)
   const [addr, setAddr] = useState('')
   const nav = useHistory({ kind: 'home' })
   const page = nav.at
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(false)
+  const openWindow = useGame((s) => s.openWindow)
+  const closeWindow = useGame((s) => s.closeWindow)
+  const setBrowserDev = useGame((s) => s.setBrowserDev)
+  // F12 opens the developer tools as their own window, and once more shuts it
+  const toggleDev = () => {
+    const w = useGame.getState().windows.find((w) => w.app === 'devtools')
+    w ? closeWindow(w.id) : openWindow('devtools')
+  }
 
   // A path on its own ('/hr/events') stays on the site that is open.
   const open = (raw) => {
@@ -107,6 +117,9 @@ export default function Browser() {
   useEffect(() => {
     setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : '')
   }, [page])
+  useEffect(() => () => {
+    useGame.getState().windows.filter((w) => w.app === 'devtools').forEach((w) => closeWindow(w.id))
+  }, [])
 
   const site = page.kind === 'site' ? resolveSite(scenario, edits, page.url) : null
   const special = page.kind === 'site' ? specialPage(page.url) : null
@@ -115,6 +128,8 @@ export default function Browser() {
   const view = page.kind === 'site' && !special
     ? siteView(site, {
       grants, unlocked, vpn,
+      // with the router's DHCP stopped only the router itself still answers
+      offline: routerDown && site?.url !== scenario.network.gateway,
       resolves: byAddress || !site?.requiresHost || hostResolves(scenario, edits, site.url)
     })
     : null
@@ -127,9 +142,10 @@ export default function Browser() {
   const firms = page.kind === 'search' ? searchCompanies(scenario.companies, page.q) : []
   const words = page.kind === 'search' ? searchTerms(scenario.terms, page.q) : []
   const promos = page.kind === 'search' ? searchAds(scenario.ads, page.q) : []
+  useEffect(() => { setBrowserDev({ console: consoleLines(page, site, view), network: networkRows(page, site, view) }) }, [page, site, view])
 
   return (
-    <div className="browser">
+    <div className="browser" tabIndex={-1} onKeyDown={(e) => e.key === 'F12' && (e.preventDefault(), toggleDev())}>
       <div className="addr-bar">
         <button onClick={step(nav.back)} disabled={!nav.canBack} title="뒤로">
           <ChevronLeft size={18} strokeWidth={1.9} />
@@ -148,6 +164,9 @@ export default function Browser() {
           <>
             <div className="ctx-catch" onPointerDown={() => setMenu(false)} />
             <div className="bw-pop">
+              <button className="bw-pop-item bw-pop-dev" onClick={() => { toggleDev(); setMenu(false) }}>
+                <Code size={14} strokeWidth={1.9} /><span className="bw-pop-mid"><span>개발자 도구</span><span className="bw-pop-url">F12</span></span>
+              </button>
               <div className="bw-pop-head">방문 기록</div>
               {scenario.history.map((h, i) => (
                 <button key={i} className="bw-pop-item" onClick={() => open(h.url)}>
@@ -186,13 +205,24 @@ export default function Browser() {
               <button className="btn-primary" onClick={submitSearch}>검색</button>
             </div>
             <section className="portal-news">
-              <h3>주요 기사</h3>
-              {latestNews(news).map((a) => (
-                <button key={a.id} className="portal-news-row" onClick={() => nav.go({ kind: 'news', id: a.id })}>
-                  <span className="portal-news-title">{a.title}</span>
-                  <span className="portal-news-by">{a.press} · {a.date}</span>
-                </button>
-              ))}
+              <h3>주요 기사<button className="pn-more" onClick={() => open('news.daon.com')}>더보기 ›</button></h3>
+              <div className="pn-grid">
+                {latestNews(news, 2).map((a) => (
+                  <button key={a.id} className="pn-card" onClick={() => nav.go({ kind: 'news', id: a.id })}>
+                    <span className="pn-thumb">
+                      {newsShot(a.id) && <img src={newsShot(a.id)} alt="" draggable="false" />}
+                    </span>
+                    <span className="pn-body">
+                      <span className="pn-press">
+                        <i>{a.press[0]}</i>{a.press}
+                        <em>구독 +</em>
+                      </span>
+                      <span className="pn-title">{a.title}</span>
+                      <span className="pn-date">{a.date.replace(/^\d{4}\.(\d{2})\.(\d{2})$/, '$1월 $2일')}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             </section>
           </div>
         )}
@@ -392,11 +422,27 @@ export default function Browser() {
           </div>
         )}
 
+        {view === 'offline' && (
+          <div className="site-error">
+            <h2>인터넷에 연결되어 있지 않습니다</h2>
+            <p>네트워크 주소를 받아오지 못했습니다. 공유기 설정을 확인하세요.</p>
+            <p className="err-code">ERR_INTERNET_DISCONNECTED</p>
+          </div>
+        )}
+
         {lost && (
           <div className="site-error">
             <h2>404 — 페이지를 찾을 수 없습니다</h2>
             <p>{page.url}{page.path}</p>
             <p className="err-hint">{site.notFound ?? '주소를 다시 확인해 주세요.'}</p>
+          </div>
+        )}
+
+        {view === 'down' && (
+          <div className="site-error">
+            <h2>이 페이지가 작동하지 않습니다</h2>
+            <p>{page.url}에서 현재 요청을 처리할 수 없습니다.</p>
+            <p className="err-code">HTTP ERROR 500</p>
           </div>
         )}
 
@@ -435,6 +481,7 @@ export default function Browser() {
           site.layout === 'portal' ? <Portal site={site} path={page.path} onOpen={(p) => open(site.url + p)} />
             : site.layout === 'wiki' ? <Wiki site={site} path={page.path} />
             : site.layout === 'calendar' ? <Calendar site={site} />
+            : site.layout === 'news' ? <News site={site} news={news} onOpen={(id) => nav.go({ kind: 'news', id })} />
               : site.layout === 'board' ? <Board site={site} />
               : site.layout === 'gov' ? <Gov site={site} />
               : site.layout === 'lotto' ? <Lotto site={site} />
@@ -453,4 +500,94 @@ export default function Browser() {
       </div>
     </div>
   )
+}
+
+const DT_PANELS = ['Elements', 'Console', 'Sources', 'Network', 'Performance', 'Memory', 'Application', 'Security']
+
+export function DevTools() {
+  const { console: lines, network } = useGame((s) => s.browserDev)
+  const [tab, setTab] = useState('Console')
+  const errors = lines.filter((l) => l.level === 'error').length
+  const warns = lines.filter((l) => l.level === 'warn').length
+  return (
+    <div className="devtools">
+      <div className="dt-bar">
+        <span className="dt-ico"><Code size={15} strokeWidth={1.8} /></span>
+        <span className="dt-ico"><Monitor size={15} strokeWidth={1.8} /></span>
+        <span className="dt-sep" />
+        {DT_PANELS.map((p) => (
+          <span key={p} className={'dt-tab' + (p === tab ? ' on' : '')}
+                onClick={() => (p === 'Console' || p === 'Network') && setTab(p)}>{p}</span>
+        ))}
+        <span className="dt-tab dt-more">»</span>
+        <span className="dt-badges">
+          {errors > 0 && <span className="dt-badge error">{errors}</span>}
+          {warns > 0 && <span className="dt-badge warn">{warns}</span>}
+        </span>
+        <span className="dt-ico"><Settings size={15} strokeWidth={1.8} /></span>
+        <span className="dt-ico"><MoreVertical size={15} strokeWidth={1.8} /></span>
+      </div>
+      <div className="dt-bar dt-sub">
+        <span className="dt-ico">⊘</span>
+        <span className="dt-sep" />
+        <span className="dt-top">top <ChevronDown size={12} strokeWidth={2} /></span>
+        <span className="dt-filter"><Search size={12} strokeWidth={2} />Filter</span>
+        <span className="dt-top">Default levels <ChevronDown size={12} strokeWidth={2} /></span>
+        <span className="dt-ico"><Settings size={15} strokeWidth={1.8} /></span>
+      </div>
+      {tab === 'Console' ? (
+        <div className="dt-log">
+          {lines.map((l, i) => (
+            <div key={i} className={'dt-line ' + l.level}>
+              <span className="dt-text">{l.text}</span>{l.at && <span className="dt-at">{l.at}</span>}
+            </div>
+          ))}
+          <div className="dt-prompt"><ChevronRight size={14} strokeWidth={2} /></div>
+        </div>
+      ) : (
+        <div className="dt-log">
+          <table className="dt-net">
+            <thead><tr><th>Name</th><th>Status</th><th>Type</th><th>Size</th><th>Time</th></tr></thead>
+            <tbody>
+              {network.map((r, i) => (
+                <tr key={i} className={r.status === '(failed)' || r.status >= 400 ? 'bad' : ''}>
+                  <td>{r.name}</td><td>{r.status}</td><td>{r.type}</td><td>{r.size}</td><td>{r.time}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// What the network tab lists: the page itself first, then what it pulled in.
+// A site that is down answers 500 on the document; one that does not resolve
+// never answers at all.
+export function networkRows(page, site, view) {
+  const host = page.kind === 'site' ? page.url : 'daon.com'
+  const doc = (status, size, time) => ({ name: page.kind === 'search' ? `search?q=${page.q}` : host, status, type: 'document', size, time })
+  const asset = (name, type, size, time) => ({ name, status: 200, type, size, time })
+  const favicon = { name: 'favicon.ico', status: 404, type: 'x-icon', size: '0 B', time: '9 ms' }
+  switch (view) {
+    case 'down': return [doc(500, '512 B', '812 ms'), asset('style.css', 'stylesheet', '18.4 kB', '31 ms'), favicon]
+    case 'error': case 'vpn': return [doc('(failed)', '0 B', '21 ms')]
+    case 'blocked': return [doc(403, '1.1 kB', '64 ms')]
+    case 'login': return [doc(200, '3.9 kB', '92 ms'), asset('login.css', 'stylesheet', '6.2 kB', '18 ms'), asset('auth.js', 'script', '41.0 kB', '37 ms')]
+    case 'ready': return [doc(200, '12.7 kB', '118 ms'), asset('style.css', 'stylesheet', '18.4 kB', '31 ms'), asset('app.js', 'script', '76.3 kB', '44 ms'), favicon]
+    default: return [doc(200, '14.2 kB', '118 ms'), asset('main.css', 'stylesheet', '31.0 kB', '24 ms'), asset('search.js', 'script', '88.4 kB', '41 ms'), asset('logo.svg', 'svg+xml', '3.1 kB', '12 ms')]
+  }
+}
+
+// What the console shows: a broken site's own errors while it is broken;
+// otherwise the quiet lines any page logs.
+function consoleLines(page, site, view) {
+  if (view === 'down') return site.console ?? []
+  const url = page.kind === 'site' ? page.url : page.kind === 'search' ? `daon.com/search?q=${page.q}` : 'daon.com'
+  return [
+    { level: 'log', text: `Navigated to https://${url}/` },
+    { level: 'log', text: 'DOMContentLoaded 42ms · load 118ms' },
+    ...(view === 'error' ? [{ level: 'error', text: `GET https://${url}/ net::ERR_NAME_NOT_RESOLVED` }] : [])
+  ]
 }

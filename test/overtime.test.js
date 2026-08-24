@@ -8,7 +8,7 @@ const every = Object.fromEntries(Array.from({ length: days }, (_, i) => [i + 1, 
 describe('the offer to stay late', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    useGame.setState({ day: 1, overtime: {}, grants: {}, unlocked: {}, extraMessages: {}, pendingAsks: {}, locks: 1, ended: false })
+    useGame.setState({ day: 1, overtime: {}, grants: {}, unlocked: {}, extraMessages: {}, pendingAsks: {}, locks: 1, ended: false, closing: false })
   })
   afterEach(() => vi.useRealTimers())
 
@@ -50,6 +50,23 @@ describe('the offer to stay late', () => {
     expect(dayDone(scenario, 1, state)).toBe(false)
     for (const id of scenario.overtime.days[1].requests) state.grants[id] = true
     expect(dayDone(scenario, 1, state)).toBe(true)
+  })
+
+  it('stamps every message with the day it arrived, so the chat can date it', () => {
+    useGame.setState({ day: 3 })
+    useGame.getState().pushMessage('boss', { from: '박 팀장', text: '오늘은 셋째 날' })
+    expect(useGame.getState().extraMessages.boss.at(-1)).toMatchObject({ day: 3, text: '오늘은 셋째 날' })
+  })
+
+  it('waits for the player to clock off, and asks again after a late night', () => {
+    expect(useGame.getState().closing).toBe(false)
+    useGame.getState().closeDay()
+    expect(useGame.getState().closing).toBe(true)
+    useGame.getState().workLate()
+    expect(useGame.getState().closing).toBe(false)
+    useGame.getState().closeDay()
+    useGame.getState().restart()
+    expect(useGame.getState().closing).toBe(false)
   })
 
   it('lets going home close the offer without adding anything', () => {

@@ -199,7 +199,10 @@ export default function App() {
   const ripples = useGame((s) => s.ripples)
   const rumor = useGame((s) => s.rumor)
   const slips = useGame((s) => s.slips)
-  const done = dayDone(scenario, day, { grants, unlocked, overtime, drawn, ripples })
+  // The evening only starts once the player clocks off from the request list.
+  const closing = useGame((s) => s.closing)
+  const finished = dayDone(scenario, day, { grants, unlocked, overtime, drawn, ripples })
+  const done = finished && closing
   const cut = laidOff(scenario.ending.layoff, { slips, overtime, drawn }, scenario)
   const offer = done ? overtimeOffer(scenario, day, overtime) : null
   const failed = useGame((s) => s.failed)
@@ -271,7 +274,7 @@ export default function App() {
       {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}
       {offer && !cut && !rumorPending(rumor) && <OvertimeOverlay offer={offer} />}
       {done && !offer && !cut && !rumorPending(rumor) && <QuitOverlay />}
-      {failed && !done && <FailOverlay />}
+      {failed && !finished && <FailOverlay />}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, hintAfter, quickSets } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
@@ -79,6 +79,7 @@ export default function Messenger({ source }) {
   const liveMessages = useGame((s) => s.scenario.messenger)
   const msgCount = useGame((s) => s.msgCount)
   const extraMessages = useGame((s) => s.extraMessages)
+  const days = useGame((s) => s.scenario.days)
   const openId = useGame((s) => s.openThread[source] ?? null)
   const setOpenThread = useGame((s) => s.setOpenThread)
   const seen = useGame((s) => s.seenThreads)
@@ -97,6 +98,7 @@ export default function Messenger({ source }) {
   const [picking, setPicking] = useState(false)
   const [answeredAt, setAnsweredAt] = useState({})
   const [reacted, setReacted] = useState({})
+  const [shrugs, setShrugs] = useState({})
   const [wrongs, setWrongs] = useState({})
   const [confirming, setConfirming] = useState(null)
   const [branch, setBranch] = useState({})
@@ -225,9 +227,26 @@ export default function Messenger({ source }) {
     reactTo(text)
   }
 
+  // A question with buttons instead of a box: the thread's own reactions answer it.
+  const pick = (text) => {
+    setAsk(thread.id, ask.then ?? null)
+    choose(text)
+  }
+
+  // A file nobody asked for gets a puzzled reply — a different one the second time.
+  const shrug = () => {
+    const lines = thread.shrug ?? m.shrug
+    if (!lines?.length) return
+    const n = shrugs[thread.id] ?? 0
+    setShrugs((c) => ({ ...c, [thread.id]: n + 1 }))
+    speak(lines[n % lines.length])
+  }
+
   const sendFile = (file) => {
     say({ file: file.name, image: file.image })
-    if (!ask?.files) return reactTo(file.id)
+    if (!ask?.files) {
+      return thread.reactions?.some((r) => r.files?.includes(file.id)) ? reactTo(file.id) : shrug()
+    }
     if (fileFits(ask, file.id)) solved()
     else missed()
   }
@@ -323,15 +342,21 @@ export default function Messenger({ source }) {
             <div className="msg-list" ref={list} onScroll={onScroll}>
               {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
               {msgsOf(thread).map((msg, i, all) => {
-                if (msg.me) return <div key={i} className="bubble me">{msg.text}</div>
                 const prev = all[i - 1]
-                const opens = !prev || prev.me || prev.from !== msg.from
+                const day = msg.day ?? 1
+                const dated = !prev || (prev.day ?? 1) !== day
+                const date = dated && <div className="msg-date">{days[day - 1]?.date ?? `${day}일차`}</div>
+                if (msg.me) return <Fragment key={i}>{date}<div className="bubble me">{msg.text}</div></Fragment>
+                const opens = !prev || prev.me || prev.from !== msg.from || dated
                 const who = people[msg.from] ?? thread
                 return (
-                  <div key={i} className="msg-row">
-                    <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
-                    <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}</div>
-                  </div>
+                  <Fragment key={i}>
+                    {date}
+                    <div className="msg-row">
+                      <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
+                      <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}</div>
+                    </div>
+                  </Fragment>
                 )
               })}
               {mine.map((sent, i) => (sent.from ? (
@@ -362,7 +387,11 @@ export default function Messenger({ source }) {
                       onClick={() => setPicking(true)}>
                 <Paperclip size={16} strokeWidth={1.9} />
               </button>
-              {ask ? (
+              {ask?.choices ? (
+                ask.choices.map((text) => (
+                  <button key={text} disabled={busy} onClick={() => pick(text)}>{text}</button>
+                ))
+              ) : ask ? (
                 <>
                   <input className="quick-input" value={draft} disabled={busy}
                          onChange={(e) => setDraft(e.target.value)}

@@ -7,9 +7,12 @@ const WALLPAPER = import.meta.glob('./wallpaper.jpg', { eager: true, query: '?ur
 // scenario shows the player (a scan is still named .jpg in-game).
 const FILES = import.meta.glob('./files/*.webp', { eager: true, query: '?url', import: 'default' })
 const SHOTS = import.meta.glob('./shots/*.webp', { eager: true, query: '?url', import: 'default' })
+const NEWS = import.meta.glob('./news/*.webp', { eager: true, query: '?url', import: 'default' })
 
 export const photoOf = (id) => PHOTOS[`./avatars/${id}.jpg`]
 export const faceOf = (id) => FACES[`./faces/${id}.svg`]
 export const fileImage = (name) => FILES[`./files/${name}.webp`]
 export const shotOf = (name) => SHOTS[`./shots/${name}.webp`]
+// a headline's thumbnail is named after the article id
+export const newsShot = (id) => NEWS[`./news/${id}.webp`]
 export const wallpaper = WALLPAPER['./wallpaper.jpg']

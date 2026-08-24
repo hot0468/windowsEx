@@ -48,6 +48,11 @@ describe('searchFiles', () => {
   it('returns nothing for a blank term', () => {
     expect(searchFiles(scenario.fs, ['문서'], '   ')).toEqual([])
   })
+
+  it('has enough look-alike files that a search actually narrows things down', () => {
+    // the point of a search box: 견적서 alone should turn up a pile, not the one answer
+    for (const term of ['견적서', '회의록', '주간보고']) expect(searchFiles(scenario.fs, ['문서'], term).length).toBeGreaterThanOrEqual(10)
+  })
 })
 
 describe('work folder', () => {

@@ -49,6 +49,8 @@ export const PenLine = (p) => (
   </S>
 )
 
+export const Code = (p) => <S {...p}><path d="m16 18 6-6-6-6M8 6l-6 6 6 6" /></S>
+
 export const Clock = (p) => (
   <S {...p}>
     <circle cx="12" cy="12" r="10" />

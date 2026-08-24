@@ -20,7 +20,10 @@ describe('what yesterday leaves behind', () => {
       ...Object.values(scenario.overtime.days)
         .flatMap((d) => d.asks.flatMap((a) => steps(a.ask))).map((a) => a.grants),
       ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask)).map((a) => a.grants),
-      'cleanpc'   // the antivirus awards this one by cleaning the machine
+      ...threads.flatMap((t) => (t.reactions ?? []).map((r) => r.grants)),
+      ...scenario.sites.flatMap((s) => s.printerweb?.queue ?? []).map((q) => q.grants),
+      'cleanpc',   // the antivirus awards this one by cleaning the machine
+      'router_broke', 'router_secured'   // the router's admin page awards these
     ].filter(Boolean))
 
     for (const r of scenario.ripples) {
@@ -44,6 +47,10 @@ describe('what yesterday leaves behind', () => {
       expect(threads.some((t) => t.id === r.beat.thread), r.id).toBe(true)
       // a consequence never asks a question, so it can never be a dead end
       expect(r.beat.ask).toBeUndefined()
+      // buttons are fine, as long as the thread knows how to answer each one
+      for (const c of r.beat.choices ?? []) {
+        expect(threads.find((t) => t.id === r.beat.thread).reactions.some((x) => x.choice === c), `${r.id}: ${c}`).toBe(true)
+      }
     }
   })
 

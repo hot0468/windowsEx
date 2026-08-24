@@ -1,6 +1,6 @@
 import Notepad from './Notepad.jsx'
 import FileExplorer from './FileExplorer.jsx'
-import Browser from './Browser.jsx'
+import Browser, { DevTools } from './Browser.jsx'
 import Messenger from './Messenger.jsx'
 import Mail from './Mail.jsx'
 import Viewer from './Viewer.jsx'
@@ -31,6 +31,7 @@ export const APPS = {
   slides: { title: '슬라이드', icon: 'ppt', comp: Slides, w: 760, h: 520, theme: '#c43e1c' },
   sheet: { title: '시트', icon: 'xls', comp: Sheet, w: 780, h: 520, theme: '#217346' },
   browser: { title: '브라우저', icon: 'globe', comp: Browser, w: 820, h: 560 },
+  devtools: { title: '개발자 도구', icon: 'globe', comp: DevTools, w: 640, h: 360 },
   installer: { title: '설치 마법사', icon: 'cmd', comp: Installer, w: 560, h: 400 },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
