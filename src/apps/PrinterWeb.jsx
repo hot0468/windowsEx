@@ -6,18 +6,23 @@ import { useGame } from '../engine/store.js'
 // was never meant for this floor, and printing it is remembered.
 export default function PrinterWeb({ site }) {
   const printer = useGame((s) => s.scenario.printer)
+  const network = useGame((s) => s.scenario.network)
   const grants = useGame((s) => s.grants)
   const grant = useGame((s) => s.grant)
   const foundMissing = useGame((s) => s.foundMissing)
-  // Clearing the jam is remote maintenance sent from this page — the only
-  // hands in this game are the ones on the keyboard.
-  const step = useGame((s) => s.mfpStep)
+  // The print failed because this PC was never registered with the copier —
+  // something a screen can actually fix, unlike a paper jam.
   const fixed = useGame((s) => s.mfpFixed)
-  const sendMfp = useGame((s) => s.sendMfp)
-  const [missed, setMissed] = useState(false)
+  const registerMfp = useGame((s) => s.registerMfp)
+  const [addr, setAddr] = useState('')
+  const [said, setSaid] = useState(null)
   const [shown, setShown] = useState(null)
   const w = site.printerweb
-  const send = (id) => setMissed(sendMfp(id) === 0)
+  const r = printer.remote
+  const register = () => {
+    if (!addr.trim()) return
+    setSaid(registerMfp(addr))
+  }
   const print = (q) => {
     setShown(q)
     grant(q.grants)
@@ -40,24 +45,36 @@ export default function PrinterWeb({ site }) {
             : <><b>{printer.error.code}</b> {printer.error.text} — {w.stateNote}</>}
         </div>
 
-        <h3>{printer.remote.title}</h3>
-        <p className="pw-note">{printer.remote.note}</p>
+        <h3>{r.title}</h3>
+        <p className="pw-note">{r.note}</p>
+        <table className="pw-table">
+          <thead><tr>{r.columns.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+          <tbody>
+            {w.devices.map((dv) => (
+              <tr key={dv.ip}><td>{dv.name}</td><td>{dv.ip}</td><td>{dv.note}</td></tr>
+            ))}
+            {fixed && (
+              <tr><td>{network.host}</td><td>{network.ip}</td><td>등록됨</td></tr>
+            )}
+          </tbody>
+        </table>
+
         {fixed ? (
           <div className="pw-receipt">
-            {printer.remote.receiptLabel} <b>{printer.receipt}</b>
+            {r.receiptLabel} <b>{printer.receipt}</b>
           </div>
         ) : (
-          <>
-            <div className="pr-steps">
-              {printer.steps.map((_, i) => <i key={i} className={i < step ? 'on' : ''} />)}
-            </div>
-            <div className="pw-cmds">
-              {printer.buttons.map((b) => (
-                <button key={b.id} onClick={() => send(b.id)}>{b.label}</button>
-              ))}
-            </div>
-            {missed && <p className="pw-wrong">{printer.remote.wrong}</p>}
-          </>
+          <div className="pw-reg">
+            <label>
+              {r.label}
+              <input value={addr} onChange={(e) => { setAddr(e.target.value); setSaid(null) }}
+                     onKeyDown={(e) => e.key === 'Enter' && register()}
+                     placeholder={r.placeholder} spellCheck={false} />
+            </label>
+            <button className="pw-print" onClick={register}>{r.button}</button>
+            {said === 'bad' && <p className="pw-wrong">{r.bad}</p>}
+            <p className="pw-note">{r.hint}</p>
+          </div>
         )}
         <dl className="pw-stats">
           {w.stats.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}

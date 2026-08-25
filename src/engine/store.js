@@ -12,7 +12,7 @@ const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'e
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpStep', 'mfpFixed']
+  'mfpFixed']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -137,9 +137,8 @@ export const useGame = create((set, get) => ({
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
-  // How far the copier repair has got, and whether it finished. The jam is
-  // cleared from the copier's own web page, so both windows read it here.
-  mfpStep: restored?.mfpStep ?? 0,
+  // Whether this PC is registered with the copier. Set on the copier's own web
+  // page and read by the print dialog, so it lives here rather than in either.
   mfpFixed: restored?.mfpFixed ?? false,
 
   setBooted: () => {
@@ -428,14 +427,18 @@ export const useGame = create((set, get) => ({
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
   // A maintenance command sent to the copier. Out of order, the paper jams
   // again and the sequence starts over.
-  sendMfp: (id) => {
+  // Registering this PC with the copier. Only its own address will do: the
+  // machine has to be on the network for the copier to find it.
+  registerMfp: (text) => {
     const s = get()
-    if (s.mfpFixed) return s.mfpStep
-    const steps = s.scenario.printer.steps
-    const next = printerStep(steps, s.mfpStep, id)
-    play(next === 0 ? 'error' : next === steps.length ? 'ok' : 'click')
-    set(next === steps.length ? { mfpStep: next, mfpFixed: true } : { mfpStep: next })
-    return next
+    if (s.mfpFixed) return 'taken'
+    if (!ipFits(s.scenario.network.ip, text)) {
+      play('error')
+      return 'bad'
+    }
+    play('ok')
+    set({ mfpFixed: true })
+    return 'done'
   },
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
@@ -790,7 +793,9 @@ export const cellMatches = (objective, sheetEdits) => {
 }
 
 // The jammed printer wants the wiki's steps in order; a wrong press jams it again.
-export const printerStep = (steps, done, id) => (steps[done] === id ? done + 1 : 0)
+// An address typed into a form: spaces forgiven, nothing else. Leading zeros
+// are not the same address, so this is a plain comparison and not a number one.
+export const ipFits = (want, text = '') => text.replace(/\s/g, '') === want
 
 // The mail brief in force on a given day: shared rules (attempts, the boss's
 // reaction, the failure screen) plus that day's client and figures.
