@@ -40,8 +40,23 @@ describe('asking the room', () => {
 
   it('shrugs at a question it has no topic for', () => {
     expect(ask.fallback.length).toBeGreaterThan(1)
-    expect(ask.fallback).toContain(roomReply(ask, '점심 뭐 먹지', 0))
+    expect(ask.fallback).toContain(roomReply(ask, '주차장 도색 언제 끝나요', 0))
     expect(roomReply(ask, '   ')).toBeNull()
+  })
+
+  it('has opinions about lunch, because everyone here does', () => {
+    const lunch = ask.topics.find((t) => t.keys.includes('맛집'))
+    expect(lunch.replies.length).toBeGreaterThan(2)
+    for (const q of ['회사 근처 맛집 어디예요', '점심 뭐 먹지', '배달 되는 데 있나요']) {
+      expect(lunch.replies, q).toContain(roomReply(ask, q, 0))
+    }
+    // and it still points rather than tells: the places it hints at are
+    // answers to other requests, so none of them may be named outright
+    const said = JSON.stringify(lunch.replies)
+    for (const p of scenario.places) {
+      if (answers.includes(p.name)) expect(said, p.name).not.toContain(p.name)
+    }
+    expect(said).toContain('검색')
   })
 
   it('points at where to look and never hands over an answer', () => {
