@@ -37,6 +37,38 @@ const Post = ({ post, onBack }) => (
   </article>
 )
 
+// The attendance page: hours the gate logged, next to the leave never taken.
+// Nobody is asked to open this — it is the company keeping score all along.
+const Attendance = ({ page, onBack }) => {
+  const a = page.attendance
+  return (
+    <article className="pt-post pt-att">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />포털 홈
+      </button>
+      <h1>{page.title}</h1>
+      <p className="pt-att-note">{a.note}</p>
+      <table className="pt-att-table">
+        <thead>
+          <tr>{a.columns.map((c) => <th key={c}>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {a.rows.map((row) => (
+            <tr key={row[0]}>
+              {row.map((cell, i) => <td key={i} className={i === 0 ? 'mo' : ''}>{cell}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <ul className="pt-att-flags">
+        {a.flags.map((f) => <li key={f}>{f}</li>)}
+      </ul>
+      <p className="pt-att-last">{a.last}</p>
+      <p className="pt-att-foot">{a.footer}</p>
+    </article>
+  )
+}
+
 // A sub-page reached by path: the workshop RSVP form. Submitting hands out the
 // receipt number a request will ask for.
 const Events = ({ page, onBack }) => {
@@ -109,7 +141,9 @@ export default function Portal({ site, path = '', onOpen }) {
         </span>
       </div>
 
-      {site.pages?.[path] ? <Events page={site.pages[path]} onBack={() => onOpen?.('')} />
+      {site.pages?.[path]?.attendance
+        ? <Attendance page={site.pages[path]} onBack={() => onOpen?.('')} />
+        : site.pages?.[path] ? <Events page={site.pages[path]} onBack={() => onOpen?.('')} />
         : post ? <Post post={post} onBack={() => setPost(null)} /> : (
       <div className="pt-grid">
         <aside className="pt-me">
