@@ -11,7 +11,8 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
-  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown']
+  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
+  'mfpStep', 'mfpFixed']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -136,6 +137,10 @@ export const useGame = create((set, get) => ({
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
+  // How far the copier repair has got, and whether it finished. The jam is
+  // cleared from the copier's own web page, so both windows read it here.
+  mfpStep: restored?.mfpStep ?? 0,
+  mfpFixed: restored?.mfpFixed ?? false,
 
   setBooted: () => {
     play('boot')
@@ -421,6 +426,17 @@ export const useGame = create((set, get) => ({
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
+  // A maintenance command sent to the copier. Out of order, the paper jams
+  // again and the sequence starts over.
+  sendMfp: (id) => {
+    const s = get()
+    if (s.mfpFixed) return s.mfpStep
+    const steps = s.scenario.printer.steps
+    const next = printerStep(steps, s.mfpStep, id)
+    play(next === 0 ? 'error' : next === steps.length ? 'ok' : 'click')
+    set(next === steps.length ? { mfpStep: next, mfpFixed: true } : { mfpStep: next })
+    return next
+  },
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
   editCell: (fileId, sheet, r, c, value) => {
