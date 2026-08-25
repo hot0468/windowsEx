@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { roomReply } from '../src/engine/store.js'
+import { roomReply, roomTopic } from '../src/engine/store.js'
 
 const room = scenario.sites.find((s) => s.url === 'sotong.ar.local').board
 const ask = room.ask
@@ -40,8 +40,45 @@ describe('asking the room', () => {
 
   it('shrugs at a question it has no topic for', () => {
     expect(ask.fallback.length).toBeGreaterThan(1)
-    expect(ask.fallback).toContain(roomReply(ask, '주차장 도색 언제 끝나요', 0))
+    expect(ask.fallback).toContain(roomReply(ask, '에어컨 온도 누가 정해요', 0))
     expect(roomReply(ask, '   ')).toBeNull()
+  })
+
+  it('lets the longer keyword win, so the trail is never hijacked', () => {
+    // 층 belongs to the toilets topic and 8층 to the one that ends the week;
+    // 최종 to file names and 단가 to prices. The longest match decides.
+    expect(roomTopic(ask, '8층에 뭐가 있어요')).toBe('floor8')
+    expect(roomTopic(ask, '8층 괴담 진짜인가요')).toBe('floor8')
+    const of = (q) => ask.topics.find((t) => t.replies.includes(roomReply(ask, q, 0)))
+    expect(of('화장실 왜 이렇게 붐벼요').keys[0]).toBe('화장실')
+    expect(of('7층 복합기 또 고장났나요').keys[0]).toBe('복합기')
+    expect(of('단가표 최종본 어디 있어요').keys[0]).toBe('단가')
+    expect(of('최종 파일 어떤 게 진짜예요').keys[0]).toBe('파일명')
+  })
+
+  it('answers the everyday things this building actually talks about', () => {
+    for (const [q, first] of [
+      ['커피 캡슐 누가 다 가져가요', '커피'],
+      ['우리 팀장 왜 이래요', '팀장'],
+      ['파일명 어떻게 지으세요', '파일명'],
+      ['연봉 언제 오르나요', '연봉'],
+      ['주차 어디에 해요', '주차'],
+      ['화장실 왜 항상 만석이죠', '화장실']
+    ]) {
+      const topic = ask.topics.find((t) => t.keys[0] === first)
+      expect(topic, first).toBeTruthy()
+      expect(topic.replies, q).toContain(roomReply(ask, q, 0))
+    }
+  })
+
+  it('gives no keyword to two topics at once', () => {
+    const seen = new Set()
+    for (const t of ask.topics) {
+      for (const k of t.keys) {
+        expect(seen.has(k), k).toBe(false)
+        seen.add(k)
+      }
+    }
   })
 
   it('has opinions about lunch, because everyone here does', () => {
