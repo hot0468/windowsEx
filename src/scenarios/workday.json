@@ -10758,7 +10758,11 @@
         "wiki",
         "reply",
         "wifi",
-        "leave"
+        "leave",
+        "address",
+        "pub",
+        "booking",
+        "deadline"
       ],
       "goal": {
         "replyToMail": "mail_client",
@@ -10817,11 +10821,7 @@
       "label": "둘째 날",
       "date": "8월 24일 (화)",
       "requests": [
-        "address",
-        "pub",
-        "booking",
         "gyul",
-        "deadline",
         "quote_b",
         "vpn",
         "leave_fix"
@@ -13950,15 +13950,15 @@
         "wiki",
         "reply",
         "wifi",
-        "leave"
-      ],
-      "2": [
-        "quote_b",
+        "leave",
         "address",
         "pub",
         "booking",
+        "deadline"
+      ],
+      "2": [
+        "quote_b",
         "gyul",
-        "deadline",
         "vpn",
         "leave_fix"
       ],
@@ -13979,8 +13979,8 @@
       ]
     },
     "sizes": {
-      "1": 5,
-      "2": 9,
+      "1": 9,
+      "2": 10,
       "3": 13,
       "4": 17,
       "5": 21
