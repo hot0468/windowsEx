@@ -71,6 +71,27 @@ describe('a day arriving', () => {
     }
   })
 
+  // 엄마 asked for the company address on the first morning — "오늘 회사
+  // 첫날인데" — while the list counted it on the second. A conversation that
+  // only ever speaks on one day has to be counted on that day.
+  it('counts a request on the day its conversation actually happens', () => {
+    const threads = [scenario.workMessenger, scenario.privateMessenger]
+      .flatMap((m) => m.sections.flatMap((sec) => sec.threads))
+    const listedOn = {}
+    for (const d of scenario.days) for (const id of d.requests) listedOn[id] = d.n
+    for (const t of threads) {
+      const days = [...new Set((t.messages ?? []).map((m) => m.day).filter(Boolean))]
+      // a thread with no day of its own, or one that speaks across days, is free
+      if (days.length !== 1) continue
+      const asks = [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].filter(Boolean)
+      for (const a of asks) {
+        const grant = chain(a).map((x) => x.grants).find(Boolean)
+        if (!grant || !listedOn[grant]) continue
+        expect(listedOn[grant], `${t.id} · ${grant}`).toBe(days[0])
+      }
+    }
+  })
+
   it('brings the day its own mail', () => {
     useGame.setState({ extraMails: [] })
     useGame.getState().startDay(2)
