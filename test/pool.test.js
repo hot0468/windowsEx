@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import { beatsFor, drawFor, requestsOf, shuffle, useGame } from '../src/engine/store.js'
+import { grantsRaised, playDay } from './playDay.js'
 
 const pool = scenario.pool
 const days = scenario.days.map((d) => d.n)
@@ -142,9 +143,7 @@ describe('the day that arrives', () => {
 
   it('asks everything it drew, in the messenger', () => {
     useGame.getState().startDay(3)
-    vi.runAllTimers()
-    const chain = (a) => (a ? [a, ...chain(a.then)] : [])
-    const asked = Object.values(useGame.getState().pendingAsks).flatMap(chain).map((a) => a.grants)
+    const asked = grantsRaised(playDay())
     for (const id of useGame.getState().drawn[3]) expect(asked, id).toContain(id)
   })
 

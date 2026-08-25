@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, hintAfter, quickSets } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, quickSets, threadMessages } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -76,10 +76,16 @@ const ProfileCard = ({ who, team, onChat, onClose }) => (
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
   const fs = useGame((s) => s.scenario.fs)
-  const liveMessages = useGame((s) => s.scenario.messenger)
+  const scenario = useGame((s) => s.scenario)
   const msgCount = useGame((s) => s.msgCount)
   const extraMessages = useGame((s) => s.extraMessages)
   const days = useGame((s) => s.scenario.days)
+  const day = useGame((s) => s.day)
+  const grants = useGame((s) => s.grants)
+  const unlocked = useGame((s) => s.unlocked)
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
   const openId = useGame((s) => s.openThread[source] ?? null)
   const setOpenThread = useGame((s) => s.setOpenThread)
   const seen = useGame((s) => s.seenThreads)
@@ -110,14 +116,31 @@ export default function Messenger({ source }) {
   const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
 
-  // A live thread's messages arrive on the scenario's timer; the rest are already there.
-  const msgsOf = (t) => [
-    ...(t.live ? liveMessages.slice(0, msgCount) : t.messages),
-    ...(extraMessages[t.id] ?? [])
-  ]
+  // On the first days the work arrives one request at a time: a conversation
+  // whose turn has not come keeps today to itself.
+  // A thread can also be waiting on something the player has not run into yet:
+  // it keeps its history and says nothing about today until that happens.
+  const held = heldThreads(scenario, day, { grants, unlocked, overtime, drawn, ripples })
+  const heldBack = (t) => (held?.has(t.id) || (t.wait && !grants[t.wait]) ? day : 0)
+  const msgsOf = (t) => threadMessages(t, scenario, msgCount, extraMessages, heldBack(t))
+  // History carries the date it was said on; this week's messages carry their day.
+  const dateOf = (m) => m?.date ?? (m?.day === undefined ? null : days[m.day - 1]?.date ?? `${m.day}일차`)
+  // Two kinds of picture end up in a conversation: a file this machine holds,
+  // which describes itself from disk, and one somebody simply sent, which is
+  // only ever a picture and says what it is on the message.
+  const attached = (msg) => {
+    const f = msg.photo ? findFile(fs, msg.photo) : null
+    const src = fileImage(f ? f.image : msg.image)
+    return src ? <img className="bubble-img" src={src} alt={(f ? f.alt ?? f.name : msg.alt) ?? ''} /> : null
+  }
   const threads = m.sections.flatMap((s) => s.threads)
   const teamOf = (id) => m.sections.find((sec) => sec.threads.some((t) => t.id === id))?.title
-  const unreadOf = (t) => msgsOf(t).length - (seen[t.id] ?? 0)
+  // The conversation someone came back to was read long ago: only what the week
+  // itself brought can still be unread.
+  const unreadOf = (t) => {
+    const all = msgsOf(t)
+    return all.length - Math.max(seen[t.id] ?? 0, all.filter((msg) => msg.date !== undefined).length)
+  }
   const thread = threads.find((t) => t.id === openId)
   // Room messages come from several people, so the sender's name picks the face.
   const people = Object.fromEntries(threads.map((t) => [t.name, t]))
@@ -159,7 +182,9 @@ export default function Messenger({ source }) {
   const spent = thread && answeredAt[thread.id] >= arrived
   // A reaction can hand the conversation a new set of choices; otherwise the
   // thread's own sets advance as you keep replying.
-  const choices = !thread
+  // A conversation still waiting its turn offers nothing to say back yet.
+  const quiet = Boolean(thread && heldBack(thread))
+  const choices = !thread || quiet
     ? []
     : branch[thread.id]
       ?? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
@@ -195,7 +220,7 @@ export default function Messenger({ source }) {
 
   // Anything the player has to look up gets typed in, so picking from a list
   // can't stand in for actually finding it.
-  const ask = thread ? (thread.id in pendingAsks ? pendingAsks[thread.id] : thread.ask ?? null) : null
+  const ask = !thread || quiet ? null : (thread.id in pendingAsks ? pendingAsks[thread.id] : thread.ask ?? null)
   // Right and wrong are the same whether the answer was typed or dropped in.
   const solved = () => {
     // a question may hand straight over to the next one
@@ -343,10 +368,10 @@ export default function Messenger({ source }) {
               {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
               {msgsOf(thread).map((msg, i, all) => {
                 const prev = all[i - 1]
-                const day = msg.day ?? 1
-                const dated = !prev || (prev.day ?? 1) !== day
-                const date = dated && <div className="msg-date">{days[day - 1]?.date ?? `${day}일차`}</div>
-                if (msg.me) return <Fragment key={i}>{date}<div className="bubble me">{msg.text}</div></Fragment>
+                const label = dateOf(msg)
+                const dated = label !== null && label !== dateOf(prev)
+                const date = dated && <div className="msg-date">{label}</div>
+                if (msg.me) return <Fragment key={i}>{date}<div className="bubble me">{msg.text}{attached(msg)}</div></Fragment>
                 const opens = !prev || prev.me || prev.from !== msg.from || dated
                 const who = people[msg.from] ?? thread
                 return (
@@ -354,7 +379,7 @@ export default function Messenger({ source }) {
                     {date}
                     <div className="msg-row">
                       <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
-                      <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}</div>
+                      <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
                     </div>
                   </Fragment>
                 )
@@ -387,7 +412,9 @@ export default function Messenger({ source }) {
                       onClick={() => setPicking(true)}>
                 <Paperclip size={16} strokeWidth={1.9} />
               </button>
-              {ask?.choices ? (
+              {quiet ? (
+                <span className="quick-done">새 메시지가 없습니다</span>
+              ) : ask?.choices ? (
                 ask.choices.map((text) => (
                   <button key={text} disabled={busy} onClick={() => pick(text)}>{text}</button>
                 ))

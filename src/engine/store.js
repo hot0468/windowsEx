@@ -12,7 +12,7 @@ const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'e
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed']
+  'mfpFixed', 'beatQueue', 'beatAsk']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -62,6 +62,17 @@ const restored = startingPoint()
 let winId = Math.max(0, ...(restored?.windows ?? []).map((w) => w.id))
 let toastId = 0
 
+// How long the day waits between two things being said.
+const BEAT_GAP = 3600
+// Who asks for the IP, and the thread's own `wait` — the scenario names the
+// same grant, so the conversation and its trigger cannot drift apart.
+export const IP_THREAD = 'security'
+export const IP_ASKED = 'ip_asked'
+// The last thing the day said asked a question, and it has not been answered.
+// Only the day's own questions hold it up: a thread's standing question is
+// always there and would stop the day before it started.
+const asking = (s) => Boolean(s.beatAsk && s.pendingAsks[s.beatAsk])
+
 export const useGame = create((set, get) => ({
   scenario,
   booted: false,
@@ -92,6 +103,10 @@ export const useGame = create((set, get) => ({
   // which small talk has already come, and on what day
   chatted: restored?.chatted ?? {},
   pendingAsks: restored?.pendingAsks ?? {},
+  // What the day still has to say, and the conversation it is waiting on
+  // before it says the next thing.
+  beatQueue: restored?.beatQueue ?? [],
+  beatAsk: restored?.beatAsk ?? null,
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   bookings: restored?.bookings ?? {},
@@ -144,12 +159,46 @@ export const useGame = create((set, get) => ({
   setBooted: () => {
     play('boot')
     set({ booted: true })
+    // A save reloaded, or a crash rebooted, mid-day: the rest of the day is
+    // still in the queue and nothing is left holding a timer for it.
+    if (get().beatQueue.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
   },
   // The id lets the view remount each toast so its entrance animation replays,
   // even when two toasts carry identical text.
   showToast: (toast) => {
+    const s = get()
+    // On the days that take it one request at a time, a conversation whose turn
+    // has not come does not interrupt.
+    const held = toast.thread ? heldThreads(s.scenario, s.day, s) : null
+    if (held && held.has(toast.thread)) return
+    // A message that lands in the conversation already on screen needs no
+    // notification: the player is watching it arrive.
+    if (watchingThread(s, toast)) return
     play('notify')
     set({ toast: { ...toast, id: ++toastId } })
+  },
+  // A conversation that has just opened says the last thing it has to say, so
+  // the player knows where the day went next.
+  nudge: (threadId) => {
+    const s = get()
+    const t = allThreads(s.scenario).find((x) => x.id === threadId)
+    const said = threadMessages(t, s.scenario, s.msgCount, s.extraMessages)
+      .filter((m) => m.day === s.day && !m.me).at(-1)
+    if (!said) return
+    const source = s.scenario.workMessenger.sections.some((sec) => sec.threads.some((x) => x.id === threadId))
+      ? 'workMessenger' : 'privateMessenger'
+    setTimeout(() => get().showToast({
+      from: said.from, text: said.text, app: 'messenger', source, thread: threadId
+    }), 1800)
+  },
+  // The intranet turning the machine away is what starts the IP conversation:
+  // the block card says to ask 정보보안팀, and 차민혁 gets there first. Until
+  // then his thread is a noticeboard with nothing on it for today.
+  askedIp: () => {
+    const s = get()
+    if (s.grants[IP_ASKED]) return
+    set({ grants: { ...s.grants, [IP_ASKED]: true } })
+    get().nudge(IP_THREAD)
   },
   clearToast: () => set({ toast: null }),
   deliverMessage: () =>
@@ -279,17 +328,7 @@ export const useGame = create((set, get) => ({
     const extra = s.scenario.overtime.days[s.day]
     if (!extra || s.overtime[s.day]) return
     set((st) => ({ overtime: { ...st.overtime, [st.day]: true }, closing: false }))
-    const beats = [extra.opening, ...(extra.asks ?? [])].filter(Boolean)
-    beats.forEach((beat, i) => setTimeout(() => {
-      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
-      if (beat.ask) get().queueAsk(beat.thread, beat.ask)
-      // a question with buttons: the thread's own reactions answer it
-      if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
-      get().showToast({
-        from: beat.from, text: beat.lines[0],
-        app: 'messenger', source: beat.source, thread: beat.thread
-      })
-    }, 1200 + i * 3600))
+    get().queueBeats([extra.opening, ...(extra.asks ?? [])].filter(Boolean), 1200)
   },
   goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
@@ -374,6 +413,9 @@ export const useGame = create((set, get) => ({
     set({
       day: n,
       misses: 0,
+      // yesterday said everything it was going to say
+      beatQueue: [],
+      beatAsk: null,
       drawn: { ...s.drawn, [n]: drawn },
       mercy: landing.some((r) => r.effect?.hintMercy),
       // what it costs you, counted where the player cannot see it
@@ -381,18 +423,8 @@ export const useGame = create((set, get) => ({
       ripples: { ...s.ripples, ...Object.fromEntries(landing.map((r) => [r.id, n])) }
     })
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
-    const beats = [day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
-      ...beatsFor(s.scenario, drawn)].filter(Boolean)
-    beats.forEach((beat, i) => setTimeout(() => {
-      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
-      if (beat.ask) get().queueAsk(beat.thread, beat.ask)
-      // a question with buttons: the thread's own reactions answer it
-      if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
-      get().showToast({
-        from: beat.from, text: beat.lines[0],
-        app: 'messenger', source: beat.source, thread: beat.thread
-      })
-    }, 3600 + i * 4200))
+    get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
+      ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
   },
   finishDay: () => {
     const s = get()
@@ -481,6 +513,7 @@ export const useGame = create((set, get) => ({
     }, after.delay ?? 2500)
   },
   grant: (key) => {
+    const was = heldThreads(get().scenario, get().day, get())
     play('ok')
     set((s) => ({
       grants: { ...s.grants, [key]: true },
@@ -490,6 +523,9 @@ export const useGame = create((set, get) => ({
         : s.ripples
     }))
     get().chat(key)
+    // finishing one request is what opens the next conversation
+    const now = heldThreads(get().scenario, get().day, get())
+    if (was && now) for (const id of was) if (!now.has(id)) get().nudge(id)
     // some mail only shows up once the player has got somewhere
     const mw = get().scenario.malware
     if (mw.after !== key || get().extraMails.some((m) => m.id === mw.mail.id)) return
@@ -514,8 +550,36 @@ export const useGame = create((set, get) => ({
       get().showToast({ from: beat.from, text: beat.lines[0], app: 'messenger', source: beat.source, thread: beat.thread })
     }, 2600)
   },
-  setAsk: (threadId, ask) =>
-    set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } })),
+  // A day speaks one conversation at a time. Its beats go in a queue, and the
+  // next one waits for the question the last one asked to be answered —
+  // otherwise three people talk over a player who is still typing a reply.
+  queueBeats: (beats, first) => {
+    if (!beats.length) return
+    set((s) => ({ beatQueue: [...s.beatQueue, ...beats] }))
+    setTimeout(() => get().nextBeat(), first)
+  },
+  // Nothing schedules the held beat: whoever answers the open question calls
+  // this again, so a waiting beat can never arrive twice.
+  nextBeat: () => {
+    const s = get()
+    const [beat, ...rest] = s.beatQueue
+    if (!beat || asking(s)) return
+    set({ beatQueue: rest, beatAsk: beat.ask || beat.choices ? beat.thread : null })
+    beat.lines.forEach((text) => s.pushMessage(beat.thread, { from: beat.from, text }))
+    if (beat.ask) get().queueAsk(beat.thread, beat.ask)
+    // a question with buttons: the thread's own reactions answer it
+    if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
+    get().showToast({
+      from: beat.from, text: beat.lines[0],
+      app: 'messenger', source: beat.source, thread: beat.thread
+    })
+    if (rest.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
+  },
+  setAsk: (threadId, ask) => {
+    set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } }))
+    // answering the question the day is waiting on is what lets it carry on
+    if (threadId === get().beatAsk && !asking(get())) setTimeout(() => get().nextBeat(), BEAT_GAP)
+  },
   // A day can raise two questions in the same conversation. The second waits
   // behind the first instead of replacing it, so neither goes unanswered.
   queueAsk: (threadId, ask) =>
@@ -659,6 +723,21 @@ export function allFiles(fs) {
 const FALLBACK_QUICK = ['네, 알겠습니다', '감사합니다']
 
 export const lineSets = (lines) => (Array.isArray(lines?.[0]) ? lines : [lines])
+
+// What a conversation actually shows: the lines it already had, then — if this
+// is the live thread — today's timed script, then whatever the week has pushed
+// into it since. A live thread keeps its history rather than replacing it.
+// Stored lines from before the week carry the `date` they were said on; anything
+// belonging to the week carries a `day` instead, which is also what marks it as
+// still unread.
+// `hold` is the day whose messages this conversation has not reached yet: on the
+// first days a thread waiting its turn shows the history it came with and none
+// of today.
+export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold = 0) => [
+  ...(thread.messages ?? []),
+  ...(thread.live ? scenario.messenger.slice(0, msgCount).map((m) => ({ ...m, day: 1 })) : []),
+  ...(extras[thread.id] ?? [])
+].filter((m) => !hold || m.day !== hold)
 
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
@@ -919,6 +998,57 @@ export function shuffle(list, pick = Math.random) {
 export const beatsFor = (scenario, ids = []) =>
   ids.map((id) => scenario.pool?.requests.find((r) => r.id === id)?.beat).filter(Boolean)
 
+// The first days ease the player in: the work is offered one request at a time,
+// and nobody else starts talking until the one on the table is done. How far the
+// day has opened is not stored anywhere — it is simply how much is finished.
+const lastStep = (ask) => (ask?.then ? lastStep(ask.then) : ask)
+
+// Which conversation carries each request, by the grant it ends on. The answer
+// only depends on the scenario, and the messenger asks on every render.
+const hosts = new WeakMap()
+export function hostThreads(scenario) {
+  if (hosts.has(scenario)) return hosts.get(scenario)
+  const threads = allThreads(scenario)
+  const host = {}
+  for (const t of threads) {
+    for (const a of [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]) {
+      if (a) host[lastStep(a).grants] = t.id
+    }
+  }
+  for (const d of scenario.days) {
+    for (const b of d.asks ?? []) if (b.ask) host[lastStep(b.ask).grants] = b.thread
+  }
+  for (const r of scenario.pool?.requests ?? []) {
+    if (r.beat?.ask) host[lastStep(r.beat.ask).grants] = r.beat.thread
+  }
+  hosts.set(scenario, host)
+  return host
+}
+
+export const allThreads = (scenario) =>
+  [scenario.workMessenger, scenario.privateMessenger].flatMap((m) => m.sections.flatMap((s) => s.threads))
+
+// The conversations still waiting their turn, or null on a day that holds
+// nothing back. Only what the day itself lines up can be held: a request's own
+// thread waits for its place in the order, and the ones with nothing to ask
+// today follow a step behind. Anything else — the live thread, a bank alert, a
+// verification code — is never in the queue and always gets through.
+export function heldThreads(scenario, day, state) {
+  if (day > (scenario.tutorialDays ?? 0)) return null
+  const list = requestsOf(scenario, day, state.overtime, state.drawn, state.ripples)
+  const step = list.filter((o) => objectiveDone(o, state)).length
+  const host = hostThreads(scenario)
+  const hosts = list.map((o) => host[o.id])
+  const taken = new Set(hosts.filter(Boolean))
+  const idle = allThreads(scenario)
+    .filter((t) => !t.live && !taken.has(t.id) && (t.messages ?? []).some((m) => m.day === day))
+    .map((t) => t.id)
+  const held = new Set()
+  hosts.forEach((id, i) => { if (id && step < i) held.add(id) })
+  idle.forEach((id, k) => { if (step <= k) held.add(id) })
+  return held
+}
+
 export const dayDone = (scenario, day, state) =>
   requestsOf(scenario, day, state.overtime ?? {}, state.drawn ?? {}, state.ripples ?? {})
     .every((o) => objectiveDone(o, state))
@@ -1079,6 +1209,16 @@ export function roomReply(ask, question, asked = 0) {
   }
   const pool = hit ? hit.replies : ask.fallback
   return pool[asked % pool.length]
+}
+
+// Which window draws which messenger. A message arriving in the conversation
+// that is already open on screen is not news, so it does not ring: the player
+// is watching it land.
+const MESSENGER_APP = { workMessenger: 'messenger', privateMessenger: 'chat' }
+export function watchingThread(s, toast) {
+  if (!toast.source || !toast.thread) return false
+  if (s.openThread[toast.source] !== toast.thread) return false
+  return s.windows.some((w) => w.app === MESSENGER_APP[toast.source] && !w.minimized)
 }
 
 // Installing something can leave an icon on the desktop. Which ones are there

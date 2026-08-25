@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import { dayDone, endingFor, overtimeOffer, requestsOf, useGame, workedEveryNight } from '../src/engine/store.js'
+import { grantsRaised, playDay } from './playDay.js'
 
 const days = scenario.days.length
 const every = Object.fromEntries(Array.from({ length: days }, (_, i) => [i + 1, true]))
@@ -34,10 +35,7 @@ describe('the offer to stay late', () => {
     const before = requestsOf(scenario, 1, {}).length
     useGame.getState().workLate()
     expect(requestsOf(scenario, 1, useGame.getState().overtime)).toHaveLength(before + 3)
-    vi.runAllTimers()
-    const asked = Object.values(useGame.getState().pendingAsks)
-    const chain = (a) => (a ? [a, ...chain(a.then)] : [])
-    const grants = asked.flatMap(chain).map((a) => a.grants)
+    const grants = grantsRaised(playDay())
     for (const id of scenario.overtime.days[1].requests) expect(grants).toContain(id)
   })
 

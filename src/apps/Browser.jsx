@@ -88,6 +88,7 @@ export default function Browser() {
   const openWindow = useGame((s) => s.openWindow)
   const closeWindow = useGame((s) => s.closeWindow)
   const setBrowserDev = useGame((s) => s.setBrowserDev)
+  const askedIp = useGame((s) => s.askedIp)
   // F12 opens the developer tools as their own window, and once more shuts it
   const toggleDev = () => {
     const w = useGame.getState().windows.find((w) => w.app === 'devtools')
@@ -144,6 +145,8 @@ export default function Browser() {
   const words = page.kind === 'search' ? searchTerms(scenario.terms, page.q) : []
   const promos = page.kind === 'search' ? searchAds(scenario.ads, page.q) : []
   useEffect(() => { setBrowserDev({ console: consoleLines(page, site, view), network: networkRows(page, site, view) }) }, [page, site, view])
+  // The block card tells the player to ask 정보보안팀; 차민혁 gets there first.
+  useEffect(() => { if (view === 'blocked') askedIp() }, [view])
 
   return (
     <div className="browser" tabIndex={-1} onKeyDown={(e) => e.key === 'F12' && (e.preventDefault(), toggleDev())}>

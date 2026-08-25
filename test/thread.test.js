@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useGame } from '../src/engine/store.js'
+import scenario from '../src/scenarios/workday.json'
+import { findFile, threadMessages, useGame } from '../src/engine/store.js'
 
 beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {}, typing: {}, readMails: {}, starred: {} }))
 
@@ -65,5 +66,94 @@ describe('mail flags', () => {
     expect(useGame.getState().starred.mail_client).toBe(true)
     useGame.getState().toggleStar('mail_client')
     expect(useGame.getState().starred.mail_client).toBe(false)
+  })
+})
+
+// The boss thread is the only live one, and a live thread used to show the
+// timed script INSTEAD of the lines it came with — silently hiding the year
+// before the accident that the week is supposed to explain.
+describe('what a conversation shows', () => {
+  const threads = [scenario.workMessenger, scenario.privateMessenger]
+    .flatMap((m) => m.sections.flatMap((s) => s.threads))
+  const boss = threads.find((t) => t.live)
+
+  it('keeps a live thread history, and puts today after it', () => {
+    expect(boss.messages.length).toBeGreaterThan(0)
+    const shown = threadMessages(boss, scenario, scenario.messenger.length)
+    expect(shown).toHaveLength(boss.messages.length + scenario.messenger.length)
+    expect(shown[0].text).toBe(boss.messages[0].text)
+    expect(shown.at(-1).text).toBe(scenario.messenger.at(-1).text)
+  })
+
+  it('dates the script as today, whatever the history above it says', () => {
+    const shown = threadMessages(boss, scenario, scenario.messenger.length)
+    expect(shown.slice(boss.messages.length).every((m) => m.day === 1 && m.date === undefined)).toBe(true)
+  })
+
+  // A message is either something said before the week — carrying the date it
+  // was said on — or something the week itself brought, carrying its day. The
+  // unread count reads that difference, so a message may never carry both.
+  it('never dates a message two ways at once', () => {
+    for (const t of threads) {
+      for (const m of t.messages ?? []) {
+        expect(m.date !== undefined && m.day !== undefined, `${t.id}: ${m.text}`).toBe(false)
+      }
+    }
+  })
+
+  // The badge counts history as read by treating the dated run at the front as
+  // seen. Were a dated line to turn up after an undated one, that arithmetic
+  // would mark a real message read and the player would never see it arrive.
+  it('keeps history in one run at the front, so the badge can skip it', () => {
+    for (const t of threads) {
+      const msgs = t.messages ?? []
+      const last = msgs.findLastIndex((m) => m.date !== undefined)
+      expect(msgs.slice(0, last + 1).every((m) => m.date !== undefined), t.id).toBe(true)
+    }
+  })
+
+  // A photo in the log is a real file on the machine, and showing one that some
+  // request wants attached would hand the player the answer in the chat window.
+  it('shows only photos that exist, and never one a request asks for', () => {
+    const chain = (a) => (a ? [a, ...chain(a.then)] : [])
+    const asks = [
+      ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(chain),
+      ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))),
+      ...Object.values(scenario.overtime.days).flatMap((d) => d.asks.flatMap((a) => chain(a.ask))),
+      ...scenario.pool.requests.flatMap((r) => chain(r.beat.ask))
+    ].filter(Boolean)
+    const wanted = new Set([
+      ...asks.flatMap((a) => a.files ?? []),
+      ...threads.flatMap((t) => (t.reactions ?? []).flatMap((r) => r.files ?? []))
+    ])
+    const shown = threads.flatMap((t) => (t.messages ?? []).filter((m) => m.photo).map((m) => [t.id, m.photo]))
+    expect(shown.length).toBeGreaterThan(0)
+    for (const [id, photo] of shown) {
+      expect(findFile(scenario.fs, photo)?.image, `${id}: ${photo}`).toBeTruthy()
+      expect(wanted.has(photo), `${id} shows ${photo}, which a request asks to be sent`).toBe(false)
+    }
+  })
+
+  // Dates are read off a fictional calendar, so nothing checks them but this.
+  it('never runs the history backwards', () => {
+    const at = (label) => {
+      const [, mo, d] = label.match(/(\d+)월 (\d+)일/).map(Number)
+      return mo * 100 + d
+    }
+    for (const t of threads) {
+      const dates = (t.messages ?? []).filter((m) => m.date).map((m) => at(m.date))
+      expect([...dates].sort((a, b) => a - b), t.id).toEqual(dates)
+    }
+  })
+
+  it('shows every other thread the lines it came with', () => {
+    for (const t of threads.filter((t) => !t.live && t.messages?.length)) {
+      expect(threadMessages(t, scenario), t.id).toHaveLength(t.messages.length)
+    }
+  })
+
+  it('adds what the week pushed in, dated by the day it arrived', () => {
+    const pushed = { [boss.id]: [{ from: 'x', text: 'y', day: 3 }] }
+    expect(threadMessages(boss, scenario, 0, pushed).at(-1)).toMatchObject({ day: 3 })
   })
 })

@@ -773,6 +773,7 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .bubble.me.file { display: flex; align-items: center; gap: 7px; }
 .bubble.me.file:has(.bubble-img) { padding: 5px; }
 .bubble-img { display: block; width: 190px; max-width: 100%; border-radius: 9px; }
+.bubble-img:not(:only-child) { margin-top: 6px; }
 
 /* mail */
 .mail-layout { display: flex; height: 100%; }

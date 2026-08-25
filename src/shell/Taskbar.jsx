@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGame, savedAt } from '../engine/store.js'
-import { APPS, knownWindows } from '../apps/registry.jsx'
+import { APPS, knownWindows, startMenuApps } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
 import { FolderOpen, LayoutGrid, Lock, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
 import { isMuted, play, setMuted } from './sound.js'
@@ -23,6 +23,7 @@ export default function Taskbar() {
   const loadGame = useGame((s) => s.loadGame)
   const newGame = useGame((s) => s.newGame)
   const lock = useGame((s) => s.lock)
+  const grants = useGame((s) => s.grants)
   const [startOpen, setStartOpen] = useState(false)
   const [asking, setAsking] = useState(null)
   const [saved, setSaved] = useState(null)
@@ -52,7 +53,7 @@ export default function Taskbar() {
         <div className="startmenu">
           <h3>고정됨</h3>
           <div className="sm-grid">
-            {Object.entries(APPS).map(([key, a]) => (
+            {startMenuApps(grants).map(([key, a]) => (
               <button key={key} className="sm-app"
                       onClick={() => { openWindow(key); setStartOpen(false) }}>
                 <div className="glyph"><Icon name={a.icon} size={30} /></div>{a.title}
