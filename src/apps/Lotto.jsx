@@ -8,7 +8,7 @@ export default function Lotto({ site }) {
   const grant = useGame((s) => s.grant)
   const won = useGame((s) => Boolean(s.grants.lotto))
   // Someone who has read their own obituary cannot be the person at the counter.
-  const gone = useGame((s) => Boolean(s.grants[CLUE.mail]))
+  const gone = useGame((s) => Boolean(s.grants[CLUE.obituary]))
   const [serial, setSerial] = useState('')
   const [result, setResult] = useState(null)
 

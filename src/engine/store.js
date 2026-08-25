@@ -12,7 +12,7 @@ const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'e
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -68,6 +68,9 @@ const BEAT_GAP = 3600
 // same grant, so the conversation and its trigger cannot drift apart.
 export const IP_THREAD = 'security'
 export const IP_ASKED = 'ip_asked'
+// What a conversation's `gate` names once the player has met the wall a
+// program's absence puts up.
+export const missingKey = (program) => `missing:${program}`
 // The last thing the day said asked a question, and it has not been answered.
 // Only the day's own questions hold it up: a thread's standing question is
 // always there and would stop the day before it started.
@@ -96,6 +99,9 @@ export const useGame = create((set, get) => ({
   // Which conversation each messenger is showing, and how much of it has been read.
   // Both live here so a toast can open a thread in an already-running window.
   openThread: {},
+  // Which choices each conversation has moved on to — part of the exchange, so
+  // it outlives the window the same way the messages do.
+  branches: restored?.branches ?? {},
   seenThreads: restored?.seenThreads ?? {},
   typing: {},
   extraMails: restored?.extraMails ?? [],
@@ -200,6 +206,11 @@ export const useGame = create((set, get) => ({
     set({ grants: { ...s.grants, [IP_ASKED]: true } })
     get().nudge(IP_THREAD)
   },
+  // Windows refusing to open something is what gives the player the thing to
+  // say about it. Until they have seen the refusal there is nothing to report.
+  sawMissing: (program) => set((s) => (s.grants[missingKey(program)]
+    ? s
+    : { grants: { ...s.grants, [missingKey(program)]: true } })),
   clearToast: () => set({ toast: null }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
@@ -441,8 +452,8 @@ export const useGame = create((set, get) => ({
   // remembered without a chime, and the boss answers a beat later.
   witness: () => {
     const s = get()
-    if (s.grants[CLUE.mail]) return
-    set({ grants: { ...s.grants, [CLUE.mail]: true } })
+    if (s.grants[CLUE.obituary]) return
+    set({ grants: { ...s.grants, [CLUE.obituary]: true } })
     const ev = s.scenario.ending.event
     setTimeout(() => {
       ev.lines.forEach((text) => get().pushMessage(ev.thread, { from: ev.from, text }))
@@ -587,6 +598,23 @@ export const useGame = create((set, get) => ({
       const waiting = s.pendingAsks[threadId]
       return { pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }
     }),
+  // A conversation belongs to the game, not to the window drawing it. Both
+  // halves of it go where every other pushed line goes, so closing the
+  // messenger cannot take the exchange with it.
+  say: (threadId, entry) => get().pushMessage(threadId, { me: true, ...entry }),
+  // The other side writes for a beat, then answers a line at a time. The
+  // timers live here rather than in the window, so a reply already started
+  // finishes even if the player closes the messenger halfway through it.
+  sayBack: (threadId, from, lines) => {
+    get().setTyping(threadId, true)
+    lines.forEach((text, i) => setTimeout(() => {
+      get().pushMessage(threadId, { from, text })
+      if (i === lines.length - 1) get().setTyping(threadId, false)
+    }, 1200 + i * 1500))
+  },
+  // Which set of choices a conversation has reached.
+  setBranch: (threadId, next) =>
+    set((s) => ({ branches: { ...s.branches, [threadId]: next } })),
   // Every message remembers the day it arrived; the scenario's own are day one.
   pushMessage: (threadId, msg) =>
     set((s) => ({
@@ -739,6 +767,13 @@ export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold
   ...(extras[thread.id] ?? [])
 ].filter((m) => !hold || m.day !== hold)
 
+// A conversation someone came back to was read long ago, so only what the week
+// itself brought can still be unread — and never what the player typed.
+export const unreadCount = (all, seen = 0) => {
+  const read = Math.max(seen, all.filter((msg) => msg.date !== undefined).length)
+  return all.filter((msg, i) => i >= read && !msg.me).length
+}
+
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
 // Loose match: spacing and case are forgiven. An entry may be an array, in
@@ -839,7 +874,7 @@ export const latestNews = (news, n = 6) =>
   [...news].sort((a, b) => b.date.localeCompare(a.date)).slice(0, n)
 
 // The player knows once they have opened their own obituary.
-export const CLUE = { mail: 'clue_mail' }
+export const CLUE = { obituary: 'clue_obituary' }
 export const awareOf = (ending, grants) => Object.keys(ending.clues).every((k) => grants[CLUE[k]])
 
 // The verification text, with the code filled in where the template asks for it.
@@ -891,8 +926,14 @@ export function requestsOf(scenario, day, overtime = {}, drawn = {}, ripples = {
   const forced = (scenario.ripples ?? [])
     .filter((r) => ripples[r.id] === day && r.effect?.extraRequest)
     .map((r) => r.effect.extraRequest)
+  // A request can need a step of its own somewhere else — a tracking number in
+  // 톡톡, a cell in a sheet. That is work the player has to do, so it goes on
+  // the list under the request that asked for it.
   return [...new Set([...today.requests, ...(drawn[day] ?? []), ...extra, ...forced])]
-    .map((id) => scenario.objectives.find((o) => o.id === id)).filter(Boolean)
+    .flatMap((id) => [
+      scenario.objectives.find((o) => o.id === id),
+      ...scenario.objectives.filter((o) => o.partOf === id)
+    ]).filter(Boolean)
 }
 
 // Grants a consequence is waiting on, so `grant` only stamps the ones that matter.

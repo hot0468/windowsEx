@@ -222,7 +222,9 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pr-back { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.25); }
 .pr { width: 340px; padding: 16px; border-radius: 8px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.3); font-size: 12px; }
 .pr-head { font-weight: 600; margin-bottom: 12px; }
-.pr-err { padding: 10px 12px; border-radius: 6px; background: #fdeaea; color: #b33; }
+/* the copier's own address is in here, and it is what the player has to go
+   and type in somewhere else */
+.pr-err { padding: 10px 12px; border-radius: 6px; background: #fdeaea; color: #b33; user-select: text; }
 .pr-err span { display: block; margin-top: 4px; color: #866; font-size: 11px; }
 .pr-steps { display: flex; gap: 5px; margin: 12px 0 8px; }
 .pr-steps i { flex: 1; height: 5px; border-radius: 3px; background: #e4e4ea; }
@@ -254,7 +256,10 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .browser { height: 100%; display: flex; flex-direction: column; }
 .addr-bar { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #f7f7f7; flex-shrink: 0; }
 .addr-bar input { flex: 1; padding: 7px 14px; border: none; border-radius: 15px; background: #fff; box-shadow: inset 0 0 0 1px #ddd; outline: none; font: inherit; }
-.page { flex: 1; overflow: auto; padding: 24px; }
+/* The desktop itself is not selectable, but a web page is: everything the
+   browser renders lives in here, and an answer read off a page has to be
+   draggable the way it would be in a real browser. */
+.page { flex: 1; overflow: auto; padding: 24px; user-select: text; }
 .page.bleed { padding: 0; }
 .bm-bar { display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-bottom: 1px solid #eee; background: #fbfbfd; color: #b0b4bd; flex-shrink: 0; }
 .bm { padding: 5px 10px; border-radius: 5px; font-size: 12px; color: #333; }
@@ -1362,6 +1367,47 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .pt-att-flags li { font-size: 12px; color: #8a3a2c; line-height: 1.8; }
 .pt-att-last { margin: 14px 0 0; font-size: 12px; color: #23262b; font-weight: 600; }
 .pt-att-foot { margin: 6px 0 0; font-size: 11px; color: #9aa0a8; }
+
+/* ── 인사관리 메뉴 ────────────────────────────────────── */
+.pt-menu-list { margin: 14px 0 0; padding: 0; list-style: none; }
+.pt-menu-list li + li { margin-top: 8px; }
+.pt-menu-list button { display: flex; align-items: center; gap: 12px; width: 100%;
+                       padding: 13px 15px; border: 1px solid #e4e7ec; border-radius: 7px;
+                       background: #fff; text-align: left; cursor: pointer; }
+.pt-menu-list button:hover { border-color: #b9c6dd; background: #f8faff; }
+.pt-menu-list b { flex: 0 0 74px; font-size: 12.5px; color: #23262b; font-weight: 600; }
+.pt-menu-list span { flex: 1; font-size: 11.5px; color: #8a9099; }
+.pt-menu-list svg { color: #b6bcc5; }
+
+/* ── 휴가신청 ─────────────────────────────────────────── */
+.pt-lv-note { margin: 2px 0 14px; font-size: 11.5px; color: #b0553f; }
+.pt-leave .pt-ev-meta em { margin-left: 6px; padding: 1px 6px; border-radius: 3px;
+                           background: #fdf0ed; color: #b0553f; font-size: 10.5px; font-style: normal; }
+.pt-leave select { padding: 6px 9px; border: 1px solid #cfd4da; border-radius: 5px;
+                   background: #fff; font-size: 12px; color: #23262b; }
+.pt-lv-bad { margin: 10px 0 0 !important; font-size: 11.5px !important; color: #b0553f !important; }
+
+/* ── 경조사 ───────────────────────────────────────────── */
+.pt-obit-note { margin: 2px 0 14px; font-size: 11.5px; color: #8a9099; }
+.pt-obit-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.pt-obit-table th { text-align: left; padding: 7px 10px; background: #f4f6f9;
+                    border-bottom: 1px solid #dfe3e8; color: #5d636d; font-weight: 600; }
+.pt-obit-table th:last-child, .pt-obit-table td:last-child { width: 88px; }
+.pt-obit-table th:nth-child(2), .pt-obit-table td:nth-child(2) { width: 84px; }
+.pt-obit-table td { padding: 7px 10px; border-bottom: 1px solid #eef0f3; color: #6b7280; }
+.pt-obit-link { color: #23262b; font-size: 12.5px; text-align: left; }
+.pt-obit-link:hover { color: #2b5fa8; text-decoration: underline; }
+.pt-obit-sec { margin-top: 18px; }
+.pt-obit-sec h2 { margin: 0 0 8px; font-size: 12.5px; color: #4a5160; font-weight: 600; }
+.pt-obit-sec dl { margin: 0; padding: 14px 16px; border-radius: 6px; background: #f6f7f9; }
+.pt-obit-sec dl > div { display: flex; gap: 12px; }
+.pt-obit-sec dl > div + div { margin-top: 7px; }
+.pt-obit-sec dt { flex: 0 0 46px; font-size: 11.5px; color: #8a9099; }
+.pt-obit-sec dd { margin: 0; font-size: 12.5px; color: #23262b; line-height: 1.7; }
+/* the end of the entry that names the player: what has to come into view */
+.pt-obit-end { display: block; height: 1px; }
+.pt-obit-close { color: #6b7280 !important; font-size: 12px !important; }
+.pt-obit-close:first-of-type { margin-top: 20px !important; }
 
 /* ── 복합기 원격 유지보수 ─────────────────────────────── */
 .pw-note { margin: 2px 0 12px; font-size: 11.5px; color: #8a9099; }

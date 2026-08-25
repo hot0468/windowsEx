@@ -9,7 +9,9 @@ const ending = scenario.ending
 const last = scenario.days.length
 const rumour = () => scenario.sites.find((s) => s.layout === 'board').board.posts.find((p) => p.id === 'b11')
 const article = () => scenario.news.find((n) => n.id === 'n_accident')
-const obituary = () => scenario.mails.find((m) => m.id === ending.clues.mail)
+const portal = scenario.sites.find((s) => s.url === 'portal.ar.co.kr')
+const board = () => portal.pages[ending.clues.obituary]?.board
+const obituary = () => board()?.posts.find((p) => p.obituary)
 
 describe('the two endings', () => {
   beforeEach(() => {
@@ -44,7 +46,7 @@ describe('the two endings', () => {
 
   it('tells the truth only to a player who opened their own obituary', () => {
     expect(awareOf(ending, {})).toBe(false)
-    expect(awareOf(ending, { [CLUE.mail]: true })).toBe(true)
+    expect(awareOf(ending, { [CLUE.obituary]: true })).toBe(true)
     useGame.getState().witness()
     useGame.setState({ day: last })
     useGame.getState().finishDay()
@@ -64,7 +66,7 @@ describe('the two endings', () => {
     expect(useGame.getState().locks).toBe(2)
     expect(endingFor(ending, { grants: {}, locks: 0 })).toBe('overwork')
     expect(endingFor(ending, { grants: {}, locks: 1 })).toBe('plain')
-    expect(endingFor(ending, { grants: { [CLUE.mail]: true }, locks: 0 })).toBe('true')
+    expect(endingFor(ending, { grants: { [CLUE.obituary]: true }, locks: 0 })).toBe('true')
   })
 
   it('puts the accident on the search portal front page', () => {
@@ -75,20 +77,63 @@ describe('the two endings', () => {
     for (let i = 1; i < front.length; i++) expect(front[i - 1].date >= front[i].date).toBe(true)
   })
 
-  it('has the obituary sitting in the inbox under an unremarkable subject, naming the player', () => {
-    const m = obituary()
-    expect(m).toBeTruthy()
-    expect(m.subject).not.toContain('부고')
-    expect(m.body).toContain('부고')
-    expect(m.body).toContain(player)
+  it('is on the portal and nowhere in the inbox, so nobody reads it by accident', () => {
+    const post = obituary()
+    expect(post).toBeTruthy()
+    const said = JSON.stringify(post)
+    expect(said).toContain('부고')
+    expect(said).toContain(player)
+    // nothing that lands in the inbox on its own says any of it
+    for (const word of ['부고', '별세', '빈소', '경조사']) {
+      expect(scenario.mails.some((m) => `${m.subject} ${m.body}`.includes(word)), word).toBe(false)
+    }
+  })
+
+  it('reads like every other week, and says it last', () => {
+    const post = obituary()
+    // a wedding, then somebody else's grandmother, then the player
+    expect(post.sections.length).toBeGreaterThan(2)
+    expect(post.sections[0].kind).not.toBe('부고')
+    const mine = post.sections.findIndex((sec) => JSON.stringify(sec).includes(player))
+    expect(mine).toBe(post.sections.length - 1)
+    // and the weeks around it are ordinary notices with nothing in them
+    const others = board().posts.filter((p) => !p.obituary)
+    expect(others.length).toBeGreaterThan(0)
+    for (const p of others) expect(JSON.stringify(p)).not.toContain(player)
+  })
+
+  it('marks the entry the reader has to scroll to, and only that one', () => {
+    const post = obituary()
+    const marked = post.sections.filter((sec) => sec.mine)
+    expect(marked).toHaveLength(1)
+    // it is the player's own, and it is the last thing on the page
+    expect(JSON.stringify(marked[0])).toContain(player)
+    expect(post.sections.at(-1).mine).toBe(true)
+    // no other week has anything to scroll to
+    for (const p of board().posts.filter((x) => !x.obituary)) {
+      expect(p.sections.some((sec) => sec.mine)).toBe(false)
+    }
+  })
+
+  it('is one row on a list, not the page itself', () => {
+    expect(board().posts.length).toBeGreaterThan(2)
+    expect(board().columns.length).toBeGreaterThan(1)
+  })
+
+  it('sits behind a menu that has to be opened on purpose', () => {
+    const menu = portal.pages['/hr']?.menu
+    expect(menu?.some((m) => m.path === ending.clues.obituary)).toBe(true)
+    // and the menu itself is on the bar the portal draws
+    expect(portal.portal.nav).toContain('인사관리')
+    expect(portal.portal.navLinks['인사관리']).toBe('/hr')
   })
 
   it('answers the opened obituary with the boss, once, and counts it as no work done', () => {
     useGame.setState({ extraMessages: {}, toast: null })
     useGame.getState().witness()
     useGame.getState().witness()
-    expect(useGame.getState().grants[CLUE.mail]).toBe(true)
-    expect(scenario.objectives.some((o) => o.grant === CLUE.mail)).toBe(false)
+    expect(useGame.getState().grants[CLUE.obituary]).toBe(true)
+    expect(scenario.objectives.some((o) => o.grant === CLUE.obituary)).toBe(false)
     vi.runAllTimers()
     const ev = ending.event
     expect(useGame.getState().extraMessages[ev.thread].map((m) => m.text)).toEqual(ev.lines)

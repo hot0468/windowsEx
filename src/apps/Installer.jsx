@@ -55,6 +55,7 @@ export default function Installer({ fileId, winId }) {
   const close = useGame((s) => s.closeWindow)
   const crash = useGame((s) => s.crash)
   const startMining = useGame((s) => s.startMining)
+  const sawMissing = useGame((s) => s.sawMissing)
   const [step, setStep] = useState(-1)
   const file = findFile(fs, fileId)
   const spec = programs[file?.program]
@@ -77,6 +78,11 @@ export default function Installer({ fileId, winId }) {
     // some installers bring something else along
     if (spec.bundles) startMining()
   }, [finished])
+
+  // The wizard turning the player away is the other way they learn the program
+  // is not on this PC, and the other way the complaint becomes sayable.
+  const walled = Boolean(spec?.needs && !grants[spec.needs])
+  useEffect(() => { if (walled) sawMissing(file.program) }, [walled])
 
   const shut = () => close(winId)
   const closeOnly = <Btn primary onClick={shut}>닫기</Btn>

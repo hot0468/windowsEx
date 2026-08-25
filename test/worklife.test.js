@@ -26,7 +26,7 @@ const thread = (id) => threads.find((t) => t.id === id)
 describe('the week that was already on record', () => {
   it('keeps an attendance page the portal links to', () => {
     expect(att).toBeTruthy()
-    expect(Object.values(portal.portal.navLinks)).toContain('/hr/attendance')
+    expect(portal.pages['/hr'].menu.some((m) => m.path === '/hr/attendance')).toBe(true)
     expect(att.attendance.rows.length).toBeGreaterThan(3)
     for (const row of att.attendance.rows) {
       expect(row).toHaveLength(att.attendance.columns.length)

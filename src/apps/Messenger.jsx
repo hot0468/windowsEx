@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, quickSets, threadMessages } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, quickSets, threadMessages, unreadCount } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -91,13 +91,16 @@ export default function Messenger({ source }) {
   const seen = useGame((s) => s.seenThreads)
   const markThreadSeen = useGame((s) => s.markThreadSeen)
   const setTyping = useGame((s) => s.setTyping)
+  const say = useGame((s) => s.say)
+  const sayBack = useGame((s) => s.sayBack)
+  const branch = useGame((s) => s.branches)
+  const setBranch = useGame((s) => s.setBranch)
   const pendingAsks = useGame((s) => s.pendingAsks)
   const setAsk = useGame((s) => s.setAsk)
   const grant = useGame((s) => s.grant)
   const slip = useGame((s) => s.slip)
   const mercy = useGame((s) => s.mercy)
   const typing = useGame((s) => s.typing)
-  const [replies, setReplies] = useState({})
   const [collapsed, setCollapsed] = useState({})
   const [tab, setTab] = useState('friends')
   const [q, setQ] = useState('')
@@ -107,13 +110,10 @@ export default function Messenger({ source }) {
   const [shrugs, setShrugs] = useState({})
   const [wrongs, setWrongs] = useState({})
   const [confirming, setConfirming] = useState(null)
-  const [branch, setBranch] = useState({})
   const [draft, setDraft] = useState('')
   const [profile, setProfile] = useState(null)
   const list = useRef(null)
   const stick = useRef(true)
-  const pending = useRef([])
-  const typingFor = useRef(null)
   const pinned = useGame((s) => s.pinned)
 
   // On the first days the work arrives one request at a time: a conversation
@@ -135,12 +135,7 @@ export default function Messenger({ source }) {
   }
   const threads = m.sections.flatMap((s) => s.threads)
   const teamOf = (id) => m.sections.find((sec) => sec.threads.some((t) => t.id === id))?.title
-  // The conversation someone came back to was read long ago: only what the week
-  // itself brought can still be unread.
-  const unreadOf = (t) => {
-    const all = msgsOf(t)
-    return all.length - Math.max(seen[t.id] ?? 0, all.filter((msg) => msg.date !== undefined).length)
-  }
+  const unreadOf = (t) => unreadCount(msgsOf(t), seen[t.id] ?? 0)
   const thread = threads.find((t) => t.id === openId)
   // Room messages come from several people, so the sender's name picks the face.
   const people = Object.fromEntries(threads.map((t) => [t.name, t]))
@@ -150,7 +145,7 @@ export default function Messenger({ source }) {
   useEffect(() => {
     const t = threads.find((x) => x.id === openId)
     if (t) markThreadSeen(t.id, msgsOf(t).length)
-  }, [openId, msgCount])
+  }, [openId, msgCount, extraMessages])
 
   // Follow new messages down, but don't yank the view away from someone who has
   // scrolled up to re-read something.
@@ -173,37 +168,26 @@ export default function Messenger({ source }) {
   )
 
   const busy = !!(thread && typing[thread.id])
-  const mine = thread ? replies[thread.id] ?? [] : []
-  const say = (entry) =>
-    setReplies((r) => ({ ...r, [thread.id]: [...(r[thread.id] ?? []), entry] }))
+  const shown = thread ? msgsOf(thread) : []
   // One pick per batch of incoming messages: the choices go quiet until the
   // other side says something new.
-  const arrived = thread ? msgsOf(thread).length + mine.filter((e) => e.from).length : 0
+  const arrived = shown.filter((msg) => !msg.me).length
   const spent = thread && answeredAt[thread.id] >= arrived
   // A reaction can hand the conversation a new set of choices; otherwise the
   // thread's own sets advance as you keep replying.
   // A conversation still waiting its turn offers nothing to say back yet.
   const quiet = Boolean(thread && heldBack(thread))
+  // How far this conversation has got today — what the window used to count in
+  // its own state, and now reads back from where the exchange is kept.
+  const exchanged = thread ? (extraMessages[thread.id] ?? []).filter((e) => e.text).length : 0
+  // Some things there is no way to say yet: a complaint about a program only
+  // exists once the player has watched it fail to open something.
+  const offerable = (list) => list.filter((c) => !thread.gate?.[c] || grants[thread.gate[c]])
   const choices = !thread || quiet
     ? []
-    : branch[thread.id]
-      ?? quickSets(thread)[Math.min(mine.filter((e) => e.text).length, quickSets(thread).length - 1)]
-  // The other side writes for a beat, then the lines land one after another.
-  const speak = (lines) => {
-    const id = thread.id
-    const who = thread.name
-    typingFor.current = id
-    setTyping(id, true)
-    lines.forEach((text, i) => {
-      pending.current.push(setTimeout(() => {
-        setReplies((r) => ({ ...r, [id]: [...(r[id] ?? []), { from: who, text }] }))
-        if (i === lines.length - 1) {
-          setTyping(id, false)
-          typingFor.current = null
-        }
-      }, 1200 + i * 1500))
-    })
-  }
+    : offerable(branch[thread.id]
+      ?? quickSets(thread)[Math.min(exchanged, quickSets(thread).length - 1)])
+  const speak = (lines) => sayBack(thread.id, thread.name, lines)
 
   const reactTo = (key) => {
     const hit = thread.reactions?.find(
@@ -212,7 +196,7 @@ export default function Messenger({ source }) {
     // answer, on the other hand, has to stay answerable until it's right.
     if (!hit || (hit.files && reacted[key])) return
     if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
-    if (hit.next) setBranch((b) => ({ ...b, [thread.id]: hit.next }))
+    if (hit.next) setBranch(thread.id, hit.next)
     if (hit.ask) setAsk(thread.id, hit.ask)
     if (hit.grants) grant(hit.grants)
     speak(hit.reply)
@@ -225,7 +209,7 @@ export default function Messenger({ source }) {
   const solved = () => {
     // a question may hand straight over to the next one
     setAsk(thread.id, ask.then ?? null)
-    if (ask.next) setBranch((b) => ({ ...b, [thread.id]: ask.next }))
+    if (ask.next) setBranch(thread.id, ask.next)
     if (ask.grants) grant(ask.grants)
     speak(ask.ok)
   }
@@ -239,7 +223,7 @@ export default function Messenger({ source }) {
   const answer = () => {
     const text = draft.trim()
     if (!text) return
-    say({ text })
+    say(thread.id, { text })
     setDraft('')
     // typing at a question that wants a file is always the wrong kind of answer
     if (!ask.files && answerFits(ask, text)) solved()
@@ -247,7 +231,7 @@ export default function Messenger({ source }) {
   }
 
   const choose = (text) => {
-    say({ text })
+    say(thread.id, { text })
     setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
     reactTo(text)
   }
@@ -268,7 +252,7 @@ export default function Messenger({ source }) {
   }
 
   const sendFile = (file) => {
-    say({ file: file.name, image: file.image })
+    say(thread.id, { file: file.name, image: file.image })
     if (!ask?.files) {
       return thread.reactions?.some((r) => r.files?.includes(file.id)) ? reactTo(file.id) : shrug()
     }
@@ -276,14 +260,9 @@ export default function Messenger({ source }) {
     else missed()
   }
 
-  useEffect(() => () => {
-    pending.current.forEach(clearTimeout)
-    if (typingFor.current) setTyping(typingFor.current, false)
-  }, [])
-
   useEffect(() => {
     if (stick.current) toBottom()
-  }, [thread ? msgsOf(thread).length : 0, mine.length, busy])
+  }, [shown.length, busy])
 
   // A drop is easy to do by accident and sending can't be undone, so it asks first.
   const drop = useFileDrop((id) => {
@@ -365,13 +344,26 @@ export default function Messenger({ source }) {
               </div>
             </div>
             <div className="msg-list" ref={list} onScroll={onScroll}>
-              {msgsOf(thread).length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
-              {msgsOf(thread).map((msg, i, all) => {
+              {shown.length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
+              {shown.map((msg, i, all) => {
                 const prev = all[i - 1]
                 const label = dateOf(msg)
                 const dated = label !== null && label !== dateOf(prev)
                 const date = dated && <div className="msg-date">{label}</div>
-                if (msg.me) return <Fragment key={i}>{date}<div className="bubble me">{msg.text}{attached(msg)}</div></Fragment>
+                if (msg.me) return (
+                  <Fragment key={i}>
+                    {date}
+                    <div className={'bubble me' + (msg.file ? ' file' : '')}>
+                      {!msg.file && <>{msg.text}{attached(msg)}</>}
+                      {msg.file && msg.image && (
+                        <img className="bubble-img" src={fileImage(msg.image)} alt={msg.file} />
+                      )}
+                      {msg.file && !msg.image && (
+                        <><Paperclip size={13} strokeWidth={2} />{msg.file}</>
+                      )}
+                    </div>
+                  </Fragment>
+                )
                 const opens = !prev || prev.me || prev.from !== msg.from || dated
                 const who = people[msg.from] ?? thread
                 return (
@@ -384,22 +376,6 @@ export default function Messenger({ source }) {
                   </Fragment>
                 )
               })}
-              {mine.map((sent, i) => (sent.from ? (
-                <div key={'r' + i} className="msg-row">
-                  <span className="msg-av"><Avatar t={thread} size={32} onOpen={setProfile} /></span>
-                  <div className="bubble them"><b>{sent.from}</b>{sent.text}</div>
-                </div>
-              ) : (
-                <div key={'r' + i} className={'bubble me' + (sent.file ? ' file' : '')}>
-                  {!sent.file && sent.text}
-                  {sent.file && sent.image && (
-                    <img className="bubble-img" src={fileImage(sent.image)} alt={sent.file} />
-                  )}
-                  {sent.file && !sent.image && (
-                    <><Paperclip size={13} strokeWidth={2} />{sent.file}</>
-                  )}
-                </div>
-              )))}
               {busy && (
                 <div className="msg-row">
                   <span className="msg-av"><Avatar t={thread} size={32} onOpen={setProfile} /></span>

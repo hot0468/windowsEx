@@ -9,8 +9,6 @@ export default function Mail() {
   const readMails = useGame((s) => s.readMails)
   const starred = useGame((s) => s.starred)
   const markMailRead = useGame((s) => s.markMailRead)
-  const obituary = useGame((s) => s.scenario.ending.clues.mail)
-  const witness = useGame((s) => s.witness)
   const toggleStar = useGame((s) => s.toggleStar)
   const sendReply = useGame((s) => s.sendReply)
   const sendMail = useGame((s) => s.sendMail)
@@ -36,7 +34,6 @@ export default function Mail() {
     setComposing(false)
     setSent(false)
     markMailRead(m.id)
-    if (m.id === obituary) witness()
   }
   const step = (by) => {
     const next = mails[at + by]

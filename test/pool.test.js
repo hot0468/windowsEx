@@ -61,7 +61,10 @@ describe('drawing a week', () => {
       const drawn = week()
       const seen = new Set()
       for (const n of days) {
-        expect(requestsOf(scenario, n, {}, drawn), `day ${n}`).toHaveLength(pool.sizes[n])
+        // a size counts the requests that came in, not the lines the list shows:
+        // a request may carry a step of its own alongside it
+        const asked = requestsOf(scenario, n, {}, drawn).filter((o) => !o.partOf)
+        expect(asked, `day ${n}`).toHaveLength(pool.sizes[n])
         for (const id of drawn[n]) {
           expect(seen.has(id), `${id} drawn twice`).toBe(false)
           seen.add(id)

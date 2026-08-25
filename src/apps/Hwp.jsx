@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGame, findFile } from '../engine/store.js'
 
 const ZOOMS = [100, 125, 150]
@@ -12,7 +12,11 @@ export default function Hwp({ fileId }) {
   const [printing, setPrinting] = useState(false)
   // the jam is cleared from the copier's own web page, not from here
   const mfpFixed = useGame((s) => s.mfpFixed)
+  const sawMissing = useGame((s) => s.sawMissing)
   const file = findFile(fs, fileId)
+  // Watching the document refuse to open is what gives the player something to
+  // report to 정보보안팀.
+  useEffect(() => { if (file && !installed) sawMissing('hangul') }, [file, installed])
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
   // Windows can name the file it cannot open, and nothing else about it.

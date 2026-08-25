@@ -89,6 +89,6 @@ describe('five nights out of five', () => {
 
   it('still loses to the truth and to the ticket', () => {
     expect(endingFor(scenario.ending, { grants: { lotto: true }, locks: 0, overtime: every, days })).toBe('lotto')
-    expect(endingFor(scenario.ending, { grants: { clue_mail: true }, locks: 0, overtime: every, days })).toBe('true')
+    expect(endingFor(scenario.ending, { grants: { clue_obituary: true }, locks: 0, overtime: every, days })).toBe('true')
   })
 })

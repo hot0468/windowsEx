@@ -3,12 +3,19 @@ import scenario from '../src/scenarios/workday.json'
 import { allThreads, heldThreads, objectiveDone, requestsOf } from '../src/engine/store.js'
 
 const base = { grants: {}, unlocked: {}, overtime: {}, drawn: {}, ripples: {} }
-const after = (day, ids) => ({
-  ...base,
-  grants: Object.fromEntries(ids.map((id) => [id, true])),
-  unlocked: Object.fromEntries(ids.map((id) => [id, true]))
-})
 const dayRequests = (day) => requestsOf(scenario, day, {}, {}, {})
+// An objective is met by the state it names: a grant for most, an unlocked site
+// for the wiki. Stamping the id in both places left the wiki forever unfinished,
+// so the day never reached its last step.
+const after = (day, ids) => {
+  const state = { ...base, grants: {}, unlocked: {} }
+  for (const o of dayRequests(day)) {
+    if (!ids.includes(o.id)) continue
+    if (o.site) state.unlocked[o.site] = true
+    else state.grants[o.grant] = true
+  }
+  return state
+}
 
 describe('the days that ease the player in', () => {
   it('eases in the first two days and no others', () => {

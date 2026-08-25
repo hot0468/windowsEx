@@ -3,7 +3,8 @@ import scenario from '../src/scenarios/workday.json'
 import { answerFits, siteView } from '../src/engine/store.js'
 
 const site = scenario.sites.find((s) => s.layout === 'calendar')
-const beat = scenario.days.flatMap((d) => d.asks ?? []).find((a) => a.ask.then?.grants === 'wedding')
+// not every beat a day brings raises a question, so reach for one carefully
+const beat = scenario.days.flatMap((d) => d.asks ?? []).find((a) => a.ask?.then?.grants === 'wedding')
 
 describe('다온 calendar and the wedding question', () => {
   it('is an outside site anyone can open', () => {

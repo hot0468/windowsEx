@@ -11,7 +11,7 @@ const doc = readFileSync('docs/endings.md', 'utf8')
 const base = { grants: {}, locks: 3, overtime: {}, days: 5, digging: {}, rumor: {} }
 const dug = { asked: true, found: true, entered: true }
 const chose = (how) => ({ heard: true, traced: true, acted: how })
-const aware = { clue_mail: true }
+const aware = { clue_obituary: true }
 const everyNight = { 1: true, 2: true, 3: true, 4: true, 5: true }
 
 describe('the ladder the doc describes', () => {

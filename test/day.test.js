@@ -56,6 +56,21 @@ describe('a day arriving', () => {
     expect(useGame.getState().beatQueue.length).toBeLessThan(held)
   })
 
+  // The wedding question used to arrive on day two while the day-three list was
+  // the one that counted it: an unlisted question one morning, an already-done
+  // line on the list the next.
+  it('only raises questions the day itself is counting', () => {
+    for (const day of scenario.days) {
+      const beats = [day.opening, ...(day.asks ?? [])].filter(Boolean)
+      for (const beat of beats) {
+        for (const step of chain(beat.ask)) {
+          if (!step.grants) continue
+          expect(day.requests, `day ${day.n} · ${beat.thread}`).toContain(step.grants)
+        }
+      }
+    }
+  })
+
   it('brings the day its own mail', () => {
     useGame.setState({ extraMails: [] })
     useGame.getState().startDay(2)

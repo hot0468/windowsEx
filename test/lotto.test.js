@@ -64,7 +64,7 @@ describe('the one who lived', () => {
 
   it('outranks overwork and the weekend, but not the truth', () => {
     expect(endingFor(scenario.ending, { grants: { lotto: true }, locks: 0 })).toBe('lotto')
-    expect(endingFor(scenario.ending, { grants: { lotto: true, [CLUE.mail]: true }, locks: 1 })).toBe('true')
+    expect(endingFor(scenario.ending, { grants: { lotto: true, [CLUE.obituary]: true }, locks: 1 })).toBe('true')
     expect(site.lotto.gone).toMatch(/본인 확인/)
     useGame.getState().grant('lotto')
     useGame.getState().finishDay()

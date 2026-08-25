@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGame, portalFeed } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
@@ -69,6 +69,146 @@ const Attendance = ({ page, onBack }) => {
   )
 }
 
+// The menu the hints have always pointed at. Nothing here is required reading —
+// which is the point of the page it leads to.
+const Menu = ({ page, onBack, onOpen }) => (
+  <article className="pt-post pt-menu">
+    <button className="pt-back" onClick={onBack}>
+      <ChevronLeft size={13} strokeWidth={2.2} />포털 홈
+    </button>
+    <h1>{page.title}</h1>
+    <ul className="pt-menu-list">
+      {page.menu.map((m) => (
+        <li key={m.path}>
+          <button onClick={() => onOpen?.(m.path)}>
+            <b>{m.label}</b>
+            <span>{m.desc}</span>
+            <ChevronRight size={14} strokeWidth={2.2} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  </article>
+)
+
+// 휴가신청: the period on record does not match the approved form, and the
+// receipt only comes out when the two agree. Nothing here can be guessed —
+// the dates are on the copy of the form the player already had to find.
+const Leave = ({ page, onBack }) => {
+  const v = page.leave
+  const [from, setFrom] = useState(v.from[0])
+  const [to, setTo] = useState(v.to[0])
+  const [result, setResult] = useState(null)
+  const submit = () =>
+    setResult(from === v.answer.from && to === v.answer.to ? 'ok' : 'no')
+  return (
+    <article className="pt-post pt-leave">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />인사관리
+      </button>
+      <h1>{page.title}</h1>
+      <p className="pt-lv-note">{v.note}</p>
+      <dl className="pt-ev-meta">
+        <div><dt>{v.current.label}</dt><dd>{v.current.period} <em>{v.current.state}</em></dd></div>
+        <div><dt>사유</dt><dd>{v.reason}</dd></div>
+        <div><dt>결재</dt><dd>{v.approver}</dd></div>
+      </dl>
+      {result === 'ok' ? (
+        <div className="pt-ev-done">
+          <p>{v.done}</p>
+          <div className="pt-ev-receipt">접수번호 <b>{v.receipt}</b></div>
+        </div>
+      ) : (
+        <div className="pt-ev-form">
+          <div className="pt-ev-row">
+            <span>시작일</span>
+            <select value={from} onChange={(e) => { setFrom(e.target.value); setResult(null) }}>
+              {v.from.map((d) => <option key={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="pt-ev-row">
+            <span>종료일</span>
+            <select value={to} onChange={(e) => { setTo(e.target.value); setResult(null) }}>
+              {v.to.map((d) => <option key={d}>{d}</option>)}
+            </select>
+          </div>
+          {result === 'no' && <p className="pt-lv-bad">{v.mismatch}</p>}
+          <button className="btn-primary" onClick={submit}>다시 등록</button>
+        </div>
+      )}
+    </article>
+  )
+}
+
+// 경조사: a weekly notice board like any other. Nothing on it is addressed to
+// the player, and the week that matters reads like the weeks around it — a
+// wedding, somebody's grandmother, and then the last entry.
+const Bereavement = ({ page, onBack }) => {
+  const b = page.board
+  const [open, setOpen] = useState(null)
+  const post = b.posts.find((x) => x.id === open)
+  if (post) return <Notice post={post} onBack={() => setOpen(null)} />
+  return (
+    <article className="pt-post pt-obit">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />인사관리
+      </button>
+      <h1>{page.title}</h1>
+      <p className="pt-obit-note">{b.note}</p>
+      <table className="pt-obit-table">
+        <thead>
+          <tr>{b.columns.map((c) => <th key={c}>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {b.posts.map((x) => (
+            <tr key={x.id}>
+              <td><button className="pt-obit-link" onClick={() => setOpen(x.id)}>{x.title}</button></td>
+              <td>{x.author}</td>
+              <td>{x.date}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </article>
+  )
+}
+
+// One week's notice, read all the way down. Opening the page is not the moment
+// the game remembers — scrolling far enough to reach the last entry is. Backing
+// out at the wedding leaves the week unread.
+const Notice = ({ post, onBack }) => {
+  const witness = useGame((s) => s.witness)
+  const end = useRef(null)
+  useEffect(() => {
+    if (!post.obituary) return
+    // without the observer the ending has to stay reachable, so opening counts
+    if (!end.current || !window.IntersectionObserver) return witness()
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && witness())
+    io.observe(end.current)
+    return () => io.disconnect()
+  }, [post.id])
+  return (
+    <article className="pt-post pt-obit">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />목록
+      </button>
+      <h1>{post.title}</h1>
+      <div className="pt-post-meta">{post.author} · {post.date}</div>
+      <p>{post.intro}</p>
+      {post.sections.map((sec, i) => (
+        <section key={i} className="pt-obit-sec">
+          <h2>■ {sec.kind}</h2>
+          <dl>
+            {sec.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+          </dl>
+          {sec.mine && <i ref={end} className="pt-obit-end" aria-hidden="true" />}
+        </section>
+      ))}
+      {post.close.map((line) => <p key={line} className="pt-obit-close">{line}</p>)}
+    </article>
+  )
+}
+
 // A sub-page reached by path: the workshop RSVP form. Submitting hands out the
 // receipt number a request will ask for.
 const Events = ({ page, onBack }) => {
@@ -118,6 +258,16 @@ const Events = ({ page, onBack }) => {
   )
 }
 
+// Each sub-page is known by the one field its data carries, and says where its
+// back button goes. A page whose shape nothing here recognises draws nothing.
+const SUBPAGES = [
+  [Attendance, 'attendance', '/hr'],
+  [Menu, 'menu', ''],
+  [Bereavement, 'board', '/hr'],
+  [Leave, 'leave', '/hr'],
+  [Events, 'event', '/hr']
+]
+
 export default function Portal({ site, path = '', onOpen }) {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
@@ -126,6 +276,10 @@ export default function Portal({ site, path = '', onOpen }) {
   // today's banner replaces yesterday's, but the 소식 list keeps piling up
   const p = { ...site.portal, ...(today ?? {}), news: portalFeed(scenario, site.portal, day) }
   const [post, setPost] = useState(null)
+  // Which sub-page a path names. A page the portal has no view for shows the
+  // portal instead of falling through to whichever view came last in a chain.
+  const [Sub, , back] = SUBPAGES.find(([, key]) => site.pages?.[path]?.[key]) ?? []
+  const sub = Boolean(Sub)
   return (
     <div className="pt">
       <div className="pt-top">
@@ -141,9 +295,8 @@ export default function Portal({ site, path = '', onOpen }) {
         </span>
       </div>
 
-      {site.pages?.[path]?.attendance
-        ? <Attendance page={site.pages[path]} onBack={() => onOpen?.('')} />
-        : site.pages?.[path] ? <Events page={site.pages[path]} onBack={() => onOpen?.('')} />
+      {sub
+        ? <Sub page={site.pages[path]} onBack={() => onOpen?.(back)} onOpen={onOpen} />
         : post ? <Post post={post} onBack={() => setPost(null)} /> : (
       <div className="pt-grid">
         <aside className="pt-me">

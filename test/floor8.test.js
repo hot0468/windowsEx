@@ -106,7 +106,7 @@ describe('going up', () => {
     const dug = { asked: true, found: true, entered: true }
     expect(endingFor(scenario.ending, { grants: {}, locks: 3, digging: dug })).toBe('missing')
     expect(endingFor(scenario.ending, { grants: { lotto: true }, locks: 3, digging: dug })).toBe('missing')
-    expect(endingFor(scenario.ending, { grants: { clue_mail: true }, locks: 0, digging: dug })).toBe('missing')
+    expect(endingFor(scenario.ending, { grants: { clue_obituary: true }, locks: 0, digging: dug })).toBe('missing')
     // and changes nothing for a player who never went
     expect(endingFor(scenario.ending, { grants: {}, locks: 3, digging: { asked: true, found: true } })).toBe('plain')
   })
