@@ -34,11 +34,17 @@ describe('reading the address bar', () => {
     expect(resolveSite(scenario, {}, 'nope.example')).toBeNull()
   })
 
-  it('treats the machine itself and a blank tab as their own pages', () => {
-    expect(specialPage('localhost')).toBe('refused')
-    expect(specialPage('127.0.0.1')).toBe('refused')
+  it('treats a blank tab as its own page', () => {
     expect(specialPage('about:blank')).toBe('blank')
     expect(specialPage('wiki.ar.co.kr')).toBeNull()
+  })
+
+  it('still has something listening on the machine itself', () => {
+    // the last occupant left a notes server running; both ways of naming
+    // this machine reach it, and the hosts file is what ties them together
+    expect(specialPage('127.0.0.1')).toBeNull()
+    expect(resolveSite(scenario, {}, '127.0.0.1').layout).toBe('notes')
+    expect(resolveSite(scenario, {}, 'localhost').url).toBe('127.0.0.1')
   })
 
   it('knows which paths exist on a site and 404s the rest', () => {

@@ -942,6 +942,22 @@ export function complaintFor(goal, reason, misses) {
 export const contentOf = (file, edits = {}) => (file ? edits[file.id] ?? file.content : '')
 
 // A hosts line is an address, whitespace, a name — comments after # ignored.
+// Every address a name is listed against, in the order the file lists them.
+// hostNames keeps only the last one, which is right for asking "what does this
+// name point at" and wrong for asking "is anything here at all".
+export function hostAddresses(scenario, edits, host) {
+  const file = findFile(scenario.fs, scenario.hosts.file)
+  const want = host.toLowerCase()
+  const out = []
+  for (const raw of contentOf(file, edits).split('\n')) {
+    const [ip, ...names] = raw.split('#')[0].trim().split(/\s+/).filter(Boolean)
+    if (ip && names.some((n) => n.toLowerCase() === want)) out.push(ip)
+  }
+  const named = scenario.hosts.required[want]
+  if (named && !out.includes(named)) out.push(named)
+  return out
+}
+
 export function hostNames(text = '') {
   const out = {}
   for (const raw of text.split('\n')) {
@@ -979,18 +995,27 @@ const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
 export function resolveSite(scenario, edits, host) {
   const exact = scenario.sites.find((s) => s.url === host)
   if (exact) return exact
-  if (!IPV4.test(host)) return null
   const file = findFile(scenario.fs, scenario.hosts.file)
   const names = { ...scenario.hosts.required, ...hostNames(contentOf(file, edits)) }
+  // A name the hosts file knows stands in for the address it points at. A name
+  // can be listed against more than one address — localhost is 127.0.0.1 and
+  // then ::1 — so try every address it carries, not just the last one to win.
+  if (!IPV4.test(host)) {
+    for (const ip of hostAddresses(scenario, edits, host)) {
+      const at = scenario.sites.find((s) => s.url === ip)
+      if (at) return at
+    }
+    return null
+  }
   const name = Object.keys(names).find((n) => names[n] === host)
   return (name && scenario.sites.find((s) => s.url === name)) ?? null
 }
 
 // Addresses that are pages in their own right, not sites to look up.
+// This machine's own address is no longer among them: something the last
+// occupant started is still listening on it, and the site list answers.
 export const specialPage = (host) =>
-  (host === 'about:blank' ? 'blank'
-    : host === 'localhost' || host === '127.0.0.1' ? 'refused'
-      : null)
+  (host === 'about:blank' ? 'blank' : null)
 
 // A path is a wiki page id or a portal sub-page; anything else on any site is a 404.
 export function pathKnown(site, path = '') {

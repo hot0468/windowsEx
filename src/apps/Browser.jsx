@@ -11,6 +11,7 @@ import Board from './Board.jsx'
 import Gov from './Gov.jsx'
 import Lotto from './Lotto.jsx'
 import Floor8 from './Floor8.jsx'
+import Notes from './Notes.jsx'
 import Vendor from './Vendor.jsx'
 import Router from './Router.jsx'
 import PrinterWeb from './PrinterWeb.jsx'
@@ -486,6 +487,7 @@ export default function Browser() {
               : site.layout === 'gov' ? <Gov site={site} />
               : site.layout === 'lotto' ? <Lotto site={site} />
               : site.layout === 'floor8' ? <Floor8 site={site} />
+              : site.layout === 'notes' ? <Notes site={site} />
               : site.layout === 'vendor' ? <Vendor site={site} />
               : site.layout === 'router' ? <Router site={site} />
               : site.layout === 'printerweb' ? <PrinterWeb site={site} />

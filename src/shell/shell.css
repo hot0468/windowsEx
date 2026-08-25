@@ -1328,3 +1328,22 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .dt-net td { padding: 3px 8px; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
 .dt-net tr:nth-child(even) td { background: #f8f9fa; }
 .dt-net tr.bad td { color: #d93025; }
+
+/* ── 이전 자리 주인이 켜둔 메모 서버 ─────────────────────── */
+.nt { min-height: 100%; padding: 26px 30px 34px; background: #fbfbf8; color: #23241f;
+      font-family: Consolas, "D2Coding", monospace; font-size: 13px; line-height: 1.8; }
+.nt-head { padding-bottom: 12px; border-bottom: 1px solid #d8d8d0; margin-bottom: 6px; }
+.nt-head h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
+.nt-head p { margin: 4px 0 0; font-size: 11.5px; color: #8a8a80; }
+.nt-entry { padding: 16px 0; border-bottom: 1px dashed #dedcd2; }
+.nt-entry p { margin: 0 0 4px; white-space: pre-wrap; }
+.nt-meta { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.nt-date { font-size: 11px; color: #a09e92; }
+.nt-title { font-size: 13.5px; font-weight: 700; color: #1a4fa0; }
+.nt-entry.cut p:last-of-type { display: inline; }
+.nt-caret { display: inline-block; width: 7px; height: 14px; margin-left: 2px;
+            background: #23241f; vertical-align: text-bottom; animation: nt-blink 1.1s step-end infinite; }
+@keyframes nt-blink { 50% { opacity: 0; } }
+.nt-foot { display: flex; flex-direction: column; gap: 3px; margin-top: 18px;
+           font-size: 11px; color: #a09e92; }
+.nt-uptime { color: #b4483a; }
