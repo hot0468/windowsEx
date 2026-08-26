@@ -1113,7 +1113,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
   .clear-overlay.ot > * { animation: none; }
 }
 .ot-count { color: #e0a25e; font-size: 13px; }
-.ot-note { max-width: 420px; margin-top: 10px; color: rgba(255,255,255,.45); font-size: 12px; line-height: 1.8; }
+/* the two choices are two sentences, and they get a line each */
+.ot-note { max-width: 460px; margin-top: 10px; color: rgba(255,255,255,.45); font-size: 12px; line-height: 1.8; white-space: pre-line; }
 
 /* the layoff notice */
 .clear-overlay.lay { background: rgba(20,20,24,.95); }
