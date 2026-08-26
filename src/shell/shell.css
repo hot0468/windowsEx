@@ -304,8 +304,14 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .vw-count + .vw-zoom { margin-left: 8px; }
 .vw:focus { outline: none; }
 .vw-zoom:hover { background: #e4e4ea; }
-.vw-canvas { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 14px; }
-.vw-canvas img { display: block; height: auto; border-radius: 3px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+/* A picture fits the window the way a picture viewer fits one: the stage is
+   the size of the canvas times the zoom, and the image is contained in it. At
+   맞춤 that is exactly the canvas, so nothing scrolls; zoomed in, the canvas
+   scrolls around a bigger stage. Tall and wide pictures need no special case. */
+.vw-canvas { flex: 1; overflow: auto; padding: 14px; }
+.vw-stage { display: flex; align-items: center; justify-content: center; }
+.vw-canvas img { display: block; max-width: 100%; max-height: 100%; object-fit: contain;
+                 border-radius: 3px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
 .vw-none { padding: 20px; }
 
 /* browser */
