@@ -13,7 +13,9 @@ const threads = [scenario.workMessenger, scenario.privateMessenger]
 const asks = [
   ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(steps),
   ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => steps(a.ask))),
-  ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask))
+  ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask)),
+  // the caller's questions are questions too
+  ...steps(scenario.summons?.beat?.ask)
 ].filter((a) => a?.accept)
 const answers = asks.flatMap((a) => a.accept.flat()).filter((a) => a.length > 2)
 

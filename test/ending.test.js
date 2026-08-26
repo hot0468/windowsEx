@@ -163,8 +163,11 @@ describe('the easter eggs', () => {
   })
 
   it('has mother keep sending food and money, and the bank keep noticing', () => {
-    const mom = threads.find((t) => t.id === 'mom')
-    expect(JSON.stringify(mom)).toMatch(/상 차리는/)
+    // she says it once the address has been given, not on the first morning:
+    // day one opens her thread for everyone, and this line only works on a
+    // reader who already suspects something
+    const hers = scenario.chatter.filter((c) => c.beat.thread === 'mom')
+    expect(JSON.stringify(hers)).toMatch(/상 차리는/)
     const card = threads.find((t) => t.id === 'card')
     expect(card.messages.filter((m) => m.text.includes('입금') && m.text.includes('엄마')).length).toBeGreaterThanOrEqual(2)
   })

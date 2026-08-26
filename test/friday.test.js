@@ -203,9 +203,16 @@ describe('the month that never happened', () => {
     expect(said(j)).toMatch(/읽씹|왜 답이 없|읽고 있으면|살아있/)
   })
 
-  it('has 엄마 know, because she is the one at the bedside', () => {
+  // Day one sends the player into 엄마's thread for the company address, so
+  // whatever is in it is read by everyone, always. It may never say where she
+  // is: the same lines have to pass as an ordinary worried mother the first
+  // time and as a month at a bedside the second.
+  it('never lets 엄마 say where she has been sitting', () => {
     const mom = thread('mom')
-    expect(said(mom)).toMatch(/병원|병실|엄마가 옆에|일어나/)
+    expect(JSON.stringify(mom)).not.toMatch(/병원|병실|중환자|의사|입원|상 차리는/)
+    // she is still there every week, saying so without saying it
+    expect(said(mom)).toMatch(/엄마 여기 있다/)
+    expect(said(mom)).toMatch(/복숭아/)
     // and she keeps sending money either way
     const card = threads.find((t) => t.id === 'card')
     expect(card.messages.filter((m) => m.text.includes('입금') && m.text.includes('엄마')).length)

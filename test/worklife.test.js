@@ -9,6 +9,8 @@ const asks = [
   ...threads.flatMap((t) => [...chain(t.ask), ...(t.reactions ?? []).flatMap((r) => chain(r.ask))]),
   ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask))),
   ...scenario.pool.requests.flatMap((r) => chain(r.beat.ask)),
+  // the caller's questions are questions too
+  ...chain(scenario.summons?.beat?.ask),
   ...Object.values(scenario.overtime?.days ?? {}).flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask)))
 ].filter(Boolean)
 
