@@ -18,7 +18,6 @@
 - `cat1.webp` — 花 狸 ([Pexels](https://www.pexels.com))
 - `cat2.webp` — Reanimated Man X ([Pexels](https://www.pexels.com))
 - `cheers.webp` — Ketut Subiyanto ([Pexels](https://www.pexels.com))
-- `gyul.webp` — Văn Long Bùi ([Pexels](https://www.pexels.com))
 - `idcard.webp` — 직접 제작
 - `korean_meal.webp` — Rov Camato ([Pexels](https://www.pexels.com))
 - `news/n_accident.webp` — Violetta B ([Pexels](https://www.pexels.com/photo/sunrise-over-empty-highway-roadway-scene-28574011/))
