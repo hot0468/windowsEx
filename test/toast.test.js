@@ -130,3 +130,50 @@ describe('day one hands the conversations over in order', () => {
     expect(rung.indexOf(mom)).toBeLessThan(rung.indexOf(jihyun))
   })
 })
+
+describe('a conversation that opens says all of it', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useGame.setState({
+      day: 1, toast: null, extraMessages: {}, msgCount: 0,
+      windows: [], openThread: {}, typing: {}
+    })
+  })
+  afterEach(() => vi.useRealTimers())
+
+  const rungBy = (threadId) => {
+    const seen = []
+    const real = useGame.getState().showToast
+    useGame.setState({ showToast: (t) => { seen.push(t); real(t) } })
+    useGame.getState().nudge(threadId)
+    vi.runAllTimers()
+    useGame.setState({ showToast: real })
+    return seen
+  }
+
+  it('rings once per line rather than only for the last one', () => {
+    // 지현 opens the first day with eight lines — her birthday, the lottery
+    // serial, the password hint. Only the last used to raise a toast.
+    const lines = scenario.privateMessenger.sections
+      .flatMap((s) => s.threads).find((t) => t.id === 'jihyun')
+      .messages.filter((m) => m.day === 1 && !m.me)
+    expect(lines.length).toBeGreaterThan(3)
+
+    const rung = rungBy('jihyun')
+    expect(rung).toHaveLength(lines.length)
+    expect(rung.map((t) => t.text)).toEqual(lines.map((m) => m.text))
+  })
+
+  it('keeps every line of a thread pointed at its own messenger', () => {
+    for (const t of rungBy('jihyun')) {
+      expect(t.app).toBe('chat')
+      expect(t.thread).toBe('jihyun')
+    }
+    for (const t of rungBy('security')) expect(t.app).toBe('messenger')
+  })
+
+  it('says nothing for a thread with nothing to say today', () => {
+    useGame.setState({ day: 4 })
+    expect(rungBy('jihyun')).toHaveLength(0)
+  })
+})

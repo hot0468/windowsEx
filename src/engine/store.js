@@ -64,6 +64,9 @@ let toastId = 0
 
 // How long the day waits between two things being said.
 const BEAT_GAP = 3600
+// And how long between consecutive lines of one conversation opening up:
+// short enough to read as one person typing, long enough to read each toast.
+const NUDGE_GAP = 2200
 // Who asks for the IP, and the thread's own `wait` — the scenario names the
 // same grant, so the conversation and its trigger cannot drift apart.
 export const IP_THREAD = 'security'
@@ -183,19 +186,24 @@ export const useGame = create((set, get) => ({
     play('notify')
     set({ toast: { ...toast, id: ++toastId } })
   },
-  // A conversation that has just opened says the last thing it has to say, so
-  // the player knows where the day went next.
+  // A conversation that has just opened says everything it has to say, one line
+  // at a time, so the player sees it arrive the way the other side sent it —
+  // 지현 opens with eight lines, and only the last of them used to ring.
   nudge: (threadId) => {
     const s = get()
     const t = allThreads(s.scenario).find((x) => x.id === threadId)
     const said = threadMessages(t, s.scenario, s.msgCount, s.extraMessages)
-      .filter((m) => m.day === s.day && !m.me).at(-1)
-    if (!said) return
+      .filter((m) => m.day === s.day && !m.me)
+    if (!said.length) return
     const source = s.scenario.workMessenger.sections.some((sec) => sec.threads.some((x) => x.id === threadId))
       ? 'workMessenger' : 'privateMessenger'
-    setTimeout(() => get().showToast({
-      from: said.from, text: said.text, app: appOf(source), source, thread: threadId
-    }), 1800)
+    said.forEach((msg, i) => setTimeout(() => {
+      if (i < said.length - 1) get().setTyping(threadId, true)
+      else get().setTyping(threadId, false)
+      get().showToast({
+        from: msg.from, text: msg.text, app: appOf(source), source, thread: threadId
+      })
+    }, 1800 + i * NUDGE_GAP))
   },
   // The intranet turning the machine away is what starts the IP conversation:
   // the block card says to ask 정보보안팀, and 차민혁 gets there first. Until
