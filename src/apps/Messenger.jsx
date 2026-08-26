@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, quickSets, threadMessages, unreadCount } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, offerable, quickSets, threadMessages, unreadCount } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -121,7 +121,13 @@ export default function Messenger({ source }) {
   // A thread can also be waiting on something the player has not run into yet:
   // it keeps its history and says nothing about today until that happens.
   const held = heldThreads(scenario, day, { grants, unlocked, overtime, drawn, ripples })
-  const heldBack = (t) => (held?.has(t.id) || (t.wait && !grants[t.wait]) ? day : 0)
+  // A thread that waits to be spoken to: 강 사장님's last question went
+  // unanswered in July, and offering a reply under it is worse than silence.
+  // It keeps its history and nothing else until he writes again himself.
+  const spoke = (t) => threadMessages(t, scenario, msgCount, extraMessages)
+    .some((m) => m.day === day && !m.me)
+  const heldBack = (t) =>
+    (held?.has(t.id) || (t.wait && !grants[t.wait]) || (t.awaits && !spoke(t)) ? day : 0)
   const msgsOf = (t) => threadMessages(t, scenario, msgCount, extraMessages, heldBack(t))
   // History carries the date it was said on; this week's messages carry their day.
   const dateOf = (m) => m?.date ?? (m?.day === undefined ? null : days[m.day - 1]?.date ?? `${m.day}일차`)
@@ -177,16 +183,18 @@ export default function Messenger({ source }) {
   // thread's own sets advance as you keep replying.
   // A conversation still waiting its turn offers nothing to say back yet.
   const quiet = Boolean(thread && heldBack(thread))
-  // How far this conversation has got today — what the window used to count in
-  // its own state, and now reads back from where the exchange is kept.
-  const exchanged = thread ? (extraMessages[thread.id] ?? []).filter((e) => e.text).length : 0
-  // Some things there is no way to say yet: a complaint about a program only
-  // exists once the player has watched it fail to open something.
-  const offerable = (list) => list.filter((c) => !thread.gate?.[c] || grants[thread.gate[c]])
+  // The sets advance as the player keeps replying — their own replies, not
+  // every line pushed into the thread, or a day's opening alone would jump
+  // straight to the last set.
+  const exchanged = shown.filter((m) => m.me).length
+  // What the player has already said here, so a canned line is not handed back
+  // the next time the other side speaks.
+  const said = new Set(shown.filter((m) => m.me).map((m) => m.text))
   const choices = !thread || quiet
     ? []
     : offerable(branch[thread.id]
-      ?? quickSets(thread)[Math.min(exchanged, quickSets(thread).length - 1)])
+      ?? quickSets(thread)[Math.min(exchanged, quickSets(thread).length - 1)],
+    { gate: thread.gate, grants, said })
   const speak = (lines) => sayBack(thread.id, thread.name, lines)
 
   const reactTo = (key) => {

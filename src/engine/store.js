@@ -823,6 +823,18 @@ export const unreadCount = (all, seen = 0) => {
 // from, so the toast follows it there rather than always opening AR톡.
 export const appOf = (source) => (source === 'privateMessenger' ? 'chat' : 'messenger')
 
+// The timed script is the first morning's, and it is delivered once. Every
+// reboot — clocking off into tomorrow, or a crash — starts the app again, so
+// what is left to say is what has not been said yet, not the whole thing over.
+export const scriptLeft = (messenger = [], msgCount = 0) => messenger.slice(msgCount)
+
+// What a conversation still has to offer. A line the player has already used is
+// not offered again — the live thread speaks all day, and every time it did the
+// same canned reply came back and could be sent once more. A line the thread
+// gates on something the player has not run into yet is not offered either.
+export const offerable = (choices = [], { gate = {}, grants = {}, said = new Set() } = {}) =>
+  choices.filter((c) => !said.has(c) && (!gate[c] || grants[gate[c]]))
+
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
 // Loose match: spacing and case are forgiven. An entry may be an array, in
@@ -1144,7 +1156,12 @@ export function heldThreads(scenario, day, state) {
   // conversations after it stay shut with nothing left to open them.
   const step = done.findIndex((d) => !d) === -1 ? done.length : done.findIndex((d) => !d)
   const host = hostThreads(scenario)
-  const hosts = list.map((o) => host[o.id])
+  // The live thread carries the day's own opening as well as whatever request
+  // it happens to host, so holding it back holds back the morning itself —
+  // nobody says anything and the day looks like it never started. It is never
+  // in the queue, on either side of it.
+  const live = allThreads(scenario).find((t) => t.live)?.id
+  const hosts = list.map((o) => (host[o.id] === live ? null : host[o.id]))
   const taken = new Set(hosts.filter(Boolean))
   const idle = allThreads(scenario)
     .filter((t) => !t.live && !taken.has(t.id) && (t.messages ?? []).some((m) => m.day === day))

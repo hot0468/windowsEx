@@ -138,10 +138,13 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .lock-err { font-size: 12px; color: #ffb4a8; text-align: center; }
 .lock-err span { display: block; margin-top: 4px; color: rgba(255,255,255,.75); }
 .quit-day { color: #8fd0ff; font-size: 13px; }
-.quit-list { list-style: none; margin: 6px 0 4px; }
-.quit-list li { padding: 3px 0; color: rgba(255,255,255,.7); font-size: 12px; }
-.quit-list li::before { content: '✓ '; color: #2fbf5f; }
-.quit-stat { color: rgba(255,255,255,.55); font-size: 12px; }
+/* the day's tally, read as a figure rather than a sentence */
+.quit-score { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 10px 0 6px; }
+.quit-score b { font-size: 58px; font-weight: 300; line-height: 1; letter-spacing: -.02em;
+                color: #fff; font-variant-numeric: tabular-nums; }
+.quit-score span { color: rgba(255,255,255,.5); font-size: 12px; letter-spacing: .12em; }
+.quit-score i { margin-top: 6px; padding: 2px 9px; border-radius: 10px; font-style: normal;
+                background: rgba(255,168,76,.16); color: #ffa84c; font-size: 11px; }
 .quit-line { max-width: 460px; color: rgba(255,255,255,.8); font-size: 13px; line-height: 1.9; }
 .pg-date { color: rgba(255,255,255,.5) !important; font-size: 11px !important; padding-bottom: 4px !important; border-bottom: 1px solid rgba(255,255,255,.12); margin-bottom: 4px; }
 .clear-overlay.fail .big { opacity: .5; filter: grayscale(1); }
@@ -1155,8 +1158,26 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 /* the overtime offer */
 .clear-overlay.ot { background: rgba(26,18,10,.93); }
 .clear-overlay.ot h1 { font-size: 26px; }
+/* The evening arrives a line at a time rather than all at once. nth-child
+   counts what is actually on screen, so an optional line shifting the rest
+   down needs no case of its own. */
+.clear-overlay.ot > *, .clear-overlay.quit > * { animation: end-in .5s ease both; }
+.clear-overlay.ot > *:nth-child(1), .clear-overlay.quit > *:nth-child(1) { animation-delay: 80ms; }
+.clear-overlay.ot > *:nth-child(2), .clear-overlay.quit > *:nth-child(2) { animation-delay: 480ms; }
+.clear-overlay.ot > *:nth-child(3), .clear-overlay.quit > *:nth-child(3) { animation-delay: 880ms; }
+.clear-overlay.ot > *:nth-child(4), .clear-overlay.quit > *:nth-child(4) { animation-delay: 1280ms; }
+.clear-overlay.ot > *:nth-child(5), .clear-overlay.quit > *:nth-child(5) { animation-delay: 1700ms; }
+.clear-overlay.ot > *:nth-child(6), .clear-overlay.quit > *:nth-child(6) { animation-delay: 2000ms; }
+.clear-overlay.ot > *:nth-child(n+7), .clear-overlay.quit > *:nth-child(n+7) { animation-delay: 2300ms; }
+/* the figure lands rather than drifts up */
+.clear-overlay.quit .quit-score b { animation: quit-pop .55s cubic-bezier(.2,.9,.3,1.4) both; animation-delay: 900ms; }
+@keyframes quit-pop { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .clear-overlay.ot > *, .clear-overlay.quit > *, .clear-overlay.quit .quit-score b { animation: none; }
+}
 .ot-count { color: #e0a25e; font-size: 13px; }
-.ot-note { max-width: 420px; margin-top: 10px; color: rgba(255,255,255,.45); font-size: 12px; line-height: 1.8; }
+/* the two choices are two sentences, and they get a line each */
+.ot-note { max-width: 460px; margin-top: 10px; color: rgba(255,255,255,.45); font-size: 12px; line-height: 1.8; white-space: pre-line; }
 
 /* the layoff notice */
 .clear-overlay.lay { background: rgba(20,20,24,.95); }
