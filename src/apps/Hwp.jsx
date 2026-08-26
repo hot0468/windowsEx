@@ -1,7 +1,63 @@
 import { useEffect, useState } from 'react'
 import { useGame, findFile } from '../engine/store.js'
+import { isForm, parseDoc, signOff } from './docLayout.js'
 
 const ZOOMS = [100, 125, 150]
+
+// The columns of an approval box, the way every Korean form has one along the
+// top right. Only the ones the document itself filled in are drawn.
+const Stamp = ({ rows }) => (
+  <table className="doc-stamp">
+    <tbody>
+      <tr>{rows.map((r) => <th key={r.label}>{r.label}</th>)}</tr>
+      <tr>{rows.map((r) => <td key={r.label}>{r.value}</td>)}</tr>
+    </tbody>
+  </table>
+)
+
+// What somebody typed, drawn as the document they meant. Blocks come from
+// docLayout; nothing here decides what the text says.
+function Doc({ content }) {
+  const blocks = parseDoc(content)
+  const stamp = signOff(blocks)
+  const seen = new Set()
+  return (
+    <div className={'doc' + (isForm(blocks) ? ' form' : '')}>
+      {stamp.length > 0 && <div className="doc-topbar"><Stamp rows={stamp} /></div>}
+      {blocks.map((b, i) => {
+        if (b.kind === 'title') return <h1 key={i} className="doc-title">{b.text}</h1>
+        if (b.kind === 'head') return <h2 key={i} className="doc-head">{b.text}</h2>
+        if (b.kind === 'note') return <p key={i} className="doc-note">{b.text}</p>
+        if (b.kind === 'blank') return <div key={i} className="doc-gap" />
+        if (b.kind === 'bullet') {
+          return <ul key={i} className="doc-list">{b.items.map((x, k) => <li key={k}>{x}</li>)}</ul>
+        }
+        if (b.kind === 'number') {
+          return (
+            <ol key={i} className="doc-list num">
+              {b.items.map((x, k) => <li key={k}><i>{b.marks[k]}.</i>{x}</li>)}
+            </ol>
+          )
+        }
+        if (b.kind === 'fields') {
+          // a row already drawn in the approval box is not repeated below it
+          const rows = b.rows.filter((r) => !(r.signed && !seen.has(r.label) && seen.add(r.label)))
+          if (!rows.length) return null
+          return (
+            <table key={i} className="doc-fields">
+              <tbody>
+                {rows.map((r, k) => (
+                  <tr key={k}><th>{r.label}</th><td>{r.value}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+        return <p key={i} className="doc-p">{b.text}</p>
+      })}
+    </div>
+  )
+}
 
 export default function Hwp({ fileId }) {
   const fs = useGame((s) => s.scenario.fs)
@@ -47,7 +103,7 @@ export default function Hwp({ fileId }) {
       <div className="hwp-ruler" />
       <div className="hwp-canvas">
         <div className="hwp-page" style={{ width: `${ZOOMS[zoom] * 5.2}px` }}>
-          <pre className="hwp-text">{file.content}</pre>
+          <Doc content={file.content} />
           <div className="hwp-pageno">- 1 -</div>
         </div>
       </div>
