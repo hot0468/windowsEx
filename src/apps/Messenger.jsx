@@ -121,7 +121,13 @@ export default function Messenger({ source }) {
   // A thread can also be waiting on something the player has not run into yet:
   // it keeps its history and says nothing about today until that happens.
   const held = heldThreads(scenario, day, { grants, unlocked, overtime, drawn, ripples })
-  const heldBack = (t) => (held?.has(t.id) || (t.wait && !grants[t.wait]) ? day : 0)
+  // A thread that waits to be spoken to: 강 사장님's last question went
+  // unanswered in July, and offering a reply under it is worse than silence.
+  // It keeps its history and nothing else until he writes again himself.
+  const spoke = (t) => threadMessages(t, scenario, msgCount, extraMessages)
+    .some((m) => m.day === day && !m.me)
+  const heldBack = (t) =>
+    (held?.has(t.id) || (t.wait && !grants[t.wait]) || (t.awaits && !spoke(t)) ? day : 0)
   const msgsOf = (t) => threadMessages(t, scenario, msgCount, extraMessages, heldBack(t))
   // History carries the date it was said on; this week's messages carry their day.
   const dateOf = (m) => m?.date ?? (m?.day === undefined ? null : days[m.day - 1]?.date ?? `${m.day}일차`)
