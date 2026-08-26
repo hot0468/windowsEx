@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { appOf, useGame, watchingThread } from '../src/engine/store.js'
+import { appOf, requestsOf, useGame, watchingThread } from '../src/engine/store.js'
 
 const chat = { from: '차민혁', text: '보냈습니다', app: 'messenger', source: 'workMessenger', thread: 'boss' }
 
@@ -95,5 +95,38 @@ describe('a toast opens the app it came from', () => {
       }
     }
     throw new Error('no 톡톡 chatter fired in 30 draws')
+  })
+})
+
+describe('day one hands the conversations over in order', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useGame.setState({
+      day: 1, grants: {}, unlocked: {}, sheetEdits: {}, overtime: {}, drawn: {}, ripples: {},
+      toast: null, extraMessages: {}, chatted: {}, msgCount: 0, windows: [], openThread: {}
+    })
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('rings for 엄마 and 지현 instead of leaving them sitting there unseen', () => {
+    // both start the day held back, so the player would otherwise only find
+    // them by opening 톡톡 on a hunch
+    const rung = []
+    for (const o of requestsOf(scenario, 1, {}, {}, {})) {
+      useGame.setState({ toast: null })
+      useGame.getState().grant(o.grant ?? o.id)
+      vi.runAllTimers()
+      const t = useGame.getState().toast
+      if (t?.thread) rung.push(t)
+    }
+    const mom = rung.find((t) => t.thread === 'mom')
+    const jihyun = rung.find((t) => t.thread === 'jihyun')
+    expect(mom, '엄마 never announced herself').toBeTruthy()
+    expect(jihyun, '지현 never announced herself').toBeTruthy()
+    // and clicking either one has to land in 톡톡, not AR톡
+    expect(mom.app).toBe('chat')
+    expect(jihyun.app).toBe('chat')
+    // 엄마 comes before 지현, the order the day is written in
+    expect(rung.indexOf(mom)).toBeLessThan(rung.indexOf(jihyun))
   })
 })
