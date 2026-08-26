@@ -3,6 +3,7 @@ import scenario from '../src/scenarios/workday.json'
 import {
   CLUE, PROGRESS, answerFits, dreamGallery, endingFor, searchBlogs, useGame, visibleByDay
 } from '../src/engine/store.js'
+import { shotOf } from '../src/assets/photos.js'
 
 // The week the game plays is dated by scenario.days — 8월 23일 (월) onward —
 // and 다온 캘린더 draws August with the 1st on a Sunday. Every other weekday
@@ -606,5 +607,41 @@ describe('taking the summons, or refusing it', () => {
     // the conversation is still open on the phone, unread
     expect(said).toMatch(/읽지 않|안 읽|나간 대화방|대화방/)
     expect(said).not.toMatch(/숨졌|부고|별세|노잣돈/)
+  })
+})
+
+// The blog does not say the photographs are not his. It shows them: the same
+// sea, the same wall, the same straw hat, worn by a face that is not his. Every
+// picture it borrows has to resolve to a real file, and every scene it shows
+// has to be one the gallery also holds — otherwise the pairing the whole
+// reveal rests on is not there to be noticed.
+describe('the pictures the blog actually shows', () => {
+  const blog = scenario.blogs.find((b) => b.id === scenario.dream.blog)
+  const shots = blog.body.filter((p) => p?.shot).map((p) => p.shot)
+
+  it('shows enough of them to be a month of somebody\'s life', () => {
+    expect(shots.length).toBeGreaterThanOrEqual(6)
+    expect(new Set(shots).size).toBe(shots.length)
+  })
+
+  it('resolves every one to a bundled image', () => {
+    for (const name of shots) expect(shotOf(name), name).toBeTruthy()
+  })
+
+  it('pairs each borrowed scene with the one in his gallery', () => {
+    const gallery = scenario.fs.휴대폰.find((f) => f.name === '갤러리').children
+    const borrowed = shots.filter((n) => /^jeju/.test(n))
+    expect(borrowed.length).toBeGreaterThanOrEqual(6)
+    for (const name of borrowed) {
+      const twin = gallery.find((p) => p.id === `file_${name}`)
+      expect(twin, `gallery has no twin for ${name}`).toBeTruthy()
+      // and it is one of the ten the dream gives back when the post is read
+      expect(scenario.dream.photos, name).toContain(twin.id)
+    }
+  })
+
+  it('still never claims in words that they are not his', () => {
+    const said = JSON.stringify(blog.body.filter((p) => typeof p === 'string'))
+    expect(said).not.toMatch(/김한별|도용|훔쳐|같은 사진/)
   })
 })

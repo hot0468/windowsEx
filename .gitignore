@@ -1,3 +1,7 @@
 node_modules/
 dist/
 .env
+
+# 합성 원본. 게임은 src/assets/shots/의 webp 변환본을 쓴다
+src/assets/files/*_ori.png
+src/assets/files/Gemini_Generated_Image_*.png
