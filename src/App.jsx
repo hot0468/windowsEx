@@ -171,17 +171,18 @@ function QuitOverlay() {
   const ripples = useGame((s) => s.ripples)
   const today = scenario.days[day - 1]
 
+  // The day's tally, not its minutes: the list of what was done is the thing
+  // the player just spent the day doing, and reading it back is not a reward.
+  const done = requestsOf(scenario, day, overtime, drawn, ripples).length
   return (
     <div className="clear-overlay quit">
-      <div className="big"><Icon name="trophy" size={64} /></div>
       <h1>{scenario.quitting.title}</h1>
       <p className="quit-day">{today.date} · {today.label}</p>
-      <ul className="quit-list">
-        {requestsOf(scenario, day, overtime, drawn, ripples).map((o) => <li key={o.id}>{o.title}</li>)}
-      </ul>
-      <p className="quit-stat">
-        요청 {requestsOf(scenario, day, overtime, drawn, ripples).length}건 완료{overtime[day] && ' · 야근'}
-      </p>
+      <div className="quit-score">
+        <b>{done}</b>
+        <span>요청 완료</span>
+        {overtime[day] && <i>야근</i>}
+      </div>
       {today.closing?.map((line, i) => <p key={i} className="quit-line">{line}</p>)}
       <button className="btn-primary" onClick={finishDay}>{scenario.quitting.button}</button>
     </div>
