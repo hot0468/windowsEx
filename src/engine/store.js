@@ -194,7 +194,7 @@ export const useGame = create((set, get) => ({
     const source = s.scenario.workMessenger.sections.some((sec) => sec.threads.some((x) => x.id === threadId))
       ? 'workMessenger' : 'privateMessenger'
     setTimeout(() => get().showToast({
-      from: said.from, text: said.text, app: 'messenger', source, thread: threadId
+      from: said.from, text: said.text, app: appOf(source), source, thread: threadId
     }), 1800)
   },
   // The intranet turning the machine away is what starts the IP conversation:
@@ -328,7 +328,7 @@ export const useGame = create((set, get) => ({
     if (!fresh) return
     setTimeout(() => get().showToast({
       from: after.from, text: after.lines[0],
-      app: 'messenger', source: after.source, thread: after.thread
+      app: appOf(after.source), source: after.source, thread: after.thread
     }), 3200)
   },
 
@@ -393,7 +393,7 @@ export const useGame = create((set, get) => ({
       after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
       get().showToast({
         from: after.from, text: after.lines[1],
-        app: 'messenger', source: after.source, thread: after.thread
+        app: appOf(after.source), source: after.source, thread: after.thread
       })
     }, 5200)
   },
@@ -457,7 +457,7 @@ export const useGame = create((set, get) => ({
     const ev = s.scenario.ending.event
     setTimeout(() => {
       ev.lines.forEach((text) => get().pushMessage(ev.thread, { from: ev.from, text }))
-      get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: 'messenger', source: ev.source, thread: ev.thread })
+      get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: appOf(ev.source), source: ev.source, thread: ev.thread })
     }, ev.delay)
   },
 
@@ -504,7 +504,7 @@ export const useGame = create((set, get) => ({
     const o = outageOf(s.scenario)
     setTimeout(() => {
       o.down.forEach((text) => get().pushMessage(o.thread, { from: o.from, text }))
-      get().showToast({ from: o.from, text: o.down[0], app: 'messenger', source: o.source, thread: o.thread })
+      get().showToast({ from: o.from, text: o.down[0], app: appOf(o.source), source: o.source, thread: o.thread })
     }, 2500)
   },
   fixRouter: () => {
@@ -520,7 +520,7 @@ export const useGame = create((set, get) => ({
     get().grant('phished')
     setTimeout(() => {
       after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
-      get().showToast({ from: after.from, text: after.lines[0], app: 'messenger', source: after.source, thread: after.thread })
+      get().showToast({ from: after.from, text: after.lines[0], app: appOf(after.source), source: after.source, thread: after.thread })
     }, after.delay ?? 2500)
   },
   grant: (key) => {
@@ -558,7 +558,7 @@ export const useGame = create((set, get) => ({
     setTimeout(() => {
       const { beat } = chosen
       beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
-      get().showToast({ from: beat.from, text: beat.lines[0], app: 'messenger', source: beat.source, thread: beat.thread })
+      get().showToast({ from: beat.from, text: beat.lines[0], app: appOf(beat.source), source: beat.source, thread: beat.thread })
     }, 2600)
   },
   // A day speaks one conversation at a time. Its beats go in a queue, and the
@@ -582,7 +582,7 @@ export const useGame = create((set, get) => ({
     if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
     get().showToast({
       from: beat.from, text: beat.lines[0],
-      app: 'messenger', source: beat.source, thread: beat.thread
+      app: appOf(beat.source), source: beat.source, thread: beat.thread
     })
     if (rest.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
   },
@@ -678,7 +678,7 @@ export const useGame = create((set, get) => ({
         get().pushMessage(c.thread, { from: c.from, text })
         if (i === lines.length - 1) {
           get().setTyping(c.thread, false)
-          get().showToast({ from: c.from, text, app: 'messenger', source: c.source, thread: c.thread })
+          get().showToast({ from: c.from, text, app: appOf(c.source), source: c.source, thread: c.thread })
           after?.()
         }
       }, i * 1600))
@@ -773,6 +773,10 @@ export const unreadCount = (all, seen = 0) => {
   const read = Math.max(seen, all.filter((msg) => msg.date !== undefined).length)
   return all.filter((msg, i) => i >= read && !msg.me).length
 }
+
+// Which app a toast should open. A beat already names the messenger it came
+// from, so the toast follows it there rather than always opening AR톡.
+export const appOf = (source) => (source === 'privateMessenger' ? 'chat' : 'messenger')
 
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
