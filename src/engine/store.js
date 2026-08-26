@@ -828,6 +828,13 @@ export const appOf = (source) => (source === 'privateMessenger' ? 'chat' : 'mess
 // what is left to say is what has not been said yet, not the whole thing over.
 export const scriptLeft = (messenger = [], msgCount = 0) => messenger.slice(msgCount)
 
+// What a conversation still has to offer. A line the player has already used is
+// not offered again — the live thread speaks all day, and every time it did the
+// same canned reply came back and could be sent once more. A line the thread
+// gates on something the player has not run into yet is not offered either.
+export const offerable = (choices = [], { gate = {}, grants = {}, said = new Set() } = {}) =>
+  choices.filter((c) => !said.has(c) && (!gate[c] || grants[gate[c]]))
+
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
 // Loose match: spacing and case are forgiven. An entry may be an array, in
