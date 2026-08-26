@@ -1137,16 +1137,33 @@ export const allThreads = (scenario) =>
 export function heldThreads(scenario, day, state) {
   if (day > (scenario.tutorialDays ?? 0)) return null
   const list = requestsOf(scenario, day, state.overtime, state.drawn, state.ripples)
-  const step = list.filter((o) => objectiveDone(o, state)).length
+  const done = list.map((o) => objectiveDone(o, state))
+  // How far the queue has actually got: the run of requests finished from the
+  // front. Counting every finished request instead would let the count fall
+  // behind the position — answer the third request before the second and the
+  // conversations after it stay shut with nothing left to open them.
+  const step = done.findIndex((d) => !d) === -1 ? done.length : done.findIndex((d) => !d)
   const host = hostThreads(scenario)
   const hosts = list.map((o) => host[o.id])
   const taken = new Set(hosts.filter(Boolean))
   const idle = allThreads(scenario)
     .filter((t) => !t.live && !taken.has(t.id) && (t.messages ?? []).some((m) => m.day === day))
     .map((t) => t.id)
+  // The queue hands out one conversation per answer, so what it has reached is
+  // how many are done in all — not the unbroken run from the front, which
+  // stalls the moment the player answers out of order and leaves the requests
+  // behind the gap with nothing able to raise them.
+  const reach = done.filter(Boolean).length
+  // Position counted among the conversations only. Several requests are
+  // answered somewhere other than a chat — a wiki page, a mail, a booking form
+  // — and counting those into the order pushed the last conversations past
+  // anything the day could reach, leaving their requests on the list with no
+  // way to raise them.
+  let place = -1
+  const rank = hosts.map((id) => (id ? ++place : -1))
   const held = new Set()
-  hosts.forEach((id, i) => { if (id && step < i) held.add(id) })
-  idle.forEach((id, k) => { if (step <= k) held.add(id) })
+  hosts.forEach((id, i) => { if (id && reach < rank[i]) held.add(id) })
+  idle.forEach((id, k) => { if (reach <= k) held.add(id) })
   return held
 }
 

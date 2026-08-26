@@ -271,7 +271,7 @@ export default function Messenger({ source }) {
   })
 
   return (
-    <div className="mg">
+    <div className={'mg mg-' + (source === 'workMessenger' ? 'work' : 'private')}>
       <div className="mg-rail">
         <button className={'mg-rail-btn' + (tab === 'friends' ? ' on' : '')}
                 onClick={() => setTab('friends')} title="친구">

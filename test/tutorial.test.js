@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { allThreads, heldThreads, objectiveDone, requestsOf } from '../src/engine/store.js'
+import { allThreads, heldThreads, hostThreads, objectiveDone, requestsOf } from '../src/engine/store.js'
 
 const base = { grants: {}, unlocked: {}, overtime: {}, drawn: {}, ripples: {} }
 const dayRequests = (day) => requestsOf(scenario, day, {}, {}, {})
@@ -71,5 +71,57 @@ describe('the days that ease the player in', () => {
     // objectiveDone is what the gate counts with; keep them reading the same state
     const [first] = dayRequests(1)
     expect(objectiveDone(first, after(1, [first.id]))).toBe(true)
+  })
+})
+
+// The easing-in counts how many requests are done, but unlocks conversations by
+// their position in the list. Finish them out of order — which the player is
+// free to do, since every request for the day is on screen at once — and the
+// count falls behind the position, leaving later conversations shut for good.
+describe('finishing the first day out of order', () => {
+  const speaks = (day, state) => {
+    const held = heldThreads(scenario, day, state)
+    return allThreads(scenario)
+      .filter((t) => (t.messages ?? []).some((m) => m.day === day))
+      .filter((t) => !held.has(t.id)).map((t) => t.id)
+  }
+
+  // What the player actually hit: the wiki left for later, everything after it
+  // answered, and 지현 and 이준호 sitting there with nothing to say — their
+  // requests on the list and no way to raise them.
+  it('opens 지현 and 이준호 with only the wiki left', () => {
+    const held = heldThreads(scenario, 1, after(1, ['ip', 'reply', 'wifi', 'leave', 'address']))
+    expect(held.has('jihyun')).toBe(false)
+    expect(held.has('junho')).toBe(false)
+  })
+
+  it('opens the next conversation even when an earlier request is skipped', () => {
+    const ids = dayRequests(1).map((o) => o.id)
+    // everything except the second request, the way a player who went hunting
+    // through the wiki last would have it
+    const skipped = ids.filter((id) => id !== ids[1])
+    const state = after(1, skipped)
+    // the ones whose requests are already answered may stay quiet; the one
+    // holding the unanswered request may not
+    for (const id of skipped) {
+      const o = dayRequests(1).find((x) => x.id === id)
+      expect(objectiveDone(o, state), id).toBe(true)
+    }
+    expect(speaks(1, state).length, 'every remaining conversation is shut').toBeGreaterThan(0)
+  })
+
+  // The one that matters: whichever request is still open, the conversation
+  // that raises it has to be able to speak. Otherwise the player is looking at
+  // a list they have no way to finish.
+  it('always leaves the unanswered request reachable', () => {
+    const host = hostThreads(scenario)
+    for (const day of [1, scenario.tutorialDays]) {
+      const ids = dayRequests(day).map((o) => o.id)
+      for (let skip = 0; skip < ids.length; skip++) {
+        const held = heldThreads(scenario, day, after(day, ids.filter((_, i) => i !== skip)))
+        const open = ids[skip]
+        expect(held.has(host[open]), `day ${day}: ${open} left unreachable`).toBe(false)
+      }
+    }
   })
 })
