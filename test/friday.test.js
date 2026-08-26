@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import {
-  CLUE, PROGRESS, answerFits, dreamGallery, endingFor, searchBlogs, useGame, visibleByDay
+  CLUE, PROGRESS, allFiles, answerFits, dreamGallery, endingFor, searchBlogs, useGame, visibleByDay
 } from '../src/engine/store.js'
-import { shotOf } from '../src/assets/photos.js'
+import { fileImage, newsShot, shotOf, wallpaper } from '../src/assets/photos.js'
 
 // The week the game plays is dated by scenario.days — 8월 23일 (월) onward —
 // and 다온 캘린더 draws August with the 1st on a Sunday. Every other weekday
@@ -643,5 +643,26 @@ describe('the pictures the blog actually shows', () => {
   it('still never claims in words that they are not his', () => {
     const said = JSON.stringify(blog.body.filter((p) => typeof p === 'string'))
     expect(said).not.toMatch(/김한별|도용|훔쳐|같은 사진/)
+  })
+})
+
+// Everything the game draws is webp; photos.js reads nothing else. A picture
+// that stops resolving does not fail a render — it silently falls back to an
+// icon or an empty frame — so the only way to know is to ask for all of them.
+describe('every picture the game asks for', () => {
+  it('resolves, whatever folder it lives in', () => {
+    const unresolved = []
+    for (const f of allFiles(scenario.fs)) {
+      if (f.image && !fileImage(f.image)) unresolved.push(`file ${f.name} → ${f.image}`)
+    }
+    for (const b of scenario.blogs) {
+      for (const p of b.body) if (p?.shot && !shotOf(p.shot)) unresolved.push(`blog ${b.id} → ${p.shot}`)
+    }
+    expect(unresolved).toEqual([])
+  })
+
+  it('still gives most headlines a thumbnail, and the wallpaper a picture', () => {
+    expect(scenario.news.filter((n) => newsShot(n.id)).length).toBeGreaterThan(15)
+    expect(wallpaper).toBeTruthy()
   })
 })
