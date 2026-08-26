@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../engine/store.js'
 import { shotOf } from '../assets/photos.js'
 import { Check, Clock, Star } from '../icons/line.jsx'
@@ -80,6 +80,15 @@ export default function Place({ place }) {
   const [tab, setTab] = useState('홈')
   const [booking, setBooking] = useState(false)
   const [done, setDone] = useState(null)
+  const area = useRef(null)
+
+  // The form opens below the photograph, off the bottom of the window. Pressing
+  // 예약 and watching nothing happen is the same as the button not working.
+  const showArea = () => area.current?.scrollIntoView({
+    block: 'start',
+    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+  })
+  useEffect(() => { if (booking || done) showArea() }, [booking, done])
 
   if (!place) return <div className="pl-none">가게 정보를 찾을 수 없습니다.</div>
   const tabs = ['홈', ...(place.menu ? ['메뉴'] : []), ...(place.posts ? ['리뷰'] : [])]
@@ -96,7 +105,7 @@ export default function Place({ place }) {
         <div className="pl-addr">{place.address}</div>
 
         {place.bookable && !done && (
-          <button className="pl-cta" onClick={() => setBooking(true)}>
+          <button className="pl-cta" onClick={() => (booked ? showArea() : setBooking(true))}>
             {booked ? '예약 내역 보기' : '예약'}
           </button>
         )}
@@ -104,6 +113,7 @@ export default function Place({ place }) {
 
       <img className="pl-shot" src={shotOf(place.photo)} alt="" draggable="false" />
 
+      <div ref={area}>
       {done && <Done place={place} details={done} />}
       {!done && booking && <Booking place={place} onDone={setDone} />}
       {!done && !booking && booked && (
@@ -114,6 +124,7 @@ export default function Place({ place }) {
           <button className="pl-confirm" onClick={() => setDone(booked)}>확인 내용 보기</button>
         </div>
       )}
+      </div>
 
       <div className="pl-tabs">
         {tabs.map((t) => (
