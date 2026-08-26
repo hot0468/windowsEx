@@ -1144,7 +1144,12 @@ export function heldThreads(scenario, day, state) {
   // conversations after it stay shut with nothing left to open them.
   const step = done.findIndex((d) => !d) === -1 ? done.length : done.findIndex((d) => !d)
   const host = hostThreads(scenario)
-  const hosts = list.map((o) => host[o.id])
+  // The live thread carries the day's own opening as well as whatever request
+  // it happens to host, so holding it back holds back the morning itself —
+  // nobody says anything and the day looks like it never started. It is never
+  // in the queue, on either side of it.
+  const live = allThreads(scenario).find((t) => t.live)?.id
+  const hosts = list.map((o) => (host[o.id] === live ? null : host[o.id]))
   const taken = new Set(hosts.filter(Boolean))
   const idle = allThreads(scenario)
     .filter((t) => !t.live && !taken.has(t.id) && (t.messages ?? []).some((m) => m.day === day))

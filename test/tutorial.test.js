@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { allThreads, heldThreads, hostThreads, objectiveDone, requestsOf } from '../src/engine/store.js'
+import { allThreads, drawFor, heldThreads, hostThreads, objectiveDone, requestsOf } from '../src/engine/store.js'
 
 const base = { grants: {}, unlocked: {}, overtime: {}, drawn: {}, ripples: {} }
 const dayRequests = (day) => requestsOf(scenario, day, {}, {}, {})
@@ -39,6 +39,42 @@ describe('the days that ease the player in', () => {
     for (const day of [1, 2]) {
       const ids = dayRequests(day).map((o) => o.id)
       expect(heldThreads(scenario, day, after(day, ids)).size, `day ${day}`).toBe(0)
+    }
+  })
+
+  // Day two draws most of its work from the pool, and the draw is where this
+  // went wrong: one of the six it drew was the boss's, holding the thread the
+  // morning speaks through, and the day opened with nobody saying anything.
+  const drawnWeek = () => {
+    const drawn = {}
+    for (const n of [1, 2]) drawn[n] = drawFor(scenario, n, drawn)
+    return drawn
+  }
+  const live = allThreads(scenario).find((t) => t.live).id
+
+  it('never holds the conversation the day speaks through, whatever it drew', () => {
+    for (let run = 0; run < 60; run++) {
+      const drawn = drawnWeek()
+      for (const day of [1, 2]) {
+        const ids = requestsOf(scenario, day, {}, drawn, {}).map((o) => o.id)
+        for (let n = 0; n <= ids.length; n++) {
+          const state = { ...after(day, ids.slice(0, n)), drawn }
+          expect(heldThreads(scenario, day, state).has(live), `day ${day} after ${n}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('opens the day with somebody actually saying something', () => {
+    for (let run = 0; run < 60; run++) {
+      const drawn = drawnWeek()
+      for (const day of [1, 2]) {
+        const held = heldThreads(scenario, day, { ...base, drawn })
+        const speaking = allThreads(scenario).filter((t) => !held.has(t.id) && (
+          t.live || (t.messages ?? []).some((m) => m.day === day)
+        ))
+        expect(speaking.map((t) => t.id), `day ${day}`).not.toEqual([])
+      }
     }
   })
 
