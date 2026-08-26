@@ -1429,6 +1429,22 @@ export const searchSites = (sites, q) => searchIn(sites.filter((s) => !s.unliste
 export const visible = (entries, showHidden) =>
   entries.filter((e) => showHidden || !e.hidden)
 
+// The pictures beside this one: the folder the file came from, showing what
+// that folder shows. A picture the week has taken away has no image left, so
+// it is not one to step onto.
+export function galleryOf(fs, fileId, showHidden = false) {
+  const holding = (entries) => {
+    if (entries.some((e) => e.id === fileId)) return entries
+    for (const e of entries) {
+      const hit = e.children && holding(e.children)
+      if (hit) return hit
+    }
+    return null
+  }
+  const folder = Object.values(fs).map(holding).find(Boolean) ?? []
+  return visible(folder, showHidden).filter((e) => e.image)
+}
+
 export function entriesAt(fs, path) {
   return path.slice(1).reduce(
     (entries, name) => entries.find((e) => e.name === name)?.children ?? [],
