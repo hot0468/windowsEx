@@ -823,6 +823,11 @@ export const unreadCount = (all, seen = 0) => {
 // from, so the toast follows it there rather than always opening AR톡.
 export const appOf = (source) => (source === 'privateMessenger' ? 'chat' : 'messenger')
 
+// The timed script is the first morning's, and it is delivered once. Every
+// reboot — clocking off into tomorrow, or a crash — starts the app again, so
+// what is left to say is what has not been said yet, not the whole thing over.
+export const scriptLeft = (messenger = [], msgCount = 0) => messenger.slice(msgCount)
+
 export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 
 // Loose match: spacing and case are forgiven. An entry may be an array, in

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending
+  useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending, scriptLeft
 } from './engine/store.js'
 import { APPS, knownWindows } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
@@ -247,7 +247,9 @@ export default function App() {
     // on the toast lets a click jump straight into that conversation.
     const source = 'workMessenger'
     const live = sc[source].sections.flatMap((s) => s.threads).find((t) => t.live)
-    const timers = sc.messenger.flatMap((m) => [
+    // Only what the script has not said yet: booting into tomorrow used to
+    // replay the first morning as toasts on top of the new day.
+    const timers = scriptLeft(sc.messenger, useGame.getState().msgCount).flatMap((m) => [
       setTimeout(() => useGame.getState().setTyping(live.id, true),
         Math.max(0, m.delay - TYPING_LEAD)),
       setTimeout(() => {
