@@ -21,7 +21,7 @@ describe('the two endings', () => {
   afterEach(() => vi.useRealTimers())
 
   it('each tells its story in scenes that say something', () => {
-    for (const kind of ['true', 'plain', 'overwork']) {
+    for (const kind of ['true', 'plain', 'overwork', 'wake']) {
       expect(ending[kind].scenes.length).toBeGreaterThan(1)
       for (const sc of ending[kind].scenes) {
         expect(sc.style).toBeTruthy()
@@ -70,10 +70,14 @@ describe('the two endings', () => {
   })
 
   it('puts the accident on the search portal front page', () => {
-    // the front page as the week opens — later-dated arrivals must not be
-    // allowed to push the one hint that matters off this assertion
+    // the crash itself is a month old by the time the week opens, so what the
+    // front page carries is the follow-up — and it has to still be there, or
+    // the week starts with no hint at all
     const front = latestNews(visibleByDay(scenario.news, 1))
-    expect(front.map((a) => a.id)).toContain('n_accident')
+    expect(front.map((a) => a.id)).toContain('n_accident2')
+    expect(JSON.stringify(front.find((a) => a.id === 'n_accident2'))).toMatch(/의식/)
+    // and the original is still there to be found by anyone who searches
+    expect(visibleByDay(scenario.news, 1).map((a) => a.id)).toContain('n_accident')
     for (let i = 1; i < front.length; i++) expect(front[i - 1].date >= front[i].date).toBe(true)
   })
 
@@ -166,7 +170,7 @@ describe('the easter eggs', () => {
   })
 
   it('lets death be true only once it is known: no other ending hints at it', () => {
-    for (const kind of ['plain', 'overwork', 'lotto']) {
+    for (const kind of ['plain', 'overwork', 'lotto', 'wake']) {
       expect(JSON.stringify(ending[kind])).not.toMatch(/2026-07-23|7월 23일|별세|부고|나타날 수 없|노잣돈|제사|상 차/)
     }
     expect(JSON.stringify(ending.true)).toMatch(/2026-07-23/)

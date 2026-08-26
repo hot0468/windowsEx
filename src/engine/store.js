@@ -8,11 +8,11 @@ const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues wh
 const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
-const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
+export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -118,6 +118,8 @@ export const useGame = create((set, get) => ({
   beatAsk: restored?.beatAsk ?? null,
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
+  // Whether the travel blog has been read to the end. The photos go with it.
+  dreamt: restored?.dreamt ?? false,
   bookings: restored?.bookings ?? {},
   day: restored?.day ?? 1,
   misses: restored?.misses ?? 0,
@@ -442,8 +444,11 @@ export const useGame = create((set, get) => ({
       ripples: { ...s.ripples, ...Object.fromEntries(landing.map((r) => [r.id, n])) }
     })
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
+    // The caller waits until the day's work has been asked for: it speaks last,
+    // and only on its own night.
+    const called = s.scenario.summons?.day === n ? [s.scenario.summons.beat] : []
     get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
-      ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
+      ...beatsFor(s.scenario, drawn), ...called].filter(Boolean), 3600)
   },
   finishDay: () => {
     const s = get()
@@ -467,6 +472,24 @@ export const useGame = create((set, get) => ({
       ev.lines.forEach((text) => get().pushMessage(ev.thread, { from: ev.from, text }))
       get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: appOf(ev.source), source: ev.source, thread: ev.thread })
     }, ev.delay)
+  },
+
+  // Reading the travel blog to the end is the moment the holiday stops being
+  // his. The photos he remembers taking were always somebody else's, and the
+  // cloud notices they are gone a beat later.
+  readDream: () => {
+    const s = get()
+    if (s.dreamt) return
+    set({ dreamt: true })
+    const note = s.scenario.dream?.notice
+    if (!note) return
+    setTimeout(() => {
+      note.lines.forEach((text) => get().pushMessage(note.thread, { from: note.from, text }))
+      get().showToast({
+        from: note.from, text: note.lines[note.lines.length - 1],
+        app: appOf(note.source), source: note.source, thread: note.thread
+      })
+    }, note.delay)
   },
 
   markMailRead: (id, read = true) =>
@@ -745,6 +768,20 @@ export function fsView(fs, { pinned = [], restored = {} } = {}) {
   return fsWithPinned(out, pinned)
 }
 
+// Once the blog has been read, the photos it was lending are gone. The rows
+// stay so the player can see the shape of what was there — a name, greyed, and
+// nothing behind it. Anything the dream never borrowed is untouched.
+export function dreamGallery(scenario, fs, dreamt) {
+  const gone = new Set(dreamt ? scenario.dream?.photos ?? [] : [])
+  if (!gone.size) return fs
+  const mark = (entries) => entries.map((e) => (
+    e.children ? { ...e, children: mark(e.children) }
+      : gone.has(e.id) ? { ...e, missing: scenario.dream.broken, image: undefined, alt: undefined }
+        : e
+  ))
+  return Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, mark(entries)]))
+}
+
 // An entry with `children` is a folder; anything else is a file.
 export function allFiles(fs) {
   const out = []
@@ -794,6 +831,9 @@ export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 const loose = (v) => v.replace(/\s/g, '').toLowerCase()
 
 export function answerFits(ask, text) {
+  // A question asked with no answer in the world takes whatever is typed: the
+  // player has already worked it out, and there is nothing to check it against.
+  if (ask.free) return text.trim() !== ''
   return ask.accept.some((entry) =>
     (Array.isArray(entry) ? entry : [entry]).every((part) => contains(text, part)))
 }
@@ -820,14 +860,17 @@ const isDigit = (ch) => ch !== undefined && ch >= '0' && ch <= '9'
 // Once the obituary has been opened the ticket is worthless: the dead cannot
 // collect. Until then, a confirmed win is the one way the week ends well.
 // Working late every single night earns the overwork ending on its own.
-// Walking into the eighth floor outranks all of it: whatever else the week was,
-// it ends there.
+// Someone who was called and never opened the notice wakes up: the summons was
+// answered by refusing it, and the refusal outranks even the ticket — but not
+// the notice itself, because the dead do not wake. Walking into the eighth
+// floor outranks all of it: whatever else the week was, it ends there.
 export const endingFor = (ending, { grants, locks, overtime = {}, days = 5, digging = {}, rumor = {} }) =>
   wentUp(digging) ? 'missing'
     : toldRumor(rumor) ? ('rumor_' + rumor.acted)
     : awareOf(ending, grants) ? 'true'
-      : grants.lotto ? 'lotto'
-        : workedEveryNight(overtime, days) || locks === 0 ? 'overwork' : 'plain'
+      : refusedSummons(grants) ? 'wake'
+        : grants.lotto ? 'lotto'
+          : workedEveryNight(overtime, days) || locks === 0 ? 'overwork' : 'plain'
 
 // The trail has to be walked in order: you cannot open a door you never heard
 // about, and the page will not resolve until the player writes it into hosts.
@@ -848,6 +891,11 @@ export const digDepth = (scenario, digging = {}) =>
 // Five nights out of five, no exceptions.
 export const workedEveryNight = (overtime, days) =>
   Array.from({ length: days }, (_, i) => overtime[i + 1]).every(Boolean)
+
+// Called, and the notice left unopened. Reaching the end of the questions is
+// what makes the week refusable at all: without the call there is nothing to
+// turn down, and opening the notice takes the refusal back.
+export const refusedSummons = (grants = {}) => Boolean(grants.summoned) && !grants[CLUE.obituary]
 
 // Too many wrong answers over the week and the company stops asking. Counted
 // against every request the week actually raised, overtime included.

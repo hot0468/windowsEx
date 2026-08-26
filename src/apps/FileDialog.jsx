@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  useGame, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
+  useGame, dreamGallery, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
 } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
@@ -9,11 +9,13 @@ import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../ic
 
 // Windows' "열기" dialog, over the whole desktop like the real one.
 export default function FileDialog({ start = '문서', onPick, onClose }) {
-  const scenarioFs = useGame((s) => s.scenario.fs)
+  const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
   const restored = useGame((s) => s.restored)
   const showHidden = useGame((s) => s.showHidden)
-  const fs = fsView(scenarioFs, { pinned, restored })
+  const dreamt = useGame((s) => s.dreamt)
+  // a photo the dream gave back is not a file you can attach either
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored })
   // a binned file is not a file you can attach
   const roots = Object.keys(fs).filter((r) => r !== '휴지통')
   const nav = useFolderNav(start)
@@ -25,9 +27,9 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
   const searching = Boolean(q.trim())
   const entries = visible(entriesAt(fs, nav.path), showHidden)
   const folders = searching ? [] : entries.filter((e) => e.children)
-  const files = searching
+  const files = (searching
     ? visible(searchFiles(fs, nav.path, q).map((h) => h.file), showHidden)
-    : entries.filter((e) => !e.children)
+    : entries.filter((e) => !e.children)).filter((f) => !f.missing)
 
   const move = (fn) => () => { setQ(''); setSelected(null); setName(''); fn() }
   const goTo = (path) => move(() => nav.goTo(path))()

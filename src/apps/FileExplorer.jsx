@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  useGame, WORK_FOLDER, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
+  useGame, WORK_FOLDER, dreamGallery, entriesAt, fileOpener, rootIcon, fsView, searchFiles, visible
 } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
@@ -17,11 +17,12 @@ export default function FileExplorer({ startFolder }) {
   const restoreFile = useGame((s) => s.restoreFile)
   const showHidden = useGame((s) => s.showHidden)
   const toggleHidden = useGame((s) => s.toggleHidden)
+  const dreamt = useGame((s) => s.dreamt)
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
   const [viewOpen, setViewOpen] = useState(false)
 
-  const fs = fsView(scenario.fs, { pinned, restored })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored })
   const roots = Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 
@@ -132,13 +133,20 @@ export default function FileExplorer({ startFolder }) {
                 <div className="glyph"><Icon name="folder" size={36} /></div>{f.name}
               </button>
             ))}
-            {files.map((f) => (
-              <button key={f.id} className="ex-file" {...(inTrash ? {} : fileDragProps(f))}
-                      onContextMenu={onContext(f)}
-                      onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
-                <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
-              </button>
-            ))}
+            {files.map((f) => (f.missing
+              ? (
+                <span key={f.id} className="ex-file ex-gone" title={f.missing}>
+                  <div className="glyph"><Icon name="image" size={36} /></div>
+                  {f.name}<em>{f.missing}</em>
+                </span>
+              )
+              : (
+                <button key={f.id} className="ex-file" {...(inTrash ? {} : fileDragProps(f))}
+                        onContextMenu={onContext(f)}
+                        onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                  <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
+                </button>
+              )))}
           </div>
         )}
 

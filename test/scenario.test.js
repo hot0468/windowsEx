@@ -41,7 +41,13 @@ describe('scenario integrity', () => {
   })
 
   it('every messenger thread has either live delivery or its own messages', () => {
-    for (const t of threads) expect(t.live || t.messages.length > 0).toBeTruthy()
+    // the caller has neither: the conversation does not exist until it speaks,
+    // and the list only draws threads that have something in them
+    const silent = scenario.summons ? [scenario.summons.thread] : []
+    for (const t of threads) {
+      if (silent.includes(t.id)) { expect(t.messages).toHaveLength(0); continue }
+      expect(t.live || t.messages.length > 0, t.id).toBeTruthy()
+    }
   })
 
   it('messenger thread ids are unique', () => {

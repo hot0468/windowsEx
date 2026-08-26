@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, portalFeed } from '../engine/store.js'
+import { useGame, portalFeed, visibleByDay } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 import Download from './Download.jsx'
@@ -142,11 +142,14 @@ const Leave = ({ page, onBack }) => {
 
 // 경조사: a weekly notice board like any other. Nothing on it is addressed to
 // the player, and the week that matters reads like the weeks around it — a
-// wedding, somebody's grandmother, and then the last entry.
+// wedding, somebody's grandmother, and then the last entry. Notices are
+// compiled on Fridays, so this week's is not on the list until the last day.
 const Bereavement = ({ page, onBack }) => {
+  const day = useGame((s) => s.day)
   const b = page.board
+  const posts = visibleByDay(b.posts, day)
   const [open, setOpen] = useState(null)
-  const post = b.posts.find((x) => x.id === open)
+  const post = posts.find((x) => x.id === open)
   if (post) return <Notice post={post} onBack={() => setOpen(null)} />
   return (
     <article className="pt-post pt-obit">
@@ -160,7 +163,7 @@ const Bereavement = ({ page, onBack }) => {
           <tr>{b.columns.map((c) => <th key={c}>{c}</th>)}</tr>
         </thead>
         <tbody>
-          {b.posts.map((x) => (
+          {posts.map((x) => (
             <tr key={x.id}>
               <td><button className="pt-obit-link" onClick={() => setOpen(x.id)}>{x.title}</button></td>
               <td>{x.author}</td>

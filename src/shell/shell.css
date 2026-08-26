@@ -202,6 +202,11 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .ex-file:hover { background: #e5f1fb; }
 .ex-file .glyph { display: flex; justify-content: center; align-items: center;
   min-height: 54px; margin-bottom: 4px; }
+/* a photo whose file is no longer there: the name stays, greyed, and says so */
+.ex-gone { display: block; color: #9a9a9a; cursor: default; }
+.ex-gone:hover { background: none; }
+.ex-gone .glyph { opacity: .25; filter: grayscale(1); }
+.ex-gone em { display: block; margin-top: 2px; font-size: 10px; font-style: normal; color: #b0b0b0; }
 
 /* notepad */
 .notepad { height: 100%; display: flex; flex-direction: column; }

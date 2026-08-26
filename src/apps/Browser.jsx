@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   hostResolves, latestNews, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
 } from '../engine/store.js'
@@ -173,7 +173,8 @@ export default function Browser() {
               </button>
               <div className="bw-pop-head">방문 기록</div>
               {scenario.history.map((h, i) => (
-                <button key={i} className="bw-pop-item" onClick={() => open(h.url)}>
+                <button key={i} className="bw-pop-item"
+                        onClick={() => { setMenu(false); h.blog ? nav.go({ kind: 'blog', id: h.blog }) : open(h.url) }}>
                   <Clock size={14} strokeWidth={1.7} />
                   <span className="bw-pop-mid">
                     <span>{h.title}</span>
@@ -384,22 +385,7 @@ export default function Browser() {
           <Place place={scenario.places.find((p) => p.name === page.name)} />
         )}
 
-        {page.kind === 'blog' && (() => {
-          const b = scenario.blogs.find((x) => x.id === page.id)
-          return (
-            <article className="bl">
-              <div className="bl-head">
-                <span className="bl-blog">{b.blog}</span>
-                <span className="bl-by">{b.author} · {b.date}</span>
-              </div>
-              <h1>{b.title}</h1>
-              {b.body.map((part, i) => (part.shot
-                ? <img key={i} className="bl-shot" src={shotOf(part.shot)} alt="" draggable="false" />
-                : <p key={i}>{part}</p>))}
-              <div className="bl-tags">{b.tags.map((t) => <span key={t}>#{t}</span>)}</div>
-            </article>
-          )
-        })()}
+        {page.kind === 'blog' && <BlogPost id={page.id} />}
 
         {special === 'refused' && (
           <div className="site-error">
@@ -583,6 +569,38 @@ export function networkRows(page, site, view) {
     case 'ready': return [doc(200, '12.7 kB', '118 ms'), asset('style.css', 'stylesheet', '18.4 kB', '31 ms'), asset('app.js', 'script', '76.3 kB', '44 ms'), favicon]
     default: return [doc(200, '14.2 kB', '118 ms'), asset('main.css', 'stylesheet', '31.0 kB', '24 ms'), asset('search.js', 'script', '88.4 kB', '41 ms'), asset('logo.svg', 'svg+xml', '3.1 kB', '12 ms')]
   }
+}
+
+// Somebody else's month, posted before the holiday that never happened. On the
+// one post the dream borrowed from, reaching the last line is what counts —
+// the same way the obituary waits to be scrolled to rather than merely opened.
+const BlogPost = ({ id }) => {
+  const b = useGame((s) => s.scenario.blogs.find((x) => x.id === id))
+  const borrowed = useGame((s) => s.scenario.dream?.blog === id)
+  const readDream = useGame((s) => s.readDream)
+  const end = useRef(null)
+  useEffect(() => {
+    if (!borrowed) return
+    // without the observer the photos still have to be reachable
+    if (!end.current || !window.IntersectionObserver) return readDream()
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && readDream())
+    io.observe(end.current)
+    return () => io.disconnect()
+  }, [id, borrowed])
+  return (
+    <article className="bl">
+      <div className="bl-head">
+        <span className="bl-blog">{b.blog}</span>
+        <span className="bl-by">{b.author} · {b.date}</span>
+      </div>
+      <h1>{b.title}</h1>
+      {b.body.map((part, i) => (part.shot
+        ? <img key={i} className="bl-shot" src={shotOf(part.shot)} alt="" draggable="false" />
+        : <p key={i}>{part}</p>))}
+      <div className="bl-tags">{b.tags.map((t) => <span key={t}>#{t}</span>)}</div>
+      {borrowed && <i ref={end} className="bl-end" aria-hidden="true" />}
+    </article>
+  )
 }
 
 // What the console shows: a broken site's own errors while it is broken;

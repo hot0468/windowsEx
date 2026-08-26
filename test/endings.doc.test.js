@@ -28,6 +28,14 @@ describe('the ladder the doc describes', () => {
     expect(endingFor(E, { ...base, locks: 0, grants: { lotto: true } })).toBe('lotto')
   })
 
+  it('wakes the one who was called and refused, above even the ticket', () => {
+    const called = { [E.summonsGrant ?? 'summoned']: true }
+    expect(endingFor(E, { ...base, grants: called })).toBe('wake')
+    expect(endingFor(E, { ...base, grants: { ...called, lotto: true } })).toBe('wake')
+    // but opening the notice takes the refusal back
+    expect(endingFor(E, { ...base, grants: { ...called, ...aware } })).toBe('true')
+  })
+
   it('lets the obituary outrank the ticket — the dead do not collect', () => {
     expect(endingFor(E, { ...base, grants: { ...aware, lotto: true } })).toBe('true')
   })
@@ -51,7 +59,7 @@ describe('the ladder the doc describes', () => {
 
 describe('the doc matches the data it describes', () => {
   it('names every ending that exists', () => {
-    const named = ['missing', 'rumor_told', 'rumor_buried', 'true', 'lotto', 'overwork', 'plain']
+    const named = ['missing', 'rumor_told', 'rumor_buried', 'true', 'lotto', 'wake', 'overwork', 'plain']
     for (const id of named) {
       expect(E[id], id).toBeTruthy()
       expect(doc, id).toContain(id)
