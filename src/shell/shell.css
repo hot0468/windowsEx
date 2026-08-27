@@ -973,6 +973,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .mw-tool { display: flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: 4px; color: #444; }
 .mw-tool:hover { background: #ebebf0; }
 .mw-body { flex: 1; overflow: auto; padding: 18px 20px; outline: none; line-height: 1.7; user-select: text; }
+/* contentEditable은 placeholder 속성이 듣지 않는다. 한 글자만 들어와도 :empty가 풀린다. */
+.mw-body:empty::before { content: attr(data-ph); white-space: pre-wrap; color: #b3b8c2; pointer-events: none; }
 .compose-row { display: flex; gap: 8px; align-items: center; }
 .attach { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 5px; background: #f0f1f5; font-size: 13px; }
 .attach:hover { background: #e5e7ee; }

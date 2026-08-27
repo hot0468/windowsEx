@@ -69,7 +69,7 @@ export default function Compose({ mail, onSend, onCancel }) {
           <span className="mw-label">제목</span>
           {mail ? <span className="mw-value">RE: {mail.subject}</span> : (
             <input className="mw-input" value={subject} onChange={(e) => setSubject(e.target.value)}
-                   placeholder="제목" aria-label="제목" spellCheck={false} />
+                   placeholder="[AR주식회사] 제목을 입력하세요" aria-label="제목" spellCheck={false} />
           )}
         </div>
         <div className="mw-row mw-attach">
@@ -118,6 +118,7 @@ export default function Compose({ mail, onSend, onCancel }) {
 
       <div className="mw-body" ref={body} contentEditable suppressContentEditableWarning
            role="textbox" aria-label="메일 본문"
+           data-ph={`안녕하세요, ${me.company} ○○○입니다.\n\n(용건)\n\n감사합니다.`}
            style={{ fontFamily: font, fontSize: size }} />
 
       {picking && (
