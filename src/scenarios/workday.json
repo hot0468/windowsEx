@@ -23058,7 +23058,8 @@
           "문서",
           "개인",
           "워크샵"
-        ]
+        ],
+        "shotNote": "一萬 (1) · man1_a.webp — 워크샵 저녁 자리. 상 위 잔과 접시 사이, 오른쪽 구석에 패를 눕혀 둔다"
       },
       {
         "id": "tile_ws_2",
@@ -23069,7 +23070,8 @@
           "문서",
           "개인",
           "워크샵"
-        ]
+        ],
+        "shotNote": "一萬 (1) · man1_b.webp — 워크샵 숙소 거실 탁자. 과자 봉지 옆에 패 하나를 세워 둔다"
       },
       {
         "id": "tile_ws_3",
@@ -23080,7 +23082,8 @@
           "문서",
           "개인",
           "워크샵"
-        ]
+        ],
+        "shotNote": "一萬 (1) · man1_c.webp — 워크샵 마지막 날 아침, 정리하다 만 상. 패는 접시 뒤에 반쯤 가려지게"
       },
       {
         "id": "tile_ws_4",
@@ -23091,7 +23094,8 @@
           "문서",
           "개인",
           "워크샵"
-        ]
+        ],
+        "shotNote": "五萬 (5) · man5_a.webp — 워크샵 둘째 날 밤, 창가 테이블. 패 하나만 조명 아래"
       },
       {
         "id": "tile_old_1",
@@ -23102,7 +23106,8 @@
           "문서",
           "개인",
           "예전사진"
-        ]
+        ],
+        "shotNote": "四萬 (4) · man4.webp — 대학 동아리방 탁자. 낡은 소파 앞, 패는 잡동사니 사이에"
       },
       {
         "id": "tile_old_2",
@@ -23113,7 +23118,8 @@
           "문서",
           "개인",
           "예전사진"
-        ]
+        ],
+        "shotNote": "六萬 (6) · man6.webp — 엠티 방 안. 이불 위 흩어진 짐 사이에 패 하나"
       },
       {
         "id": "tile_old_3",
@@ -23124,49 +23130,57 @@
           "문서",
           "개인",
           "예전사진"
-        ]
+        ],
+        "shotNote": "七萬 (7) · man7.webp — 졸업식 날 학과 사무실 책상. 꽃다발 옆에 패 하나"
       },
       {
         "id": "tile_pub_1",
         "tile": 9,
         "shot": "man9_a",
-        "blog": "b_nogari"
+        "blog": "b_nogari",
+        "shotNote": "九萬 (9) · man9_a.webp — 노가리골목 야외 테이블. 맥주잔 옆에 패를 눕혀 둔다"
       },
       {
         "id": "tile_pub_2",
         "tile": 9,
         "shot": "man9_b",
-        "blog": "b_nogari"
+        "blog": "b_nogari",
+        "shotNote": "九萬 (9) · man9_b.webp — 호프집 안쪽 자리. 안주 접시 옆, 패는 살짝 가려지게"
       },
       {
         "id": "tile_pub_3",
         "tile": 9,
         "shot": "man9_c",
-        "blog": "b_nogari"
+        "blog": "b_nogari",
+        "shotNote": "九萬 (9) · man9_c.webp — 노가리골목 평상. 빈 잔들 사이에 패 하나"
       },
       {
         "id": "tile_cafe_1",
         "tile": 2,
         "shot": "man2",
-        "blog": "b_jeju_cafe"
+        "blog": "b_jeju_cafe",
+        "shotNote": "二萬 (2) · man2.webp — 제주 성산 카페 창가. 커피잔 옆에 패 하나"
       },
       {
         "id": "tile_cafe_2",
         "tile": 3,
         "shot": "man3",
-        "blog": "b_jeju_cafe"
+        "blog": "b_jeju_cafe",
+        "shotNote": "三萬 (3) · man3.webp — 돌담 안쪽 카페 마당의 나무 탁자. 패 하나만"
       },
       {
         "id": "tile_gh_1",
         "tile": 8,
         "shot": "man8",
-        "blog": "b_pension"
+        "blog": "b_pension",
+        "shotNote": "八萬 (8) · man8.webp — 게스트하우스 공용 주방 식탁. 귤 몇 개 옆에 패 하나"
       },
       {
         "id": "tile_gh_2",
         "tile": 5,
         "shot": "man5_b",
-        "blog": "b_pension"
+        "blog": "b_pension",
+        "shotNote": "五萬 (5) · man5_b.webp — 게스트하우스 툇마루. 슬리퍼 옆에 패 하나"
       }
     ]
   }

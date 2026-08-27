@@ -38,6 +38,9 @@ const cmds = {
   files: () => allFiles().forEach((f) => console.log(`${f.id}\t${f.trail}/${f.name}`)),
   pool: () => s.pool.requests.forEach((r) => console.log(`${r.id}\t${r.beat.thread}\t${steps(r.beat.ask).length}단계\t${s.pool.after[r.id] ? 'day>=' + s.pool.after[r.id] : ''}`)),
   ripples: () => s.ripples.forEach((r) => console.log(`${r.id}\t${JSON.stringify(r.when)}\t${JSON.stringify(r.effect ?? {})}`)),
+  // 찍어야 할 사진 목록. 어느 패이고 어디에 놓이는지 한눈에 본다.
+  tiles: () => s.nineGates.shots.forEach((t) =>
+    console.log(`${t.shot}.webp\t${t.tile}萬\t${t.blog ? 'blog:' + t.blog : t.at.join('/') + '/' + t.name}\n\t${t.shotNote.split('— ')[1] ?? ''}`)),
   thread: () => {
     const t = threads.find((x) => x.id === arg)
     if (!t) return console.log('threads:', threads.map((x) => x.id).join(' '))

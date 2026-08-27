@@ -138,4 +138,29 @@ describe('구련보등', () => {
     expect(tileShots(scenario, 'blog', 'b_jeju_cafe')).toHaveLength(2)
     expect(tileShots(scenario, 'blog', 'b_ar')).toHaveLength(0)
   })
+
+  it('찍을 사람에게 무슨 패인지 알려 준다', () => {
+    for (const s of gates.shots) {
+      expect(s.shotNote, s.id).toBeTruthy()
+      expect(s.shotNote, s.id).toContain(s.shot + '.webp')
+    }
+  })
+
+  it('그 메모가 화면으로는 새지 않는다', () => {
+    // 뷰어는 파일의 alt를 그대로 그린다. 거기에 무슨 패인지 적으면 답이 샌다.
+    const HAN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+    const walk = (entries, out = []) => {
+      for (const e of entries ?? []) {
+        if (e.children) walk(e.children, out)
+        else if (e.tile) out.push(e)
+      }
+      return out
+    }
+    for (const f of walk(Object.values(scenario.fs).flat())) {
+      expect(f.alt, f.id).toBeTruthy()
+      expect(f.alt, f.id + ' 의 alt가 패를 지목한다').not.toContain(HAN[f.tile])
+      expect(f.alt, f.id).not.toContain('마작')
+      expect(f.alt, f.id).not.toContain('shotNote')
+    }
+  })
 })
