@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 
 // The store reads storage at import time, so each case stubs it, then imports.
 const mem = () => {
@@ -85,5 +86,29 @@ describe('save / load', () => {
     const useGame = await freshStore()
     useGame.getState().loadGame()
     expect(useGame.getState().toast.text).toContain('저장된 게임이 없습니다')
+  })
+})
+
+// The save is the whole of PROGRESS and nothing else. A field restored on boot
+// but left out of the list comes back as its default every time the page
+// reloads — the kind of loss that reads as "the game forgot", not as a crash.
+describe('what survives a reload', () => {
+  const src = readFileSync('src/engine/store.js', 'utf8')
+  const listed = src.match(/export const PROGRESS = \[([\s\S]*?)\]/)[1]
+    .match(/'[^']+'/g).map((s) => s.slice(1, -1))
+  const restoredOnBoot = [...src.matchAll(/^ {2}(\w+): restored\?\./gm)].map((m) => m[1])
+
+  it('saves every field the store restores on boot', () => {
+    expect(restoredOnBoot.filter((f) => !listed.includes(f))).toEqual([])
+  })
+
+  it('restores every field it saves', () => {
+    expect(listed.filter((f) => !restoredOnBoot.includes(f))).toEqual([])
+  })
+
+  it('carries the week: the day, the grants, and what was witnessed', () => {
+    for (const k of ['day', 'grants', 'dreamt', 'drawn', 'overtime', 'digging', 'rumor']) {
+      expect(listed, k).toContain(k)
+    }
   })
 })
