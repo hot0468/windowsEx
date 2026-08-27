@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import scenario from '../src/scenarios/workday.json'
 import { PROGRESS, allFiles, endingFor, fsView, tileShots, useGame } from '../src/engine/store.js'
 
@@ -162,5 +163,12 @@ describe('구련보등', () => {
       expect(f.alt, f.id).not.toContain('마작')
       expect(f.alt, f.id).not.toContain('shotNote')
     }
+  })
+
+  it('패 폴더는 파일을 받는 자리가 아니다', () => {
+    // 바탕화면 폴더 아이콘은 전부 같은 드롭 핸들러를 달고 있었다. 그래서 패
+    // 폴더에 파일을 떨구면 엉뚱하게 작업 폴더로 들어갔다.
+    const src = readFileSync('src/shell/Desktop.jsx', 'utf8')
+    expect(src).toContain('e.name === WORK_FOLDER ? work.dropProps : {}')
   })
 })

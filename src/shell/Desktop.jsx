@@ -1,4 +1,4 @@
-import { installedShortcuts, useGame, fileOpener, fsView, visible } from '../engine/store.js'
+import { WORK_FOLDER, installedShortcuts, useGame, fileOpener, fsView, visible } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
@@ -33,7 +33,12 @@ export default function Desktop() {
         </button>
       ))}
       {desktop.map((e) => (e.children ? (
-        <button key={e.name} className={'desktop-icon' + (work.over ? ' drop' : '')} {...work.dropProps}
+        // Only the work folder takes a dropped file. The tiles gather by being
+        // copied from the picture itself, and dropping on it used to pin the
+        // file somewhere else entirely.
+        <button key={e.name}
+                className={'desktop-icon' + (e.name === WORK_FOLDER && work.over ? ' drop' : '')}
+                {...(e.name === WORK_FOLDER ? work.dropProps : {})}
                 onDoubleClick={() => openWindow('explorer', { startFolder: ['바탕화면', e.name] })}>
           <div className="glyph"><Icon name="folder" size={38} /></div>{e.name}
           {/* The tile folder wears no number: how many are in there is a thing
