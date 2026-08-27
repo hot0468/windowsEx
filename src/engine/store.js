@@ -1397,9 +1397,16 @@ export const opensWhileMining = (app) => SAFE_APPS.includes(app)
 
 // What the task manager lists: the miner first, on top of the ordinary rows.
 export function processList(miner, mining) {
-  const rows = [...miner.processes]
+  // The ghost sits at 0% CPU, so sorting by CPU always leaves it last: you only
+  // meet it if you scroll to the bottom of a list nobody needs to scroll.
+  const rows = [...miner.processes, ...(miner.ghost ? [miner.ghost] : [])]
   return mining ? [{ ...miner.process, miner: true }, ...rows] : rows
 }
+
+// Commands the prompt knows but never advertises. HELP does not list them and
+// nothing in the week needs them — they are there for whoever types anyway.
+export const hiddenCommand = (scenario, cmd) =>
+  (cmd && scenario.hiddenCommands?.[cmd]) || null
 
 // Exactly one state per visited site: no tunnel means no name, no approval
 // means no login form, no login means no content. Returning a single value

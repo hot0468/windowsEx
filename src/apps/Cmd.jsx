@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { hiddenCommand, useGame } from '../engine/store.js'
 
 const BANNER = [
   'Microsoft Windows [Version 10.0.26100.2314]',
@@ -70,6 +70,7 @@ export const ping = (n, host) => {
 
 export default function Cmd() {
   const net = useGame((s) => s.scenario.network)
+  const scenario = useGame((s) => s.scenario)
   const prompt = `C:\\Users\\${net.user}>`
   const [lines, setLines] = useState(BANNER)
   const [input, setInput] = useState('')
@@ -89,8 +90,9 @@ export default function Cmd() {
         : cmd === 'hostname' ? [net.host, '']
           : cmd === 'whoami' ? [`ar\\${net.user}`, '']
             : cmd === 'help' ? HELP
-              : [`'${typed}'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램,`,
-                 '또는 배치 파일이 아닙니다.', '']
+              : hiddenCommand(scenario, cmd)
+                ?? [`'${typed}'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램,`,
+                    '또는 배치 파일이 아닙니다.', '']
     setLines((l) => [...l, prompt + ' ' + typed, ...out])
   }
 

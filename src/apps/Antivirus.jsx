@@ -65,6 +65,14 @@ export default function Antivirus() {
         <div className="av-found">
           <h2>{(cleaned ? av.clean : av.nothing).title}</h2>
           {(cleaned ? av.clean : av.nothing).lines.map((line) => <p key={line} className="av-note">{line}</p>)}
+          {/* Nothing was wrong with it. The scanner just could not say what it was. */}
+          {av.unclassified && (
+            <div className="av-item av-odd">
+              <b>{av.unclassified.line}</b>
+              <span>{av.unclassified.path}</span>
+              <p className="av-note">{av.unclassified.note}</p>
+            </div>
+          )}
         </div>
       )}
 

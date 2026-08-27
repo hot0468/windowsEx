@@ -10,6 +10,8 @@ export default function TaskManager() {
   const [picked, setPicked] = useState(null)
   const [asking, setAsking] = useState(false)
   const [killed, setKilled] = useState(false)
+  // How many times the player has tried to end the one that will not end.
+  const [nagged, setNagged] = useState(0)
 
   const rows = processList(miner, mining).sort((a, b) => b.cpu - a.cpu)
   const selected = rows.find((r) => r.name === picked) ?? null
@@ -17,6 +19,11 @@ export default function TaskManager() {
 
   const end = () => {
     if (!selected) return
+    // The ghost refuses in its own words, and the words wear thin if you insist.
+    if (miner.ghost && selected.name === miner.ghost.name) {
+      setNagged((n) => n + 1)
+      return setAsking('ghost')
+    }
     if (!selected.miner) return setAsking('system')
     setAsking('confirm')
   }
@@ -70,6 +77,16 @@ export default function TaskManager() {
         <div className="mg-ask" onPointerDown={() => setAsking(false)}>
           <div className="mg-ask-card" onPointerDown={(e) => e.stopPropagation()}>
             <p>이 프로세스는 Windows가 실행 중입니다. 끝낼 수 없습니다.</p>
+            <div className="mg-ask-row">
+              <button className="sm-cancel" onClick={() => setAsking(false)}>확인</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {asking === 'ghost' && (
+        <div className="mg-ask" onPointerDown={() => setAsking(false)}>
+          <div className="mg-ask-card" onPointerDown={(e) => e.stopPropagation()}>
+            <p>{miner.ghost.refuse[Math.min(nagged - 1, miner.ghost.refuse.length - 1)]}</p>
             <div className="mg-ask-row">
               <button className="sm-cancel" onClick={() => setAsking(false)}>확인</button>
             </div>
