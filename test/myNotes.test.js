@@ -52,4 +52,10 @@ describe('전 사용자가 남긴 서버에 내 메모 붙이기', () => {
     // 메모를 쓴다고 열리는 것은 없다
     expect(useGame.getState().grants).toEqual({})
   })
+
+  it('머리말의 메모 개수가 실제와 맞는다', () => {
+    // '저장된 메모 7개'가 그대로 있으면, 열 개가 보이는데 일곱이라고 우긴다.
+    const count = Number(notes.sub.match(/(\d+)개/)[1])
+    expect(count).toBe(notes.entries.length)
+  })
 })

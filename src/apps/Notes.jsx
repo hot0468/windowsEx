@@ -26,7 +26,11 @@ export default function Notes({ site }) {
     <div className="nt">
       <div className="nt-head">
         <h1>{n.header}</h1>
-        <p>{n.sub}</p>
+        {/* The count in the header is his, from 2023. Once she starts adding
+            her own it has to include them, or the page contradicts itself. */}
+        <p>{myNotes.length
+          ? n.sub.replace(/\d+개/, n.entries.length + myNotes.length + '개')
+          : n.sub}</p>
       </div>
 
       {n.entries.map((e, i) => (

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { WORK_FOLDER, installedShortcuts, useGame, fileOpener, fsView, visible } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
@@ -23,9 +24,23 @@ export default function Desktop() {
   const tiles = useGame((st) => st.tiles)
   const desktop = visible(fsView(scenario.fs, { pinned, restored, tiles, scenario })['바탕화면'], showHidden)
   const work = useFileDrop(pinFile)
+  // The tile folder takes a drop too, but only a photograph with a tile in it
+  // belongs there. Anything else is put back with a word about why, rather
+  // than swallowed — a folder that ignores a drop looks broken.
+  const takeTile = useGame((s) => s.takeTile)
+  const gates = scenario.nineGates
+  const [refused, setRefused] = useState(null)
+  const gather = useFileDrop((id) => {
+    if (gates?.shots.some((x) => x.id === id)) return takeTile(id)
+    setRefused(id)
+    setTimeout(() => setRefused(null), 2600)
+  })
+  const NO_DROP = { over: false, dropProps: {} }
+  const dropFor = (name) => (name === WORK_FOLDER ? work : name === gates?.folder ? gather : NO_DROP)
   const icons = [...SHORTCUTS, ...installedShortcuts(scenario.programs, grants)]
   return (
     <div className="desktop-icons">
+      {refused && <div className="di-refused">{gates.refuse}</div>}
       {icons.map((s) => (
         <button key={s.label} className="desktop-icon"
                 onDoubleClick={() => openWindow(s.app, s.props)}>
@@ -33,12 +48,12 @@ export default function Desktop() {
         </button>
       ))}
       {desktop.map((e) => (e.children ? (
-        // Only the work folder takes a dropped file. The tiles gather by being
-        // copied from the picture itself, and dropping on it used to pin the
-        // file somewhere else entirely.
+        // Each folder answers to its own drop: the work folder pins what lands
+        // on it, the tile folder gathers. Before, every folder carried the work
+        // folder's handler, so a drop on the tiles pinned it somewhere else.
         <button key={e.name}
-                className={'desktop-icon' + (e.name === WORK_FOLDER && work.over ? ' drop' : '')}
-                {...(e.name === WORK_FOLDER ? work.dropProps : {})}
+                className={'desktop-icon' + (dropFor(e.name).over ? ' drop' : '')}
+                {...dropFor(e.name).dropProps}
                 onDoubleClick={() => openWindow('explorer', { startFolder: ['바탕화면', e.name] })}>
           <div className="glyph"><Icon name="folder" size={38} /></div>{e.name}
           {/* The tile folder wears no number: how many are in there is a thing

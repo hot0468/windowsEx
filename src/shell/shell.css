@@ -1554,3 +1554,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
    is what gives it away, and only until it has been taken. */
 .tile-photo { cursor: default; }
 .tile-photo.taken { opacity: .72; }
+
+/* A file that does not belong in the tile folder, said once and then gone. */
+.di-refused { position: fixed; left: 50%; top: 28px; transform: translateX(-50%); z-index: 60;
+  padding: 9px 16px; border-radius: 8px; background: rgba(20,22,28,.88); color: #e8eaf0;
+  font-size: 12.5px; pointer-events: none; }

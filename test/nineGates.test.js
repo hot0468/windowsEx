@@ -165,10 +165,21 @@ describe('구련보등', () => {
     }
   })
 
-  it('패 폴더는 파일을 받는 자리가 아니다', () => {
-    // 바탕화면 폴더 아이콘은 전부 같은 드롭 핸들러를 달고 있었다. 그래서 패
-    // 폴더에 파일을 떨구면 엉뚱하게 작업 폴더로 들어갔다.
+  it('폴더마다 제 드롭을 받는다', () => {
+    // 전에는 바탕화면 폴더가 전부 작업 폴더의 드롭 핸들러를 달고 있어서, 패
+    // 폴더에 떨군 파일이 엉뚱하게 작업 폴더로 들어갔다.
     const src = readFileSync('src/shell/Desktop.jsx', 'utf8')
-    expect(src).toContain('e.name === WORK_FOLDER ? work.dropProps : {}')
+    expect(src).toContain('dropFor')
+    expect(src).toContain('name === gates?.folder ? gather')
+  })
+
+  it('패가 아닌 파일은 폴더가 받지 않고, 왜인지 말해 준다', () => {
+    const g = () => useGame.getState()
+    // takeTile은 패가 아닌 것을 조용히 무시한다 — 화면 쪽에서 말을 해 줘야 한다
+    g().takeTile('file_memo')
+    expect(g().tiles).toEqual([])
+    expect(gates.refuse).toBeTruthy()
+    // 몇 장 남았는지는 말하지 않는다
+    expect(gates.refuse).not.toMatch(/[0-9]/)
   })
 })
