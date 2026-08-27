@@ -3,6 +3,7 @@ import {
   hostResolves, latestNews, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
 } from '../engine/store.js'
 import Place from './Place.jsx'
+import TilePhoto from './TilePhoto.jsx'
 import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
 import News from './News.jsx'
@@ -576,6 +577,8 @@ export function networkRows(page, site, view) {
 // the same way the obituary waits to be scrolled to rather than merely opened.
 const BlogPost = ({ id }) => {
   const b = useGame((s) => s.scenario.blogs.find((x) => x.id === id))
+  const shots = useGame((s) => s.scenario.nineGates?.shots)
+  const tileOf = (tileId) => shots?.find((x) => x.id === tileId)
   const borrowed = useGame((s) => s.scenario.dream?.blog === id)
   const readDream = useGame((s) => s.readDream)
   const end = useRef(null)
@@ -594,9 +597,15 @@ const BlogPost = ({ id }) => {
         <span className="bl-by">{b.author} · {b.date}</span>
       </div>
       <h1>{b.title}</h1>
-      {b.body.map((part, i) => (part.shot
-        ? <img key={i} className="bl-shot" src={shotOf(part.shot)} alt="" draggable="false" />
-        : <p key={i}>{part}</p>))}
+      {b.body.map((part, i) => {
+        if (part.tile) {
+          const shot = tileOf(part.tile)
+          return shot ? <TilePhoto key={i} shot={shot} className="bl-shot" /> : null
+        }
+        return part.shot
+          ? <img key={i} className="bl-shot" src={shotOf(part.shot)} alt="" draggable="false" />
+          : <p key={i}>{part}</p>
+      })}
       <div className="bl-tags">{b.tags.map((t) => <span key={t}>#{t}</span>)}</div>
       {borrowed && <i ref={end} className="bl-end" aria-hidden="true" />}
     </article>

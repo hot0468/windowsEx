@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -174,6 +174,8 @@ export const useGame = create((set, get) => ({
   // Wiki pages she has edited: `account` → { day, line }. Separate from
   // `edits`, which holds file contents and is read by a ripple.
   wikiEdits: restored?.wikiEdits ?? {},
+  // Which tile photographs have been copied into the folder on the desktop.
+  tiles: restored?.tiles ?? [],
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -716,6 +718,19 @@ export const useGame = create((set, get) => ({
     set({ wikiEdits })
   },
 
+  // Copying a tile photograph into the folder. Fourteen of them make a hand
+  // that wins on any tile at all — nine gates, every one of them open — and the
+  // week does not get to finish.
+  takeTile: (id) => {
+    const s = get()
+    const gates = s.scenario.nineGates
+    if (!gates || s.tiles.includes(id)) return
+    if (!gates.shots.some((x) => x.id === id)) return
+    const tiles = [...s.tiles, id]
+    set({ tiles })
+    if (tiles.length >= gates.shots.length) get().endGame(gates.ending)
+  },
+
   // Nothing reads these back but the player, on a later day. That is the point.
   writeNote: (text) => {
     const said = text.trim()
@@ -843,9 +858,33 @@ export function fsWithPinned(fs, pinned) {
   return { ...fs, 바탕화면: [...fs['바탕화면'], { name: WORK_FOLDER, children: copies }] }
 }
 
+// The tiles the player has gathered. Like the work folder, this is a view: the
+// folder is not on the desktop until the first photo goes into it, and what is
+// inside are the same files, still where they were.
+export function fsWithTiles(sc, fs, tiles = []) {
+  if (!tiles.length) return fs
+  const gates = (sc ?? scenario).nineGates
+  if (!gates) return fs
+  const shots = new Map(gates.shots.map((s) => [s.id, s]))
+  const children = tiles.map((id) => findFile(fs, id) ?? blogTile(shots.get(id))).filter(Boolean)
+  if (!children.length) return fs
+  return { ...fs, 바탕화면: [...fs['바탕화면'], { name: gates.folder, children }] }
+}
+
+// A tile found in a blog post has no file behind it, so the folder makes one.
+const blogTile = (shot) => shot && {
+  id: shot.id, name: shot.id + '.jpg', image: shot.shot, alt: '사진', tile: shot.tile
+}
+
+// Which tile photos belong to a given spot — a blog post, or a folder path.
+export const tileShots = (scenario, kind, key) =>
+  (scenario.nineGates?.shots ?? []).filter((s) => (kind === 'blog'
+    ? s.blog === key
+    : s.at && s.at.join('/') === key))
+
 // The bin is a view: a file flagged `deleted` in the scenario sits in 휴지통
 // until restored, then reappears where the data always kept it.
-export function fsView(fs, { pinned = [], restored = {} } = {}) {
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
@@ -856,7 +895,7 @@ export function fsView(fs, { pinned = [], restored = {} } = {}) {
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))
   out['휴지통'] = [...(out['휴지통'] ?? []), ...binned]
-  return fsWithPinned(out, pinned)
+  return fsWithTiles(scenario, fsWithPinned(out, pinned), tiles)
 }
 
 // Once the blog has been read, the photos it was lending are gone. The rows

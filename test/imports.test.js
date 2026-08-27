@@ -47,7 +47,9 @@ describe('store imports', () => {
 // wrong and nothing throws — the file opens to an empty frame, which is the kind
 // of thing you only notice if you happen to open that one file.
 describe('picture files', () => {
-  const have = new Set(readdirSync('src/assets/files')
+  // Photographs live in files/, and the ones with a mahjong tile in them in
+  // tiles/. Both are reached by `image` the same way.
+  const have = new Set([...readdirSync('src/assets/files'), ...readdirSync('src/assets/tiles')]
     .map((f) => f.replace(/[.](webp|jpg)$/, '')))
   // Files name a picture, and so does a message someone sends one in, so this
   // walks the whole scenario rather than just the disk.

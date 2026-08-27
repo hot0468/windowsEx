@@ -20,7 +20,8 @@ export default function Desktop() {
   const pinFile = useGame((s) => s.pinFile)
   const restored = useGame((s) => s.restored)
   const showHidden = useGame((st) => st.showHidden)
-  const desktop = visible(fsView(scenario.fs, { pinned, restored })['바탕화면'], showHidden)
+  const tiles = useGame((st) => st.tiles)
+  const desktop = visible(fsView(scenario.fs, { pinned, restored, tiles, scenario })['바탕화면'], showHidden)
   const work = useFileDrop(pinFile)
   const icons = [...SHORTCUTS, ...installedShortcuts(scenario.programs, grants)]
   return (
@@ -35,7 +36,11 @@ export default function Desktop() {
         <button key={e.name} className={'desktop-icon' + (work.over ? ' drop' : '')} {...work.dropProps}
                 onDoubleClick={() => openWindow('explorer', { startFolder: ['바탕화면', e.name] })}>
           <div className="glyph"><Icon name="folder" size={38} /></div>{e.name}
-          {e.children.length > 0 && <span className="di-count">{e.children.length}</span>}
+          {/* The tile folder wears no number: how many are in there is a thing
+              you find out by opening it, not by glancing at the desktop. */}
+          {e.children.length > 0 && e.name !== scenario.nineGates?.folder && (
+            <span className="di-count">{e.children.length}</span>
+          )}
         </button>
       ) : (
         <button key={e.id} className="desktop-icon" {...fileDragProps(e)}

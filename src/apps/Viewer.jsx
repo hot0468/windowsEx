@@ -18,8 +18,12 @@ export default function Viewer({ fileId }) {
   // which of the folder's pictures is up; the window keeps its own place
   const [shown, setShown] = useState(fileId)
   const frame = useRef(null)
+  const gates = useGame((s) => s.scenario.nineGates)
+  const tiles = useGame((s) => s.tiles)
+  const takeTile = useGame((s) => s.takeTile)
+  const [menu, setMenu] = useState(null)
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
   const gallery = galleryOf(fs, fileId, showHidden)
   const at = gallery.findIndex((f) => f.id === shown)
   const file = findFile(fs, shown)
@@ -69,9 +73,25 @@ export default function Viewer({ fileId }) {
       </div>
       <div className="vw-canvas">
         <div className="vw-stage" style={{ width: `${ZOOMS[zoom] * 100}%`, height: `${ZOOMS[zoom] * 100}%` }}>
-          <img src={src} alt={file.alt ?? file.name} />
+          {/* Blown up on screen is where the tile in the corner is noticed. */}
+          <img src={src} alt={file.alt ?? file.name}
+               title={file.tile && !tiles.includes(file.id) ? gates?.hint : undefined}
+               onContextMenu={(e) => {
+                 if (!file.tile || tiles.includes(file.id)) return
+                 e.preventDefault()
+                 setMenu({ x: e.clientX, y: e.clientY })
+               }} />
         </div>
       </div>
+      {menu && (
+        <>
+          <div className="ctx-catch" onPointerDown={() => setMenu(null)}
+               onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} />
+          <div className="ctx" style={{ left: menu.x, top: menu.y }}>
+            <button onClick={() => { takeTile(file.id); setMenu(null) }}>{gates.copy}</button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

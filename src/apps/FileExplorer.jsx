@@ -18,11 +18,12 @@ export default function FileExplorer({ startFolder }) {
   const showHidden = useGame((s) => s.showHidden)
   const toggleHidden = useGame((s) => s.toggleHidden)
   const dreamt = useGame((s) => s.dreamt)
+  const tiles = useGame((s) => s.tiles)
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
   const [viewOpen, setViewOpen] = useState(false)
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
   const roots = Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 

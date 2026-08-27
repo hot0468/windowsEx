@@ -1549,3 +1549,8 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
               border-radius: 6px; background: #f7fbff; font-size: 13px; }
 .pw-receipt b { font-family: Consolas, monospace; letter-spacing: 0.5px; }
 .pw-status.ok .pw-dot { background: #16a34a; }
+
+/* A photograph with a tile in it. It looks like any other picture; the pointer
+   is what gives it away, and only until it has been taken. */
+.tile-photo { cursor: default; }
+.tile-photo.taken { opacity: .72; }
