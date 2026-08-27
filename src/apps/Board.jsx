@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronDown, Flag, MessageSquare, ThumbsDown, ThumbsUp } from '../icons/line.jsx'
-import { useGame, boardPosts, roomReply, roomTopic } from '../engine/store.js'
+import { useGame, boardPosts, myPosts, roomReply, roomTopic } from '../engine/store.js'
 
 // An outside community site: a list of posts, one post at a time, nothing to
 // log into. A room with an `ask` block also lets the player post a question.
@@ -12,8 +12,20 @@ export default function Board({ site }) {
   const [waiting, setWaiting] = useState(false)
   const askedRoom = useGame((s) => s.askedRoom)
   const day = useGame((s) => s.day)
-  const posts = boardPosts(b.posts, day)
+  const scenario = useGame((s) => s.scenario)
+  const posted = useGame((s) => s.posted)
+  const postTo = useGame((s) => s.postTo)
+  const [writing, setWriting] = useState(null)
+  const [notice, setNotice] = useState(false)
+  // Hers sit on top of the board's own, newest first, the way a board works.
+  const mine = b.compose ? myPosts(scenario, { posted, day }, site.url) : []
+  const posts = [...mine, ...boardPosts(b.posts, day)]
   const post = posts.find((p) => p.id === id)
+  // A post of hers that is no longer listed was taken down. Saying so is the
+  // whole point — silently bouncing back to the list would read as a bug.
+  const removed = !post && id
+    ? b.compose?.options.find((o) => o.id === id && posted[site.url + '/' + id] !== undefined)
+    : null
 
   const send = () => {
     const question = draft.trim()
@@ -36,7 +48,14 @@ export default function Board({ site }) {
         <span className="bd-tag">{b.tagline}</span>
       </div>
 
-      {post ? (
+      {removed ? (
+        <article className="bd-post">
+          <button className="bd-back" onClick={() => setId(null)}>
+            <ChevronLeft size={13} strokeWidth={2.2} />목록
+          </button>
+          <div className="bd-gone">{removed.gone}</div>
+        </article>
+      ) : post ? (
         <article className="bd-post">
           <button className="bd-back" onClick={() => setId(null)}>
             <ChevronLeft size={13} strokeWidth={2.2} />목록
@@ -91,6 +110,14 @@ export default function Board({ site }) {
               ))}
             </div>
           )}
+          {b.compose && (
+            <div className="bd-compose">
+              <button className="btn-primary" onClick={() => setWriting('pick')}>
+                {b.compose.button}
+              </button>
+              {notice && <span className="bd-posted">{b.compose.posted}</span>}
+            </div>
+          )}
           <div className="bd-list">
             {posts.map((p) => (
               <button key={p.id} className="bd-row" onClick={() => setId(p.id)}>
@@ -103,6 +130,41 @@ export default function Board({ site }) {
             ))}
           </div>
         </>
+      )}
+
+      {writing && (
+        <div className="mg-ask" onPointerDown={() => setWriting(null)}>
+          <div className="bd-write-card" onPointerDown={(e) => e.stopPropagation()}>
+            <h2>{b.compose.title}</h2>
+            <p className="bd-write-hint">{b.compose.hint}</p>
+            {/* Picking beats typing here: a written reaction per topic reads as
+                the board having understood, which keyword matching never does. */}
+            <div className="bd-write-picks">
+              {b.compose.options.map((o) => {
+                const already = posted[site.url + '/' + o.id] !== undefined
+                return (
+                  <button key={o.id} disabled={already}
+                          className={'bd-write-pick' + (writing === o.id ? ' on' : '')}
+                          onClick={() => setWriting(o.id)}>
+                    {o.pick}
+                    {already && <i>이미 올림</i>}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="bd-write-row">
+              <button className="btn-primary" disabled={writing === 'pick'}
+                      onClick={() => {
+                        postTo(site.url, writing)
+                        setWriting(null)
+                        setNotice(true)
+                      }}>
+                {b.compose.submit}
+              </button>
+              <button className="sm-cancel" onClick={() => setWriting(null)}>{b.compose.cancel}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

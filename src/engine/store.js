@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -169,6 +169,8 @@ export const useGame = create((set, get) => ({
   // What the player adds to the note server the last occupant left running.
   // His log stops mid-sentence in 2023; these go underneath it.
   myNotes: restored?.myNotes ?? [],
+  // Which posts she has put up, and on what day: `board.kr/w_boss` → 2.
+  posted: restored?.posted ?? {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -681,6 +683,13 @@ export const useGame = create((set, get) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), { day: s.day, ...msg }] }
     })),
   setScratch: (scratch) => set({ scratch }),
+  // Posting to an anonymous board. It grants nothing and opens nothing — what
+  // it buys is a handful of strangers answering, or not.
+  postTo: (url, id) =>
+    set((s) => (s.posted[url + '/' + id] !== undefined
+      ? s
+      : { posted: { ...s.posted, [url + '/' + id]: s.day } })),
+
   // Nothing reads these back but the player, on a later day. That is the point.
   writeNote: (text) => {
     const said = text.trim()
@@ -969,6 +978,31 @@ export const visibleByDay = (items = [], day = 1) => items.filter((x) => (x.day 
 // The sort is stable, so the authored order inside a day survives.
 export const boardPosts = (posts = [], day = 1) =>
   [...visibleByDay(posts, day)].sort((a, b) => (b.day ?? 0) - (a.day ?? 0))
+
+// What the player has put on a board herself. A post carries the day it went
+// up: the replies land the morning after, and one of them is never answered at
+// all — it is quietly gone by the time she looks again.
+export function myPosts(scenario, { posted = {}, day = 1 }, url) {
+  const site = scenario.sites.find((s) => s.url === url)
+  const compose = site?.board?.compose
+  const options = compose?.options ?? []
+  return Object.entries(posted)
+    .filter(([key]) => key.startsWith(url + '/'))
+    .map(([key, when]) => [options.find((o) => o.id === key.slice(url.length + 1)), when])
+    .filter(([option, when]) => option && !(option.vanishes && day - when >= option.vanishes))
+    .map(([option, when]) => ({
+      ...option,
+      author: compose.author,
+      company: compose.company,
+      likes: 0,
+      time: '방금',
+      day: when,
+      // Nobody replies the same day, and nobody ever replies to the one about
+      // the eighth floor.
+      comments: day > when ? option.comments : []
+    }))
+    .sort((a, b) => b.day - a.day)
+}
 
 // The portal keeps every day's announcements: today's on top, then each
 // earlier day, then what was already pinned before the week began.
