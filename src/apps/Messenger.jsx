@@ -117,6 +117,7 @@ export default function Messenger({ source }) {
   const stick = useRef(true)
   const openedHistory = useGame((s) => s.openedHistory)
   const openHistory = useGame((s) => s.openHistory)
+  const readAllBack = useGame((s) => s.readAllBack)
   // 불러오는 시늉이 도는 동안에는 버튼을 다시 누를 수 없다.
   const [loading, setLoading] = useState(false)
   const pinned = useGame((s) => s.pinned)
@@ -218,8 +219,12 @@ export default function Messenger({ source }) {
     const el = list.current
     const before = el ? el.scrollHeight : 0
     setTimeout(() => {
-      openHistory(thread.id, opened + 1)
+      const next = opened + 1
+      openHistory(thread.id, next)
       setLoading(false)
+      // Reaching the bottom of a conversation is its own kind of looking, and
+      // one of them looks back.
+      if (next >= chunks.length && thread.id === scenario.readBack?.thread) readAllBack()
       requestAnimationFrame(() => {
         if (el) el.scrollTop += el.scrollHeight - before
       })

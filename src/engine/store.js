@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -123,6 +123,10 @@ export const useGame = create((set, get) => ({
   grants: restored?.grants ?? {},
   // Whether the travel blog has been read to the end. The photos go with it.
   dreamt: restored?.dreamt ?? false,
+  // Whether 엄마's conversation has been unfolded all the way back. She answers
+  // that once, and only for the player who went looking.
+  readBack: restored?.readBack ?? false,
+
   bookings: restored?.bookings ?? {},
   day: restored?.day ?? 1,
   misses: restored?.misses ?? 0,
@@ -485,6 +489,25 @@ export const useGame = create((set, get) => ({
     if (s.dreamt) return
     set({ dreamt: true })
     const note = s.scenario.dream?.notice
+    if (!note) return
+    setTimeout(() => {
+      note.lines.forEach((text) => get().pushMessage(note.thread, { from: note.from, text }))
+      get().showToast({
+        from: note.from, text: note.lines[note.lines.length - 1],
+        app: appOf(note.source), source: note.source, thread: note.thread
+      })
+    }, note.delay)
+  },
+
+  // Unfolding 엄마's conversation all the way back is its own kind of looking.
+  // What is down there is a month of her talking into nothing — after the 24th
+  // of July not one line is his. She does not say that, and never could; she
+  // only notices the read mark move and says his name. Nothing answers.
+  readAllBack: () => {
+    const s = get()
+    if (s.readBack) return
+    set({ readBack: true })
+    const note = s.scenario.readBack
     if (!note) return
     setTimeout(() => {
       note.lines.forEach((text) => get().pushMessage(note.thread, { from: note.from, text }))

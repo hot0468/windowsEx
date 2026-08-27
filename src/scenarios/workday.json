@@ -22512,5 +22512,16 @@
         }
       }
     }
+  },
+  "readBack": {
+    "source": "privateMessenger",
+    "thread": "mom",
+    "from": "엄마",
+    "delay": 2600,
+    "lines": [
+      "지금 읽고 있는 거니?",
+      "읽음이 바뀌었어. 엄마 지금 보고 있었는데.",
+      "한별아."
+    ]
   }
 }
