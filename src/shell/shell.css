@@ -1446,6 +1446,12 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
 .nt-caret { display: inline-block; width: 7px; height: 14px; margin-left: 2px;
             background: #23241f; vertical-align: text-bottom; animation: nt-blink 1.1s step-end infinite; }
 @keyframes nt-blink { 50% { opacity: 0; } }
+/* Hers, under his. Same server, three years later. */
+.nt-mine .nt-date { color: #1a4fa0; }
+.nt-write { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-top: 16px; }
+.nt-write textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d8d8d0;
+  border-radius: 4px; background: #fffef8; font: inherit; font-size: 13px; line-height: 1.7; resize: vertical; }
+.nt-write textarea:focus { outline: none; border-color: #1a4fa0; }
 .nt-foot { display: flex; flex-direction: column; gap: 3px; margin-top: 18px;
            font-size: 11px; color: #a09e92; }
 .nt-uptime { color: #b4483a; }

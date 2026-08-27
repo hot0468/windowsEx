@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -166,6 +166,9 @@ export const useGame = create((set, get) => ({
   // and then either told or buried it.
   rumor: restored?.rumor ?? {},
   scratch: restored?.scratch ?? '',
+  // What the player adds to the note server the last occupant left running.
+  // His log stops mid-sentence in 2023; these go underneath it.
+  myNotes: restored?.myNotes ?? [],
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -678,6 +681,12 @@ export const useGame = create((set, get) => ({
       extraMessages: { ...s.extraMessages, [threadId]: [...(s.extraMessages[threadId] ?? []), { day: s.day, ...msg }] }
     })),
   setScratch: (scratch) => set({ scratch }),
+  // Nothing reads these back but the player, on a later day. That is the point.
+  writeNote: (text) => {
+    const said = text.trim()
+    if (!said) return
+    set((s) => ({ myNotes: [...s.myNotes, { day: s.day, text: said }] }))
+  },
   // A government site verifies you by phone: the code lands in 톡톡, the way
   // a real SMS would, and the toast points at that conversation.
   sendCode: (gov) => {
