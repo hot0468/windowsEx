@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { checkEtiquette } from '../src/engine/goal.js'
+import { checkEtiquette, checkGoal } from '../src/engine/goal.js'
+import { goalFor } from '../src/engine/store.js'
 import scenario from '../src/scenarios/workday.json'
 
 const rules = {
@@ -88,5 +89,25 @@ describe('예절 규칙 데이터', () => {
   it('발신 메일 규칙이 시나리오 한 곳에만 있다', () => {
     expect(scenario.days[2].fetch.greetings).toBeUndefined()
     expect(scenario.days[2].fetch.closings).toBeUndefined()
+  })
+})
+
+describe('답장에서 예절은 사이드퀘스트다', () => {
+  const goal = goalFor(scenario, 1)
+  // 끝맺음말 목록에 '부탁드립니다'가 있으므로 그 말을 피해야 closing까지 걸린다
+  const rude = `${goal.requiredKeywords[0]} 확인해주세요`
+
+  it('예절을 어겨도 답장 판정은 통과한다', () => {
+    expect(checkGoal(goal, { attachmentId: goal.requiredAttachment, body: rude }).ok).toBe(true)
+  })
+
+  it('예절을 갖춰도 첨부가 틀리면 여전히 실패한다', () => {
+    const polite = `안녕하세요, 김한별입니다.\n\n${goal.requiredKeywords[0]}\n\n감사합니다.`
+    expect(checkGoal(goal, { attachmentId: 'file_wrong', body: polite }).ok).toBe(false)
+  })
+
+  it('그 답장은 예절 검사에서는 걸린다', () => {
+    const r = { ...scenario.etiquette, company: scenario.player.company, name: scenario.player.name }
+    expect(checkEtiquette(r, { body: rude, outbound: false })).toEqual(['greeting', 'closing'])
   })
 })

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
-import { checkGoal, checkOutbound } from './goal.js'
+import { checkEtiquette, checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
@@ -739,11 +739,14 @@ export const useGame = create((set, get) => ({
   openHistory: (id, n) =>
     set((s) => (s.openedHistory[id] === n ? s : { openedHistory: { ...s.openedHistory, [id]: n } })),
 
-  sendReply: ({ attachmentId, body }) => {
+  sendReply: ({ attachmentId, subject, body }) => {
     const s = get()
     const goal = goalFor(s.scenario, s.day)
     const original = [...s.scenario.mails, ...s.extraMails].find((m) => m.id === goal.replyToMail)
     const verdict = checkGoal(goal, { attachmentId, body })
+    // 예절은 일과 별개다. 메일은 그대로 나가고 목표도 정상 처리되며, 실수
+    // 횟수에도 들어가지 않는다. 잠시 뒤 박 팀장이 거래처 말을 옮길 뿐이다.
+    get().scold({ subject, body, outbound: false })
     setTimeout(() => {
       set((st) => ({
         extraMails: [...st.extraMails, {
@@ -770,6 +773,19 @@ export const useGame = create((set, get) => ({
 
     get().nag(lines, () => spent && setTimeout(() => set({ failed: true }), 2600))
     return verdict.ok
+  },
+
+  // 어긴 게 여럿이어도 사유 하나만 고른다. 한 번에 셋을 지적하면 잔소리가
+  // 아니라 체크리스트가 된다.
+  scold: ({ subject, body, outbound }) => {
+    const s = get()
+    const e = s.scenario.etiquette
+    if (!e) return
+    const [reason] = checkEtiquette(
+      { ...e, company: s.scenario.player.company, name: s.scenario.player.name },
+      { subject, body, outbound }
+    )
+    if (reason) get().nag(e.nags[reason])
   },
 
   // The boss types a moment after the client's reply lands, one line at a time.

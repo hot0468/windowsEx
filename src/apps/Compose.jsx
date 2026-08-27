@@ -47,7 +47,7 @@ export default function Compose({ mail, onSend, onCancel }) {
     <div className="mw">
       <div className="mw-actions">
         <button className="btn-primary" disabled={!mail && !to.trim()}
-                onClick={() => onSend({ to: to.trim(), subject: subject.trim() || '(제목 없음)', attachmentId: att || null, body: body.current.innerText })}>
+                onClick={() => onSend({ to: to.trim(), subject: mail ? 'RE: ' + mail.subject : subject.trim() || '(제목 없음)', attachmentId: att || null, body: body.current.innerText })}>
           <Send size={15} strokeWidth={1.8} />보내기
         </button>
         <button className="sm-cancel" onClick={onCancel}>취소</button>
