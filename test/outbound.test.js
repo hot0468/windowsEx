@@ -5,32 +5,53 @@ import { allFiles, entriesAt, findFile, fsView } from '../src/engine/store.js'
 
 const day = scenario.days.find((d) => d.fetch)
 const fetch = day.fetch
-const polite = (middle) => `김영민 대리님, 안녕하세요. AR 김한별입니다.\n\n${middle}\n\n감사합니다.\n김한별 드림`
+const et = scenario.etiquette
+const player = scenario.player
+const polite = (middle) => `김영민 대리님, 안녕하세요. AR 주식회사 김한별입니다.\n\n${middle}\n\n감사합니다.\n김한별 드림`
+const sub = '[AR주식회사] 자료 요청'
+const send = (over = {}) =>
+  checkOutbound(fetch, { to: fetch.to, subject: sub, body: polite('발주 계획서'), ...over }, et, player)
 
 describe('a mail the player sends first', () => {
   it('bounces an address nobody has', () => {
-    expect(checkOutbound(fetch, { to: 'nobody@ctech.co.kr', body: polite('발주 계획서') }).reason).toBe('address')
-    expect(checkOutbound(undefined, { to: fetch.to, body: polite('발주 계획서') }).reason).toBe('address')
+    expect(send({ to: 'nobody@ctech.co.kr' }).reason).toBe('address')
+    expect(checkOutbound(undefined, { to: fetch.to, subject: sub, body: polite('발주 계획서') }, et, player).reason).toBe('address')
   })
 
   it('forgives case and spacing in the address', () => {
-    expect(checkOutbound(fetch, { to: ' YM.Kim@ctech.co.kr ', body: polite('발주 계획서') }).ok).toBe(true)
+    expect(send({ to: ' YM.Kim@ctech.co.kr ' }).ok).toBe(true)
   })
 
-  it('notices a mail with no greeting or no sign-off', () => {
-    expect(checkOutbound(fetch, { to: fetch.to, body: '발주 계획서 보내주세요' }).reason).toBe('rude')
-    expect(checkOutbound(fetch, { to: fetch.to, body: '안녕하세요. 발주 계획서 보내주세요' }).reason).toBe('rude')
-    expect(checkOutbound(fetch, { to: fetch.to, body: '발주 계획서 보내주세요. 감사합니다.' }).reason).toBe('rude')
+  it('말머리가 없으면 되돌아온다', () => {
+    const v = send({ subject: '자료 요청' })
+    expect(v.reason).toBe('subject')
+    expect(v.ok).toBe(false)
+    expect(v.reply.attach).toBeUndefined()
+  })
+
+  it('인사말이나 자기소개가 없으면 되돌아온다', () => {
+    expect(send({ body: '발주 계획서 보내주세요' }).reason).toBe('greeting')
+    expect(send({ body: '안녕하세요. 발주 계획서 보내주세요. 감사합니다.' }).reason).toBe('greeting')
+  })
+
+  it('끝맺음말이 없으면 되돌아온다', () => {
+    expect(send({ body: '안녕하세요, 김한별입니다. 발주 계획서 보내주세요' }).reason).toBe('closing')
+  })
+
+  it('사유마다 다른 회신이 있다', () => {
+    const bodies = ['subject', 'greeting', 'closing'].map((r) => fetch.rudeReplies[r].body)
+    expect(bodies.every(Boolean)).toBe(true)
+    expect(new Set(bodies).size).toBe(3)
   })
 
   it('asks again when the body never says what is wanted', () => {
-    const v = checkOutbound(fetch, { to: fetch.to, body: polite('지난번 자료 좀 보내주세요.') })
+    const v = send({ body: polite('지난번 자료 좀 보내주세요.') })
     expect(v.reason).toBe('keyword')
     expect(v.reply.attach).toBeUndefined()
   })
 
   it('sends the document back for a proper request', () => {
-    const v = checkOutbound(fetch, { to: fetch.to, body: polite('하반기 발주 계획서 공유 부탁드립니다.') })
+    const v = send({ body: polite('하반기 발주 계획서 공유 부탁드립니다.') })
     expect(v.ok).toBe(true)
     expect(v.reply.attach.fileId).toBeTruthy()
   })
@@ -46,7 +67,7 @@ describe('a mail the player sends first', () => {
 
   it('has a bounce to send and a scolding for a rude mail', () => {
     expect(scenario.goal.bounce.body).toContain('{to}')
-    expect(fetch.rude.length).toBeGreaterThan(1)
+    expect(et.nags.subject.length).toBeGreaterThan(1)
     expect(day.requests).toContain(scenario.objectives.find((o) => o.grant === fetch.grants).id)
   })
 })

@@ -13,17 +13,22 @@ export function checkGoal(goal, { attachmentId, body }) {
 }
 
 // A mail the player sends first. Checked in the order the world would notice:
-// an unknown address bounces before anyone reads it (the caller owns the bounce); a mail with no greeting or
-// sign-off gets a cool reply (and the boss hears about it); then the body has
-// to actually name what is being asked for.
-const hasAny = (body, words = []) => words.some((w) => norm(body).includes(norm(w)))
+// an unknown address bounces before anyone reads it (the caller owns the bounce); a mail that skips
+// the company name, the greeting, or the sign-off gets a cool reply naming the
+// one it skipped (and the boss hears about it); then the body has to actually
+// name what is being asked for.
 
-export function checkOutbound(fetch, { to, body }) {
+export function checkOutbound(fetch, { to, subject, body }, etiquette, player) {
   if (!fetch || norm(to).toLowerCase() !== norm(fetch.to).toLowerCase()) {
     return { ok: false, reason: 'address', reply: null }
   }
-  if (!hasAny(body, fetch.greetings) || !hasAny(body, fetch.closings)) {
-    return { ok: false, reason: 'rude', reply: fetch.rudeReply }
+  // 이 메일은 본퀘스트다. 답장과 달리 예절을 어기면 되돌아온다.
+  const [rude] = checkEtiquette(
+    { ...etiquette, company: player.company, name: player.name },
+    { subject, body, outbound: true }
+  )
+  if (rude) {
+    return { ok: false, reason: rude, reply: fetch.rudeReplies[rude] }
   }
   if (fetch.requiredKeywords.some((k) => !norm(body).includes(norm(k)))) {
     return { ok: false, reason: 'keyword', reply: fetch.unclearReply }

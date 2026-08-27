@@ -809,7 +809,7 @@ export const useGame = create((set, get) => ({
   sendMail: ({ to, subject, body }) => {
     const s = get()
     const fetch = s.scenario.days[s.day - 1]?.fetch
-    const verdict = checkOutbound(fetch, { to, body })
+    const verdict = checkOutbound(fetch, { to, subject, body }, s.scenario.etiquette, s.scenario.player)
     const fill = (t = '') => t.replace('{to}', to).replace('{subject}', subject)
     const reply = verdict.reply ?? s.scenario.goal.bounce
     setTimeout(() => {
@@ -817,7 +817,8 @@ export const useGame = create((set, get) => ({
       set((st) => ({ extraMails: [...st.extraMails, mail] }))
       get().showToast({ from: mail.from, text: `새 메일이 도착했습니다: ${mail.subject}`, app: 'mail' })
       if (verdict.ok) setTimeout(() => get().grant(fetch.grants), 2200)
-      if (verdict.reason === 'rude') get().nag(fetch.rude)
+      const nags = s.scenario.etiquette.nags[verdict.reason]
+      if (nags) get().nag(nags)
     }, 1800)
     return verdict.ok
   }

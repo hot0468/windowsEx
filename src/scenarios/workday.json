@@ -11683,11 +11683,6 @@
         "requiredKeywords": [
           "발주 계획"
         ],
-        "rudeReply": {
-          "from": "김영민 <ym.kim@ctech.co.kr>",
-          "subject": "RE: {subject}",
-          "body": "메일 받았습니다.\n\n어떤 용건이신지 정식으로 다시 보내주시면 확인 후 회신드리겠습니다.\n\n김영민 드림"
-        },
         "unclearReply": {
           "from": "김영민 <ym.kim@ctech.co.kr>",
           "subject": "RE: {subject}",
@@ -11703,12 +11698,24 @@
             "fileId": "file_ctech_plan"
           }
         },
-        "rude": [
-          "김대리, 방금 C테크 김영민 대리한테 연락 왔어요.",
-          "메일이 인사도 끝맺음도 없이 용건만 달랑 와서 당황했다네요. 예의가 없다고.",
-          "거래처 메일은 인사, 본론, 끝인사 갖춰서 보내세요. 자중하세요."
-        ],
-        "grants": "fetch"
+        "grants": "fetch",
+        "rudeReplies": {
+          "subject": {
+            "from": "김영민 <ym.kim@ctech.co.kr>",
+            "subject": "RE: {subject}",
+            "body": "메일 받았습니다.\n\n제목에 회사명이 없어 스팸함에서 뒤늦게 찾았습니다.\n어느 회사에서 보내신 건지 제목에 밝혀 다시 보내주시겠습니까?\n\n김영민 드림"
+          },
+          "greeting": {
+            "from": "김영민 <ym.kim@ctech.co.kr>",
+            "subject": "RE: {subject}",
+            "body": "메일 받았습니다.\n\n실례지만 어느 분이신지요? 인사도 소속도 없이 용건만 있어 확인이 어렵습니다.\n정식으로 다시 보내주시면 회신드리겠습니다.\n\n김영민 드림"
+          },
+          "closing": {
+            "from": "김영민 <ym.kim@ctech.co.kr>",
+            "subject": "RE: {subject}",
+            "body": "메일 받았습니다.\n\n본문이 중간에 끊긴 것 같은데, 혹시 잘못 보내신 건 아닌지요?\n확인 후 다시 부탁드립니다.\n\n김영민 드림"
+          }
+        }
       }
     },
     {
