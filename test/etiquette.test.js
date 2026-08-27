@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { checkEtiquette } from '../src/engine/goal.js'
+import scenario from '../src/scenarios/workday.json'
 
 const rules = {
   company: 'AR 주식회사',
@@ -58,5 +59,34 @@ describe('메일 예절 검사', () => {
 
   it('여러 개를 어기면 우선순위 순으로 전부 돌려준다', () => {
     expect(check({ subject: '견적서', body: '견적서 보내드립니다.' })).toEqual(['subject', 'greeting', 'closing'])
+  })
+})
+
+describe('예절 규칙 데이터', () => {
+  const e = scenario.etiquette
+
+  it('규칙과 잔소리가 모두 있다', () => {
+    expect(e.greetings.length).toBeGreaterThan(1)
+    expect(e.closings.length).toBeGreaterThan(1)
+    for (const reason of ['subject', 'greeting', 'closing']) {
+      expect(e.nags[reason]).toHaveLength(3)
+    }
+  })
+
+  it('잔소리가 정답표가 되지 않는다', () => {
+    const lines = Object.values(e.nags).flat().join('\n')
+    expect(lines).not.toContain('[AR주식회사]')
+    expect(lines).not.toContain('김한별입니다')
+  })
+
+  it('실제 시나리오 규칙으로 바른 메일이 통과한다', () => {
+    const r = { ...e, company: scenario.player.company, name: scenario.player.name }
+    const body = `안녕하세요, ${scenario.player.company} ${scenario.player.name}입니다.\n\n견적서 보내드립니다.\n\n감사합니다.`
+    expect(checkEtiquette(r, { subject: '[AR주식회사] 견적서', body, outbound: true })).toEqual([])
+  })
+
+  it('발신 메일 규칙이 시나리오 한 곳에만 있다', () => {
+    expect(scenario.days[2].fetch.greetings).toBeUndefined()
+    expect(scenario.days[2].fetch.closings).toBeUndefined()
   })
 })
