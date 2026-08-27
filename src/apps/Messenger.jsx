@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, offerable, quickSets, threadMessages, unreadCount } from '../engine/store.js'
+import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -114,6 +115,10 @@ export default function Messenger({ source }) {
   const [profile, setProfile] = useState(null)
   const list = useRef(null)
   const stick = useRef(true)
+  const openedHistory = useGame((s) => s.openedHistory)
+  const openHistory = useGame((s) => s.openHistory)
+  // 불러오는 시늉이 도는 동안에는 버튼을 다시 누를 수 없다.
+  const [loading, setLoading] = useState(false)
   const pinned = useGame((s) => s.pinned)
 
   // On the first days the work arrives one request at a time: a conversation
@@ -174,7 +179,17 @@ export default function Messenger({ source }) {
   )
 
   const busy = !!(thread && typing[thread.id])
-  const shown = thread ? msgsOf(thread) : []
+  const all = thread ? msgsOf(thread) : []
+  // 지난 기록은 접어 두고 이번 주 것만 펼쳐 둔다. 펼친 묶음은 뒤(최근)에서부터
+  // 꺼내므로, 두 묶음을 열었다면 가장 최근 두 날짜 뭉치가 올라온다.
+  // 접기는 보여주는 자리에서만 일어난다 — 아래 대화 판정은 전부 `shown`(전체)을
+  // 그대로 읽는다. 무엇을 펼쳐 두었느냐가 오갈 말을 바꾸면 안 된다.
+  const chunks = thread ? historyChunks(all) : []
+  const opened = openedHistory[thread?.id] ?? 0
+  const folded = chunks.slice(0, Math.max(0, chunks.length - opened))
+  const hidden = folded.flat().length
+  const shown = all
+  const visible = hidden ? all.slice(hidden) : all
   // One pick per batch of incoming messages: the choices go quiet until the
   // other side says something new.
   const arrived = shown.filter((msg) => !msg.me).length
@@ -195,6 +210,22 @@ export default function Messenger({ source }) {
     : offerable(branch[thread.id]
       ?? quickSets(thread)[Math.min(exchanged, quickSets(thread).length - 1)],
     { gate: thread.gate, grants, said })
+  // 기록이 위에 붙으면 읽고 있던 자리가 그만큼 밀린다. 붙기 전 높이를 재 두고
+  // 그 차이만큼 내려 주면 보던 자리가 그대로 남는다.
+  const loadMore = () => {
+    if (loading) return
+    setLoading(true)
+    const el = list.current
+    const before = el ? el.scrollHeight : 0
+    setTimeout(() => {
+      openHistory(thread.id, opened + 1)
+      setLoading(false)
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop += el.scrollHeight - before
+      })
+    }, 400)
+  }
+
   const speak = (lines) => sayBack(thread.id, thread.name, lines)
 
   const reactTo = (key) => {
@@ -352,8 +383,19 @@ export default function Messenger({ source }) {
               </div>
             </div>
             <div className="msg-list" ref={list} onScroll={onScroll}>
-              {shown.length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
-              {shown.map((msg, i, all) => {
+              {folded.length > 0 && (
+                loading ? (
+                  <div className="msg-more busy">
+                    <span className="spinner sm" />불러오는 중…
+                  </div>
+                ) : (
+                  <button className="msg-more" onClick={loadMore}>
+                    이전 메시지 {folded[folded.length - 1].length}개 더 보기
+                  </button>
+                )
+              )}
+              {visible.length === 0 && <div className="msg-empty">아직 메시지가 없습니다</div>}
+              {visible.map((msg, i, all) => {
                 const prev = all[i - 1]
                 const label = dateOf(msg)
                 const dated = label !== null && label !== dateOf(prev)
