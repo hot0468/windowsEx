@@ -73,3 +73,26 @@ describe('illustrations', () => {
     }
   })
 })
+
+describe('search has more than lunch in it', () => {
+  // 여섯 편 중 다섯이 강남 맛집이던 시절에는 무엇을 검색해도 밥집이 나왔다.
+  it('covers what a desk worker would actually look up', () => {
+    for (const q of ['복합기', '엑셀', '출근길', '연차', '한달살기']) {
+      expect(titles(q).length, q).toBeGreaterThan(0)
+    }
+  })
+
+  it('is not all restaurant reviews any more', () => {
+    const food = blogs.filter((b) => b.tags.some((t) => t.includes('맛집')))
+    expect(food.length).toBeLessThan(blogs.length / 2)
+  })
+
+  it('gives each post its own headline and id', () => {
+    expect(new Set(blogs.map((b) => b.id)).size).toBe(blogs.length)
+    expect(new Set(blogs.map((b) => b.title)).size).toBe(blogs.length)
+  })
+
+  it('spreads the posts over more than one publication', () => {
+    expect(new Set(blogs.map((b) => b.blog)).size).toBeGreaterThan(3)
+  })
+})
