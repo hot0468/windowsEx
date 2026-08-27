@@ -31,8 +31,14 @@ N개 더 보기` 버튼을 놓는다. 누르면 스피너가 잠깐 돌고 지�
 안 된다. 알림 스레드 6종(card/delivery/shop/loan/telecom/gov)은 `date`도 `day`도
 없어 애초에 이번 주 판정이 불가능한데, 이 규칙이면 자연히 대상에서 빠진다.
 
-접히는 스레드는 9개다: boss, junho, minseo, soyoung, security, payroll,
-jihyun, mom, room_school.
+접히는 스레드는 7개다: boss, junho, minseo, soyoung, jihyun, mom, room_school.
+(security·payroll은 `day`가 있지만 기록이 2줄뿐이라 아래 8줄 규칙에서 빠진다.)
+
+**7개 전부 1일차부터 접힌다.** 시나리오의 `thread.messages` 안에 있는 `day`
+메시지는 전부 `day: 1`이고, 지난 기록(`date`)은 정적 데이터라 요일에 따라 변하지
+않는다. 즉 이 기능의 효과는 1일차에 이미 전부 나온다 — 주가 지나며 커지거나
+작아지지 않는다. 주중에 들어오는 말은 `extraMessages`로 붙는 별개 경로이고,
+그것은 언제나 펼쳐진 쪽에 남는다.
 
 ## 접는 규칙
 
