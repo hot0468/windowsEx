@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -106,6 +106,9 @@ export const useGame = create((set, get) => ({
   // it outlives the window the same way the messages do.
   branches: restored?.branches ?? {},
   seenThreads: restored?.seenThreads ?? {},
+  // 대화마다 지난 기록을 몇 묶음까지 펼쳐 두었나. 한 번 연 기록은 다시 감추지
+  // 않으므로 저장에 실린다.
+  openedHistory: restored?.openedHistory ?? {},
   typing: {},
   extraMails: restored?.extraMails ?? [],
   extraMessages: restored?.extraMessages ?? {},
@@ -666,6 +669,8 @@ export const useGame = create((set, get) => ({
     set((s) => (!!s.typing[id] === on ? s : { typing: { ...s.typing, [id]: on } })),
   markThreadSeen: (id, count) =>
     set((s) => (s.seenThreads[id] === count ? s : { seenThreads: { ...s.seenThreads, [id]: count } })),
+  openHistory: (id, n) =>
+    set((s) => (s.openedHistory[id] === n ? s : { openedHistory: { ...s.openedHistory, [id]: n } })),
 
   sendReply: ({ attachmentId, body }) => {
     const s = get()

@@ -39,6 +39,29 @@ describe('save / load', () => {
     expect(next.windows.map((w) => w.app)).toEqual(['browser'])
   })
 
+  it('펼쳐 둔 이전 메시지는 다시 켜도 펼쳐져 있다', async () => {
+    const useGame = await freshStore()
+    useGame.getState().openHistory('mom', 2)
+    useGame.getState().saveGame()
+
+    globalThis.sessionStorage.setItem('windowsEx.pendingLoad', '1')
+    vi.resetModules()
+    const next = (await freshStore()).getState()
+
+    expect(next.openedHistory.mom).toBe(2)
+  })
+
+  it('이 필드가 없던 옛 저장도 읽힌다', async () => {
+    // 예전 세이브에는 openedHistory 자체가 없다.
+    globalThis.localStorage.setItem('windowsEx.save',
+      JSON.stringify({ at: 1, windows: [], nextZ: 10, day: 1 }))
+    globalThis.sessionStorage.setItem('windowsEx.pendingLoad', '1')
+    vi.resetModules()
+    const next = (await freshStore()).getState()
+
+    expect(next.openedHistory).toEqual({})
+  })
+
   it('picks the autosave up again after a plain refresh', async () => {
     const useGame = await freshStore()
     useGame.setState({ unlocked: { 'wiki.ar.co.kr': true }, scratch: '메모' })
