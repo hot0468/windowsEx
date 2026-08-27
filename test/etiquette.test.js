@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { checkEtiquette, checkGoal } from '../src/engine/goal.js'
-import { goalFor } from '../src/engine/store.js'
+import { goalFor, useGame } from '../src/engine/store.js'
 import scenario from '../src/scenarios/workday.json'
 
 const rules = {
@@ -109,5 +109,59 @@ describe('답장에서 예절은 사이드퀘스트다', () => {
   it('그 답장은 예절 검사에서는 걸린다', () => {
     const r = { ...scenario.etiquette, company: scenario.player.company, name: scenario.player.name }
     expect(checkEtiquette(r, { body: rude, outbound: false })).toEqual(['greeting', 'closing'])
+  })
+})
+
+describe('sendReply: 두 잔소리가 겹치지 않는다', () => {
+  const goal = goalFor(scenario, 1)
+  const attachmentId = goal.requiredAttachment
+  const keyword = goal.requiredKeywords[0]
+  const boss = goal.complain.thread
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useGame.setState({
+      day: 1,
+      misses: 0,
+      failed: false,
+      extraMails: [],
+      extraMessages: {},
+      typing: {}
+    })
+  })
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers()
+    vi.useRealTimers()
+  })
+
+  it('무례하면서 틀린 답장은 잔소리가 한 번만 나간다', () => {
+    // 예절도 어기고(인사/끝맺음 없음) 첨부도 틀렸다
+    useGame.getState().sendReply({ attachmentId: 'file_wrong', subject: 'RE: 견적', body: keyword })
+
+    vi.advanceTimersByTime(10000)
+
+    const st = useGame.getState()
+    expect(st.misses).toBe(1)
+    expect(st.failed).toBe(false)
+    const lines = st.extraMessages[boss] ?? []
+    // 일 실패 잔소리(attachment) 한 세트만 나가야 하고, 예절 잔소리(greeting/closing)가 섞이면 안 된다
+    expect(lines.length).toBe(goal.complain.attachment.length)
+    expect(lines.map((m) => m.text)).toEqual(goal.complain.attachment)
+  })
+
+  it('무례하지만 맞는 답장은 실수로 세지 않고 예절 잔소리만 나간다', () => {
+    // 첨부/키워드는 맞지만 인사도 끝맺음도 없다
+    useGame.getState().sendReply({ attachmentId, subject: 'RE: 견적', body: keyword })
+
+    vi.advanceTimersByTime(10000)
+
+    const st = useGame.getState()
+    expect(st.misses).toBe(0)
+    const texts = (st.extraMessages[boss] ?? []).map((m) => m.text)
+    expect(texts.length).toBeGreaterThan(0)
+    // 예절 잔소리 세트(reason) 중 하나와 정확히 일치해야 한다 — 일 실패 잔소리(attachment/keyword)가 아니다
+    const nagSets = Object.values(scenario.etiquette.nags)
+    expect(nagSets.some((set) => JSON.stringify(set) === JSON.stringify(texts))).toBe(true)
   })
 })

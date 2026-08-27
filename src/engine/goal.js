@@ -48,13 +48,15 @@ export function checkEtiquette(rules, { subject, body, outbound }) {
 
   if (outbound) {
     const head = norm(subject).replace(OPENERS, '')
-    if (!head.startsWith(norm(rules.company))) out.push('subject')
+    if (!head.toLowerCase().startsWith(norm(rules.company).toLowerCase())) out.push('subject')
   }
 
   // 인사를 했는지, 그리고 누가 쓰는지 밝혔는지. 이름 없는 '○○○입니다'는
   // 소개가 아니고, 끝맺음의 '김한별 드림'도 소개가 아니다.
   const greeted = rules.greetings.some((g) => nbody.includes(norm(g)))
-  const named = nbody.includes(norm(rules.name) + '입니다')
+  // 이름과 '입니다' 사이에 직함이 끼어드는 것("김한별 대리입니다")은 허용한다.
+  // rules.name은 고정된 한글 이름(김한별)이라 정규식에 그대로 꽂아도 안전하다.
+  const named = new RegExp(norm(rules.name) + '.{0,6}입니다').test(nbody)
   if (!greeted || !named) out.push('greeting')
 
   if (!rules.closings.some((c) => nbody.includes(norm(c)))) out.push('closing')

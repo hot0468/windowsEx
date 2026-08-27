@@ -746,7 +746,9 @@ export const useGame = create((set, get) => ({
     const verdict = checkGoal(goal, { attachmentId, body })
     // 예절은 일과 별개다. 메일은 그대로 나가고 목표도 정상 처리되며, 실수
     // 횟수에도 들어가지 않는다. 잠시 뒤 박 팀장이 거래처 말을 옮길 뿐이다.
-    get().scold({ subject, body, outbound: false })
+    // 다만 일 자체가 틀린 날은 그쪽이 먼저다. 한 스레드에서 두 잔소리가
+    // 엇갈리면 팀장이 딴 얘기 두 개를 동시에 하는 것처럼 읽힌다.
+    if (verdict.ok) get().scold({ subject, body, outbound: false })
     setTimeout(() => {
       set((st) => ({
         extraMails: [...st.extraMails, {
