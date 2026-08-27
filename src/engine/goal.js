@@ -30,3 +30,29 @@ export function checkOutbound(fetch, { to, body }) {
   }
   return { ok: true, reason: null, reply: fetch.reply }
 }
+
+// 메일 예절. 판정이 아니라 매너를 본다 — 어겼다고 메일이 막히는 것은 발신 메일
+// 하나뿐이고(본퀘스트), 답장에서는 박 팀장의 잔소리로만 돌아온다.
+// 여는 기호는 형식일 뿐이라 걷어내고 본다: [AR주식회사]든 (AR 주식회사)든
+// 회사 이름이 제목 맨 앞에 오기만 하면 된다.
+const OPENERS = /^[[\](){}<>【】「」『』"'""''.,·:\-–—]+/
+
+export function checkEtiquette(rules, { subject, body, outbound }) {
+  const nbody = norm(body)
+  const out = []
+
+  if (outbound) {
+    const head = norm(subject).replace(OPENERS, '')
+    if (!head.startsWith(norm(rules.company))) out.push('subject')
+  }
+
+  // 인사를 했는지, 그리고 누가 쓰는지 밝혔는지. 이름 없는 '○○○입니다'는
+  // 소개가 아니고, 끝맺음의 '김한별 드림'도 소개가 아니다.
+  const greeted = rules.greetings.some((g) => nbody.includes(norm(g)))
+  const named = nbody.includes(norm(rules.name) + '입니다')
+  if (!greeted || !named) out.push('greeting')
+
+  if (!rules.closings.some((c) => nbody.includes(norm(c)))) out.push('closing')
+
+  return out
+}
