@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -171,6 +171,9 @@ export const useGame = create((set, get) => ({
   myNotes: restored?.myNotes ?? [],
   // Which posts she has put up, and on what day: `board.kr/w_boss` → 2.
   posted: restored?.posted ?? {},
+  // Wiki pages she has edited: `account` → { day, line }. Separate from
+  // `edits`, which holds file contents and is read by a ripple.
+  wikiEdits: restored?.wikiEdits ?? {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -690,6 +693,29 @@ export const useGame = create((set, get) => ({
       ? s
       : { posted: { ...s.posted, [url + '/' + id]: s.day } })),
 
+  // Editing a wiki page. Only the three that hold no answer can be edited, and
+  // none of it survives the night. Insist three times and 차민혁 says so.
+  editWiki: (key, line) => {
+    const s = get()
+    const edit = s.scenario.wikiEdit
+    const said = line.trim()
+    if (!edit?.pages.includes(key) || !said) return
+    const wikiEdits = { ...s.wikiEdits, [key]: { day: s.day, line: said } }
+    const times = Object.keys(wikiEdits).filter((k) => k !== 'nagged').length
+    if (times >= edit.nagAfter && !s.wikiEdits.nagged) {
+      wikiEdits.nagged = true
+      const nag = edit.nag
+      setTimeout(() => {
+        nag.lines.forEach((text) => get().pushMessage(nag.thread, { from: nag.from, text }))
+        get().showToast({
+          from: nag.from, text: nag.lines[nag.lines.length - 1],
+          app: appOf(nag.source), source: nag.source, thread: nag.thread
+        })
+      }, nag.delay)
+    }
+    set({ wikiEdits })
+  },
+
   // Nothing reads these back but the player, on a later day. That is the point.
   writeNote: (text) => {
     const said = text.trim()
@@ -978,6 +1004,22 @@ export const visibleByDay = (items = [], day = 1) => items.filter((x) => (x.day 
 // The sort is stable, so the authored order inside a day survives.
 export const boardPosts = (posts = [], day = 1) =>
   [...visibleByDay(posts, day)].sort((a, b) => (b.day ?? 0) - (a.day ?? 0))
+
+// A wiki page as it stands today. Editing one puts her name on it for the rest
+// of the day; by the next morning the approved version is back, and the note
+// saying so is the only trace left.
+export function wikiPage(scenario, { wikiEdits = {}, day = 1 }, key) {
+  const page = scenario.sites
+    .filter((s) => s.layout === 'wiki')
+    .map((s) => s.wiki.pages[key]).find(Boolean)
+  const edit = scenario.wikiEdit
+  const mine = wikiEdits[key]
+  if (!page || !edit || !mine) return page
+  if (day > mine.day) {
+    return { ...page, author: edit.revertedBy, notes: [...(page.notes ?? []), edit.reverted] }
+  }
+  return { ...page, author: edit.author, notes: [...(page.notes ?? []), mine.line] }
+}
 
 // What the player has put on a board herself. A post carries the day it went
 // up: the replies land the morning after, and one of them is never answered at

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight, Clock, FolderOpen } from '../icons/line.jsx'
-import { useGame } from '../engine/store.js'
+import { useGame, wikiPage } from '../engine/store.js'
 
 export default function Wiki({ site, path = '' }) {
   const w = site.wiki
@@ -11,7 +11,22 @@ export default function Wiki({ site, path = '' }) {
   useEffect(() => { if (site.requiresHost) unlockSite(site.url) }, [site.url])
   const [id, setId] = useState(wanted ?? w.home)
   useEffect(() => { if (wanted) setId(wanted) }, [wanted])
-  const page = w.pages[id]
+  const scenario = useGame((s) => s.scenario)
+  const wikiEdits = useGame((s) => s.wikiEdits)
+  const day = useGame((s) => s.day)
+  const editWiki = useGame((s) => s.editWiki)
+  const [writing, setWriting] = useState(false)
+  const [line, setLine] = useState('')
+  // Three pages take an edit; the rest are the answer sheets the week is built
+  // on, and letting her rewrite those would break the walkthrough.
+  const canEdit = scenario.wikiEdit?.pages.includes(id)
+  const page = canEdit ? wikiPage(scenario, { wikiEdits, day }, id) : w.pages[id]
+  const save = () => {
+    if (!line.trim()) return
+    editWiki(id, line)
+    setWriting(false)
+    setLine('')
+  }
   const foundMissing = useGame((s) => s.foundMissing)
   // reading the page that will not let a sixth employee go
   useEffect(() => { if (id === 'attend') foundMissing() }, [id])
@@ -71,6 +86,33 @@ export default function Wiki({ site, path = '' }) {
         )}
 
         {page.notes?.map((n, i) => <div key={i} className="wk-note">※ {n}</div>)}
+
+        {canEdit && (
+          <div className="wk-edit">
+            {writing ? (
+              <>
+                <p className="wk-edit-hint">{scenario.wikiEdit.hint}</p>
+                <input value={line} spellCheck={false}
+                       placeholder={scenario.wikiEdit.placeholder}
+                       aria-label={scenario.wikiEdit.placeholder}
+                       onChange={(e) => setLine(e.target.value)}
+                       onKeyDown={(e) => e.key === 'Enter' && save()} />
+                <div className="wk-edit-row">
+                  <button className="btn-primary" disabled={!line.trim()} onClick={save}>
+                    {scenario.wikiEdit.save}
+                  </button>
+                  <button className="sm-cancel" onClick={() => { setWriting(false); setLine('') }}>
+                    {scenario.wikiEdit.cancel}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button className="wk-edit-btn" onClick={() => setWriting(true)}>
+                {scenario.wikiEdit.button}
+              </button>
+            )}
+          </div>
+        )}
       </article>
     </div>
   )
