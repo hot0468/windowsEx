@@ -1,1 +1,183 @@
-/* Task 7이 채운다. */
+/* 폰 셸. 데스크톱과 다른 물건이므로 회사 시스템의 파랑(#2f6fd0)을 쓰지
+   않는다. 색은 갤러리 사진과 읽지 않은 알림 점에만 산다. */
+.phone {
+  --p-ink: #10131a;
+  --p-bg: #f7f8fa;
+  --p-surface: #fff;
+  --p-line: #e6e8ed;
+  --p-mute: #8b909c;
+  --p-accent: #3d4a5c;
+  --p-ease: cubic-bezier(.32, .72, 0, 1);
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--p-bg);
+  color: var(--p-ink);
+  font-family: Pretendard, -apple-system, 'Malgun Gothic', sans-serif;
+  font-size: 15px;
+  overflow: hidden;
+}
+
+/* 상태바 */
+.ph-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  flex: none;
+}
+.ph-status-right { display: flex; align-items: center; gap: 6px; }
+.ph-signal { letter-spacing: -2px; font-size: 10px; }
+
+/* 하루 진행 바. 데스크톱 Progress의 두 가지 일을 한 줄로 한다. */
+.ph-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 20px 10px;
+  font-size: 12.5px;
+  color: var(--p-mute);
+  flex: none;
+}
+.ph-day-n b { color: var(--p-ink); font-weight: 600; }
+.ph-day-n i { font-style: normal; color: #c9803a; }
+.ph-day-end {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--p-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 90ms ease-out, opacity 90ms ease-out;
+}
+.ph-day-end:active { transform: scale(.96); }
+.ph-day-end:disabled { opacity: .5; cursor: default; }
+
+/* 홈 */
+.ph-home { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 12px 8px; }
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px 4px;
+}
+.ph-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 90ms ease-out;
+}
+.ph-icon:active { transform: scale(.92); }
+.ph-glyph {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: var(--p-surface);
+  color: var(--p-accent);
+  box-shadow: 0 1px 3px rgba(16, 19, 26, .08), 0 6px 16px rgba(16, 19, 26, .05);
+}
+.ph-label {
+  max-width: 74px;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--p-ink);
+  overflow-wrap: anywhere;
+}
+
+/* 앱 */
+.phone-app {
+  position: absolute;
+  inset: 40px 0 0;             /* 상태바 아래 */
+  display: flex;
+  flex-direction: column;
+  background: var(--p-bg);
+  animation: ph-in 220ms var(--p-ease);
+  will-change: transform;
+}
+@keyframes ph-in {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: none; }
+}
+.pa-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 52px;
+  padding: 0 8px 0 4px;
+  background: var(--p-surface);
+  border-bottom: 1px solid var(--p-line);
+  flex: none;
+}
+.pa-back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--p-ink);
+  cursor: pointer;
+  transition: transform 90ms ease-out, background 90ms ease-out;
+}
+.pa-back:active { transform: scale(.9); background: rgba(16, 19, 26, .05); }
+.pa-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 앱 내용. 데스크톱의 .win-body가 하던 자리를 그대로 잇는다. */
+.phone-body {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--p-surface);
+}
+
+/* 홈 인디케이터. 보이는 선은 얇지만 누르는 자리는 넓다. */
+.pa-home {
+  display: grid;
+  place-items: center;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  flex: none;
+  touch-action: none;
+}
+.pa-bar {
+  width: 140px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--p-ink);
+  opacity: .22;
+  transition: opacity 90ms ease-out, transform 90ms ease-out;
+}
+.pa-home:active .pa-bar { opacity: .45; transform: scaleX(.94); }
+
+/* 폰에서는 데스크톱 창틀이 설 자리가 없다. */
+.phone .window, .phone .taskbar, .phone .desktop-icons { display: none; }
