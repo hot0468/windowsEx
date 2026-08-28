@@ -78,7 +78,10 @@ describe('what the addresses lead to', () => {
 
   it('gives every client a site the search results can link to', () => {
     for (const c of scenario.companies.filter((c) => c.url)) {
-      expect(site(c.url)?.layout, c.url).toBe('vendor')
+      // 회사 페이지로 그려지기만 하면 된다. C테크는 한 장짜리 vendor 대신
+      // 층이 있는 corp 화면을 쓴다 — 검색 결과가 가리키는 곳이 실제로 열리고
+      // 회사 페이지로 보이는가가 이 검사의 요지다.
+      expect(['vendor', 'corp'], c.url).toContain(site(c.url)?.layout)
     }
     expect(scenario.companies.filter((c) => c.url).length).toBeGreaterThanOrEqual(3)
   })
