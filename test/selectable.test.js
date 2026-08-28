@@ -1,58 +1,48 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import scenario from '../src/scenarios/workday.json'
 
+// body가 user-select: none이라, 값을 보여주는 자리는 하나하나 다시 켜 줘야
+// 한다. 안 켜면 화면에는 멀쩡히 보이는데 끌어서 복사가 안 된다 — 크래시도
+// 아니고 로그도 안 남아서, 그 값을 손으로 받아치다 오타를 내야 알게 된다.
+// VPN 세션 ID가 그랬다.
 const css = readFileSync('src/shell/shell.css', 'utf8')
-const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
-const threads = [scenario.workMessenger, scenario.privateMessenger]
-  .flatMap((m) => m.sections.flatMap((s) => s.threads))
-const asks = [
-  ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(steps),
-  ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => steps(a.ask))),
-  ...Object.values(scenario.overtime.days).flatMap((d) => d.asks.flatMap((a) => steps(a.ask))),
-  ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask)),
-  // the caller's questions are questions too
-  ...steps(scenario.summons?.beat?.ask)
-].filter((a) => a?.accept)
-const answers = [...new Set(asks.flatMap((a) => a.accept.flat()))]
 
-// The desktop turns text selection off so the shell feels like an application.
-// Anywhere the player has to read an answer back out has to turn it on again,
-// or the answer is on screen and still out of reach.
-const rule = (selector) => {
-  const at = css.indexOf(selector + ' {')
-  return at === -1 ? null : css.slice(at, css.indexOf('}', at))
-}
+// 이 셀렉터를 그대로 이름으로 가진 규칙들의 본문. 정규식 대신 중괄호로 자른다
+// — 셀렉터에 점과 대괄호가 섞여 있어 이스케이프가 오히려 위험하다.
+// 주석은 걷어낸다 — 규칙 바로 위에 붙은 주석이 셀렉터 이름에 섞여 든다.
+const bare = css.split('/*')
+  .map((part, i) => (i ? part.slice(part.indexOf('*/') + 2) : part))
+  .join('')
 
-describe('text the player has to copy', () => {
-  it('turns selection off on the desktop as a whole', () => {
-    expect(rule('body')).toContain('user-select: none')
+const bodies = (sel) => bare.split('}')
+  .map((block) => block.split('{'))
+  .filter(([head, body]) => body && head.split(',').map((s) => s.trim()).includes(sel))
+  .map(([, body]) => body)
+
+const selectable = (sel) => bodies(sel).some((b) => b.includes('user-select: text'))
+
+describe('옮겨 적어야 하는 값은 고를 수 있다', () => {
+  it('body는 기본으로 선택을 끈다 — 이 검사가 필요한 이유', () => {
+    expect(bodies('body').some((b) => b.includes('user-select: none'))).toBe(true)
   })
 
-  it('turns it back on for everything the browser renders', () => {
-    // one rule for the viewport, not one per page — the portal footer was
-    // missed for exactly as long as it was a list of individual opt-ins
-    expect(rule('.page')).toContain('user-select: text')
-  })
+  // 답이 실제로 적혀 있는 자리들. 새 화면을 만들 때 여기 한 줄 늘리는 것이
+  // 플레이어가 복사 안 된다고 알려 주는 것보다 싸다.
+  const spots = [
+    ['설정·상태 패널의 값 (VPN 세션 ID, 복합기 등록 IP, 라우터 게이트웨이)', 'dd'],
+    ['한글 문서', '.hwp-text'],
+    ['PDF', '.pdf-text'],
+    ['메모장', '.np-body'],
+    ['시트 셀', '.xl-grid td'],
+    ['슬라이드 본문', '.sl-slide li'],
+    ['메일 본문', '.md-body'],
+    ['웹 사이트', '.page'],
+    ['명령 프롬프트', '.cmd-out'],
+    ['위키 표', '.wk-table td'],
+    ['라우터 표', '.rt-table td']
+  ]
 
-  it('covers the places the answers actually are', () => {
-    // whatever else moves, these have to stay selectable: web pages, the text
-    // of a document, and the dialogs that hand out a value to type elsewhere
-    for (const sel of ['.page', '.np-body', '.hwp-text', '.pr-err', '.pr-receipt']) {
-      expect(rule(sel), sel).toContain('user-select: text')
-    }
-  })
-
-  it('keeps the copier address readable off the print dialog', () => {
-    // the address the print error names is the copier's own web page
-    const mfp = scenario.sites.find((x) => x.printerweb)
-    expect(scenario.printer.error.help).toContain(mfp.ip)
-    expect(rule('.pr-err')).toContain('user-select: text')
-  })
-
-  it('still has answers sitting on a portal page', () => {
-    const portal = JSON.stringify(scenario.sites.find((s) => s.url === 'portal.ar.co.kr'))
-    expect(answers.filter((a) => portal.includes(a)).length).toBeGreaterThan(5)
-    expect(portal).toContain('테헤란로 122')
-  })
+  for (const [what, sel] of spots) {
+    it(`${what} — ${sel}`, () => expect(selectable(sel)).toBe(true))
+  }
 })

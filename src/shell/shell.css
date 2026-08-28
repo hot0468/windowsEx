@@ -2,6 +2,10 @@
 html, body, #root { height: 100%; overflow: hidden; }
 body { font-family: 'Segoe UI', 'Segoe UI Variable', 'Malgun Gothic', sans-serif; font-size: 14px; user-select: none; }
 button { font: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+/* 값은 옮겨 적으라고 있는 것이다. 정의 목록의 dd는 전부 고를 수 있게 둔다 —
+   VPN 세션 ID나 복합기 등록 IP처럼 긴 것을 손으로 받아치게 하면 오타 하나가
+   오답이 된다. 항목 이름(dt)은 옮겨 적을 일이 없으므로 그대로 둔다. */
+dd { user-select: text; }
 
 /* scrollbars: thin, rounded, out of the way until you look for them */
 * { scrollbar-width: thin; scrollbar-color: #c3c8d4 transparent; }
@@ -816,6 +820,8 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .sl-slide h2 { font-size: 24px; color: #1f2430; border-bottom: 3px solid #d24726; padding-bottom: 14px; }
 .sl-slide ul { margin: 24px 0 0 20px; }
 .sl-slide li { padding: 7px 0; font-size: 14px; color: #333; line-height: 1.6; }
+/* 슬라이드 본문에도 옮겨 적을 값이 있다 — 견적 슬라이드의 총액 같은 것. */
+.sl-slide h2, .sl-slide li { user-select: text; }
 .sl-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: #2e2e35; color: #cfd2da; flex-shrink: 0; }
 .sl-name { flex: 1; min-width: 0; font-size: 11px; color: #9ea3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sl-bar button { display: flex; padding: 5px; border-radius: 4px; color: #cfd2da; }
