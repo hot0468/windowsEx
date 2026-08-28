@@ -161,3 +161,40 @@ describe('finishing the first day out of order', () => {
     }
   })
 })
+
+// 위 검사는 하나만 남기고 전부 끝낸 상태를 본다 — 그 자리에서는 진행도가 이미
+// 끝까지 가 있어 아무 대화도 닫히지 않으므로, 순서 때문에 생기는 잠김은 잡히지
+// 않는다. 실제로 멈추는 자리는 하루의 중간이다: 2일차는 풀에서 더 뽑아 10건이
+// 되고, 그러면 한 대화가 요청을 둘 이상 맡는다 — 정보보안팀이 VPN 세션 ID와
+// 복합기 등록 IP를 함께 묻는 식이다. 뒤엣것의 차례로 대화를 닫아 버리면 이미
+// 차례가 온 앞엣것까지 잠겨 하루가 거기서 멈춘다.
+describe('a conversation that carries two of the day\u2019s requests', () => {
+  const seeded = (seed) => () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    return seed / 2147483648
+  }
+  const day = scenario.tutorialDays
+
+  it('opens on the earliest of them, not the last', () => {
+    const host = hostThreads(scenario)
+    let sawDouble = false
+    for (let seed = 1; seed <= 40; seed++) {
+      const drawn = { [day]: drawFor(scenario, day, {}, seeded(seed)) }
+      const list = requestsOf(scenario, day, {}, drawn, {})
+      const hosts = list.map((o) => host[o.id]).filter(Boolean)
+      if (new Set(hosts).size < hosts.length) sawDouble = true
+      // 하루를 순서대로 걸어 내려간다. 앞의 k건을 끝냈으면 그다음 것을 꺼낼
+      // 대화가 열려 있어야 한다 — 하루가 멈추는 자리는 여기다.
+      const state = { ...base, grants: {}, unlocked: {}, drawn }
+      for (const next of list) {
+        const held = heldThreads(scenario, day, state)
+        expect(held.has(host[next.id]),
+          `seed ${seed}: ${next.id} unreachable after ${Object.keys(state.grants).length} done`).toBe(false)
+        if (next.site) state.unlocked[next.site] = true
+        else state.grants[next.grant] = true
+      }
+    }
+    // 검사가 실제로 그 조합을 밟았는지 — 안 밟았으면 위 단언은 빈 검사다.
+    expect(sawDouble, 'no draw ever gave one thread two requests').toBe(true)
+  })
+})

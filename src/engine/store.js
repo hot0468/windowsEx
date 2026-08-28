@@ -1375,7 +1375,15 @@ export function heldThreads(scenario, day, state) {
   let place = -1
   const rank = hosts.map((id) => (id ? ++place : -1))
   const held = new Set()
-  hosts.forEach((id, i) => { if (id && reach < rank[i]) held.add(id) })
+  // 한 대화가 하루에 요청을 둘 이상 맡는다 — 정보보안팀은 VPN 세션 ID도,
+  // 복합기 등록 IP도 묻는다. 뒤엣것의 차례로 대화를 닫아 버리면 이미 차례가
+  // 온 앞엣것까지 같이 잠겨 하루가 멈춘다. 대화는 그 대화가 맡은 것 중 가장
+  // 이른 것을 기준으로 열린다.
+  const due = new Map()
+  hosts.forEach((id, i) => {
+    if (id && (!due.has(id) || rank[i] < due.get(id))) due.set(id, rank[i])
+  })
+  due.forEach((r, id) => { if (reach < r) held.add(id) })
   idle.forEach((id, k) => { if (reach <= k) held.add(id) })
   return held
 }
