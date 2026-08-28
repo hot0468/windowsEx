@@ -74,6 +74,9 @@ const ProfileCard = ({ who, team, onChat, onClose }) => (
   </div>
 )
 
+// 요청마다 문구를 적어 두지 않은 곳에서 쓰는 되묻기.
+const HINT_ASK = '어디서 찾으면 될까요?'
+
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
   const fs = useGame((s) => s.scenario.fs)
@@ -261,9 +264,22 @@ export default function Messenger({ source }) {
   }
   const missed = () => {
     slip()
+    nextHint()
+  }
+  // 힌트를 달라고 되묻는 것은 틀린 답이 아니다 — slip() 을 부르지 않는다.
+  // 대신 힌트 단계는 함께 올라간다. 물어서 1번을 듣고 틀렸는데 또 1번을
+  // 들으면 되묻기가 한 번 낭비된 셈이 된다.
+  const nextHint = () => {
     const n = wrongs[thread.id] ?? 0
     setWrongs((w) => ({ ...w, [thread.id]: n + 1 }))
     speak(hintAfter(ask, n, mercy))
+  }
+  // 요청을 받고도 어디서부터 봐야 할지 모를 때 되묻는 자리. 문구는 요청이
+  // 직접 들고 있으면 그것을, 없으면 어디에나 맞는 말을 쓴다.
+  const askHint = () => {
+    say(thread.id, { text: ask.hintAsk ?? HINT_ASK })
+    setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
+    nextHint()
   }
 
   const answer = () => {
@@ -440,6 +456,13 @@ export default function Messenger({ source }) {
                 </div>
               )}
             </div>
+            {ask && !ask.choices && ask.no?.length > 0 && (
+              <div className="quick-hint-row">
+                <button className="quick-hint" disabled={busy} onClick={askHint}>
+                  {ask.hintAsk ?? HINT_ASK}
+                </button>
+              </div>
+            )}
             <div className="quick">
               <button className="quick-att" disabled={busy} title="파일 보내기"
                       onClick={() => setPicking(true)}>
