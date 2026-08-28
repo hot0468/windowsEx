@@ -38,9 +38,19 @@ describe('화면 스택', () => {
     useGame.getState().pushScreen('app:explorer')
     useGame.getState().pushScreen('folder:문서')
     useGame.getState().pushScreen('folder:2026')
-    useGame.getState().goHome()
+    useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
     expect(useGame.getState().currentApp()).toBe(null)
+  })
+
+  // goHome은 게임의 '퇴근하기'다. 폰 홈 버튼이 그걸 실행하면 그날 야근
+  // 여부가 조용히 확정되어 overwork 엔딩이 망가진다.
+  it('폰 홈은 퇴근시키지 않는다', () => {
+    useGame.setState({ overtime: {}, day: 1 })
+    useGame.getState().pushScreen('app:mail')
+    useGame.getState().goPhoneHome()
+    expect(useGame.getState().screens).toEqual([])
+    expect(useGame.getState().overtime[1]).toBeUndefined()
   })
 
   // 같은 화면을 두 번 밀면 뒤로가 헛돈다 — 눌린 것 같은데 안 나가는 버그가 된다.
@@ -53,7 +63,7 @@ describe('화면 스택', () => {
   // 소프트락 방지: 어떤 깊이에서도 홈으로 나올 수 있어야 한다.
   it('아무리 깊어도 홈으로 나올 수 있다', () => {
     for (let i = 0; i < 30; i++) useGame.getState().pushScreen(`deep:${i}`)
-    useGame.getState().goHome()
+    useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
   })
 })

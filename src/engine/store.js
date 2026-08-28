@@ -257,6 +257,9 @@ export const useGame = create((set, get) => ({
 
   popScreen: () => set((s) => ({ screens: s.screens.slice(0, -1) })),
 
+  // 폰 홈으로. 게임의 goHome(퇴근하기)과 이름이 겹치지 않게 따로 둔다 —
+  // 그쪽은 하루를 끝내는 동작이라 홈 버튼이 건드려서는 안 된다.
+  goPhoneHome: () => set({ screens: [] }),
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
   currentApp: () => {
@@ -390,7 +393,7 @@ export const useGame = create((set, get) => ({
     set((st) => ({ overtime: { ...st.overtime, [st.day]: true }, closing: false }))
     get().queueBeats([extra.opening, ...(extra.asks ?? [])].filter(Boolean), 1200)
   },
-  goHome: () => set((s) => (s.overtime[s.day] !== undefined ? { screens: [] } : { overtime: { ...s.overtime, [s.day]: false }, screens: [] })),
+  goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
   askedRoom: (about) => set((s) => {
     const next = { roomQuestions: s.roomQuestions + 1 }
