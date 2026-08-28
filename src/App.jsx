@@ -10,6 +10,9 @@ import Progress from './shell/Progress.jsx'
 import Crash from './shell/Crash.jsx'
 import Ending from './shell/Ending.jsx'
 import Lock from './shell/Lock.jsx'
+import PhoneShell from './shell/PhoneShell.jsx'
+import { useViewport } from './shell/useViewport.js'
+import './shell/phone.css'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
@@ -210,6 +213,7 @@ export default function App() {
   const crashed = useGame((s) => s.crashed)
   const locked = useGame((s) => s.locked)
   const ended = useGame((s) => s.ended)
+  const shell = useViewport()
 
   // Ctrl+Alt+L locks on the spot; leaving the machine alone locks it too.
   useEffect(() => {
@@ -265,19 +269,29 @@ export default function App() {
   if (ended) return <Ending />
   if (crashed) return <Crash />
   if (!booted) return <Boot />
-  return (
-    <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
-      <Desktop />
-      <Progress />
-      <WindowLayer />
+
+  // 오버레이는 두 셸이 함께 쓴다 — 이미 전체화면이라 폰에서도 그대로 선다.
+  const overlays = (
+    <>
       <Toast />
-      <Taskbar />
       {locked && <Lock />}
       {rumorPending(rumor) && !failed && <RumorOverlay />}
       {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}
       {offer && !cut && !rumorPending(rumor) && <OvertimeOverlay offer={offer} />}
       {done && !offer && !cut && !rumorPending(rumor) && <QuitOverlay />}
       {failed && !finished && <FailOverlay />}
+    </>
+  )
+
+  if (shell === 'phone') return <><PhoneShell />{overlays}</>
+
+  return (
+    <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
+      <Desktop />
+      <Progress />
+      <WindowLayer />
+      {overlays}
+      <Taskbar />
     </div>
   )
 }
