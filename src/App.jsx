@@ -54,7 +54,9 @@ function Toast() {
     <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
          onClick={() => {
            if (toast.source) setOpenThread(toast.source, toast.thread)
-           if (app) openWindow(toast.app)
+           // 토스트가 가리키는 자리까지 열어 준다 — 다운로드 완료를 눌렀는데
+           // 파일 탐색기가 첫 화면에서 멈추면 알림이 절반만 일한 셈이다.
+           if (app) openWindow(toast.app, toast.props)
            clearToast()
          }}>
       <b>

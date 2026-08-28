@@ -14,7 +14,7 @@ export default function Download({ item }) {
     if (saved) return
     restoreFile(item.fileId)
     play('ok')
-    showToast({ from: '다운로드 완료', text: `${item.name} — 다운로드 폴더에 저장했습니다.`, app: 'explorer' })
+    showToast({ from: '다운로드 완료', text: `${item.name} — 다운로드 폴더에 저장했습니다.`, app: 'explorer', props: { startFolder: '다운로드' } })
   }
 
   return (
