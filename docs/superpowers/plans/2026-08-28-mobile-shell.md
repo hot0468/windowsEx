@@ -178,7 +178,10 @@ git commit -m "feat: 화면 폭으로 폰 셸과 데스크톱 셸을 가른다"
   - 상태 `screens: string[]` — `[]`면 홈. 항목은 `'app:<id>'` 또는 앱이 정한 임의 문자열
   - `pushScreen(key: string)` — 스택에 쌓는다. 같은 키 연속 중복은 무시
   - `popScreen()` — 하나 벗긴다. 홈에서는 아무 일도 없다
-  - `goHome()` — 스택을 비운다
+  - `goPhoneHome()` — 스택을 비운다. **`goHome`이 아니다** — 그 이름은 이미
+    게임의 '퇴근하기'(야근 제안 거절, `App.jsx:158`)가 쓰고 있고, 거기에
+    화면 스택을 얹으면 홈 버튼이 그날 야근 여부를 확정해 overwork 엔딩을
+    망가뜨린다
   - `currentApp() -> string | null` — 스택 맨 아래의 앱 id. 홈이면 `null`
 
 스택을 store에 두는 이유: 이 프로젝트는 컴포넌트를 렌더링해 테스트하지 않는다(`@testing-library` 없음, jsdom 미설정). 로직을 store로 밀어야 기존 방식대로 검사할 수 있다.
@@ -230,7 +233,7 @@ describe('화면 스택', () => {
     useGame.getState().pushScreen('app:explorer')
     useGame.getState().pushScreen('folder:문서')
     useGame.getState().pushScreen('folder:2026')
-    useGame.getState().goHome()
+    useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
     expect(useGame.getState().currentApp()).toBe(null)
   })
@@ -245,7 +248,7 @@ describe('화면 스택', () => {
   // 소프트락 방지: 어떤 깊이에서도 홈으로 나올 수 있어야 한다.
   it('아무리 깊어도 홈으로 나올 수 있다', () => {
     for (let i = 0; i < 30; i++) useGame.getState().pushScreen(`deep:${i}`)
-    useGame.getState().goHome()
+    useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
   })
 })
@@ -282,7 +285,7 @@ grep -n "openWindow: (" src/engine/store.js
 
   popScreen: () => set((s) => ({ screens: s.screens.slice(0, -1) })),
 
-  goHome: () => set({ screens: [] }),
+  goPhoneHome: () => set({ screens: [] }),
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
   currentApp: () => {
@@ -447,7 +450,7 @@ git commit -m "feat: 폰 홈에 놓을 앱 목록"
 - Create: `src/shell/PhoneApp.jsx`
 
 **Interfaces:**
-- Consumes: `useGame`(`popScreen`, `goHome`, `screens`)
+- Consumes: `useGame`(`popScreen`, `goPhoneHome`, `screens`)
 - Produces: `<PhoneApp title icon onBack>{children}</PhoneApp>`
 
 `Window.jsx`가 데스크톱에서 하던 일을 폰에서 한다. 창 대신 전체화면이고, 제목 표시줄 대신 헤더, 크기 조절 손잡이 대신 홈 인디케이터다.
@@ -471,13 +474,13 @@ const COMMIT = 70
 export default function PhoneApp({ title, icon, onBack, children }) {
   const screens = useGame((s) => s.screens)
   const popScreen = useGame((s) => s.popScreen)
-  const goHome = useGame((s) => s.goHome)
+  const goPhoneHome = useGame((s) => s.goPhoneHome)
   const [dx, setDx] = useState(0)
   const drag = useRef(null)
 
   // 뒤로 갈 데가 있는지는 두 곳이 정한다. 앱이 제 안의 깊이를 onBack으로
   // 알려주면 그걸 쓰고, 아니면 스택의 깊이를 본다.
-  const back = onBack ?? (screens.length > 1 ? popScreen : goHome)
+  const back = onBack ?? (screens.length > 1 ? popScreen : goPhoneHome)
 
   const onPointerDown = (e) => {
     if (e.clientX > EDGE) return
@@ -512,7 +515,7 @@ export default function PhoneApp({ title, icon, onBack, children }) {
       </header>
       <div className="phone-body">{children}</div>
       {/* 홈 인디케이터는 장식이 아니라 버튼이다. 어느 앱에서든 여기로 나온다. */}
-      <button className="pa-home" onClick={goHome} aria-label="홈">
+      <button className="pa-home" onClick={goPhoneHome} aria-label="홈">
         <span className="pa-bar" />
       </button>
     </div>
@@ -608,7 +611,7 @@ export default function PhoneShell() {
   const grants = useGame((s) => s.grants)
   const currentApp = useGame((s) => s.currentApp)
   const popScreen = useGame((s) => s.popScreen)
-  const goHome = useGame((s) => s.goHome)
+  const goPhoneHome = useGame((s) => s.goPhoneHome)
   const windows = useGame((s) => s.windows)
 
   // 안드로이드의 뒤로가기 제스처는 그대로 두면 게임을 나가버린다. 한 겹
@@ -643,7 +646,7 @@ export default function PhoneShell() {
       )}
       {entry && cfg && (
         <PhoneApp title={entry.title} icon={entry.icon}
-                  onBack={screens.length > 1 ? popScreen : goHome}>
+                  onBack={screens.length > 1 ? popScreen : goPhoneHome}>
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />
         </PhoneApp>
       )}
