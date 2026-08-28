@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -186,6 +186,8 @@ export const useGame = create((set, get) => ({
   // 시트에서 아직 저장하지 않은 편집. PROGRESS에 넣지 않는다 — 저장 안 한 것이
   // 다음 세션까지 살아남으면 '저장'이라는 말이 뜻을 잃는다.
   sheetDrafts: {},
+  // 어느 요청에 되물어 힌트를 받았는지. 버튼은 요청마다 한 번만 뜬다.
+  hinted: restored?.hinted ?? {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -565,6 +567,7 @@ export const useGame = create((set, get) => ({
   markMailRead: (id, read = true) =>
     set((s) => ({ readMails: { ...s.readMails, [id]: read } })),
   toggleStar: (id) => set((s) => ({ starred: { ...s.starred, [id]: !s.starred[id] } })),
+  markHinted: (key) => set((s) => ({ hinted: { ...s.hinted, [key]: true } })),
   toggleBookmark: (url) => set((s) => ({
     myBookmarks: s.myBookmarks.includes(url)
       ? s.myBookmarks.filter((x) => x !== url)
@@ -1227,6 +1230,26 @@ export const hintAfter = (ask, wrongs, mercy = false) => {
   // the morning after a late night, nobody makes you work for the hint
   return sets[Math.min(mercy ? wrongs + 1 : wrongs, sets.length - 1)]
 }
+
+// 되물었을 때 돌려줄 말. no 의 각 단계는 대개 [틀렸다는 말, 실제 힌트] 인데,
+// 답을 낸 적도 없는 사람에게 "그 날짜가 아닌 것 같은데요"로 답하면 말이 안
+// 된다. 앞의 퇴짜를 떼고 힌트만 준다. 뗄 것이 없는 단계(퇴짜 한 줄뿐인 것이
+// 243개 중 51개)는 건너뛰고 다음 단계로 넘어간다 — 되물었는데 아무것도 못
+// 듣는 것보다는 한 단계 더 주는 편이 낫다. step 은 그다음 오답이 이어받을
+// 자리다.
+export function hintReply(ask, from = 0) {
+  const sets = lineSets(ask.no)
+  for (let i = Math.min(from, sets.length - 1); i < sets.length; i++) {
+    const rest = sets[i].slice(1)
+    if (rest.length) return { lines: rest, step: i + 1 }
+  }
+  return { lines: sets[sets.length - 1], step: sets.length }
+}
+
+// 되묻기는 요청 하나에 한 번뿐이다. 대화 하나가 하루에 요청을 둘 이상 맡으므로
+// 대화 id 만으로는 못 세고, 요청 자체를 가리키는 열쇠가 필요하다.
+export const hintKey = (threadId, ask) =>
+  threadId + '|' + (ask?.placeholder ?? '') + '|' + JSON.stringify(ask?.accept ?? ask?.files ?? null)
 
 // Edited cells are kept flat, one key per cell, on top of the read-only workbook.
 export const cellKey = (fileId, sheet, r, c) => `${fileId}:${sheet}:${r}:${c}`

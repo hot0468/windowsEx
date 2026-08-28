@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, offerable, quickSets, threadMessages, unreadCount } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, threadMessages, unreadCount } from '../engine/store.js'
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
@@ -104,6 +104,8 @@ export default function Messenger({ source }) {
   const grant = useGame((s) => s.grant)
   const slip = useGame((s) => s.slip)
   const mercy = useGame((s) => s.mercy)
+  const hinted = useGame((s) => s.hinted)
+  const markHinted = useGame((s) => s.markHinted)
   const typing = useGame((s) => s.typing)
   const [collapsed, setCollapsed] = useState({})
   const [tab, setTab] = useState('friends')
@@ -277,9 +279,13 @@ export default function Messenger({ source }) {
   // 요청을 받고도 어디서부터 봐야 할지 모를 때 되묻는 자리. 문구는 요청이
   // 직접 들고 있으면 그것을, 없으면 어디에나 맞는 말을 쓴다.
   const askHint = () => {
+    const { lines, step } = hintReply(ask, wrongs[thread.id] ?? 0)
     say(thread.id, { text: ask.hintAsk ?? HINT_ASK })
     setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
-    nextHint()
+    // 다음 오답은 여기서 이어받는다.
+    setWrongs((w) => ({ ...w, [thread.id]: step }))
+    markHinted(hintKey(thread.id, ask))
+    speak(lines)
   }
 
   const answer = () => {
@@ -456,7 +462,7 @@ export default function Messenger({ source }) {
                 </div>
               )}
             </div>
-            {ask && !ask.choices && ask.no?.length > 0 && (
+            {ask && !ask.choices && ask.no?.length > 0 && !hinted[hintKey(thread.id, ask)] && (
               <div className="quick-hint-row">
                 <button className="quick-hint" disabled={busy} onClick={askHint}>
                   <HelpCircle size={14} strokeWidth={2} />
