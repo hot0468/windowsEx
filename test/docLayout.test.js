@@ -21,7 +21,8 @@ describe('laying a document out', () => {
 
   it('reads a form as a title, fields, and a note', () => {
     const kinds = parseDoc(doc('견적서_2023_하반기.hwp').content).map((b) => b.kind)
-    expect(kinds.filter((k) => k !== 'blank')).toEqual(['title', 'fields', 'note'])
+    // 견적서는 품목을 표로 싣는다
+    expect(kinds.filter((k) => k !== 'blank')).toEqual(['title', 'fields', 'table', 'note'])
   })
 
   it('keeps a label with its value', () => {
@@ -60,5 +61,38 @@ describe('laying a document out', () => {
   it('tells a form from a report', () => {
     expect(isForm(parseDoc(doc('휴가신청서_사본.hwp').content))).toBe(true)
     expect(isForm(parseDoc(doc('견적서_2023_하반기.hwp').content))).toBe(true)
+  })
+})
+
+describe('견적서의 품목 표', () => {
+  const quote = () => parseDoc(doc('견적서_최종_진짜최종.hwp').content)
+
+  it('| 로 그린 줄을 표 한 덩어리로 읽는다', () => {
+    const table = quote().find((b) => b.kind === 'table')
+    expect(table).toBeTruthy()
+    expect(table.head).toEqual(['품목', '수량', '단가', '금액'])
+    expect(table.rows.length).toBeGreaterThan(0)
+    for (const row of table.rows) expect(row).toHaveLength(table.head.length)
+  })
+
+  it('아직 못 채운 칸은 빈 칸으로 남는다', () => {
+    // 단가는 사내위키에서 찾아 와야 하는 답이다. 표가 생겼다고 채워지면 안 된다.
+    const table = quote().find((b) => b.kind === 'table')
+    const flat = table.rows.flat().join('')
+    expect(flat).not.toMatch(/[0-9]{3},[0-9]{3}/)
+  })
+
+  it('표를 쓰는 문서도 한 줄도 잃지 않는다', () => {
+    for (const f of docs.filter((x) => x.content.includes('|'))) {
+      expect(linesOf(parseDoc(f.content)).join('\n'), f.name).toBe(f.content)
+    }
+  })
+
+  it('견적서마다 품목 표가 있다', () => {
+    const quotes = docs.filter((f) => /^견적서_(최종|D유통|B물산|C테크|E마트|F상사|G산업)/.test(f.name))
+    expect(quotes.length).toBeGreaterThan(4)
+    for (const f of quotes) {
+      expect(parseDoc(f.content).some((b) => b.kind === 'table'), f.name).toBe(true)
+    }
   })
 })

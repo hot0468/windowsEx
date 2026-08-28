@@ -267,6 +267,16 @@ button { font: inherit; border: none; background: none; cursor: pointer; color: 
                  font-weight: 600; text-align: center; white-space: nowrap; }
 .doc-fields td { background: #fff; }
 
+/* The itemised table on a quote: 품목 · 수량 · 단가 · 금액, ruled off at the
+   total. Numbers sit right so the columns read down. */
+.doc-table { width: 100%; margin: 12px 0 16px; border-collapse: collapse; }
+.doc-table th, .doc-table td { padding: 7px 10px; border: 1px solid #9aa0a8;
+                               font-size: 12.5px; line-height: 1.6; }
+.doc-table th { background: #f1f2f5; color: #3c4048; font-weight: 600; text-align: center; white-space: nowrap; }
+.doc-table td { background: #fff; }
+.doc-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+.doc-table tr.sum td { border-top: 2px solid #6b7280; background: #fafbfc; font-weight: 700; }
+
 .doc-head { margin: 22px 0 6px; font-size: 14px; font-weight: 700; color: #23262b; }
 .doc-head::before { content: '■ '; color: #6b7280; }
 .doc-p { margin: 0; }

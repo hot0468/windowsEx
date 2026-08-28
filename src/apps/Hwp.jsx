@@ -39,6 +39,23 @@ function Doc({ content }) {
             </ol>
           )
         }
+        if (b.kind === 'table') {
+          return (
+            <table key={i} className="doc-table">
+              <thead>
+                <tr>{b.head.map((c, k) => <th key={k}>{c}</th>)}</tr>
+              </thead>
+              <tbody>
+                {/* the total is ruled off from the items above it */}
+                {b.rows.map((row, k) => (
+                  <tr key={k} className={/합계|총액/.test(row[0]) ? 'sum' : undefined}>
+                    {row.map((c, j) => <td key={j}>{c}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
         if (b.kind === 'fields') {
           // a row already drawn in the approval box is not repeated below it
           const rows = b.rows.filter((r) => !(r.signed && !seen.has(r.label) && seen.add(r.label)))

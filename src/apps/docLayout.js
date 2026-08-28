@@ -15,6 +15,12 @@ const NUMBER = /^(\d+)[.)]\s+(.*)$/
 // prose — a sentence that happens to contain a colon keeps running afterwards,
 // and that full stop mid-line is what gives it away
 const FIELD = /^([^:]{1,16}):\s*(.*)$/
+// A row of a table, drawn the way somebody would type one: pipes between the
+// cells, with or without the outer ones. The first such row is the header. An
+// empty cell stays empty — a quote whose unit price is still to be looked up
+// has holes in it on purpose.
+const ROW = /^\|?([^|]*\|[^|]*(?:\|[^|]*)*)\|?$/
+const isRow = (t) => t.includes('|') && !TITLE.test(t) && !NOTE.test(t) && !HEAD.test(t)
 const PROSE = /[.!?]\s+\S/
 // The fields that mean somebody signed off. Not 작성 or 담당 — those name the
 // person who wrote the report or the contact at the client, and boxing them
@@ -27,6 +33,7 @@ const kindOf = (line) => {
   if (TITLE.test(t)) return 'title'
   if (HEAD.test(t)) return 'head'
   if (NOTE.test(t)) return 'note'
+  if (isRow(t)) return 'row'
   if (BULLET.test(t)) return 'bullet'
   if (NUMBER.test(t)) return 'number'
   if (FIELD.test(t) && !PROSE.test(t.match(FIELD)[2])) return 'field'
@@ -58,6 +65,22 @@ export function parseDoc(content = '') {
       const [, label, value] = t.match(FIELD)
       if (run?.kind !== 'fields') run = push({ kind: 'fields', rows: [], lines: [] })
       run.rows.push({ label: label.trim(), value, signed: SIGNED.test(label.trim()) })
+      run.lines.push(line)
+      return
+    }
+
+    if (kind === 'row') {
+      // Split the line as typed, then trim each cell. A row written `a | b | `
+      // ends on an empty cell — a quote still waiting on its price is exactly
+      // that — so the trailing column has to survive.
+      const fenced = t.startsWith('|') && t.endsWith('|')
+      const body = fenced ? t.slice(1, -1) : line.replace(/^\s*\|/, '')
+      const cells = body.split('|').map((c) => c.trim())
+      if (run?.kind !== 'table') {
+        run = push({ kind: 'table', head: cells, rows: [], lines: [line] })
+        return
+      }
+      run.rows.push(cells)
       run.lines.push(line)
       return
     }
@@ -95,5 +118,8 @@ export const signOff = (blocks) =>
 // A form is a document whose fields somebody filled in; a report is prose with
 // headings. Both get the same furniture, but only a form is boxed and centred.
 export const isForm = (blocks) =>
-  blocks.some((b) => b.kind === 'fields' && b.rows.length > 1) &&
+  (blocks.some((b) => b.kind === 'fields' && b.rows.length > 1) ||
+    // an itemised table is form furniture too: a quote carries most of what it
+    // says in the table, leaving too few `키: 값` lines to recognise it by
+    (blocks.some((b) => b.kind === 'table') && blocks.some((b) => b.kind === 'fields'))) &&
   !blocks.some((b) => b.kind === 'text' && b.text.trim().length > 40)
