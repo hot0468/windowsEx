@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand'
+import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
 import { checkEtiquette, checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'

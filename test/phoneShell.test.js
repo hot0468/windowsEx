@@ -1,4 +1,4 @@
-﻿import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useGame } from '../src/engine/store.js'
 
 beforeEach(() => useGame.setState({ screens: [] }))
