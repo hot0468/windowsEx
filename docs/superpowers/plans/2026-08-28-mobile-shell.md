@@ -55,7 +55,7 @@
 
 판별 로직을 순수 함수로 분리하는 이유는 이 프로젝트에 DOM 테스트 환경이 없기 때문이다. 훅은 얇게 두고 로직만 검사한다.
 
-- [ ] **Step 1: 실패하는 테스트를 쓴다**
+- [x] **Step 1: 실패하는 테스트를 쓴다**
 
 `test/viewport.test.js`:
 
@@ -98,12 +98,12 @@ describe('셸 선택', () => {
 })
 ```
 
-- [ ] **Step 2: 실패를 확인한다**
+- [x] **Step 2: 실패를 확인한다**
 
 Run: `npx vitest run test/viewport.test.js`
 Expected: FAIL — `Failed to resolve import "../src/shell/useViewport.js"`
 
-- [ ] **Step 3: 구현한다**
+- [x] **Step 3: 구현한다**
 
 `src/shell/useViewport.js`:
 
@@ -152,12 +152,12 @@ export function useViewport() {
 }
 ```
 
-- [ ] **Step 4: 통과를 확인한다**
+- [x] **Step 4: 통과를 확인한다**
 
 Run: `npx vitest run test/viewport.test.js`
 Expected: PASS — 7 tests
 
-- [ ] **Step 5: 커밋한다**
+- [x] **Step 5: 커밋한다**
 
 ```bash
 git add src/shell/useViewport.js test/viewport.test.js
@@ -188,7 +188,7 @@ git commit -m "feat: 화면 폭으로 폰 셸과 데스크톱 셸을 가른다"
 
 `screens`는 **`PROGRESS`에 넣지 않는다.** 어느 화면을 보고 있었는지는 세이브에 남을 성질이 아니다 — 불러오면 홈에서 시작하는 게 맞다.
 
-- [ ] **Step 1: 실패하는 테스트를 쓴다**
+- [x] **Step 1: 실패하는 테스트를 쓴다**
 
 `test/phoneShell.test.js`:
 
@@ -254,12 +254,12 @@ describe('화면 스택', () => {
 })
 ```
 
-- [ ] **Step 2: 실패를 확인한다**
+- [x] **Step 2: 실패를 확인한다**
 
 Run: `npx vitest run test/phoneShell.test.js`
 Expected: FAIL — `useGame.getState().pushScreen is not a function`
 
-- [ ] **Step 3: 구현한다**
+- [x] **Step 3: 구현한다**
 
 `src/engine/store.js`의 `useGame` 안, `openWindow` 정의 근처에 넣는다. 먼저 자리를 찾는다:
 
@@ -294,17 +294,17 @@ grep -n "openWindow: (" src/engine/store.js
   },
 ```
 
-- [ ] **Step 4: 통과를 확인한다**
+- [x] **Step 4: 통과를 확인한다**
 
 Run: `npx vitest run test/phoneShell.test.js`
 Expected: PASS — 8 tests
 
-- [ ] **Step 5: 기존 테스트가 안 깨졌는지 본다**
+- [x] **Step 5: 기존 테스트가 안 깨졌는지 본다**
 
 Run: `npx vitest run test/store.test.js test/save.test.js`
 Expected: PASS
 
-- [ ] **Step 6: 커밋한다**
+- [x] **Step 6: 커밋한다**
 
 ```bash
 git add src/engine/store.js test/phoneShell.test.js
@@ -327,7 +327,7 @@ git commit -m "feat: 폰 셸이 쓸 화면 스택을 store에 둔다"
 
 이번 라운드에서는 **설정 앱을 만들지 않는다**(스펙의 '제외' 항목). `cmd`를 폰 홈에서 빼면 `hostname`·`ipconfig`를 물어보는 요청 10건이 폰에서 막힌다. 그래서 이번에는 **`cmd`를 폰 홈에 남긴다** — 설정 앱이 생기면 그때 뺀다. 답이 실제로 찾아져야 한다는 원칙이 먼저다.
 
-- [ ] **Step 1: 실패하는 테스트를 쓴다**
+- [x] **Step 1: 실패하는 테스트를 쓴다**
 
 `test/phoneShell.test.js` 맨 아래에 추가한다:
 
@@ -389,12 +389,12 @@ describe('폰 홈 앱 목록', () => {
 })
 ```
 
-- [ ] **Step 2: 실패를 확인한다**
+- [x] **Step 2: 실패를 확인한다**
 
 Run: `npx vitest run test/phoneShell.test.js`
 Expected: FAIL — `phoneApps is not a function`
 
-- [ ] **Step 3: 구현한다**
+- [x] **Step 3: 구현한다**
 
 `src/apps/registry.jsx` 맨 아래에 추가한다:
 
@@ -430,12 +430,12 @@ export const phoneApps = (grants = {}) => [
 ]
 ```
 
-- [ ] **Step 4: 통과를 확인한다**
+- [x] **Step 4: 통과를 확인한다**
 
 Run: `npx vitest run test/phoneShell.test.js`
 Expected: PASS — 16 tests
 
-- [ ] **Step 5: 커밋한다**
+- [x] **Step 5: 커밋한다**
 
 ```bash
 git add src/apps/registry.jsx test/phoneShell.test.js
@@ -455,7 +455,7 @@ git commit -m "feat: 폰 홈에 놓을 앱 목록"
 
 `Window.jsx`가 데스크톱에서 하던 일을 폰에서 한다. 창 대신 전체화면이고, 제목 표시줄 대신 헤더, 크기 조절 손잡이 대신 홈 인디케이터다.
 
-- [ ] **Step 1: 구현한다**
+- [x] **Step 1: 구현한다**
 
 `src/shell/PhoneApp.jsx`:
 
@@ -523,14 +523,14 @@ export default function PhoneApp({ title, icon, onBack, children }) {
 }
 ```
 
-- [ ] **Step 2: 문법을 검증한다**
+- [x] **Step 2: 문법을 검증한다**
 
 `ChevronLeft`는 `src/icons/line.jsx:108`에 이미 있다. 새로 만들지 않는다.
 
 Run: `npm run build`
 Expected: 성공 (JSX 문법 검증 겸용 — `node --check`는 JSX를 못 읽는다)
 
-- [ ] **Step 3: 커밋한다**
+- [x] **Step 3: 커밋한다**
 
 ```bash
 git add src/shell/PhoneApp.jsx
@@ -548,7 +548,7 @@ git commit -m "feat: 폰의 전체화면 앱 틀 — 헤더, 뒤로, 홈"
 - Consumes: `phoneApps`(Task 3), `PhoneApp`(Task 4), `useGame`(Task 2), `APPS`
 - Produces: `<PhoneShell />`
 
-- [ ] **Step 1: 구현한다**
+- [x] **Step 1: 구현한다**
 
 `src/shell/PhoneShell.jsx`:
 
@@ -655,12 +655,12 @@ export default function PhoneShell() {
 }
 ```
 
-- [ ] **Step 2: 문법을 검증한다**
+- [x] **Step 2: 문법을 검증한다**
 
 Run: `npm run build`
 Expected: 성공
 
-- [ ] **Step 3: 커밋한다**
+- [x] **Step 3: 커밋한다**
 
 ```bash
 git add src/shell/PhoneShell.jsx
@@ -677,7 +677,7 @@ git commit -m "feat: 폰 셸 — 상태바, 홈, 물리 뒤로가기 가로채�
 **Interfaces:**
 - Consumes: `useViewport`(Task 1), `PhoneShell`(Task 5)
 
-- [ ] **Step 1: import를 넣는다**
+- [x] **Step 1: import를 넣는다**
 
 `src/App.jsx`의 `import Lock from './shell/Lock.jsx'` 바로 아래에 추가한다:
 
@@ -687,7 +687,7 @@ import { useViewport } from './shell/useViewport.js'
 import './shell/phone.css'
 ```
 
-- [ ] **Step 2: 분기를 넣는다**
+- [x] **Step 2: 분기를 넣는다**
 
 `App()` 안에서 `const booted = useGame((s) => s.booted)` 아래에 추가한다:
 
@@ -728,17 +728,17 @@ import './shell/phone.css'
   )
 ```
 
-- [ ] **Step 3: 문법을 검증한다**
+- [x] **Step 3: 문법을 검증한다**
 
 Run: `npm run build`
 Expected: 성공
 
-- [ ] **Step 4: 기존 테스트 전체를 돌린다**
+- [x] **Step 4: 기존 테스트 전체를 돌린다**
 
 Run: `npm test`
 Expected: 748+ passed — 데스크톱이 깨지지 않았음을 확인한다
 
-- [ ] **Step 5: 커밋한다**
+- [x] **Step 5: 커밋한다**
 
 ```bash
 git add src/App.jsx
@@ -764,7 +764,7 @@ git commit -m "feat: 좁은 화면이면 폰 셸로 간다"
 폰에 데스크톱의 `Progress`를 그대로 얹지는 않는다. 그건 접었다 펴는 패널이라
 폰 홈에 어울리지 않는다. 대신 **상태바 아래 얇은 진행 바** 하나를 둔다.
 
-- [ ] **Step 1: 홈에 진행 바를 넣는다**
+- [x] **Step 1: 홈에 진행 바를 넣는다**
 
 `src/shell/PhoneShell.jsx`의 import에 추가한다:
 
@@ -809,7 +809,7 @@ function DayBar() {
 }
 ```
 
-- [ ] **Step 2: 홈에 건다**
+- [x] **Step 2: 홈에 건다**
 
 `PhoneShell`의 return에서 홈을 그리는 부분을 다음으로 바꾼다:
 
@@ -823,7 +823,7 @@ function DayBar() {
       )}
 ```
 
-- [ ] **Step 3: 빌드하고 전체 테스트**
+- [x] **Step 3: 빌드하고 전체 테스트**
 
 Run: `npm run build`
 Expected: 성공
@@ -831,7 +831,7 @@ Expected: 성공
 Run: `npm test`
 Expected: 772+ passed
 
-- [ ] **Step 4: 커밋한다**
+- [x] **Step 4: 커밋한다**
 
 ```bash
 git add src/shell/PhoneShell.jsx
@@ -850,7 +850,7 @@ Task 7의 `phone.css`에 `.ph-day`, `.ph-day-n`, `.ph-day-end` 스타일이 포�
 
 `shell.css`는 이 한 곳 외에 건드리지 않는다.
 
-- [ ] **Step 1: `phone.css`를 쓴다**
+- [x] **Step 1: `phone.css`를 쓴다**
 
 ```css
 /* 폰 셸. 데스크톱과 다른 물건이므로 회사 시스템의 파랑(#2f6fd0)을 쓰지
@@ -1038,7 +1038,7 @@ Task 7의 `phone.css`에 `.ph-day`, `.ph-day-n`, `.ph-day-end` 스타일이 포�
 .phone .window, .phone .taskbar, .phone .desktop-icons { display: none; }
 ```
 
-- [ ] **Step 2: reduced-motion에 물린다**
+- [x] **Step 2: reduced-motion에 물린다**
 
 `src/shell/shell.css`의 1213줄 근처 블록을 찾는다:
 
@@ -1057,12 +1057,12 @@ grep -n "prefers-reduced-motion" src/shell/shell.css
 }
 ```
 
-- [ ] **Step 3: 빌드한다**
+- [x] **Step 3: 빌드한다**
 
 Run: `npm run build`
 Expected: 성공
 
-- [ ] **Step 4: 커밋한다**
+- [x] **Step 4: 커밋한다**
 
 ```bash
 git add src/shell/phone.css src/shell/shell.css
@@ -1077,41 +1077,41 @@ git commit -m "feat: 폰 셸의 스타일과 모션"
 
 계획서의 코드가 통과해도 화면이 맞는지는 별개다. 이 프로젝트에는 CDP로 브라우저를 띄워 확인한 전례가 있다(메모리 `windowsex-cdp-driving`).
 
-- [ ] **Step 1: 개발 서버를 띄운다**
+- [x] **Step 1: 개발 서버를 띄운다**
 
 Run: `npm run dev`
 Expected: `http://127.0.0.1:5173` 에서 뜬다
 
-- [ ] **Step 2: 폰 셸을 연다**
+- [x] **Step 2: 폰 셸을 연다**
 
 브라우저에서 `http://127.0.0.1:5173/?shell=phone` 를 연다.
 DevTools의 기기 모드로 폭 390px을 준다.
 
-- [ ] **Step 3: 다음을 눈으로 확인한다**
+- [x] **Step 3: 다음을 눈으로 확인한다**
 
-- [ ] 상태바에 시각이 뜬다
-- [ ] 홈에 아이콘이 4열로 놓인다
-- [ ] 아이콘을 누르면 앱이 우→좌로 밀려 들어온다
-- [ ] 앱 안에서 스크롤이 된다
-- [ ] `‹` 뒤로가 동작한다
-- [ ] **홈 인디케이터를 누르면 홈으로 나온다** — 어느 앱, 어느 깊이에서든
-- [ ] 좌측 가장자리에서 오른쪽으로 끌면 뒤로 간다
-- [ ] 안드로이드(또는 DevTools 기기 모드)에서 뒤로가기가 게임을 나가지 않는다
-- [ ] `AR톡`을 열어 대화가 보인다
-- [ ] `사진`을 열어 갤러리가 보인다
-- [ ] `내 PC 드라이브`를 열어 문서 폴더가 보인다
+- [x] 상태바에 시각이 뜬다
+- [x] 홈에 아이콘이 4열로 놓인다
+- [x] 아이콘을 누르면 앱이 우→좌로 밀려 들어온다
+- [x] 앱 안에서 스크롤이 된다
+- [x] `‹` 뒤로가 동작한다
+- [x] **홈 인디케이터를 누르면 홈으로 나온다** — 어느 앱, 어느 깊이에서든
+- [x] 좌측 가장자리에서 오른쪽으로 끌면 뒤로 간다
+- [x] 안드로이드(또는 DevTools 기기 모드)에서 뒤로가기가 게임을 나가지 않는다
+- [x] `AR톡`을 열어 대화가 보인다
+- [x] `사진`을 열어 갤러리가 보인다
+- [x] `내 PC 드라이브`를 열어 문서 폴더가 보인다
 
-- [ ] **Step 4: 데스크톱이 그대로인지 본다**
+- [x] **Step 4: 데스크톱이 그대로인지 본다**
 
 `http://127.0.0.1:5173/` 를 넓은 창에서 연다. 창을 끌고 크기를 바꿔 본다.
 Expected: 예전과 똑같다
 
-- [ ] **Step 5: 전체 테스트**
+- [x] **Step 5: 전체 테스트**
 
 Run: `npm test`
 Expected: 748+ passed
 
-- [ ] **Step 6: 확인한 것을 적는다**
+- [x] **Step 6: 확인한 것을 적는다**
 
 `docs/superpowers/plans/2026-08-28-mobile-shell.md` 맨 아래에 「확인 기록」 절을 만들어, 위 항목 중 안 되는 것과 그 이유를 적는다. 다음 라운드(앱 내부 손질)의 출발점이 된다.
 
