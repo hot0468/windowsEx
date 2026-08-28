@@ -13,12 +13,14 @@ const allFiles = () => {
   Object.entries(s.fs).forEach(([root, es]) => walk(es, root))
   return out
 }
-const everyAsk = () => [
-  ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]).flatMap(steps).map((a) => ({ ...a, where: 'thread' })),
-  ...s.days.flatMap((d) => (d.asks ?? []).flatMap((a) => steps(a.ask).map((x) => ({ ...x, where: 'day' + d.n })))),
-  ...Object.entries(s.overtime.days).flatMap(([n, d]) => d.asks.flatMap((a) => steps(a.ask).map((x) => ({ ...x, where: 'ot' + n })))),
-  ...s.pool.requests.flatMap((r) => steps(r.beat.ask).map((x) => ({ ...x, where: 'pool:' + r.id })))
-].filter((a) => a.placeholder)
+const roots = () => [
+  ...threads.flatMap((t) => [{ ask: t.ask, where: 'thread:' + t.id }, ...(t.reactions ?? []).map((r) => ({ ask: r.ask, where: 'thread:' + t.id + ':reaction' }))]),
+  ...s.days.flatMap((d) => (d.asks ?? []).map((a) => ({ ask: a.ask, where: 'day' + d.n + ':' + a.thread }))),
+  ...Object.entries(s.overtime.days).flatMap(([n, d]) => d.asks.map((a) => ({ ask: a.ask, where: 'ot' + n + ':' + a.thread }))),
+  ...s.pool.requests.map((r) => ({ ask: r.beat.ask, where: 'pool:' + r.id })),
+  { ask: s.summons.beat.ask, where: 'summons' }
+].filter((r) => r.ask)
+const everyAsk = () => roots().flatMap((r) => steps(r.ask).map((x) => ({ ...x, where: r.where }))).filter((a) => a.placeholder)
 
 const cmds = {
   help: () => console.log(Object.keys(cmds).join('  ')),
@@ -65,6 +67,17 @@ const cmds = {
     if (hits.length > 40) console.log(`… ${hits.length - 40} more`)
     if (!hits.length) console.log('(no hits)')
   },
+  // 한 요청의 전 단계(체인)를 본다: ask <grants|pool id|where 조각> — JSON을 직접 열 필요가 없다
+  ask: () => {
+    if (!arg) return console.log('usage: ask <grants|pool id|where>  (예: ask expense_sheet / ask pool:quote)')
+    const hit = roots().find((r) => steps(r.ask).some((a) => a.grants === arg)) ?? roots().find((r) => r.where.includes(arg))
+    if (!hit) return console.log('not found — try: grants / pool')
+    console.log(hit.where)
+    console.log(JSON.stringify(steps(hit.ask).map(({ then, ...a }) => a), null, 1))
+  },
+  chatter: () => s.chatter.forEach((c) => console.log(`${c.id}\t${c.days ? 'days:' + c.days.join(',') : 'after:' + c.after}\t${c.egg}\t${c.beat.thread}`)),
+  summons: () => steps(s.summons.beat.ask).forEach((a, i) =>
+    console.log(`${i + 1}. ${a.free ? '(free)' : (a.accept ?? []).flat().join(' | ')}\t${a.placeholder ?? ''}${a.grants ? '\t→' + a.grants : ''}`)),
   file: () => {
     const f = allFiles().find((x) => x.id === arg || x.name === arg)
     console.log(f ? JSON.stringify(f, null, 1) : 'not found — try: files')

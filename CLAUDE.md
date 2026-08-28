@@ -1,11 +1,11 @@
 # windowsEx — 작업 규칙
 
-가짜 Windows 데스크톱 방탈출 게임. **게임 내용은 전부 `src/scenarios/workday.json`(14k줄) 하나에 있고, 코드는 그걸 그리는 뷰어다.** 콘텐츠 작업 = JSON 수정, 기능 작업 = store/컴포넌트 수정.
+가짜 Windows 데스크톱 방탈출 게임. **게임 내용은 전부 `src/scenarios/workday.json`(23k줄) 하나에 있고, 코드는 그걸 그리는 뷰어다.** 콘텐츠 작업 = JSON 수정, 기능 작업 = store/컴포넌트 수정.
 
 ## 토큰 절약 수칙
 
-- **workday.json을 cat/Read로 열지 마라.** `node scripts/query.mjs <명령>` 으로 조회한다 (`node scripts/query.mjs help`). 구조 파악에 JSON 덤프가 필요했던 적은 없다.
-- **shell.css(100KB)·store.js(48KB)도 통째로 Read 말고** `grep -n`으로 위치 찾아 offset/limit로 읽어라. `docs/superpowers/plans/`의 완료된 plan은 읽지 마라.
+- **workday.json을 cat/Read로 열지 마라.** `node scripts/query.mjs <명령>` 으로 조회한다 (`node scripts/query.mjs help`). 요청 한 건의 전 단계는 `ask <grants|pool:id>`, 잡담은 `chatter`, 부름은 `summons`. 구조 파악에 JSON 덤프가 필요했던 적은 없다.
+- **shell.css(125KB)·store.js(80KB)도 통째로 Read 말고** `grep -n`으로 위치 찾아 offset/limit로 읽어라. `docs/superpowers/plans/`의 완료된 plan은 읽지 마라.
 - 테스트는 먼저 관련 파일만: `npx vitest run test/<관련>.test.js`, 마지막에 한 번만 전체 `npm test`.
 - JSON 수정은 node 스크립트로 (`JSON.parse` → 수정 → `JSON.stringify(s,null,2)+'\n'`). sed/Edit로 JSON을 건드리지 마라.
 - **JS/JSX 수정 시 CRLF 주의**: 대부분 파일이 CRLF다. 스크립트로 고칠 땐 `\r\n→\n` 정규화 후 수정, 저장 시 `\n→\r\n` 복원. bash heredoc 안의 `\n` 리터럴은 자주 깨지니 파이썬(io, newline='') 또는 Edit 도구를 써라.
