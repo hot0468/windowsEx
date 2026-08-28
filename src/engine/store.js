@@ -64,6 +64,10 @@ let toastId = 0
 
 // How long the day waits between two things being said.
 const BEAT_GAP = 3600
+// 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
+const SAY_FIRST = 1200
+const SAY_GAP = 1500
+const sayTime = (count) => SAY_FIRST + Math.max(0, count - 1) * SAY_GAP
 // And how long between consecutive lines of one conversation opening up:
 // short enough to read as one person typing, long enough to read each toast.
 const NUDGE_GAP = 2200
@@ -220,8 +224,7 @@ export const useGame = create((set, get) => ({
     const said = threadMessages(t, s.scenario, s.msgCount, s.extraMessages)
       .filter((m) => m.day === s.day && !m.me)
     if (!said.length) return
-    const source = s.scenario.workMessenger.sections.some((sec) => sec.threads.some((x) => x.id === threadId))
-      ? 'workMessenger' : 'privateMessenger'
+    const source = sourceOf(s.scenario, threadId)
     said.forEach((msg, i) => setTimeout(() => {
       if (i < said.length - 1) get().setTyping(threadId, true)
       else get().setTyping(threadId, false)
@@ -378,7 +381,7 @@ export const useGame = create((set, get) => ({
     const seenKey = `infected:${s.crashSource ?? 'mail'}`
     const fresh = !s.grants[seenKey]
     if (fresh) {
-      after.lines.forEach((text) => s.pushMessage(after.thread, { from: after.from, text }))
+      s.saying(after.thread, after.from, after.lines)
       s.grant(seenKey)
       if (!s.grants.infected) s.grant('infected')
     }
@@ -448,7 +451,7 @@ export const useGame = create((set, get) => ({
     s.showToast({ from: '작업 관리자', text: s.scenario.miner.killed.toast, app: 'taskmgr' })
     const after = s.scenario.miner.after
     setTimeout(() => {
-      after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
+      get().saying(after.thread, after.from, after.lines)
       get().showToast({
         from: after.from, text: after.lines[1],
         app: appOf(after.source), source: after.source, thread: after.thread
@@ -517,7 +520,7 @@ export const useGame = create((set, get) => ({
     set({ grants: { ...s.grants, [CLUE.obituary]: true } })
     const ev = s.scenario.ending.event
     setTimeout(() => {
-      ev.lines.forEach((text) => get().pushMessage(ev.thread, { from: ev.from, text }))
+      get().saying(ev.thread, ev.from, ev.lines)
       get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: appOf(ev.source), source: ev.source, thread: ev.thread })
     }, ev.delay)
   },
@@ -532,7 +535,7 @@ export const useGame = create((set, get) => ({
     const note = s.scenario.dream?.notice
     if (!note) return
     setTimeout(() => {
-      note.lines.forEach((text) => get().pushMessage(note.thread, { from: note.from, text }))
+      get().saying(note.thread, note.from, note.lines)
       get().showToast({
         from: note.from, text: note.lines[note.lines.length - 1],
         app: appOf(note.source), source: note.source, thread: note.thread
@@ -551,7 +554,7 @@ export const useGame = create((set, get) => ({
     const note = s.scenario.readBack
     if (!note) return
     setTimeout(() => {
-      note.lines.forEach((text) => get().pushMessage(note.thread, { from: note.from, text }))
+      get().saying(note.thread, note.from, note.lines)
       get().showToast({
         from: note.from, text: note.lines[note.lines.length - 1],
         app: appOf(note.source), source: note.source, thread: note.thread
@@ -634,7 +637,7 @@ export const useGame = create((set, get) => ({
     s.grant('router_broke')
     const o = outageOf(s.scenario)
     setTimeout(() => {
-      o.down.forEach((text) => get().pushMessage(o.thread, { from: o.from, text }))
+      get().saying(o.thread, o.from, o.down)
       get().showToast({ from: o.from, text: o.down[0], app: appOf(o.source), source: o.source, thread: o.thread })
     }, 2500)
   },
@@ -642,7 +645,7 @@ export const useGame = create((set, get) => ({
     if (!get().routerDown) return
     set({ routerDown: false })
     const o = outageOf(get().scenario)
-    setTimeout(() => o.up.forEach((text) => get().pushMessage(o.thread, { from: o.from, text })), 1500)
+    setTimeout(() => get().saying(o.thread, o.from, o.up), 1500)
   },
   secureRouter: () => get().grant('router_secured'),
   // Credentials typed into the look-alike login page: security notices at once.
@@ -650,7 +653,7 @@ export const useGame = create((set, get) => ({
     if (get().grants.phished) return
     get().grant('phished')
     setTimeout(() => {
-      after.lines.forEach((text) => get().pushMessage(after.thread, { from: after.from, text }))
+      get().saying(after.thread, after.from, after.lines)
       get().showToast({ from: after.from, text: after.lines[0], app: appOf(after.source), source: after.source, thread: after.thread })
     }, after.delay ?? 2500)
   },
@@ -688,7 +691,7 @@ export const useGame = create((set, get) => ({
     set((st) => ({ chatted: { ...st.chatted, [chosen.id]: st.day } }))
     setTimeout(() => {
       const { beat } = chosen
-      beat.lines.forEach((text) => get().pushMessage(beat.thread, { from: beat.from, text }))
+      get().saying(beat.thread, beat.from, beat.lines)
       get().showToast({ from: beat.from, text: beat.lines[0], app: appOf(beat.source), source: beat.source, thread: beat.thread })
     }, 2600)
   },
@@ -707,7 +710,11 @@ export const useGame = create((set, get) => ({
     const [beat, ...rest] = s.beatQueue
     if (!beat || asking(s)) return
     set({ beatQueue: rest, beatAsk: beat.ask || beat.choices ? beat.thread : null })
-    beat.lines.forEach((text) => s.pushMessage(beat.thread, { from: beat.from, text }))
+    // 보고 있는 대화면 한 줄씩 온다. 그러면 이 대화가 말을 마치는 데 시간이
+    // 걸리므로, 다음 대화는 그때까지 기다린다 — 안 그러면 한 줄씩 오는 도중에
+    // 다른 사람이 끼어들어 두 대화가 뒤엉킨다.
+    const watching = watchingThread(s, { source: beat.source, thread: beat.thread })
+    s.saying(beat.thread, beat.from, beat.lines)
     if (beat.ask) get().queueAsk(beat.thread, beat.ask)
     // a question with buttons: the thread's own reactions answer it
     if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
@@ -715,7 +722,9 @@ export const useGame = create((set, get) => ({
       from: beat.from, text: beat.lines[0],
       app: appOf(beat.source), source: beat.source, thread: beat.thread
     })
-    if (rest.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
+    if (rest.length) {
+      setTimeout(() => get().nextBeat(), Math.max(BEAT_GAP, watching ? sayTime(beat.lines.length) + SAY_GAP : 0))
+    }
   },
   setAsk: (threadId, ask) => {
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } }))
@@ -741,7 +750,16 @@ export const useGame = create((set, get) => ({
     lines.forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
       if (i === lines.length - 1) get().setTyping(threadId, false)
-    }, 1200 + i * 1500))
+    }, SAY_FIRST + i * SAY_GAP))
+  },
+  // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
+  // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
+  // 네 줄이 한 번에 튀어나오면 사람이 친 말로 읽히지 않는다.
+  saying: (threadId, from, lines) => {
+    const s = get()
+    const source = sourceOf(s.scenario, threadId)
+    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines)
+    else lines.forEach((text) => get().pushMessage(threadId, { from, text }))
   },
   // Which set of choices a conversation has reached.
   setBranch: (threadId, next) =>
@@ -772,7 +790,7 @@ export const useGame = create((set, get) => ({
       wikiEdits.nagged = true
       const nag = edit.nag
       setTimeout(() => {
-        nag.lines.forEach((text) => get().pushMessage(nag.thread, { from: nag.from, text }))
+        get().saying(nag.thread, nag.from, nag.lines)
         get().showToast({
           from: nag.from, text: nag.lines[nag.lines.length - 1],
           app: appOf(nag.source), source: nag.source, thread: nag.thread
@@ -1607,6 +1625,11 @@ export function roomReply(ask, question, asked = 0) {
 // that is already open on screen is not news, so it does not ring: the player
 // is watching it land.
 const MESSENGER_APP = { workMessenger: 'messenger', privateMessenger: 'chat' }
+// 이 대화가 업무용 메신저의 것인지 개인 메신저의 것인지.
+export const sourceOf = (scenario, threadId) =>
+  (scenario.workMessenger.sections.some((sec) => sec.threads.some((x) => x.id === threadId))
+    ? 'workMessenger' : 'privateMessenger')
+
 export function watchingThread(s, toast) {
   if (!toast.source || !toast.thread) return false
   if (s.openThread[toast.source] !== toast.thread) return false
