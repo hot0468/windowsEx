@@ -350,7 +350,7 @@ export const useGame = create((set, get) => ({
     play('error')
     set({ crashed: true, crashSource: source, toast: null })
   },
-  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false }),
+  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false, screens: [] }),
   // Finishing the last request does nothing on its own; the player clocks off
   // from the request list, and only then the evening (offer, then the door) begins.
   closeDay: () => set({ closing: true }),

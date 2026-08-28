@@ -7,7 +7,7 @@ import { fileDragProps } from './dragFile.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Monitor, Search } from '../icons/line.jsx'
 
-export default function FileExplorer({ startFolder }) {
+export default function FileExplorer({ startFolder, roots: only }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
   const restored = useGame((s) => s.restored)
@@ -24,7 +24,7 @@ export default function FileExplorer({ startFolder }) {
   const [viewOpen, setViewOpen] = useState(false)
 
   const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
-  const roots = Object.keys(fs)
+  const roots = only ?? Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 
   const here = nav.path[nav.path.length - 1]

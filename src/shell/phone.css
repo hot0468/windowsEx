@@ -63,6 +63,74 @@
 .ph-day-end:active { transform: scale(.96); }
 .ph-day-end:disabled { opacity: .5; cursor: default; }
 
+/* 저장 · 불러오기 · 처음부터. Taskbar의 시작 메뉴를 폰 홈 한 자리로
+   접은 것 — 폰은 시작 메뉴를 그리지 않으므로 세이브가 닿는 유일한 문. */
+.ph-menu { position: relative; flex: none; }
+.ph-menu-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--p-surface);
+  color: var(--p-ink);
+  box-shadow: 0 1px 3px rgba(16, 19, 26, .08);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 90ms ease-out;
+}
+.ph-menu-btn:active { transform: scale(.92); }
+.ph-menu-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 156px;
+  padding: 6px;
+  border: 1px solid var(--p-line);
+  border-radius: 14px;
+  background: var(--p-surface);
+  box-shadow: 0 6px 20px rgba(16, 19, 26, .14);
+}
+.ph-menu-item {
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--p-ink);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.ph-menu-item:active { background: var(--p-bg); }
+.ph-menu-item:disabled { color: var(--p-mute); cursor: default; }
+.ph-menu-confirm {
+  margin: 4px 6px 8px;
+  color: var(--p-ink);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.ph-menu-row { display: flex; gap: 6px; padding: 0 6px 6px; }
+.ph-menu-btn-primary {
+  flex: 1;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--p-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ph-menu-row .ph-menu-item { flex: 1; background: var(--p-bg); text-align: center; }
+
 /* 홈 */
 .ph-home { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 12px 8px; }
 .ph-grid {
@@ -178,6 +246,3 @@
   transition: opacity 90ms ease-out, transform 90ms ease-out;
 }
 .pa-home:active .pa-bar { opacity: .45; transform: scaleX(.94); }
-
-/* 폰에서는 데스크톱 창틀이 설 자리가 없다. */
-.phone .window, .phone .taskbar, .phone .desktop-icons { display: none; }

@@ -1,10 +1,70 @@
 import { useEffect, useState } from 'react'
-import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
-import { APPS, phoneApps } from '../apps/registry.jsx'
+import { useGame, objectiveDone, requestsOf, savedAt } from '../engine/store.js'
+import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
 import Icon from '../icons/Icon.jsx'
 
 const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
+
+// Taskbar의 시작 메뉴와 같은 확인 문구. 저장/불러오기/새 게임의 의미가
+// 폰에서 달라지면 안 되므로 그대로 옮긴다.
+const CONFIRM = {
+  new: '진행 중인 게임을 버리고 처음부터 시작합니다. 저장한 게임은 그대로 남습니다.',
+  load: '저장한 시점으로 되돌아갑니다. 지금까지의 진행 상황은 사라집니다.'
+}
+
+// 저장 · 불러오기 · 처음부터. Taskbar(시작 메뉴)에만 있던 세 동작을 폰
+// 홈에도 연다 — 폰은 시작 메뉴를 그리지 않으므로 여기가 없으면 세이브가
+// 폰에서는 아예 닿지 않는다.
+function PhoneMenu() {
+  const saveGame = useGame((s) => s.saveGame)
+  const loadGame = useGame((s) => s.loadGame)
+  const newGame = useGame((s) => s.newGame)
+  const [open, setOpen] = useState(false)
+  const [asking, setAsking] = useState(null)
+  const [saved, setSaved] = useState(null)
+
+  const toggle = () => {
+    if (!open) setSaved(savedAt())
+    setAsking(null)
+    setOpen(!open)
+  }
+
+  return (
+    <div className="ph-menu">
+      <button className="ph-menu-btn" onClick={toggle} aria-label="메뉴">⋯</button>
+      {open && (
+        <div className="ph-menu-pop">
+          {asking ? (
+            <>
+              <p className="ph-menu-confirm">{CONFIRM[asking]}</p>
+              <div className="ph-menu-row">
+                <button className="ph-menu-btn-primary"
+                        onClick={() => (asking === 'new' ? newGame() : loadGame())}>
+                  예
+                </button>
+                <button className="ph-menu-item" onClick={() => setAsking(null)}>아니오</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <button className="ph-menu-item"
+                      onClick={() => { saveGame(); setSaved(Date.now()); setOpen(false) }}>
+                저장
+              </button>
+              <button className="ph-menu-item" disabled={!saved} onClick={() => setAsking('load')}>
+                불러오기
+              </button>
+              <button className="ph-menu-item" onClick={() => setAsking('new')}>
+                처음부터
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // 상태바. 시각은 데스크톱 잠금화면과 같은 소스를 쓴다.
 function StatusBar() {
@@ -53,6 +113,7 @@ function DayBar() {
           오늘 업무 마치기
         </button>
       )}
+      <PhoneMenu />
     </div>
   )
 }
@@ -89,7 +150,9 @@ export default function PhoneShell() {
   const grants = useGame((s) => s.grants)
   const currentApp = useGame((s) => s.currentApp)
   const popScreen = useGame((s) => s.popScreen)
+  const pushScreen = useGame((s) => s.pushScreen)
   const goPhoneHome = useGame((s) => s.goPhoneHome)
+  const closeWindow = useGame((s) => s.closeWindow)
   const windows = useGame((s) => s.windows)
 
   // 안드로이드의 뒤로가기 제스처는 그대로 두면 게임을 나가버린다. 한 겹
@@ -100,7 +163,11 @@ export default function PhoneShell() {
     const onPop = () => {
       const s = useGame.getState()
       if (!s.screens.length) return          // 홈이면 진짜로 나간다
+      const top = s.screens[s.screens.length - 1]
       s.popScreen()
+      // 창 화면을 벗길 땐 창도 닫는다 — 안 닫으면 다음 렌더에서 같은
+      // 창이 '새로 생긴 창'으로 보여 자동으로 다시 밀려 들어온다.
+      if (top?.startsWith('win:')) s.closeWindow(Number(top.slice(4)))
       window.history.pushState(null, '')     // 다음 뒤로가기를 위해 다시 깐다
     }
     window.history.pushState(null, '')
@@ -108,8 +175,40 @@ export default function PhoneShell() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
+  // 탐색기·메일 첨부·브라우저 다운로드가 모두 openWindow(app, {fileId})로
+  // 문서를 연다 — 데스크톱에서는 그게 새 창이지만, 폰은 창을 그리지
+  // 않으므로 화면 스택에 올려주지 않으면 아무 일도 일어나지 않는다.
+  //
+  // 홈 앱(사진·파일·AR톡 …)이 여는 창은 뺀다 — 그건 Home.open이 이미
+  // 'app:<id>' 화면으로 밀어둔다. 그 창까지 또 밀면 같은 앱이 화면
+  // 두 겹으로 쌓여 뒤로가기가 한 번 헛돈다.
+  // 새로 생긴 문서 창(스택에 아직 없는 것)만 민다 — 이미 올라온 창을
+  // 다시 밀면 그 자리에서 무한히 반복된다.
+  useEffect(() => {
+    const homeKeys = new Set(
+      phoneApps(grants).map((a) => a.app + JSON.stringify(a.props ?? {}))
+    )
+    for (const w of knownWindows(windows)) {
+      if (homeKeys.has(w.key)) continue
+      const k = 'win:' + w.id
+      if (!screens.includes(k)) pushScreen(k)
+    }
+  }, [windows, screens, pushScreen, grants])
+
+  const top = screens[screens.length - 1]
+  const winId = top?.startsWith('win:') ? Number(top.slice(4)) : null
+  const openWin = winId != null ? windows.find((w) => w.id === winId) : null
+  const winCfg = openWin ? APPS[openWin.app] : null
+
+  // 창 화면에서 뒤로가면 그 창도 닫는다 — 안 닫으면 스택에서는 빠졌는데
+  // windows에는 남아 있어, 위 effect가 같은 화면을 바로 다시 민다.
+  const backFromWindow = () => {
+    popScreen()
+    closeWindow(winId)
+  }
+
   const id = currentApp()
-  const entry = id ? phoneApps(grants).find((a) => a.id === id) : null
+  const entry = !winCfg && id ? phoneApps(grants).find((a) => a.id === id) : null
   const cfg = entry ? APPS[entry.app] : null
   // 창은 app이 아니라 app+props로 갈린다(store의 openWindow와 같은 키).
   // 사진·파일·내 PC 드라이브가 모두 explorer라, app만 보면 셋 중 엉뚱한
@@ -120,14 +219,19 @@ export default function PhoneShell() {
   return (
     <div className="phone">
       <StatusBar />
-      {!entry && (
+      {!entry && !winCfg && (
         <>
           <DayBar />
           <Home />
           <div className="pa-home" aria-hidden="true"><span className="pa-bar" /></div>
         </>
       )}
-      {entry && cfg && (
+      {winCfg && (
+        <PhoneApp title={winCfg.title} icon={winCfg.icon} onBack={backFromWindow}>
+          <winCfg.comp {...(openWin.props ?? {})} winId={openWin.id} />
+        </PhoneApp>
+      )}
+      {!winCfg && entry && cfg && (
         <PhoneApp title={entry.title} icon={entry.icon}
                   onBack={screens.length > 1 ? popScreen : goPhoneHome}>
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />

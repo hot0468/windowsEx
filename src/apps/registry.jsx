@@ -59,9 +59,9 @@ export const knownWindows = (windows) => windows.filter((w) => APPS[w.app])
 // 이름을 '사내 드라이브'로 하면 안 된다 — drive.ar.local이 이미 그 이름을
 // 쓰고 있고, 그쪽은 VPN과 hosts로 잠긴 별개의 퍼즐이다.
 const PHONE_EXTRA = [
-  { id: 'photos', title: '사진', icon: 'image', app: 'explorer', props: { startFolder: ['휴대폰', '갤러리'] } },
-  { id: 'files', title: '파일', icon: 'folder', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'] } },
-  { id: 'drive', title: '내 PC 드라이브', icon: 'folder', app: 'explorer', props: { startFolder: '문서' } }
+  { id: 'photos', title: '사진', icon: 'image', app: 'explorer', props: { startFolder: ['휴대폰', '갤러리'], roots: ['휴대폰'] } },
+  { id: 'files', title: '파일', icon: 'folder', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'], roots: ['휴대폰'] } },
+  { id: 'drive', title: '내 PC 드라이브', icon: 'folder', app: 'explorer', props: { startFolder: '문서', roots: ['문서', '다운로드', '휴지통', '로컬 디스크 (C:)'] } }
 ]
 
 // 폰에 없는 물건. 작업 관리자와 백신은 PC를 관리하는 도구고, 탐색기는

@@ -132,4 +132,33 @@ describe('폰 홈 앱 목록', () => {
       expect(a.icon).toBeTruthy()
     }
   })
+
+  // 사진·파일은 fs.휴대폰만 봐야 한다. roots가 없으면 FileExplorer가
+  // fs의 6개 루트를 전부 보여줘, '사진'에서 한 번에 로컬 디스크 (C:)로
+  // 건너뛸 수 있었다.
+  it('사진·파일은 휴대폰 루트만 본다', () => {
+    const photos = phoneApps({}).find((a) => a.id === 'photos')
+    const files = phoneApps({}).find((a) => a.id === 'files')
+    expect(photos.props.roots).toEqual(['휴대폰'])
+    expect(files.props.roots).toEqual(['휴대폰'])
+  })
+
+  // 내 PC 드라이브는 PC의 저장소가 마운트된 것이지 폰 저장소가 아니다.
+  // '휴대폰'이 섞여 들어가면 두 저장소가 다시 하나로 합쳐진다.
+  it('내 PC 드라이브는 PC의 네 루트만 보고 휴대폰은 보지 않는다', () => {
+    const drive = phoneApps({}).find((a) => a.id === 'drive')
+    expect(drive.props.roots).toEqual(['문서', '다운로드', '휴지통', '로컬 디스크 (C:)'])
+    expect(drive.props.roots).not.toContain('휴대폰')
+  })
+})
+
+describe('restart()', () => {
+  // C2 회귀 방지: restart가 screens를 비우지 않으면, 크래시 후 재부팅한
+  // 플레이어가 열지도 않은 앱 화면에 떨어진다 — 그 화면을 뒷받침하는
+  // window는 이미 사라졌으므로 사실상 소프트락이다.
+  it('screens를 비운다', () => {
+    useGame.setState({ screens: ['app:mail', 'win:1'] })
+    useGame.getState().restart()
+    expect(useGame.getState().screens).toEqual([])
+  })
 })
