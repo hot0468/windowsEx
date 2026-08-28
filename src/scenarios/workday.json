@@ -7548,7 +7548,7 @@
     {
       "url": "drive.ar.local",
       "title": "AR 사내 드라이브",
-      "layout": "wiki",
+      "layout": "drive",
       "requiresHost": true,
       "requiresVpn": true,
       "wiki": {

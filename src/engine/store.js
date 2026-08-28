@@ -1099,9 +1099,14 @@ export const boardPosts = (posts = [], day = 1) =>
 // A wiki page as it stands today. Editing one puts her name on it for the rest
 // of the day; by the next morning the approved version is back, and the note
 // saying so is the only trace left.
+// 사내위키와 사내 드라이브는 겉만 다르고 같은 모양의 문서를 담는다. 어느
+// 쪽인지로 갈라 두면 드라이브 페이지가 조용히 404가 되고, 거기 걸린 편집도
+// 같이 죽는다 (편집 가능한 셋 중 q3·owner가 드라이브 쪽이다).
+const holdsWikiPages = (s) => s?.layout === 'wiki' || s?.layout === 'drive'
+
 export function wikiPage(scenario, { wikiEdits = {}, day = 1 }, key) {
   const page = scenario.sites
-    .filter((s) => s.layout === 'wiki')
+    .filter(holdsWikiPages)
     .map((s) => s.wiki.pages[key]).find(Boolean)
   const edit = scenario.wikiEdit
   const mine = wikiEdits[key]
@@ -1518,7 +1523,7 @@ export const specialPage = (host) =>
 // A path is a wiki page id or a portal sub-page; anything else on any site is a 404.
 export function pathKnown(site, path = '') {
   if (!path) return true
-  if (site?.layout === 'wiki') return Boolean(site.wiki.pages[path.slice(1)])
+  if (holdsWikiPages(site)) return Boolean(site.wiki.pages[path.slice(1)])
   return Boolean(site?.pages?.[path])
 }
 

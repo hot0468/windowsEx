@@ -8,6 +8,7 @@ import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
 import News from './News.jsx'
 import Wiki from './Wiki.jsx'
+import Drive from './Drive.jsx'
 import Board from './Board.jsx'
 import Gov from './Gov.jsx'
 import Lotto from './Lotto.jsx'
@@ -494,6 +495,7 @@ export default function Browser() {
         {view === 'ready' && !lost && (
           site.layout === 'portal' ? <Portal site={site} path={page.path} onOpen={(p) => open(site.url + p)} />
             : site.layout === 'wiki' ? <Wiki site={site} path={page.path} />
+            : site.layout === 'drive' ? <Drive site={site} path={page.path} />
             : site.layout === 'calendar' ? <Calendar site={site} />
             : site.layout === 'news' ? <News site={site} news={news} onOpen={(id) => nav.go({ kind: 'news', id })} />
               : site.layout === 'board' ? <Board site={site} />

@@ -3,7 +3,9 @@ import scenario from '../src/scenarios/workday.json'
 import { PROGRESS, useGame, wikiPage } from '../src/engine/store.js'
 
 const edit = scenario.wikiEdit
-const wikis = scenario.sites.filter((s) => s.layout === 'wiki')
+// 고칠 수 있는 셋 중 q3·owner는 사내 드라이브에 있다. 드라이브가 자기 화면을
+// 갖게 되면서 layout이 갈라졌으니, 문서를 담는 사이트는 둘 다 본다.
+const wikis = scenario.sites.filter((s) => s.layout === 'wiki' || s.layout === 'drive')
 
 const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
 const threads = [scenario.workMessenger, scenario.privateMessenger]
