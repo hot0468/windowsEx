@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { pickShell } from '../src/shell/useViewport.js'
 
 describe('셸 선택', () => {

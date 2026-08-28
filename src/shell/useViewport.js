@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // 폰 셸로 넘어가는 폭. 이보다 좁으면 창을 띄울 자리가 없다.
 export const PHONE_MAX = 820
