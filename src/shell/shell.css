@@ -1569,23 +1569,31 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .pt-profile-stats dt, .pt-profile-stats dd { font-size: 11.5px; }
 
 /* ── 회사 홈페이지 (C테크) ────────────────────────────── */
-/* 한 장짜리 vendor 페이지와 달리 층이 있다. .page가 이미 패딩을 주므로
-   여기서는 그것을 밀어내고 화면 끝까지 쓴다 — 실제 사이트처럼 보이려면
-   히어로와 푸터가 창 폭을 꽉 채워야 한다. */
-.cp { margin: -24px; color: #1f2430; font-size: 13px; line-height: 1.7; }
+/* .page.bleed 가 이미 패딩을 0으로 만든다. 여기서 음수 마진으로 또 빼면
+   컨테이너보다 넓어져 가로 스크롤이 생긴다 — 그냥 폭을 그대로 쓴다. */
+.cp { width: 100%; color: #1f2430; font-size: 13px; line-height: 1.7; }
 
-.cp-gnb { display: flex; align-items: center; gap: 28px; padding: 16px 40px; border-bottom: 1px solid #e7e9ee; background: #fff; }
-.cp-brand { display: flex; align-items: baseline; gap: 10px; font-size: 19px; font-weight: 800; letter-spacing: -.3px; color: #10243f; }
+/* 창이 좁아지면 메뉴가 넘치는 대신 아래로 접힌다. 가로 스크롤은 만들지 않는다. */
+.cp-gnb { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; padding: 16px 40px; border-bottom: 1px solid #e7e9ee; background: #fff; }
+.cp-brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 19px; font-weight: 800; letter-spacing: -.3px; color: #10243f; }
 .cp-brand em { font-size: 11.5px; font-weight: 500; font-style: normal; color: #8a9099; letter-spacing: 0; }
-.cp-gnb nav { display: flex; gap: 22px; margin-left: auto; color: #4a5058; font-size: 13px; }
+.cp-gnb nav { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-left: auto; color: #4a5058; font-size: 13px; }
 
-.cp-hero { padding: 62px 40px 54px; background: linear-gradient(160deg, #10243f 0%, #1d4b7d 100%); color: #fff; }
+.cp-hero { position: relative; overflow: hidden; padding: 62px 40px 54px; background: linear-gradient(160deg, #10243f 0%, #1d4b7d 100%); color: #fff; }
+.cp-hero-text { position: relative; z-index: 1; }
 .cp-eyebrow { font-size: 11px; letter-spacing: 2.4px; color: #8fc0f0; }
 .cp-hero h1 { margin: 14px 0 12px; font-size: 34px; line-height: 1.3; letter-spacing: -1px; font-weight: 700; }
 .cp-hero p { max-width: 560px; color: #cfe0f2; font-size: 14px; }
+/* 비스듬히 지나가는 반송 라인. 넘치는 부분은 히어로가 잘라낸다. */
+.cp-hero-art { position: absolute; right: -60px; top: -40px; bottom: -40px; width: 340px; display: flex; gap: 16px; transform: skewX(-18deg); opacity: .5; }
+.cp-hero-art i { flex: 1; border-radius: 4px; background: linear-gradient(180deg, rgba(143,192,240,.55), rgba(143,192,240,0)); }
+.cp-hero-art i:nth-child(2) { margin-top: 34px; }
+.cp-hero-art i:nth-child(3) { margin-top: 12px; }
+.cp-hero-art i:nth-child(4) { margin-top: 52px; }
+.cp-hero-art i:nth-child(5) { margin-top: 24px; }
 
-.cp-stats { display: flex; padding: 0 40px; background: #fff; border-bottom: 1px solid #e7e9ee; }
-.cp-stats > div { flex: 1; padding: 26px 0; text-align: center; }
+.cp-stats { display: flex; flex-wrap: wrap; padding: 0 40px; background: #fff; border-bottom: 1px solid #e7e9ee; }
+.cp-stats > div { flex: 1 1 150px; padding: 26px 0; text-align: center; }
 .cp-stats > div + div { border-left: 1px solid #eef0f4; }
 .cp-stats strong { display: block; font-size: 26px; color: #1d4b7d; letter-spacing: -.5px; }
 .cp-stats span { font-size: 12px; color: #8a9099; }
@@ -1593,17 +1601,21 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .cp-sec { padding: 42px 40px; background: #fff; }
 .cp-sec + .cp-sec { border-top: 1px solid #eef0f4; }
 .cp-sec h2 { margin-bottom: 20px; font-size: 20px; letter-spacing: -.5px; color: #10243f; }
-.cp-cards { display: flex; gap: 16px; }
-.cp-cards article { flex: 1; padding: 22px; border: 1px solid #e7e9ee; border-radius: 10px; background: #fbfcfe; }
+.cp-cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.cp-cards article { flex: 1 1 210px; padding: 22px; border: 1px solid #e7e9ee; border-radius: 10px; background: #fbfcfe; }
+.cp-card-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 14px; border-radius: 10px; background: #e8f0fb; color: #1d4b7d; }
 .cp-cards h3 { margin-bottom: 8px; font-size: 14.5px; color: #1d4b7d; }
 .cp-cards p { color: #5f6570; font-size: 12.5px; }
 
 .cp-support { background: #f6f8fb; }
 .cp-support dl { display: flex; flex-direction: column; gap: 1px; background: #e7e9ee; border: 1px solid #e7e9ee; border-radius: 8px; overflow: hidden; }
-.cp-support dl > div { display: flex; gap: 18px; padding: 14px 18px; background: #fff; }
-.cp-support dt { flex: 0 0 130px; color: #8a9099; font-size: 12.5px; }
-.cp-support dd { color: #1f2430; font-size: 12.5px; }
+.cp-support dl > div { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 14px 18px; background: #fff; }
+.cp-support dt { display: flex; align-items: center; gap: 8px; flex: 0 0 150px; color: #8a9099; font-size: 12.5px; }
+.cp-support dt svg { color: #b0b7c1; }
+.cp-support dd { min-width: 0; color: #1f2430; font-size: 12.5px; }
 
+.cp-map-row { display: flex; align-items: flex-start; gap: 14px; }
+.cp-map-pin { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; background: #e8f0fb; color: #1d4b7d; }
 .cp-address { font-size: 15px; color: #1f2430; }
 .cp-map-note { margin-top: 6px; color: #8a9099; font-size: 12.5px; }
 

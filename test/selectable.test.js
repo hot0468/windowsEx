@@ -51,3 +51,19 @@ describe('옮겨 적어야 하는 값은 고를 수 있다', () => {
     it(`${what} — ${sel}`, () => expect(selectable(sel)).toBe(true))
   }
 })
+
+// 브라우저는 사이트를 그릴 때 .page 에 bleed 를 붙여 패딩을 이미 0으로 만든다
+// (Browser.jsx의 className 계산). 그걸 모르고 화면 쪽에서 음수 마진으로 패딩을
+// 또 빼면 컨테이너보다 넓어져 가로 스크롤이 생기고, 머리 쪽이 왼쪽으로 밀린다.
+// C테크 홈페이지가 그랬다. 창 폭을 꽉 쓰는 화면들이 같은 길로 가지 않게 막는다.
+describe('창 폭을 꽉 쓰는 화면은 패딩을 두 번 빼지 않는다', () => {
+  it('.page.bleed 가 패딩을 이미 0으로 만든다', () => {
+    expect(bodies('.page.bleed').some((b) => b.includes('padding: 0'))).toBe(true)
+  })
+
+  for (const sel of ['.cp', '.dr', '.wk']) {
+    it(`${sel} 이 음수 마진으로 빠져나가지 않는다`, () => {
+      for (const b of bodies(sel)) expect(b.includes('margin: -'), sel).toBe(false)
+    })
+  }
+})
