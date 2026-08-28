@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useGame } from '../src/engine/store.js'
+import { phoneApps, APPS } from '../src/apps/registry.jsx'
 
 beforeEach(() => useGame.setState({ screens: [] }))
 
@@ -65,5 +66,58 @@ describe('화면 스택', () => {
     for (let i = 0; i < 30; i++) useGame.getState().pushScreen(`deep:${i}`)
     useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
+  })
+})
+
+describe('폰 홈 앱 목록', () => {
+  it('폰다운 앱들이 있다', () => {
+    const ids = phoneApps({}).map((a) => a.id)
+    expect(ids).toContain('messenger')
+    expect(ids).toContain('chat')
+    expect(ids).toContain('mail')
+    expect(ids).toContain('browser')
+  })
+
+  it('폰 저장소가 앱으로 올라온다', () => {
+    const ids = phoneApps({}).map((a) => a.id)
+    expect(ids).toContain('photos')
+    expect(ids).toContain('files')
+  })
+
+  it('내 PC 드라이브가 있다', () => {
+    const drive = phoneApps({}).find((a) => a.id === 'drive')
+    expect(drive).toBeTruthy()
+    expect(drive.title).toBe('내 PC 드라이브')
+  })
+
+  // 게임에 이미 AR 사내 드라이브(drive.ar.local)가 있다. 같은 이름을 쓰면
+  // '사내 드라이브 > 전사 > …' 힌트가 플레이어를 엉뚱한 앱으로 보낸다.
+  it('사내 드라이브라는 이름을 쓰지 않는다', () => {
+    for (const a of phoneApps({})) expect(a.title).not.toBe('사내 드라이브')
+    for (const a of phoneApps({})) expect(a.title).not.toBe('AR 사내 드라이브')
+  })
+
+  it('창에서만 열리는 것은 홈에 없다', () => {
+    const ids = phoneApps({}).map((a) => a.id)
+    expect(ids).not.toContain('devtools')
+    expect(ids).not.toContain('installer')
+  })
+
+  it('설치하지 않은 프로그램은 홈에 없다', () => {
+    expect(phoneApps({}).map((a) => a.id)).not.toContain('vpn')
+    expect(phoneApps({ vpnInstalled: true }).map((a) => a.id)).toContain('vpn')
+  })
+
+  // 설정 앱이 아직 없다. cmd까지 빼면 hostname·ipconfig를 묻는 요청
+  // 10건이 폰에서 답을 찾을 수 없게 된다.
+  it('설정 앱이 생기기 전까지 명령 프롬프트를 남긴다', () => {
+    expect(phoneApps({}).map((a) => a.id)).toContain('cmd')
+  })
+
+  it('홈의 모든 항목은 그릴 수 있는 것이다', () => {
+    for (const a of phoneApps({ vpnInstalled: true })) {
+      expect(a.title).toBeTruthy()
+      expect(a.icon).toBeTruthy()
+    }
   })
 })

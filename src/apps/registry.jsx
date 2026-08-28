@@ -48,3 +48,33 @@ export const startMenuApps = (grants = {}) =>
 // A restored save can name an app this build no longer has. Drawing one throws
 // and takes the whole desktop with it, so drop them before anything renders.
 export const knownWindows = (windows) => windows.filter((w) => APPS[w.app])
+
+// 폰 홈에 놓이는 것들. 데스크톱 시작 메뉴와 다르다 — 폰에 없는 물건은
+// 빼고, PC에서는 탐색기 안의 폴더였던 것이 폰에서는 앱이 된다.
+//
+// 'photos'와 'files'는 fs.휴대폰 아래를 연다. 폰이 제 것으로 가진 저장소고,
+// 부름이 묻는 영수증_0723이 여기 있다.
+//
+// 'drive'는 PC의 저장소가 폰에 마운트된 것이다. 원격 데스크톱이 아니다.
+// 이름을 '사내 드라이브'로 하면 안 된다 — drive.ar.local이 이미 그 이름을
+// 쓰고 있고, 그쪽은 VPN과 hosts로 잠긴 별개의 퍼즐이다.
+const PHONE_EXTRA = [
+  { id: 'photos', title: '사진', icon: 'image', app: 'explorer', props: { startFolder: ['휴대폰', '갤러리'] } },
+  { id: 'files', title: '파일', icon: 'folder', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'] } },
+  { id: 'drive', title: '내 PC 드라이브', icon: 'folder', app: 'explorer', props: { startFolder: '문서' } }
+]
+
+// 폰에 없는 물건. 작업 관리자와 백신은 PC를 관리하는 도구고, 탐색기는
+// 사진·파일·드라이브로 갈라져 홈에 이미 세 번 올라와 있다.
+//
+// cmd와 notepad는 뺄 자리지만 남긴다. 설정 앱(기기 정보 · 사설 DNS)이
+// 아직 없어서, 지금 빼면 hostname·ipconfig·hosts를 묻는 요청 14건이
+// 폰에서 답을 찾을 수 없게 된다. 설정 앱이 생기는 라운드에 함께 뺀다.
+const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus'])
+
+export const phoneApps = (grants = {}) => [
+  ...PHONE_EXTRA,
+  ...Object.entries(APPS)
+    .filter(([id, a]) => !a.noLaunch && !NOT_ON_PHONE.has(id) && (!a.grant || grants[a.grant]))
+    .map(([id, a]) => ({ id, title: a.title, icon: a.icon, app: id }))
+]
