@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { APPS, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
 import Icon from '../icons/Icon.jsx'
@@ -20,6 +20,39 @@ function StatusBar() {
         <span className="ph-signal" aria-hidden="true">▮▮▮</span>
         <span>87%</span>
       </span>
+    </div>
+  )
+}
+
+// 데스크톱의 Progress가 하던 두 가지 — 오늘 몇 건을 풀었는지, 그리고 하루를
+// 끝내는 일 — 을 폰에서는 이 한 줄이 한다. closeDay를 부르는 경로가 여기밖에
+// 없으므로 이게 없으면 폰에서는 하루가 끝나지 않는다.
+function DayBar() {
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const grants = useGame((s) => s.grants)
+  const unlocked = useGame((s) => s.unlocked)
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
+  const closing = useGame((s) => s.closing)
+  const closeDay = useGame((s) => s.closeDay)
+
+  const list = requestsOf(scenario, day, overtime, drawn, ripples)
+  const done = list.filter((o) => objectiveDone(o, { grants, unlocked }))
+  const finished = done.length === list.length
+
+  return (
+    <div className="ph-day">
+      <span className="ph-day-n">
+        {day}일차 · <b>{done.length}</b>/{list.length}
+        {overtime[day] && <i> · 야근</i>}
+      </span>
+      {finished && (
+        <button className="ph-day-end" onClick={closeDay} disabled={closing}>
+          오늘 업무 마치기
+        </button>
+      )}
     </div>
   )
 }
@@ -89,6 +122,7 @@ export default function PhoneShell() {
       <StatusBar />
       {!entry && (
         <>
+          <DayBar />
           <Home />
           <div className="pa-home" aria-hidden="true"><span className="pa-bar" /></div>
         </>
