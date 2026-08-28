@@ -70,7 +70,9 @@ const PHONE_EXTRA = [
 // cmd와 notepad는 뺄 자리지만 남긴다. 설정 앱(기기 정보 · 사설 DNS)이
 // 아직 없어서, 지금 빼면 hostname·ipconfig·hosts를 묻는 요청 14건이
 // 폰에서 답을 찾을 수 없게 된다. 설정 앱이 생기는 라운드에 함께 뺀다.
-const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus'])
+// viewer도 뺀다. 제목이 '사진'이라 폰 네이티브 photos와 홈에서 이름이
+// 겹치고, 사진 뷰어는 파일을 열면 뜨는 것이지 홈에서 실행하는 앱이 아니다.
+const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus', 'viewer'])
 
 export const phoneApps = (grants = {}) => [
   ...PHONE_EXTRA,

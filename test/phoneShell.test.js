@@ -114,6 +114,18 @@ describe('폰 홈 앱 목록', () => {
     expect(phoneApps({}).map((a) => a.id)).toContain('cmd')
   })
 
+  // 홈에 같은 이름이 둘 있으면 어느 쪽이 무엇인지 알 수 없다. viewer의
+  // 제목이 '사진'이라 폰 네이티브 photos와 겹쳤다.
+  it('홈에 같은 이름이 두 번 나오지 않는다', () => {
+    const titles = phoneApps({ vpnInstalled: true }).map((a) => a.title)
+    expect(new Set(titles).size).toBe(titles.length)
+  })
+
+  // 사진 뷰어는 파일을 열면 뜨는 것이지 홈에서 실행하는 앱이 아니다.
+  it('사진 뷰어는 홈에 없다', () => {
+    expect(phoneApps({}).map((a) => a.id)).not.toContain('viewer')
+  })
+
   it('홈의 모든 항목은 그릴 수 있는 것이다', () => {
     for (const a of phoneApps({ vpnInstalled: true })) {
       expect(a.title).toBeTruthy()
