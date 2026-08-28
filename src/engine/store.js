@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
 import { checkEtiquette, checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'
@@ -242,6 +242,28 @@ export const useGame = create((set, get) => ({
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
 
+  // 폰 셸의 화면 스택. []면 홈이고, 'app:<id>'가 바닥에 깔린 뒤 앱이 제
+  // 안에서 더 들어갈 때마다 쌓인다. 데스크톱 셸은 이 값을 보지 않는다.
+  //
+  // PROGRESS에 넣지 않는다 — 어느 화면을 보고 있었는지는 세이브에 남을
+  // 성질이 아니고, 불러오면 홈에서 시작하는 편이 낫다.
+  screens: [],
+
+  pushScreen: (key) => set((s) => (
+    // 같은 화면이 두 번 쌓이면 뒤로가 한 번 헛돈다. 눌렀는데 안 나가는
+    // 것처럼 보이므로 연속 중복은 버린다.
+    s.screens[s.screens.length - 1] === key ? s : { screens: [...s.screens, key] }
+  )),
+
+  popScreen: () => set((s) => ({ screens: s.screens.slice(0, -1) })),
+
+
+  // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
+  currentApp: () => {
+    const [first] = get().screens
+    return first?.startsWith('app:') ? first.slice(4) : null
+  },
+
   openWindow: (app, props = {}) => {
     // A machine pinned at 96% cannot hold a new window: it appears and shuts.
     // The two ways out of this state are exempt, or the player would be stuck.
@@ -368,7 +390,7 @@ export const useGame = create((set, get) => ({
     set((st) => ({ overtime: { ...st.overtime, [st.day]: true }, closing: false }))
     get().queueBeats([extra.opening, ...(extra.asks ?? [])].filter(Boolean), 1200)
   },
-  goHome: () => set((s) => (s.overtime[s.day] !== undefined ? s : { overtime: { ...s.overtime, [s.day]: false } })),
+  goHome: () => set((s) => (s.overtime[s.day] !== undefined ? { screens: [] } : { overtime: { ...s.overtime, [s.day]: false }, screens: [] })),
   slip: () => set((s) => ({ slips: s.slips + 1 })),
   askedRoom: (about) => set((s) => {
     const next = { roomQuestions: s.roomQuestions + 1 }
