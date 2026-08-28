@@ -747,6 +747,101 @@ git commit -m "feat: 좁은 화면이면 폰 셸로 간다"
 
 ---
 
+## Task 6.5: 폰에서 하루를 끝낼 수 있게 한다
+
+**Files:**
+- Modify: `src/shell/PhoneShell.jsx`
+
+**Interfaces:**
+- Consumes: `useGame`(`closeDay`, `closing`), `requestsOf`, `objectiveDone`
+
+**왜 이 태스크가 계획에 뒤늦게 들어왔나:** Task 6 리뷰에서 발견됐다. 데스크톱의
+`Progress` 컴포넌트에는 「오늘 업무 마치기」 버튼이 있고, **그것이 `closeDay`를
+부르는 유일한 경로다**(`grep closeDay` → `Progress.jsx` 한 곳). 폰 셸에는
+`Progress`가 없으므로, 요청을 다 풀어도 하루가 끝나지 않는다. 1일차에서 게임이
+멈춘다 — 소프트락이다.
+
+폰에 데스크톱의 `Progress`를 그대로 얹지는 않는다. 그건 접었다 펴는 패널이라
+폰 홈에 어울리지 않는다. 대신 **상태바 아래 얇은 진행 바** 하나를 둔다.
+
+- [ ] **Step 1: 홈에 진행 바를 넣는다**
+
+`src/shell/PhoneShell.jsx`의 import에 추가한다:
+
+```jsx
+import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
+```
+
+`StatusBar` 함수 아래에 컴포넌트를 추가한다:
+
+```jsx
+// 데스크톱의 Progress가 하던 두 가지 — 오늘 몇 건을 풀었는지, 그리고 하루를
+// 끝내는 일 — 을 폰에서는 이 한 줄이 한다. closeDay를 부르는 경로가 여기밖에
+// 없으므로 이게 없으면 폰에서는 하루가 끝나지 않는다.
+function DayBar() {
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const grants = useGame((s) => s.grants)
+  const unlocked = useGame((s) => s.unlocked)
+  const overtime = useGame((s) => s.overtime)
+  const drawn = useGame((s) => s.drawn)
+  const ripples = useGame((s) => s.ripples)
+  const closing = useGame((s) => s.closing)
+  const closeDay = useGame((s) => s.closeDay)
+
+  const list = requestsOf(scenario, day, overtime, drawn, ripples)
+  const done = list.filter((o) => objectiveDone(o, { grants, unlocked }))
+  const finished = done.length === list.length
+
+  return (
+    <div className="ph-day">
+      <span className="ph-day-n">
+        {day}일차 · <b>{done.length}</b>/{list.length}
+        {overtime[day] && <i> · 야근</i>}
+      </span>
+      {finished && (
+        <button className="ph-day-end" onClick={closeDay} disabled={closing}>
+          오늘 업무 마치기
+        </button>
+      )}
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: 홈에 건다**
+
+`PhoneShell`의 return에서 홈을 그리는 부분을 다음으로 바꾼다:
+
+```jsx
+      {!entry && (
+        <>
+          <DayBar />
+          <Home />
+          <div className="pa-home" aria-hidden="true"><span className="pa-bar" /></div>
+        </>
+      )}
+```
+
+- [ ] **Step 3: 빌드하고 전체 테스트**
+
+Run: `npm run build`
+Expected: 성공
+
+Run: `npm test`
+Expected: 772+ passed
+
+- [ ] **Step 4: 커밋한다**
+
+```bash
+git add src/shell/PhoneShell.jsx
+git commit -m "fix: 폰에서도 하루를 끝낼 수 있게 한다"
+```
+
+Task 7의 `phone.css`에 `.ph-day`, `.ph-day-n`, `.ph-day-end` 스타일이 포함된다.
+
+---
+
 ## Task 7: 스타일과 모션
 
 **Files:**
@@ -794,6 +889,34 @@ git commit -m "feat: 좁은 화면이면 폰 셸로 간다"
 }
 .ph-status-right { display: flex; align-items: center; gap: 6px; }
 .ph-signal { letter-spacing: -2px; font-size: 10px; }
+
+/* 하루 진행 바. 데스크톱 Progress의 두 가지 일을 한 줄로 한다. */
+.ph-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 20px 10px;
+  font-size: 12.5px;
+  color: var(--p-mute);
+  flex: none;
+}
+.ph-day-n b { color: var(--p-ink); font-weight: 600; }
+.ph-day-n i { font-style: normal; color: #c9803a; }
+.ph-day-end {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--p-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 90ms ease-out, opacity 90ms ease-out;
+}
+.ph-day-end:active { transform: scale(.96); }
+.ph-day-end:disabled { opacity: .5; cursor: default; }
 
 /* 홈 */
 .ph-home { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 12px 8px; }
@@ -930,7 +1053,7 @@ grep -n "prefers-reduced-motion" src/shell/shell.css
   .clear-overlay.ot > *, .clear-overlay.quit > *, .clear-overlay.quit .quit-score b { animation: none; }
   /* 폰 셸의 모션도 전부 여기서 멈춘다. */
   .phone-app { animation: none; }
-  .ph-icon, .pa-back, .pa-bar { transition: none; }
+  .ph-icon, .pa-back, .pa-bar, .ph-day-end { transition: none; }
 }
 ```
 
