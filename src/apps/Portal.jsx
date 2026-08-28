@@ -383,7 +383,10 @@ export default function Portal({ site, path = '', onOpen }) {
   return (
     <div className="pt">
       <div className="pt-top">
-        <span className="pt-logo">AR</span>
+        {/* 로고는 어느 화면에서든 포털 홈으로. 하위 메뉴의 '뒤로'와 같은 자리다. */}
+        {onOpen
+          ? <button className="pt-logo" onClick={() => onOpen('')}>AR</button>
+          : <span className="pt-logo">AR</span>}
         <nav>
           {p.nav.map((n) => (p.navLinks?.[n] && onOpen
             ? <button key={n} className="pt-nav-link" onClick={() => onOpen(p.navLinks[n])}>{n}</button>
