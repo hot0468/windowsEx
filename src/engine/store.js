@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks']
 
 const snapshot = (s) => {
   const out = { at: Date.now() }
@@ -176,6 +176,9 @@ export const useGame = create((set, get) => ({
   wikiEdits: restored?.wikiEdits ?? {},
   // Which tile photographs have been copied into the folder on the desktop.
   tiles: restored?.tiles ?? [],
+  // 주소를 직접 알아내야 닿는 곳은 북마크 바에 실려 나오지 않는다 — 소통방은
+  // hosts를 고쳐야 열린다. 플레이어가 직접 별을 눌러 얹은 주소가 여기 쌓인다.
+  myBookmarks: restored?.myBookmarks ?? [],
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -556,6 +559,11 @@ export const useGame = create((set, get) => ({
   markMailRead: (id, read = true) =>
     set((s) => ({ readMails: { ...s.readMails, [id]: read } })),
   toggleStar: (id) => set((s) => ({ starred: { ...s.starred, [id]: !s.starred[id] } })),
+  toggleBookmark: (url) => set((s) => ({
+    myBookmarks: s.myBookmarks.includes(url)
+      ? s.myBookmarks.filter((x) => x !== url)
+      : [...s.myBookmarks, url]
+  })),
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),

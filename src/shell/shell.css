@@ -763,6 +763,12 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .bl-shot { display: block; width: 100%; margin: 4px 0 20px; border-radius: 6px; }
 .bl-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding-top: 18px; border-top: 1px solid #eee; }
 .bl-tags span { color: #3a9d5d; font-size: 12px; }
+.bw-star { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #9aa0a8; }
+.bw-star:hover:not(:disabled) { background: #eceef3; color: #555; }
+.bw-star.on { color: #e0a92a; }
+.bw-star.on svg { fill: currentColor; }
+.bw-star:disabled { cursor: default; }
+.bw-star:disabled:not(.on) { opacity: .35; }
 .bw-menu { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #555; }
 .bw-menu:hover { background: #eceef3; }
 .bw-pop { position: absolute; right: 8px; top: calc(100% - 2px); z-index: 6; width: 300px; padding: 6px; border-radius: 8px; background: #fff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.22); }

@@ -81,6 +81,8 @@ export default function Browser() {
   const news = visibleByDay(scenario.news, day)
   const vpn = useGame((s) => s.vpn)
   const routerDown = useGame((s) => s.routerDown)
+  const myBookmarks = useGame((s) => s.myBookmarks)
+  const toggleBookmark = useGame((s) => s.toggleBookmark)
   const [addr, setAddr] = useState('')
   const nav = useHistory({ kind: 'home' })
   const page = nav.at
@@ -149,6 +151,18 @@ export default function Browser() {
   // The block card tells the player to ask 정보보안팀; 차민혁 gets there first.
   useEffect(() => { if (view === 'blocked') askedIp() }, [view])
 
+  // 회사가 깔아 둔 것 뒤에 플레이어가 얹은 것이 붙는다. 이름은 사이트가
+  // 스스로 말하는 제목을 쓴다 — 소통방은 '소통방'으로 실린다.
+  const marks = [
+    ...scenario.bookmarks,
+    ...myBookmarks
+      .filter((u) => !scenario.bookmarks.some((b) => b.url === u))
+      .map((u) => ({ url: u, title: scenario.sites.find((s) => s.url === u)?.title ?? u }))
+  ]
+  const canMark = page.kind === 'site' && Boolean(site) && view === 'ready'
+  const fixedMark = canMark && scenario.bookmarks.some((b) => b.url === site.url)
+  const marked = canMark && marks.some((b) => b.url === site.url)
+
   return (
     <div className="browser" tabIndex={-1} onKeyDown={(e) => e.key === 'F12' && (e.preventDefault(), toggleDev())}>
       <div className="addr-bar">
@@ -162,6 +176,15 @@ export default function Browser() {
         <input value={addr} onChange={(e) => setAddr(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && open(addr)}
                placeholder="주소를 입력하세요" aria-label="주소" spellCheck={false} />
+        {/* 열려 있는 곳만 즐겨찾기에 얹는다 — 주소만 쳐 넣고 못 들어간 곳을
+            담아 두면 북마크 바가 가 본 적 없는 데를 가리킨다. 회사가 깔아 둔
+            셋은 뺄 수 없다. */}
+        <button className={'bw-star' + (marked ? ' on' : '')} disabled={!canMark || fixedMark}
+                onClick={() => toggleBookmark(site.url)}
+                title={fixedMark ? '기본 즐겨찾기' : marked ? '즐겨찾기에서 빼기' : '즐겨찾기에 추가'}
+                aria-label={marked ? '즐겨찾기에서 빼기' : '즐겨찾기에 추가'}>
+          <Star size={16} strokeWidth={1.9} />
+        </button>
         <button className="bw-menu" onClick={() => setMenu(!menu)} title="메뉴">
           <MoreVertical size={17} strokeWidth={2} />
         </button>
@@ -191,7 +214,7 @@ export default function Browser() {
 
       <div className="bm-bar">
         <Star size={13} strokeWidth={1.9} />
-        {scenario.bookmarks.map((b) => (
+        {marks.map((b) => (
           <button key={b.url} className="bm" onClick={() => open(b.url)}>{b.title}</button>
         ))}
       </div>
