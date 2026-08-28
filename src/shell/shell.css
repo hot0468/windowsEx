@@ -941,6 +941,10 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .md-attach-run:hover { background: #e0e5ef; }
 
 .md-body { padding: 22px 16px; white-space: pre-wrap; font-family: inherit; line-height: 1.8; user-select: text; }
+/* 메일 머리와 말풍선도 옮겨 적을 자리다 — 보낸사람 주소, 제목, 첨부 파일명,
+   날짜, 그리고 동료가 대화로 불러 주는 값. 본문(.md-body)만 켜 두면 정작
+   주소를 손으로 받아치게 된다. */
+.md-chip, .md-head h3, .md-date, .md-attach-name, .bubble { user-select: text; }
 .mail-empty { margin: auto; padding: 24px; text-align: center; color: #99a; font-size: 13px; }
 .mail-sent { display: flex; align-items: center; gap: 8px; margin: 12px 16px 0; background: #e7f4e8; color: #1b5e20; padding: 10px 14px; border-radius: 6px; font-size: 13px; }
 /* compose (webmail-style) */

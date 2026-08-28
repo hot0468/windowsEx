@@ -39,7 +39,12 @@ describe('옮겨 적어야 하는 값은 고를 수 있다', () => {
     ['웹 사이트', '.page'],
     ['명령 프롬프트', '.cmd-out'],
     ['위키 표', '.wk-table td'],
-    ['라우터 표', '.rt-table td']
+    ['라우터 표', '.rt-table td'],
+    ['메일 보낸사람', '.md-chip'],
+    ['메일 제목', '.md-head h3'],
+    ['메일 날짜', '.md-date'],
+    ['첨부 파일명', '.md-attach-name'],
+    ['메신저 말풍선', '.bubble']
   ]
 
   for (const [what, sel] of spots) {
