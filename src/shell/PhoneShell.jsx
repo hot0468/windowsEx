@@ -78,7 +78,11 @@ export default function PhoneShell() {
   const id = currentApp()
   const entry = id ? phoneApps(grants).find((a) => a.id === id) : null
   const cfg = entry ? APPS[entry.app] : null
-  const win = cfg ? windows.find((w) => w.app === entry.app) : null
+  // 창은 app이 아니라 app+props로 갈린다(store의 openWindow와 같은 키).
+  // 사진·파일·내 PC 드라이브가 모두 explorer라, app만 보면 셋 중 엉뚱한
+  // 창을 집는다.
+  const key = entry ? entry.app + JSON.stringify(entry.props ?? {}) : null
+  const win = cfg ? windows.find((w) => w.key === key) : null
 
   return (
     <div className="phone">
