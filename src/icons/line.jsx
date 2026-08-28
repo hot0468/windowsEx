@@ -203,6 +203,14 @@ export const Info = (p) => (
   </S>
 )
 
+export const HelpCircle = (p) => (
+  <S {...p}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <path d="M12 17h.01" />
+  </S>
+)
+
 export const Bold = (p) => <S {...p}><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" /></S>
 
 export const Italic = (p) => <S {...p}><path d="M19 4h-9m4 16H5M15 4L9 20" /></S>

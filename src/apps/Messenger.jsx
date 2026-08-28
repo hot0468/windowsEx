@@ -5,7 +5,7 @@ import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
 import {
-  BellOff, ChevronDown, MessageSquare,
+  BellOff, ChevronDown, HelpCircle, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
@@ -459,6 +459,7 @@ export default function Messenger({ source }) {
             {ask && !ask.choices && ask.no?.length > 0 && (
               <div className="quick-hint-row">
                 <button className="quick-hint" disabled={busy} onClick={askHint}>
+                  <HelpCircle size={14} strokeWidth={2} />
                   {ask.hintAsk ?? HINT_ASK}
                 </button>
               </div>
