@@ -13,17 +13,50 @@ const Face = ({ id, size }) => {
   )
 }
 
-const Panel = ({ title, more, children }) => (
+// 홈은 요약이다. 전부를 들고 있되 앞의 몇 건만 그리고, 나머지는 상단 메뉴가
+// 여는 전체 목록에 맡긴다. 자르지 않으면 5일차 소식이 스무 건 넘게 쌓인다.
+const HOME_ROWS = 4
+const HOME_NEWS = 5
+
+// `more`가 경로를 들고 있으면 진짜 링크가 된다. 글자만 있으면 예전처럼 장식.
+const Panel = ({ title, more, onOpen, children }) => (
   <section className="pt-panel">
     <div className="pt-panel-head">
       <h4>{title}</h4>
-      {more && <span className="pt-more">{more}<ChevronRight size={12} strokeWidth={2.2} /></span>}
+      {more && (more.path && onOpen
+        ? <button className="pt-more" onClick={() => onOpen(more.path)}>
+            {more.label}<ChevronRight size={12} strokeWidth={2.2} />
+          </button>
+        : <span className="pt-more">{more.label ?? more}<ChevronRight size={12} strokeWidth={2.2} /></span>)}
     </div>
     {children}
   </section>
 )
 
 const State = ({ value }) => <span className={'pt-state s-' + value}>{value}</span>
+
+// 회의실 한 줄. 홈 사이드바와 업무관리 페이지가 같은 것을 그린다.
+const Room = ({ r, i }) => (
+  <div className="pt-room">
+    <span className={'pt-room-tag r' + ((i % 3) + 1)}>{r.room}</span>
+    <span className="pt-room-time">{r.time}</span>
+    <span className="pt-room-who">{r.who}</span>
+  </div>
+)
+
+// 홈 패널의 한 줄. 본문이 달린 것(소식)은 눌러서 열린다.
+const Row = ({ r, onPost }) => (r.body && onPost
+  ? <button className="pt-row pt-row-open" onClick={() => onPost(r)}>
+      <span className="pt-row-title">{r.title}</span>
+      <span className="pt-row-who">{r.author}</span>
+      <span className="pt-row-date">{r.date}</span>
+    </button>
+  : <div className="pt-row">
+      {r.state && <State value={r.state} />}
+      <span className="pt-row-title">{r.title}</span>
+      {r.who && <span className="pt-row-who">{r.who}</span>}
+      <span className="pt-row-date">{r.date}</span>
+    </div>)
 
 // The notice banner and every 사내 소식 item are board posts you can open.
 const Post = ({ post, onBack }) => (
@@ -261,6 +294,68 @@ const Events = ({ page, onBack }) => {
   )
 }
 
+// 상단 메뉴가 여는 전체 목록. 행은 홈과 같은 마크업(`Row`)을 쓴다 — 두 곳이
+// 다르게 생기면 같은 목록으로 읽히지 않는다. 페이지는 행을 들고 있지 않고
+// 포털의 어느 칸을 펼칠지 이름만 든다: 행을 두 벌 적으면 한쪽만 낡는다.
+const List = ({ page, p, onBack, onPost }) => {
+  const rows = p[page.list] ?? []
+  return (
+    <article className="pt-post pt-list">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />포털 홈
+      </button>
+      <h1>{page.title}<em>{rows.length}</em></h1>
+      {page.note && <p className="pt-list-note">{page.note}</p>}
+      <div className="pt-list-rows">
+        {rows.map((r, i) => <Row key={i} r={r} onPost={onPost} />)}
+      </div>
+      {page.rooms && p.rooms && (
+        <section className="pt-list-rooms">
+          <h4>회의실 현황</h4>
+          {p.rooms.map((r, i) => <Room key={i} r={r} i={i} />)}
+        </section>
+      )}
+    </article>
+  )
+}
+
+// 마이페이지. 사번·근속·연차는 홈 사이드바와 같은 값을 그대로 읽는다 —
+// 부름이 "마이페이지에 근속 연차가 표시되어 있을 텐데"라고 묻는 그 화면이다.
+// 링크는 이미 있는 인사관리 페이지로만 간다.
+const Profile = ({ page, p, onBack, onOpen }) => (
+  <article className="pt-post pt-profile">
+    <button className="pt-back" onClick={onBack}>
+      <ChevronLeft size={13} strokeWidth={2.2} />포털 홈
+    </button>
+    <h1>{page.title}</h1>
+    <div className="pt-profile-head">
+      <Face id={p.me.id} size={64} />
+      <div>
+        <div className="pt-me-team">{p.me.team}</div>
+        <div className="pt-me-name">{p.me.name} <span>{p.me.rank}</span></div>
+      </div>
+    </div>
+    <dl className="pt-me-stats pt-profile-stats">
+      <div><dt>사번</dt><dd>{p.me.empNo}</dd></div>
+      <div><dt>근속</dt><dd>{p.me.tenure}</dd></div>
+      <div><dt>총 연차</dt><dd>{p.me.leaveTotal}</dd></div>
+      <div><dt>남은 연차</dt><dd className="hot">{p.me.leaveLeft}</dd></div>
+      {page.profile.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+    </dl>
+    <ul className="pt-menu-list">
+      {page.profile.links.map((l) => (
+        <li key={l.path}>
+          <button onClick={() => onOpen?.(l.path)}>
+            <b>{l.label}</b>
+            <span>{l.desc}</span>
+            <ChevronRight size={14} strokeWidth={2.2} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  </article>
+)
+
 // Each sub-page is known by the one field its data carries, and says where its
 // back button goes. A page whose shape nothing here recognises draws nothing.
 const SUBPAGES = [
@@ -268,7 +363,9 @@ const SUBPAGES = [
   [Menu, 'menu', ''],
   [Bereavement, 'board', '/hr'],
   [Leave, 'leave', '/hr'],
-  [Events, 'event', '/hr']
+  [Events, 'event', '/hr'],
+  [List, 'list', ''],
+  [Profile, 'profile', '']
 ]
 
 export default function Portal({ site, path = '', onOpen }) {
@@ -298,9 +395,12 @@ export default function Portal({ site, path = '', onOpen }) {
         </span>
       </div>
 
-      {sub
-        ? <Sub page={site.pages[path]} onBack={() => onOpen?.(back)} onOpen={onOpen} />
-        : post ? <Post post={post} onBack={() => setPost(null)} /> : (
+      {/* 본문이 먼저다 — 커뮤니티 안에서 소식을 열면 목록이 아니라 본문이
+          나와야 하고, 뒤로는 열려 있던 목록으로 돌아간다. */}
+      {post
+        ? <Post post={post} onBack={() => setPost(null)} />
+        : sub ? <Sub page={site.pages[path]} p={p} onBack={() => onOpen?.(back)}
+                     onOpen={onOpen} onPost={setPost} /> : (
       <div className="pt-grid">
         <aside className="pt-me">
           <Face id={p.me.id} size={64} />
@@ -322,31 +422,18 @@ export default function Portal({ site, path = '', onOpen }) {
           </button>
 
           <div className="pt-cols">
-            <Panel title="내문서" more="결재작성">
-              {p.docs.map((d, i) => (
-                <div key={i} className="pt-row">
-                  <State value={d.state} />
-                  <span className="pt-row-title">{d.title}</span>
-                  <span className="pt-row-date">{d.date}</span>
-                </div>
-              ))}
+            <Panel title="내문서" more={{ label: '전체보기', path: '/approval' }} onOpen={onOpen}>
+              {p.docs.slice(0, HOME_ROWS).map((d, i) => <Row key={i} r={d} />)}
             </Panel>
 
-            <Panel title="업무관리" more="전체보기">
-              {p.tasks.map((t, i) => (
-                <div key={i} className="pt-row">
-                  <State value={t.state} />
-                  <span className="pt-row-title">{t.title}</span>
-                  <span className="pt-row-who">{t.who}</span>
-                  <span className="pt-row-date">{t.date}</span>
-                </div>
-              ))}
+            <Panel title="업무관리" more={{ label: '전체보기', path: '/tasks' }} onOpen={onOpen}>
+              {p.tasks.slice(0, HOME_ROWS).map((t, i) => <Row key={i} r={t} />)}
             </Panel>
           </div>
 
-          <Panel title="사내 소식">
+          <Panel title="사내 소식" more={{ label: '전체보기', path: '/community' }} onOpen={onOpen}>
             <ul className="pt-news">
-              {p.news.map((n, i) => (
+              {p.news.slice(0, HOME_NEWS).map((n, i) => (
                 <li key={i}>
                   <button onClick={() => setPost(n)}>{n.title}</button>
                   <span className="pt-row-date">{n.date}</span>
@@ -369,13 +456,7 @@ export default function Portal({ site, path = '', onOpen }) {
 
         <aside className="pt-side">
           <Panel title="회의실 현황">
-            {p.rooms.map((r, i) => (
-              <div key={i} className="pt-room">
-                <span className={'pt-room-tag r' + ((i % 3) + 1)}>{r.room}</span>
-                <span className="pt-room-time">{r.time}</span>
-                <span className="pt-room-who">{r.who}</span>
-              </div>
-            ))}
+            {p.rooms.map((r, i) => <Room key={i} r={r} i={i} />)}
           </Panel>
 
           <Panel title="직원 현황">
