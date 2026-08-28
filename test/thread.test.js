@@ -157,3 +157,30 @@ describe('what a conversation shows', () => {
     expect(threadMessages(boss, scenario, 0, pushed).at(-1)).toMatchObject({ day: 3 })
   })
 })
+
+// Messenger.jsx는 사진 반응을 한 번만 내보내려고 "이 반응의 첫 줄을 이미
+// 들었는가"를 대화 기록에서 찾는다. 컴포넌트 state가 아니라 기록을 읽어야
+// 창을 닫았다 열어도 같은 반응이 다시 오지 않는다. 그 판정이 서려면 첫 줄이
+// 반응마다 달라야 하고, 스레드가 처음부터 갖고 있던 말과 겹쳐도 안 된다.
+describe('a photo reaction only lands once', () => {
+  const threads = [scenario.workMessenger, scenario.privateMessenger]
+    .flatMap((m) => m.sections.flatMap((s) => s.threads))
+  const fileReactions = threads.flatMap(
+    (t) => (t.reactions ?? []).filter((r) => r.files).map((r) => [t, r]))
+
+  it('has reactions to react to', () => {
+    expect(fileReactions.length).toBeGreaterThan(0)
+  })
+
+  it('opens each one with a line no other reaction opens with', () => {
+    const openers = fileReactions.map(([, r]) => r.reply[0])
+    expect(new Set(openers).size).toBe(openers.length)
+  })
+
+  it('never opens with a line the thread already said', () => {
+    for (const [t, r] of fileReactions) {
+      const already = (t.messages ?? []).map((m) => m.text)
+      expect(already, t.id + ' / ' + r.files.join(',')).not.toContain(r.reply[0])
+    }
+  })
+})

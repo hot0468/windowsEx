@@ -107,7 +107,6 @@ export default function Messenger({ source }) {
   const [q, setQ] = useState('')
   const [picking, setPicking] = useState(false)
   const [answeredAt, setAnsweredAt] = useState({})
-  const [reacted, setReacted] = useState({})
   const [shrugs, setShrugs] = useState({})
   const [wrongs, setWrongs] = useState({})
   const [confirming, setConfirming] = useState(null)
@@ -206,6 +205,10 @@ export default function Messenger({ source }) {
   // What the player has already said here, so a canned line is not handed back
   // the next time the other side speaks.
   const said = new Set(shown.filter((m) => m.me).map((m) => m.text))
+  // 그리고 무엇을 이미 들었는지. 반응은 한 번뿐인데, 창을 닫으면 컴포넌트
+  // state는 날아가고 기록은 남는다 — 그래서 기록 쪽을 읽는다. 같은 반응을 쓰는
+  // 사진이 둘이면(고양이 두 장) 어느 쪽을 보내도 반응은 한 번이다.
+  const heard = new Set(shown.filter((m) => !m.me).map((m) => m.text))
   const choices = !thread || quiet
     ? []
     : offerable(branch[thread.id]
@@ -238,8 +241,7 @@ export default function Messenger({ source }) {
       (r) => r.files?.includes(key) || r.choice === key)
     // Sharing the same photo twice shouldn't repeat the same gushing; a wrong
     // answer, on the other hand, has to stay answerable until it's right.
-    if (!hit || (hit.files && reacted[key])) return
-    if (hit.files) setReacted((r) => ({ ...r, [key]: true }))
+    if (!hit || (hit.files && heard.has(hit.reply[0]))) return
     if (hit.next) setBranch(thread.id, hit.next)
     if (hit.ask) setAsk(thread.id, hit.ask)
     if (hit.grants) grant(hit.grants)
