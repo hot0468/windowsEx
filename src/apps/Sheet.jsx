@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useGame, cellKey, findFile } from '../engine/store.js'
+import { Save } from '../icons/line.jsx'
 
 const colName = (i) => String.fromCharCode(65 + i)
 
 export default function Sheet({ fileId }) {
   const fs = useGame((s) => s.scenario.fs)
   const edits = useGame((s) => s.sheetEdits)
-  const editCell = useGame((s) => s.editCell)
+  const drafts = useGame((s) => s.sheetDrafts)
+  const draftCell = useGame((s) => s.draftCell)
+  const saveSheet = useGame((s) => s.saveSheet)
   const [tab, setTab] = useState(0)
   const [cell, setCell] = useState({ r: 0, c: 0 })
   const [editing, setEditing] = useState(null)   // { r, c, text } while a cell is being typed into
@@ -16,21 +19,41 @@ export default function Sheet({ fileId }) {
   const sheet = file.sheets[Math.min(tab, file.sheets.length - 1)]
   // the header counts as row 1, the way it does in a real spreadsheet; edits
   // are keyed on the data row, so the header is never editable
-  const shown = (r, c, value) => (r === 0 ? value : edits[cellKey(fileId, sheet.name, r - 1, c)] ?? value)
+  // 저장 안 한 것이 저장된 것을 덮어 보인다 — 화면은 지금 치고 있는 것을
+  // 보여주고, 문서에 들어간 것은 저장을 눌러야 바뀐다.
+  const key = (r, c) => cellKey(fileId, sheet.name, r - 1, c)
+  const shown = (r, c, value) => (r === 0 ? value : drafts[key(r, c)] ?? edits[key(r, c)] ?? value)
+  const dirty = Object.keys(drafts).some((k) => k.startsWith(fileId + ':'))
   const rows = [sheet.columns, ...sheet.rows].map((row, r) => row.map((v, c) => shown(r, c, v)))
   const at = rows[cell.r]?.[cell.c] ?? ''
 
   const commit = () => {
-    if (editing) editCell(fileId, sheet.name, editing.r - 1, editing.c, editing.text)
+    // 고친 것이 없으면 저장할 것도 없다 — 값을 그대로 두고 나온 것까지
+    // 미저장으로 세면 닫을 때마다 쓸데없이 물어보게 된다.
+    if (editing && editing.text !== rows[editing.r][editing.c]) {
+      draftCell(fileId, sheet.name, editing.r - 1, editing.c, editing.text)
+    }
     setEditing(null)
   }
+  const save = () => { commit(); saveSheet(fileId) }
 
   return (
-    <div className="xl">
+    <div className="xl" tabIndex={-1}
+         onKeyDown={(e) => {
+           if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+             e.preventDefault()
+             save()
+           }
+         }}>
       <div className="xl-bar">
+        <button className="xl-save" onClick={save} disabled={!dirty}
+                title={dirty ? '저장 (Ctrl+S)' : '저장할 변경 내용이 없습니다'}>
+          <Save size={14} strokeWidth={1.9} />저장
+        </button>
         <span className="xl-ref">{colName(cell.c)}{cell.r + 1}</span>
         <span className="xl-fx">fx</span>
         <span className="xl-value">{at}</span>
+        {dirty && <span className="xl-dirty">저장되지 않음</span>}
       </div>
 
       <div className="xl-grid">

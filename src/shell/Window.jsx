@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { useGame, fitY, resizeRect } from '../engine/store.js'
+import { useEffect, useRef, useState } from 'react'
+import { useGame, fitY, resizeRect, unsavedFile } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { Minus, Square, X } from '../icons/line.jsx'
 
@@ -13,6 +13,12 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   const toggleMaximize = useGame((s) => s.toggleMaximize)
   const moveWindow = useGame((s) => s.moveWindow)
   const resizeWindow = useGame((s) => s.resizeWindow)
+  const saveSheet = useGame((s) => s.saveSheet)
+  const dropDrafts = useGame((s) => s.dropDrafts)
+  // 저장 안 한 것을 들고 있는 창은 그냥 닫지 않는다. 창틀은 무엇이 저장 안
+  // 됐는지 모르고, 저장이라는 개념을 가진 앱이 있는지만 스토어에 묻는다.
+  const unsaved = useGame((s) => unsavedFile(s, win))
+  const [asking, setAsking] = useState(false)
   const drag = useRef(null)
   const grab = useRef(null)
 
@@ -68,10 +74,26 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
         <div className="win-buttons">
           <button onClick={() => minimizeWindow(win.id)} title="최소화"><Minus size={13} strokeWidth={1.5} /></button>
           <button onClick={() => toggleMaximize(win.id)} title="최대화"><Square size={11} strokeWidth={1.7} /></button>
-          <button className="close" onClick={() => closeWindow(win.id)} title="닫기"><X size={13} strokeWidth={1.5} /></button>
+          <button className="close" onClick={() => (unsaved ? setAsking(true) : closeWindow(win.id))}
+                  title="닫기"><X size={13} strokeWidth={1.5} /></button>
         </div>
       </div>
       <div className="win-body">{children}</div>
+      {asking && unsaved && (
+        <div className="win-ask">
+          <div className="win-ask-card">
+            <p><b>{title}</b> 의 변경 내용을 저장하시겠습니까?</p>
+            <p className="win-ask-sub">저장하지 않으면 고친 내용이 사라집니다.</p>
+            <div className="win-ask-row">
+              <button className="btn-primary"
+                      onClick={() => { saveSheet(unsaved); closeWindow(win.id) }}>저장</button>
+              <button className="sm-cancel"
+                      onClick={() => { dropDrafts(unsaved); closeWindow(win.id) }}>저장 안 함</button>
+              <button className="sm-cancel" onClick={() => setAsking(false)}>취소</button>
+            </div>
+          </div>
+        </div>
+      )}
       {!win.maximized && HANDLES.map((dir) => (
         <span key={dir} className={`rz rz-${dir}`} onPointerDown={startResize(dir)}
               onPointerMove={onResizeMove} onPointerUp={endResize} />

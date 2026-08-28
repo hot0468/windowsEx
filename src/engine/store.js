@@ -179,6 +179,9 @@ export const useGame = create((set, get) => ({
   // 주소를 직접 알아내야 닿는 곳은 북마크 바에 실려 나오지 않는다 — 소통방은
   // hosts를 고쳐야 열린다. 플레이어가 직접 별을 눌러 얹은 주소가 여기 쌓인다.
   myBookmarks: restored?.myBookmarks ?? [],
+  // 시트에서 아직 저장하지 않은 편집. PROGRESS에 넣지 않는다 — 저장 안 한 것이
+  // 다음 세션까지 살아남으면 '저장'이라는 말이 뜻을 잃는다.
+  sheetDrafts: {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
@@ -587,11 +590,39 @@ export const useGame = create((set, get) => ({
   // cell is met the moment the value fits.
   editCell: (fileId, sheet, r, c, value) => {
     set((s) => ({ sheetEdits: { ...s.sheetEdits, [cellKey(fileId, sheet, r, c)]: value } }))
+    get().checkCells()
+  },
+  // 시트 목표는 저장된 문서만 본다. 고쳐 놓고 저장을 안 했으면 아직 안 고친
+  // 것이다 — 실제 업무가 그렇고, 저장이 뜻을 가지려면 그래야 한다.
+  checkCells: () => {
     const { scenario, sheetEdits, grants, grant } = get()
     scenario.objectives
       .filter((o) => o.cell && !grants[o.grant] && cellMatches(o, sheetEdits))
       .forEach((o) => grant(o.grant))
   },
+  // 셀에 쳐 넣은 것은 일단 여기 쌓인다. 저장을 눌러야 문서로 넘어간다.
+  draftCell: (fileId, sheet, r, c, value) =>
+    set((s) => ({ sheetDrafts: { ...s.sheetDrafts, [cellKey(fileId, sheet, r, c)]: value } })),
+  // 저장. 들고 있던 것을 문서에 옮기고 목표를 다시 본다.
+  saveSheet: (fileId) => {
+    const s = get()
+    const mine = Object.keys(s.sheetDrafts).filter((k) => k.startsWith(fileId + ':'))
+    if (!mine.length) return
+    const sheetEdits = { ...s.sheetEdits }
+    const sheetDrafts = { ...s.sheetDrafts }
+    for (const k of mine) {
+      sheetEdits[k] = sheetDrafts[k]
+      delete sheetDrafts[k]
+    }
+    set({ sheetEdits, sheetDrafts })
+    get().checkCells()
+  },
+  // 저장하지 않고 닫을 때. 들고 있던 것을 버린다.
+  dropDrafts: (fileId) =>
+    set((s) => ({
+      sheetDrafts: Object.fromEntries(
+        Object.entries(s.sheetDrafts).filter(([k]) => !k.startsWith(fileId + ':')))
+    })),
   setVpn: (on) => set({ vpn: on }),
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   // The router's admin page. Stopping DHCP takes the floor down until it is
@@ -1181,6 +1212,15 @@ export const hintAfter = (ask, wrongs, mercy = false) => {
 
 // Edited cells are kept flat, one key per cell, on top of the read-only workbook.
 export const cellKey = (fileId, sheet, r, c) => `${fileId}:${sheet}:${r}:${c}`
+
+// 이 창이 아직 저장 안 한 것을 들고 있으면 그 파일 id, 아니면 null. 창틀이
+// 닫기 전에 물어봐야 할지 여기에 묻는다 — 오늘 저장이라는 개념을 가진 앱은
+// 시트뿐이라 시트만 안다. 다른 앱이 생기면 여기 한 줄이 는다.
+export const unsavedFile = (state, win) => {
+  const id = win?.app === 'sheet' ? win.props?.fileId : null
+  if (!id) return null
+  return Object.keys(state.sheetDrafts ?? {}).some((k) => k.startsWith(id + ':')) ? id : null
+}
 
 export const cellMatches = (objective, sheetEdits) => {
   const { file, sheet, row, col, value } = objective.cell

@@ -791,6 +791,17 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .xl-ref { width: 58px; padding: 3px 8px; border: 1px solid #dcdee6; border-radius: 3px; text-align: center; color: #333; }
 .xl-fx { color: #999; font-style: italic; }
 .xl-value { flex: 1; min-width: 0; padding-left: 8px; border-left: 1px solid #e2e4ea; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xl-save { display: flex; align-items: center; gap: 5px; padding: 4px 11px; margin-right: 4px; border-radius: 4px; background: #217346; color: #fff; font-size: 12px; }
+.xl-save:hover:not(:disabled) { background: #1a5c38; }
+.xl-save:disabled { background: #e4e6ec; color: #a8adb6; cursor: default; }
+.xl-dirty { margin-left: auto; padding-right: 4px; color: #b0553f; font-size: 11px; }
+
+/* 저장 안 한 채 닫으려 할 때. 창 안에만 덮이므로 다른 창은 계속 쓸 수 있다. */
+.win-ask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,22,28,.32); border-radius: inherit; z-index: 20; }
+.win-ask-card { width: 340px; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 12px 34px rgba(0,0,0,.3); }
+.win-ask-card p { font-size: 13px; line-height: 1.6; color: #23262b; }
+.win-ask-sub { margin-top: 6px; color: #7b8089; font-size: 12px; }
+.win-ask-row { display: flex; gap: 8px; margin-top: 16px; }
 .xl-grid { flex: 1; overflow: auto; }
 .xl-grid table { border-collapse: collapse; }
 .xl-grid th { position: sticky; background: #f2f3f6; border: 1px solid #d6d9e0; color: #666; font-weight: 400; }
