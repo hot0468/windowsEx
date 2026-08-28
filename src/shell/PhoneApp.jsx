@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGame } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { ChevronLeft } from '../icons/line.jsx'
