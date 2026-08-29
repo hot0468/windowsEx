@@ -513,11 +513,17 @@ describe('the account with no name', () => {
   const thread = scenario.privateMessenger.sections
     .flatMap((sec) => sec.threads).find((t) => t.id === summons?.thread)
   const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
-  const chain = steps(summons?.beat?.ask)
+  // 하룻밤에 몰아 묻지 않고 며칠 저녁에 나눠 묻는다. 물음을 세는 자리는
+  // 밤을 순서대로 이어 붙인 것이다.
+  const nights = Object.keys(summons?.nights ?? {}).map(Number).sort((a, b) => a - b)
+  const chain = nights.flatMap((d) => steps(summons.nights[d].ask))
+  const said = JSON.stringify(summons)
 
-  it('arrives on the night he dies, from nobody', () => {
+  it('며칠 저녁에 걸쳐, 이름 없는 자리에서 온다', () => {
     expect(summons).toBeTruthy()
-    expect(summons.day).toBe(scenario.days.length - 1)
+    expect(nights.length).toBeGreaterThan(2)
+    // 마지막 밤은 답할 다음 날이 있어야 한다 — 마지막 날 밤에 물으면 못 답한다.
+    expect(Math.max(...nights)).toBeLessThan(scenario.days.length)
     expect(thread).toBeTruthy()
     // no name, no face, no last-seen: it must not read as a person
     expect(thread.name).toMatch(/알 수 없|^$/)
@@ -526,15 +532,27 @@ describe('the account with no name', () => {
   })
 
   it('opens like spam and then knows something only he could know', () => {
-    const [hook, proof] = summons.beat.lines
+    const [hook, proof] = summons.nights[nights[0]].lines
     expect(hook).toMatch(/진실/)
     // the second line quotes the cloud backup receipt verbatim
     const cloud = scenario.privateMessenger.sections
       .flatMap((sec) => sec.threads).find((t) => t.id === 'cloud')
     const backup = cloud.messages[0].text
     expect(backup).toContain('23:41')
-    expect(backup).toContain('13장')
     expect(proof).toContain('23:41')
+  })
+
+  // 첫 밤은 묻지 않고 고르게 한다. 받으면 며칠 저녁이 이어지고, 물리면 끝난다.
+  it('첫 밤은 받을지 물릴지 고르게 한다', () => {
+    const first = summons.nights[nights[0]]
+    expect(first.choices).toHaveLength(2)
+    const answers = (thread.reactions ?? []).map((r) => r.choice)
+    for (const c of first.choices) expect(answers, c).toContain(c)
+    // 물리는 쪽은 표를 세워 그 뒤 밤을 막는다.
+    const off = (thread.reactions ?? []).find((r) => r.grants === summons.off)
+    expect(off, '물릴 길이 없다').toBeTruthy()
+    expect(summons.off).toBeTruthy()
+    expect(summons.off).not.toBe(summons.grant)
   })
 
   it('asks enough to build the case, and every answer is already in the game', () => {
@@ -550,7 +568,6 @@ describe('the account with no name', () => {
   })
 
   it('never states the conclusion — it only ever asks', () => {
-    const said = JSON.stringify(summons.beat)
     for (const word of ['사고', '교통사고', '중환자', '혼수', '의식불명', '죽', '숨졌', '부고', '영안']) {
       expect(said, word).not.toContain(word)
     }
@@ -664,5 +681,37 @@ describe('every picture the game asks for', () => {
   it('still gives most headlines a thumbnail, and the wallpaper a picture', () => {
     expect(scenario.news.filter((n) => newsShot(n.id)).length).toBeGreaterThan(15)
     expect(wallpaper).toBeTruthy()
+  })
+})
+
+// 본인 부고 끝에 놓인 표식이 화면에 들어오면 그것을 본 것으로 친다. 글이 한
+// 화면에 다 들어가면 열자마자 발동해, 내려가며 알게 되는 대목이 통째로
+// 사라진다 — 큰 모니터에서 창을 키우면 그렇게 된다. 위에 몇 건이 쌓여 있어야
+// 한 번은 밀어 내리게 된다.
+describe('본인 부고는 한 화면에 담기지 않는다', () => {
+  const board = scenario.sites.find((s) => s.url === 'portal.ar.co.kr')
+    .pages['/hr/bereavement'].board
+  const post = board.posts.find((p) => p.obituary)
+
+  it('부고가 실린 글이 하나 있다', () => {
+    expect(post).toBeTruthy()
+    expect(board.posts.filter((p) => p.obituary)).toHaveLength(1)
+  })
+
+  it('본인 것은 맨 아래에 있다', () => {
+    const at = post.sections.findIndex((s) => s.mine)
+    expect(at).toBe(post.sections.length - 1)
+  })
+
+  it('그 위에 넉넉히 쌓여 있다', () => {
+    const above = post.sections.slice(0, -1)
+    expect(above.length).toBeGreaterThanOrEqual(4)
+    // 줄 수로도 재 둔다. 절만 늘리고 내용이 비면 여전히 한 화면에 들어간다.
+    const rows = above.reduce((n, s) => n + s.rows.length, 0)
+    expect(rows).toBeGreaterThanOrEqual(14)
+  })
+
+  it('본인 것이 아닌 절에는 표식이 없다', () => {
+    expect(post.sections.filter((s) => s.mine)).toHaveLength(1)
   })
 })

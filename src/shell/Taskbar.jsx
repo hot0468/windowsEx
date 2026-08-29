@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { opensAnew, useGame, savedAt } from '../engine/store.js'
+import { gameClock, opensAnew, useGame, savedAt } from '../engine/store.js'
 import { APPS, knownWindows, startMenuApps } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
 import { FolderOpen, LayoutGrid, Lock, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
@@ -27,7 +27,13 @@ export default function Taskbar() {
   const [startOpen, setStartOpen] = useState(false)
   const [asking, setAsking] = useState(null)
   const [saved, setSaved] = useState(null)
-  const [now, setNow] = useState(new Date())
+  const [tick, setTick] = useState(0)
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const overtime = useGame((s) => s.overtime)
+  const dayAt = useGame((s) => s.dayAt)
+  // 실제 시계가 아니라 게임 안의 시각. tick 은 다시 그리기 위한 것뿐이다.
+  const clock = gameClock(scenario, { day, overtime, dayAt })
   const [quiet, setQuiet] = useState(isMuted())
 
   const toggleStart = () => {
@@ -37,7 +43,7 @@ export default function Taskbar() {
   }
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30000)
+    const t = setInterval(() => setTick((v) => v + 1), 30000)
     return () => clearInterval(t)
   }, [])
 
@@ -111,8 +117,8 @@ export default function Taskbar() {
           {quiet ? <VolumeOff size={16} strokeWidth={1.8} /> : <Volume size={16} strokeWidth={1.8} />}
         </button>
         <div className="tb-clock">
-          {now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}<br />
-          {now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+          {clock.time}<br />
+          {clock.date}
         </div>
       </div>
     </>

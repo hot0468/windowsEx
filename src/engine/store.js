@@ -12,29 +12,86 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen']
 
-// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다. 시나리오의 대사를
-// 고쳐도 이미 열린 질문은 옛 사본 그대로 남아, 파일에는 새 말이 보이는데
-// 대화는 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다.
-// 켤 때, 묻는 말과 정답이 같은 질문이 시나리오에 있으면 그쪽으로 갈아 끼운다.
-// 두 질문이 한 대화에 겹쳐 만들어진 것(appendAsk)은 시나리오에 없으므로
-// 그대로 둔다.
-const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? a?.files ?? null)
+// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
+// 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
+// 파일에는 새 말이 보이는데 대화는 옛 말을 하고 옛 답을 받는다 — 만드는 동안
+// 플레이하면 이것이 버그처럼 보인다.
+//
+// 그래서 시나리오의 질문마다 자리표를 하나 찍어 둔다. 자리표는 훑는 순서로
+// 매기므로 대사나 정답이 바뀌어도 그대로다 — 묻는 말과 정답으로 짝을 찾으면
+// 정작 정답이 바뀐 판에서 짝을 잃는다. 질문을 새로 넣거나 빼면 그 뒤 자리표가
+// 밀리는데, 그때는 옛 방식으로 한 번 더 찾아본다.
+const PATH = '__at'
 
-export function freshenAsks(scenario, pending = {}) {
-  const index = new Map()
-  const chain = (a) => { for (let x = a; x; x = x.then) index.set(askOf(x), x) }
-  const walk = (n) => {
-    if (Array.isArray(n)) return n.forEach(walk)
-    if (n && typeof n === 'object') {
-      if (n.ask) chain(n.ask)
-      Object.values(n).forEach(walk)
+export function stampAsks(scenario) {
+  let n = 0
+  const chain = (a, owner) => {
+    let d = 0
+    for (let x = a; x; x = x.then) {
+      // 자리표는 세이브에 같이 실려야 한다. 숨기면 저장될 때 떨어져 나가,
+      // 다음에 켤 때 짚을 것이 없다.
+      if (!x[PATH]) x[PATH] = owner + ':' + d
+      d++
+    }
+  }
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.forEach(walk)
+    if (node && typeof node === 'object') {
+      if (node.ask) chain(node.ask, 'a' + n++)
+      Object.values(node).forEach(walk)
     }
   }
   walk(scenario)
+  return scenario
+}
+
+// 자리표가 없던 옛 세이브를 위한 되짚기 — 묻는 말과 정답이 같으면 같은 질문.
+const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? a?.files ?? null)
+
+export function freshenAsks(scenario, pending = {}) {
+  const byPath = new Map()
+  // 되짚기는 대화별로 나눠 둔다. 묻는 말과 정답만 보면 남의 대화 질문을
+  // 끌어다 꽂는다 — 대화가 끝난 자리(null)가 부름의 마지막 빈칸 질문과
+  // 열쇠가 같아, 지현이가 부름의 대사를 말한 적이 있다.
+  const byText = new Map()
+  const owner = new Map()
+  const put = (thread, a) => {
+    if (!byText.has(thread)) byText.set(thread, new Map())
+    byText.get(thread).set(askOf(a), a)
+  }
+  const walk = (node, thread) => {
+    if (Array.isArray(node)) return node.forEach((x) => walk(x, thread))
+    if (node && typeof node === 'object') {
+      const t = node.thread ?? node.id ?? thread
+      if (node.ask) {
+        for (let x = node.ask; x; x = x.then) {
+          if (x[PATH]) { byPath.set(x[PATH], x); owner.set(x[PATH], t) }
+          if (t) put(t, x)
+        }
+      }
+      Object.values(node).forEach((x) => walk(x, t))
+    }
+  }
+  walk(stampAsks(scenario), null)
+
   const out = {}
-  for (const [id, a] of Object.entries(pending)) out[id] = index.get(askOf(a)) ?? a
+  for (const [id, a] of Object.entries(pending)) {
+    // 열린 질문이 없는 자리는 없는 채로 둔다. 여기서 무엇이든 끌어오면
+    // 끝난 대화가 되살아난다.
+    if (!a || typeof a !== 'object') { out[id] = a; continue }
+    // 자리표로 찾을 때도 임자를 확인한다. 자리표만 보면 잘못 꽂힌 질문도
+    // '찾았다' 가 되어 그대로 남는다.
+    const viaPath = a[PATH] && owner.get(a[PATH]) === id ? byPath.get(a[PATH]) : null
+    const mine = viaPath ?? byText.get(id)?.get(askOf(a))
+    if (mine) { out[id] = mine; continue }
+    // 남의 대화 질문이 이 자리에 꽂혀 있으면 세이브가 상한 것이다. 예전
+    // 되짚기가 그렇게 만들었고, 그대로 두면 최민서가 부름의 대사를 한다.
+    // 고칠 방법은 없고 비우는 것이 맞다 — 그 대화는 할 말이 없어질 뿐이다.
+    const elsewhere = a[PATH] && owner.has(a[PATH]) && owner.get(a[PATH]) !== id
+    out[id] = elsewhere ? null : a
+  }
   return out
 }
 
@@ -60,6 +117,41 @@ function write(key, value) {
   } catch {
     return false
   }
+}
+
+// 게임 안의 시각. 실제 시계를 그대로 걸면 토요일 밤에 플레이하는 사람이
+// 게임 속에서도 주말 야근을 하고 있는 것처럼 보인다 — 화면의 날짜와 게임의
+// 날짜가 다른 이야기를 한다.
+//
+// 날짜는 그날 것을 쓰고, 시각은 출근 시각에서 시작해 논 만큼 흐른다. 실제
+// 1분이 게임 30분이다: 하루를 십몇 분에 끝내도 퇴근 무렵이 되고, 오래 붙들고
+// 있어도 퇴근 시각을 넘지 않는다. 야근을 고른 날은 저녁부터 센다.
+const CLOCK_SPEED = 30
+const MORNING = 9 * 60
+const EVENING = 18 * 60
+const NIGHT_IN = 19 * 60
+const NIGHT_OUT = 23 * 60 + 30
+
+export function gameClock(scenario, { day = 1, overtime = {}, dayAt = 0 } = {}, nowMs = Date.now()) {
+  const night = Boolean(overtime[day])
+  const from = night ? NIGHT_IN : MORNING
+  const until = night ? NIGHT_OUT : EVENING
+  const run = dayAt ? Math.floor((nowMs - dayAt) / 60000) * CLOCK_SPEED : 0
+  const at = Math.min(from + Math.max(0, run), until)
+  const p = (v) => String(v).padStart(2, '0')
+  return {
+    date: scenario?.days?.[day - 1]?.date ?? '',
+    time: `${p(Math.floor(at / 60))}:${p(at % 60)}`
+  }
+}
+
+// 오늘 밤 부름이 보낼 것. 거절했으면 아무 밤도 오지 않고, 이미 보낸 밤은
+// 다시 오지 않는다.
+export function callerNight(s) {
+  const su = s.scenario?.summons
+  if (!su?.nights || s.grants[su.off]) return null
+  const beat = su.nights[s.day]
+  return beat && !s.grants['called:' + s.day] ? beat : null
 }
 
 export function savedAt() {
@@ -91,10 +183,20 @@ const BEAT_GAP = 3600
 // 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
 const SAY_FIRST = 1200
 const SAY_GAP = 1500
-const sayTime = (count) => SAY_FIRST + Math.max(0, count - 1) * SAY_GAP
+const sayTime = (count, gap = SAY_GAP) => SAY_FIRST + Math.max(0, count - 1) * gap
 // And how long between consecutive lines of one conversation opening up:
 // short enough to read as one person typing, long enough to read each toast.
 const NUDGE_GAP = 2200
+// 부고를 본 뒤 마지막 말들이 도착하는 속도. 사람이 바뀔 때 한 박자 쉬고,
+// 마지막 줄 뒤에는 읽을 만큼 두었다가 엔딩으로 넘어간다.
+// 마지막 장면은 일부러 느리다. 여기서 오는 말은 처리할 일이 아니라 읽을
+// 것이다 — 평소 속도로 흘리면 다 지나간 뒤에야 무슨 말이었는지 안다.
+const SEAL_SAY = 3400
+const SEAL_TURN = 3800
+// 사고 기사가 뜨고 나서 계정이 입을 열 때까지 — 다 읽을 만큼은 아니어도,
+// 무엇이 뜬 것인지 알아볼 만큼은 된다.
+const SEAL_READ = 5200
+const SEAL_TAIL = 3600
 // Who asks for the IP, and the thread's own `wait` — the scenario names the
 // same grant, so the conversation and its trigger cannot drift apart.
 export const IP_THREAD = 'security'
@@ -150,6 +252,11 @@ export const useGame = create((set, get) => ({
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   // Whether the travel blog has been read to the end. The photos go with it.
+  // 부고를 본 뒤. 그 페이지가 떠 있던 창 하나만 남아 그 자리에 굳고, 마지막
+  // 말들이 차례로 도착한 다음 게임이 끝난다. 그동안 아무것도 열리지 않는다.
+  sealed: restored?.sealed ?? false,
+  // 그 자리에 굳은 창. 이것만 스크롤이 서고, 뒤이어 뜨는 창들은 읽을 수 있다.
+  frozen: restored?.frozen ?? null,
   dreamt: restored?.dreamt ?? false,
   // Whether 엄마's conversation has been unfolded all the way back. She answers
   // that once, and only for the player who went looking.
@@ -207,6 +314,8 @@ export const useGame = create((set, get) => ({
   // 주소를 직접 알아내야 닿는 곳은 북마크 바에 실려 나오지 않는다 — 소통방은
   // hosts를 고쳐야 열린다. 플레이어가 직접 별을 눌러 얹은 주소가 여기 쌓인다.
   myBookmarks: restored?.myBookmarks ?? [],
+  // 이 날이 시작한 실제 시각. 게임 시계가 여기서부터 흐른다.
+  dayAt: restored?.dayAt ?? Date.now(),
   // 시트에서 아직 저장하지 않은 편집. PROGRESS에 넣지 않는다 — 저장 안 한 것이
   // 다음 세션까지 살아남으면 '저장'이라는 말이 뜻을 잃는다.
   sheetDrafts: {},
@@ -226,6 +335,13 @@ export const useGame = create((set, get) => ({
     // A save reloaded, or a crash rebooted, mid-day: the rest of the day is
     // still in the queue and nothing is left holding a timer for it.
     if (get().beatQueue.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
+    // 굳은 채로 저장된 판을 다시 켰다. 마지막 말들을 물고 있던 타이머는
+    // 새로고침과 함께 사라졌으니, 여기서 되살리지 않으면 그 화면에 영영
+    // 갇힌다 — 이미 정해진 결말로 곧장 보낸다.
+    const g = get()
+    if (g.sealed && !g.ended) {
+      setTimeout(() => get().endGame(endingFor(g.scenario.ending, { ...g, days: g.scenario.days.length })), SEAL_TAIL)
+    }
   },
   // The id lets the view remount each toast so its entrance animation replays,
   // even when two toasts carry identical text.
@@ -323,10 +439,14 @@ export const useGame = create((set, get) => ({
     return first?.startsWith('app:') ? first.slice(4) : null
   },
 
-  openWindow: (app, props = {}, anew = false) => {
+  openWindow: (app, props = {}, anew = false, forced = false) => {
     // A machine pinned at 96% cannot hold a new window: it appears and shuts.
     // The two ways out of this state are exempt, or the player would be stuck.
     const s0 = get()
+    // 굳은 뒤로 플레이어는 아무것도 열지 못한다. 바탕화면도 작업표시줄도
+    // 치웠지만 알림이나 남은 단축키가 여기로 들어올 수 있다. 마지막 장면이
+    // 스스로 띄우는 창만 forced로 지나간다.
+    if (s0.sealed && !forced) return s0
     if (s0.mining && !opensWhileMining(app)) {
       play('error')
       return s0.showToast({ from: s0.scenario.miner.symptoms.title, text: s0.scenario.miner.symptoms.lines[0], app: 'taskmgr' })
@@ -355,7 +475,7 @@ export const useGame = create((set, get) => ({
       }
     })
   },
-  closeWindow: (id) => set((s) => ({ windows: s.windows.filter((w) => w.id !== id) })),
+  closeWindow: (id) => set((s) => (s.sealed ? s : { windows: s.windows.filter((w) => w.id !== id) })),
   focusWindow: (id) =>
     set((s) => ({
       windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.nextZ, minimized: false } : w)),
@@ -412,7 +532,16 @@ export const useGame = create((set, get) => ({
   restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false, screens: [] }),
   // Finishing the last request does nothing on its own; the player clocks off
   // from the request list, and only then the evening (offer, then the door) begins.
-  closeDay: () => set({ closing: true }),
+  // 하루를 마치면 결과가 뜨기 전에 그날 밤 몫이 먼저 도착한다. 답은 다음
+  // 날 하게 되어 있다 — 마감 화면이 대화를 덮으므로 그 자리에서는 못 쓴다.
+  closeDay: () => {
+    const s = get()
+    const night = callerNight(s)
+    if (!night) return set({ closing: true })
+    s.grant('called:' + s.day)
+    s.queueBeats([night], 300)
+    setTimeout(() => set({ closing: true }), 2600)
+  },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
   lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
@@ -528,6 +657,7 @@ export const useGame = create((set, get) => ({
     const s = get()
     const day = s.scenario.days[n - 1]
     if (!day) return
+    set({ dayAt: Date.now() })
     const drawn = s.drawn[n] ?? drawFor(s.scenario, n, s.drawn)
     // What the player did yesterday decides what today says to them.
     const landing = ripplesFor(s.scenario, n, s)
@@ -547,9 +677,8 @@ export const useGame = create((set, get) => ({
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
     // The caller waits until the day's work has been asked for: it speaks last,
     // and only on its own night.
-    const called = s.scenario.summons?.day === n ? [s.scenario.summons.beat] : []
     get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
-      ...beatsFor(s.scenario, drawn), ...called].filter(Boolean), 3600)
+      ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
   },
   finishDay: () => {
     const s = get()
@@ -562,17 +691,59 @@ export const useGame = create((set, get) => ({
   // The last clock-off brings either a weekend or the truth, depending on
   // what the player has read along the way.
   endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
-  // Opening the obituary is the moment the week stops making sense. It is
-  // remembered without a chime, and the boss answers a beat later.
+  // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
+  // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다.
+  //
+  // 그다음은 게임이 혼자 진행한다. 사람들이 차례로 말을 걸어오고(창이 스스로
+  // 뜬다), 닷새 내내 아무도 열어 보지 않았을 사고 기사가 뜨고, 나흘 밤 묻기만
+  // 하던 계정이 마지막으로 대답한다. 그러고 나서 끝난다.
   witness: () => {
     const s = get()
-    if (s.grants[CLUE.obituary]) return
-    set({ grants: { ...s.grants, [CLUE.obituary]: true } })
-    const ev = s.scenario.ending.event
+    // 굳었는지로 따진다. 표식만 보고 돌아서면, 이 화면이 생기기 전에 부고를
+    // 이미 열어 둔 세이브는 다시 열어도 아무 일이 일어나지 않는다.
+    if (s.sealed) return
+    // 어느 창이 그것을 띄우고 있는지는 창틀이 앱에 알려 주지 않는다. 방금
+    // 읽던 것은 맨 앞의 브라우저다.
+    const keep = s.windows.filter((w) => w.app === 'browser')
+      .reduce((top, w) => (!top || w.z > top.z ? w : top), null)
+    set({
+      grants: { ...s.grants, [CLUE.obituary]: true },
+      sealed: true,
+      frozen: keep?.id ?? null,
+      // 띄운 창을 못 찾으면 그냥 다 굳힌다 — 화면을 통째로 비우는 것보다 낫다.
+      windows: keep ? [{ ...keep, minimized: false }] : s.windows,
+      screens: keep ? ['win:' + keep.id] : s.screens,
+      beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, toast: null, closing: false
+    })
+    const e = s.scenario.ending
+    let at = 0
+    // 말하는 사람이 바뀔 때마다 그 메신저가 열리고 그 대화가 앞으로 온다 —
+    // 보고 있는 대화이므로 줄이 한 줄씩 도착한다.
+    const speaks = (say) => {
+      if (!say) return
+      at += say.delay ?? SEAL_TURN
+      const when = at
+      setTimeout(() => {
+        get().openWindow(appOf(say.source), {}, false, true)
+        get().setOpenThread(say.source, say.thread)
+        get().saying(say.thread, say.from, say.lines, SEAL_SAY)
+      }, when)
+      at += sayTime(say.lines.length, SEAL_SAY)
+    }
+    speaks(e.event)
+    for (const say of e.last ?? []) speaks(say)
+    if (e.article) {
+      at += SEAL_TURN
+      const when = at
+      setTimeout(() => get().openWindow('browser', { start: { kind: 'news', id: e.article } }, true, true), when)
+      at += SEAL_READ
+    }
+    speaks(e.explain)
+    // 다 읽고 나면 넘어간다. 어느 엔딩인지는 그 주가 이미 정해 두었다.
     setTimeout(() => {
-      get().saying(ev.thread, ev.from, ev.lines)
-      get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: appOf(ev.source), source: ev.source, thread: ev.thread })
-    }, ev.delay)
+      const g = get()
+      g.endGame(endingFor(g.scenario.ending, { ...g, days: g.scenario.days.length }))
+    }, at + SEAL_TAIL)
   },
 
   // Reading the travel blog to the end is the moment the holiday stops being
@@ -796,20 +967,20 @@ export const useGame = create((set, get) => ({
   // The other side writes for a beat, then answers a line at a time. The
   // timers live here rather than in the window, so a reply already started
   // finishes even if the player closes the messenger halfway through it.
-  sayBack: (threadId, from, lines) => {
+  sayBack: (threadId, from, lines, gap = SAY_GAP) => {
     get().setTyping(threadId, true)
     lines.forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
       if (i === lines.length - 1) get().setTyping(threadId, false)
-    }, SAY_FIRST + i * SAY_GAP))
+    }, SAY_FIRST + i * gap))
   },
   // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
   // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
   // 네 줄이 한 번에 튀어나오면 사람이 친 말로 읽히지 않는다.
-  saying: (threadId, from, lines) => {
+  saying: (threadId, from, lines, gap) => {
     const s = get()
     const source = sourceOf(s.scenario, threadId)
-    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines)
+    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines, gap)
     else lines.forEach((text) => get().pushMessage(threadId, { from, text }))
   },
   // Which set of choices a conversation has reached.
@@ -1844,10 +2015,15 @@ export function mailTime(date = '') {
 
 // newest first; same timestamp falls back to the order they arrived in.
 // `at` 이 박혀 있으면 그것이 시각이다 — '방금' 처럼 날짜로 읽을 수 없는 것.
+//
+// 안 읽은 것이 먼저 온다. 회신에 딸려 온 답장은 그날 끝의 시각을 달고 오므로,
+// 시각만으로 세우면 아침에 온 새 메일이 오늘 주고받은 답장 밑으로 내려간다 —
+// 정작 아직 안 읽은 것이 안 보인다. 읽고 나면 제 날짜 자리로 내려간다.
 const mailAt = (m) => m.at ?? mailTime(m.date)
-export const sortMails = (mails) => mails
+export const sortMails = (mails, read = {}) => mails
   .map((m, i) => [m, i])
-  .sort(([a, i], [b, j]) => mailAt(b) - mailAt(a) || j - i)
+  .sort(([a, i], [b, j]) =>
+    (read[a.id] ? 1 : 0) - (read[b.id] ? 1 : 0) || mailAt(b) - mailAt(a) || j - i)
   .map(([m]) => m)
 
 // Sponsored results are not sites the portal indexed — they are bought, so they

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
+import { gameClock, useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
 import Icon from '../icons/Icon.jsx'
 import { ChevronLeft, X } from '../icons/line.jsx'
 
-const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 
 // Taskbar의 시작 메뉴와 같은 확인 문구. 저장/불러오기/새 게임의 의미가
 // 폰에서 달라지면 안 되므로 그대로 옮긴다.
@@ -16,14 +15,19 @@ const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 
 // 상태바. 시각은 데스크톱 잠금화면과 같은 소스를 쓴다.
 function StatusBar() {
-  const [now, setNow] = useState(() => new Date())
+  const [, setTick] = useState(0)
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const overtime = useGame((s) => s.overtime)
+  const dayAt = useGame((s) => s.dayAt)
+  const clock = gameClock(scenario, { day, overtime, dayAt })
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 10000)
+    const t = setInterval(() => setTick((v) => v + 1), 10000)
     return () => clearInterval(t)
   }, [])
   return (
     <div className="ph-status">
-      <span>{hhmm(now)}</span>
+      <span>{clock.time}</span>
       <span className="ph-status-right">
         <span className="ph-signal" aria-hidden="true">▮▮▮</span>
         <span>87%</span>
@@ -159,6 +163,7 @@ function Recents({ screens, windows, grants, onPick, onClose, onDismiss }) {
 
 export default function PhoneShell() {
   const screens = useGame((s) => s.screens)
+  const sealed = useGame((s) => s.sealed)
   const grants = useGame((s) => s.grants)
   const currentApp = useGame((s) => s.currentApp)
   const popScreen = useGame((s) => s.popScreen)
@@ -257,8 +262,11 @@ export default function PhoneShell() {
                  onClose={dropScreen}
                  onDismiss={() => setRecents(false)} />
       )}
-      <NavBar screens={screens} windows={windows} grants={grants}
-              recents={recents} onRecents={() => setRecents((v) => !v)} />
+      {/* 굳은 뒤에는 돌아갈 곳도 켤 것도 없다 — 그 페이지 하나만 남는다. */}
+      {!sealed && (
+        <NavBar screens={screens} windows={windows} grants={grants}
+                recents={recents} onRecents={() => setRecents((v) => !v)} />
+      )}
     </div>
   )
 }

@@ -72,7 +72,9 @@ function Login({ site, onOk }) {
   )
 }
 
-export default function Browser() {
+// start: 창이 처음부터 가 있을 자리. 마지막 장면이 사고 기사를 띄울 때
+// 쓴다 — 그 밖에는 늘 첫 화면에서 시작한다.
+export default function Browser({ start }) {
   const scenario = useGame((s) => s.scenario)
   const unlocked = useGame((s) => s.unlocked)
   const grants = useGame((s) => s.grants)
@@ -86,7 +88,7 @@ export default function Browser() {
   const myBookmarks = useGame((s) => s.myBookmarks)
   const toggleBookmark = useGame((s) => s.toggleBookmark)
   const [addr, setAddr] = useState('')
-  const nav = useHistory({ kind: 'home' })
+  const nav = useHistory(start ?? { kind: 'home' })
   const page = nav.at
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(false)

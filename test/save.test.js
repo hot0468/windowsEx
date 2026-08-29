@@ -145,7 +145,8 @@ describe('what survives a reload', () => {
 // 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다. 켤 때
 // 시나리오의 같은 질문으로 갈아 끼운다.
 describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
-  const first = scenario.summons.beat.ask
+  // 부름은 밤마다 나뉘어 온다. 물음이 있는 첫 밤을 쓴다.
+  const first = scenario.summons.nights[2].ask
 
   it('옛 사본을 들고 있으면 시나리오 것으로 바꾼다', () => {
     const stale = { placeholder: first.placeholder, accept: first.accept, ok: ['옛날 말'] }
@@ -169,5 +170,84 @@ describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
   it('아무것도 안 열려 있으면 아무 일도 없다', () => {
     expect(freshenAsks(scenario, {})).toEqual({})
     expect(freshenAsks(scenario, undefined)).toEqual({})
+  })
+})
+
+// 대사가 바뀌었을 때는 묻는 말과 정답으로 짝을 찾을 수 있었지만, 정답 자체가
+// 바뀌면 그 방법으로는 짝을 잃는다 — 입사년을 옮기던 날 부름이 옛 정답을
+// 계속 요구했다. 자리표로 찾으면 대사도 정답도 바뀐 질문을 알아본다.
+describe('정답이 바뀐 질문도 켤 때 새로 읽는다', () => {
+  // 부름은 밤마다 나뉘어 온다. 물음이 있는 첫 밤을 쓴다.
+  const first = scenario.summons.nights[2].ask
+  const step = first.then               // 이어지는 자리
+
+  it('시나리오의 질문마다 자리표가 찍혀 있다', () => {
+    freshenAsks(scenario, {})
+    // 자리표는 세이브에 같이 실려야 다음에 켤 때 짚을 수 있다.
+    expect(step.__at, '자리표가 없다').toBeTruthy()
+    expect(JSON.parse(JSON.stringify(step)).__at).toBe(step.__at)
+  })
+
+  it('대사도 정답도 바뀐 사본을 알아본다', () => {
+    const stale = { ...step, accept: ['옛날 정답'], ok: ['옛날 말'] }
+    const out = freshenAsks(scenario, { caller: stale })
+    expect(out.caller.accept).toEqual(step.accept)
+    expect(out.caller.ok).toEqual(step.ok)
+  })
+
+  it('자리표가 없던 옛 세이브는 묻는 말과 정답으로 찾는다', () => {
+    const old = { placeholder: step.placeholder, accept: step.accept, ok: ['옛날 말'] }
+    expect(freshenAsks(scenario, { caller: old }).caller.ok).toEqual(step.ok)
+  })
+
+  it('시나리오에 없는 질문은 그대로 둔다', () => {
+    const merged = { placeholder: '합쳐진 질문', accept: ['x'], ok: ['그대로'] }
+    expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
+  })
+})
+
+// 되짚기가 남의 대화 질문을 끌어다 꽂은 적이 있다. 대화가 끝나면 그 자리에
+// null 이 남는데, 그 열쇠가 부름의 마지막 빈칸 질문(묻는 말도 정답도 없는
+// 것)과 같아서 — 지현이가 부름의 마지막 대사를 말했다.
+describe('되짚기가 남의 대화를 끌어오지 않는다', () => {
+  it('끝난 대화 자리는 빈 채로 둔다', () => {
+    const out = freshenAsks(scenario, { jihyun: null })
+    expect(out.jihyun).toBe(null)
+  })
+
+  it('묻는 말이 같아도 다른 대화의 질문은 가져오지 않는다', () => {
+    const caller = scenario.summons.nights[2].ask
+    const stale = { placeholder: caller.placeholder, accept: caller.accept, ok: ['옛날 말'] }
+    // 같은 열쇠라도 대화가 다르면 그대로 둔다.
+    expect(freshenAsks(scenario, { jihyun: stale }).jihyun).toBe(stale)
+    // 제 대화에서는 갈아 끼운다.
+    expect(freshenAsks(scenario, { caller: stale }).caller.ok).toEqual(caller.ok)
+  })
+})
+
+// 예전 되짚기가 남의 대화 질문을 세이브에 꽂아 놓았다. 새로 생기는 것은
+// 막았지만 이미 상한 세이브는 그대로라, 최민서가 부름의 마지막 대사를 했다.
+// 켤 때 알아보고 비운다 — 되돌릴 방법은 없고, 그 대화가 할 말이 없어질 뿐이다.
+describe('상한 세이브를 켤 때 비운다', () => {
+  const nights = Object.keys(scenario.summons.nights).map(Number).sort((a, b) => a - b)
+  // 첫 밤은 묻지 않고 고르게만 하므로, 물음이 있는 밤을 쓴다.
+  const callerAsk = scenario.summons.nights[nights.find((d) => scenario.summons.nights[d].ask)].ask
+
+  it('부름의 질문이 남의 대화에 꽂혀 있으면 비운다', () => {
+    freshenAsks(scenario, {})            // 자리표를 찍어 둔다
+    const out = freshenAsks(scenario, { minseo: callerAsk })
+    expect(out.minseo).toBe(null)
+  })
+
+  it('제 대화에 있으면 그대로 쓴다', () => {
+    freshenAsks(scenario, {})
+    expect(freshenAsks(scenario, { caller: callerAsk }).caller).toBe(callerAsk)
+  })
+
+  // 시나리오에 없는 질문(한 대화에 둘이 겹쳐 만들어진 것)은 임자를 알 수
+  // 없으므로 건드리지 않는다.
+  it('임자를 모르는 질문은 그대로 둔다', () => {
+    const merged = { placeholder: '합쳐진 질문', accept: ['x'], ok: ['그대로'] }
+    expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
   })
 })

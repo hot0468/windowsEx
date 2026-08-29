@@ -56,15 +56,27 @@ describe('the offer to stay late', () => {
     expect(useGame.getState().extraMessages.boss.at(-1)).toMatchObject({ day: 3, text: '오늘은 셋째 날' })
   })
 
+  // 마칠 때 그날 밤 부름이 먼저 도착하고 결과는 잠시 뒤에 뜬다. 그 사이를
+  // 건너뛰어야 결과 화면을 볼 수 있다.
+  const clockOff = () => {
+    useGame.getState().closeDay()
+    vi.advanceTimersByTime(3000)
+  }
+
   it('waits for the player to clock off, and asks again after a late night', () => {
-    expect(useGame.getState().closing).toBe(false)
-    useGame.getState().closeDay()
-    expect(useGame.getState().closing).toBe(true)
-    useGame.getState().workLate()
-    expect(useGame.getState().closing).toBe(false)
-    useGame.getState().closeDay()
-    useGame.getState().restart()
-    expect(useGame.getState().closing).toBe(false)
+    vi.useFakeTimers()
+    try {
+      expect(useGame.getState().closing).toBe(false)
+      clockOff()
+      expect(useGame.getState().closing).toBe(true)
+      useGame.getState().workLate()
+      expect(useGame.getState().closing).toBe(false)
+      clockOff()
+      useGame.getState().restart()
+      expect(useGame.getState().closing).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('lets going home close the offer without adding anything', () => {

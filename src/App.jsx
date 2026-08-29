@@ -215,7 +215,34 @@ export default function App() {
   const crashed = useGame((s) => s.crashed)
   const locked = useGame((s) => s.locked)
   const ended = useGame((s) => s.ended)
+  const sealed = useGame((s) => s.sealed)
   const shell = useViewport()
+
+  // 개발 중에만 여는 문.
+  //   ?ending=seal  5일차 경조사 게시판을 띄운 채로 시작한다 — 부고를 열어
+  //                 끝까지 내리면 마지막 장면이 실제와 똑같이 돈다.
+  //   ?ending=say   부고를 이미 본 것으로 치고 메시지부터 바로 튼다.
+  //   ?ending=true  그 이름의 엔딩 화면으로 바로 간다.
+  //
+  // 부팅 전에 돈다. 굳은 채로 저장된 판을 복구하는 길과 부딪히면 미리보기가
+  // 시작하자마자 끝나 버린다.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const want = new URLSearchParams(window.location.search).get('ending')
+    if (!want) return
+    const g = useGame.getState()
+    if (want !== 'seal' && want !== 'say') return g.endGame(want)
+    useGame.setState({ day: g.scenario.days.length, sealed: false, frozen: null, ended: false })
+    g.unlockSite('portal.ar.co.kr')
+    g.openWindow('browser', { start: { kind: 'site', url: 'portal.ar.co.kr', path: '/hr/bereavement' } })
+  }, [])
+
+  // 메시지부터 보는 문은 부팅이 끝나기를 기다린다. 부팅 화면 뒤에서 말이
+  // 오가면 첫 줄을 놓친다.
+  useEffect(() => {
+    if (!import.meta.env.DEV || !booted) return
+    if (new URLSearchParams(window.location.search).get('ending') === 'say') useGame.getState().witness()
+  }, [booted])
 
   // Ctrl+Alt+L locks on the spot; leaving the machine alone locks it too.
   useEffect(() => {
@@ -285,15 +312,21 @@ export default function App() {
     </>
   )
 
-  if (shell === 'phone') return <><PhoneShell />{overlays}</>
+  if (shell === 'phone') return <><PhoneShell />{!sealed && overlays}</>
 
+  // 굳은 뒤로는 바탕화면도, 할 일 목록도, 작업표시줄도 없다 — 남은 요청은
+  // 이제 아무 의미가 없다. 마지막 장면이 띄우는 창들만 뜬다.
+  //
+  // 창은 여기서 그리던 것을 그대로 그린다. 딴 가지로 빼면 리액트가 창을
+  // 새로 세워서, 굳어야 할 화면이 맨 위로 되감긴다.
   return (
-    <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
-      <Desktop />
-      <Progress />
+    <div className={'desktop' + (sealed ? ' sealed' : '')}
+         style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
+      {!sealed && <Desktop />}
+      {!sealed && <Progress />}
       <WindowLayer />
-      {overlays}
-      <Taskbar />
+      {!sealed && overlays}
+      {!sealed && <Taskbar />}
     </div>
   )
 }
