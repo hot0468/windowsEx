@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { useGame } from '../src/engine/store.js'
-import { phoneApps, APPS } from '../src/apps/registry.jsx'
+import { phoneApps, startMenuApps, APPS } from '../src/apps/registry.jsx'
 
 beforeEach(() => useGame.setState({ screens: [] }))
 
@@ -209,5 +209,38 @@ describe('켠 창 목록', () => {
     const src = readFileSync('src/shell/PhoneShell.jsx', 'utf8')
     for (const label of ['켠 창', '홈', '뒤로']) expect(src).toContain(`aria-label="${label}"`)
     expect(src).toContain('<NavBar')
+  })
+})
+
+// 게임을 다루는 버튼(저장 · 불러오기 · 처음부터)은 데스크톱에서는 시작 메뉴에
+// 있다. 폰에는 시작 메뉴가 없어 홈 구석의 ⋯ 에 숨어 있었다. 설정 앱으로 옮긴다.
+describe('설정 앱', () => {
+  const src = readFileSync('src/apps/Settings.jsx', 'utf8')
+
+  it('폰 홈에 있다', () => {
+    expect(phoneApps({}).map((a) => a.id)).toContain('settings')
+  })
+
+  // 데스크톱은 시작 메뉴가 이미 그 셋을 들고 있다. 두 군데 두면 어느 쪽이
+  // 진짜인지 알 수 없다.
+  it('데스크톱 시작 메뉴에는 없다', () => {
+    expect(startMenuApps({}).map(([id]) => id)).not.toContain('settings')
+  })
+
+  it('게임을 다루는 셋을 들고 있다', () => {
+    for (const fn of ['saveGame', 'loadGame', 'newGame']) expect(src, fn).toContain(fn)
+  })
+
+  it('되돌리는 것은 물어보고 한다', () => {
+    expect(src).toContain('CONFIRM')
+    expect(src).toContain("setAsking('new')")
+    expect(src).toContain("setAsking('load')")
+  })
+
+  // 옮겼으면 있던 자리에서는 빠져야 한다.
+  it('폰 홈의 ⋯ 메뉴는 사라졌다', () => {
+    const shell = readFileSync('src/shell/PhoneShell.jsx', 'utf8')
+    expect(shell).not.toContain('PhoneMenu')
+    expect(shell).not.toContain('newGame')
   })
 })

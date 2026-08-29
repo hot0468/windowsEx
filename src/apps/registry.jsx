@@ -11,6 +11,7 @@ import Cmd from './Cmd.jsx'
 import Slides from './Slides.jsx'
 import Sheet from './Sheet.jsx'
 import Installer from './Installer.jsx'
+import Settings from './Settings.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
@@ -33,6 +34,9 @@ export const APPS = {
   browser: { title: '브라우저', icon: 'globe', comp: Browser, w: 820, h: 560 },
   devtools: { title: '개발자 도구', icon: 'globe', comp: DevTools, w: 640, h: 360, noLaunch: true },
   installer: { title: '설치 마법사', icon: 'cmd', comp: Installer, w: 560, h: 400, noLaunch: true },
+  // 폰에는 시작 메뉴가 없어 게임을 다루는 버튼이 갈 자리가 없다. 설정 앱이
+  // 그 자리다 — 데스크톱에는 시작 메뉴가 이미 있으므로 올리지 않는다.
+  settings: { title: '설정', icon: 'settings', comp: Settings, w: 420, h: 520, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
@@ -43,7 +47,7 @@ export const APPS = {
 // tools belong to the browser and the wizard to a setup file. And a program
 // that has not been installed yet is not on this PC to list.
 export const startMenuApps = (grants = {}) =>
-  Object.entries(APPS).filter(([, a]) => !a.noLaunch && (!a.grant || grants[a.grant]))
+  Object.entries(APPS).filter(([, a]) => !a.noLaunch && !a.phoneOnly && (!a.grant || grants[a.grant]))
 
 // A restored save can name an app this build no longer has. Drawing one throws
 // and takes the whole desktop with it, so drop them before anything renders.

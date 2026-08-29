@@ -1799,3 +1799,24 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .di-refused { position: fixed; left: 50%; top: 28px; transform: translateX(-50%); z-index: 60;
   padding: 9px 16px; border-radius: 8px; background: rgba(20,22,28,.88); color: #e8eaf0;
   font-size: 12.5px; pointer-events: none; }
+
+/* ── 설정 앱 ──────────────────────────────────────────── */
+/* 폰에는 시작 메뉴가 없어 게임을 다루는 버튼이 갈 자리가 없다. 여기가 그 자리다. */
+.st { height: 100%; overflow: auto; padding: 16px; background: #f4f5f8; }
+.st-head { padding: 4px 4px 16px; }
+.st-day { font-size: 20px; font-weight: 700; color: #1f2430; }
+.st-when { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: #8a9099; font-size: 12px; }
+.st-group { border-radius: 12px; background: #fff; overflow: hidden; }
+.st-group-name { padding: 12px 16px 6px; color: #8a9099; font-size: 11.5px; }
+.st-item { display: flex; align-items: center; gap: 13px; width: 100%; padding: 13px 16px; border: 0; background: none; text-align: left; cursor: pointer; }
+.st-item + .st-item { border-top: 1px solid #f0f1f5; }
+.st-item:active:not(:disabled) { background: #f4f6fa; }
+.st-item:disabled { opacity: .45; cursor: default; }
+.st-item svg { flex-shrink: 0; color: #5f6570; }
+.st-item span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.st-item b { font-size: 14px; font-weight: 500; color: #1f2430; }
+.st-item em { font-size: 12px; font-style: normal; color: #8a9099; }
+.st-danger svg, .st-danger b { color: #b0553f; }
+.st-ask { padding: 20px 16px; border-radius: 12px; background: #fff; }
+.st-ask p { font-size: 13.5px; line-height: 1.75; color: #1f2430; }
+.st-ask-row { display: flex; gap: 8px; margin-top: 18px; }

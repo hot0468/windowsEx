@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame, objectiveDone, requestsOf, savedAt } from '../engine/store.js'
+import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
 import Icon from '../icons/Icon.jsx'
@@ -9,63 +9,10 @@ const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 
 // Taskbar의 시작 메뉴와 같은 확인 문구. 저장/불러오기/새 게임의 의미가
 // 폰에서 달라지면 안 되므로 그대로 옮긴다.
-const CONFIRM = {
-  new: '진행 중인 게임을 버리고 처음부터 시작합니다. 저장한 게임은 그대로 남습니다.',
-  load: '저장한 시점으로 되돌아갑니다. 지금까지의 진행 상황은 사라집니다.'
-}
 
 // 저장 · 불러오기 · 처음부터. Taskbar(시작 메뉴)에만 있던 세 동작을 폰
 // 홈에도 연다 — 폰은 시작 메뉴를 그리지 않으므로 여기가 없으면 세이브가
 // 폰에서는 아예 닿지 않는다.
-function PhoneMenu() {
-  const saveGame = useGame((s) => s.saveGame)
-  const loadGame = useGame((s) => s.loadGame)
-  const newGame = useGame((s) => s.newGame)
-  const [open, setOpen] = useState(false)
-  const [asking, setAsking] = useState(null)
-  const [saved, setSaved] = useState(null)
-
-  const toggle = () => {
-    if (!open) setSaved(savedAt())
-    setAsking(null)
-    setOpen(!open)
-  }
-
-  return (
-    <div className="ph-menu">
-      <button className="ph-menu-btn" onClick={toggle} aria-label="메뉴">⋯</button>
-      {open && (
-        <div className="ph-menu-pop">
-          {asking ? (
-            <>
-              <p className="ph-menu-confirm">{CONFIRM[asking]}</p>
-              <div className="ph-menu-row">
-                <button className="ph-menu-btn-primary"
-                        onClick={() => (asking === 'new' ? newGame() : loadGame())}>
-                  예
-                </button>
-                <button className="ph-menu-item" onClick={() => setAsking(null)}>아니오</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <button className="ph-menu-item"
-                      onClick={() => { saveGame(); setSaved(Date.now()); setOpen(false) }}>
-                저장
-              </button>
-              <button className="ph-menu-item" disabled={!saved} onClick={() => setAsking('load')}>
-                불러오기
-              </button>
-              <button className="ph-menu-item" onClick={() => setAsking('new')}>
-                처음부터
-              </button>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // 상태바. 시각은 데스크톱 잠금화면과 같은 소스를 쓴다.
 function StatusBar() {
@@ -114,7 +61,6 @@ function DayBar() {
           오늘 업무 마치기
         </button>
       )}
-      <PhoneMenu />
     </div>
   )
 }
