@@ -35,7 +35,7 @@ export default function Pdf({ fileId }) {
       <div className="hwp-canvas">
         {/* 서식은 칸이 여럿이라 줄글보다 넓은 종이가 필요하다 — 좁으면 이름과
             날짜가 글자 단위로 접힌다. */}
-        <div className="pdf-page" style={{ width: `${ZOOMS[zoom] * (f ? 6.9 : r ? 3.4 : 5.2)}px` }}>
+        <div className={"pdf-page" + (r ? " pdf-slip" : "")} style={{ width: `${ZOOMS[zoom] * (f ? 6.9 : r ? 3.4 : 5.2)}px` }}>
           <h1 className="pdf-title">{title}</h1>
           {r ? (
             <div className="pdf-receipt">
