@@ -52,10 +52,6 @@ export default function PhoneApp({ title, icon, onBack, children }) {
         </span>
       </header>
       <div className="phone-body">{children}</div>
-      {/* 홈 인디케이터는 장식이 아니라 버튼이다. 어느 앱에서든 여기로 나온다. */}
-      <button className="pa-home" onClick={goPhoneHome} aria-label="홈">
-        <span className="pa-bar" />
-      </button>
     </div>
   )
 }

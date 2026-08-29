@@ -295,6 +295,27 @@ export const useGame = create((set, get) => ({
   // 폰 홈으로. 게임의 goHome(퇴근하기)과 이름이 겹치지 않게 따로 둔다 —
   // 그쪽은 하루를 끝내는 동작이라 홈 버튼이 건드려서는 안 된다.
   goPhoneHome: () => set({ screens: [] }),
+  // 최근 목록에서 하나를 고르면 그 위에 쌓인 화면을 걷어낸다. 창 화면을
+  // 걷을 땐 창도 같이 닫는다 — 스택에서만 빼면 다음 렌더에서 '새로 생긴
+  // 창'으로 보여 도로 밀려 들어온다.
+  goScreen: (key) => set((s) => {
+    const at = s.screens.lastIndexOf(key)
+    if (at < 0) return s
+    const gone = s.screens.slice(at + 1)
+      .filter((k) => k.startsWith('win:'))
+      .map((k) => Number(k.slice(4)))
+    return {
+      screens: s.screens.slice(0, at + 1),
+      windows: s.windows.filter((w) => !gone.includes(w.id))
+    }
+  }),
+  // 최근 목록에서 하나를 치운다.
+  dropScreen: (key) => set((s) => ({
+    screens: s.screens.filter((k) => k !== key),
+    windows: key.startsWith('win:')
+      ? s.windows.filter((w) => w.id !== Number(key.slice(4)))
+      : s.windows
+  })),
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
   currentApp: () => {

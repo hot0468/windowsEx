@@ -246,3 +246,77 @@
   transition: opacity 90ms ease-out, transform 90ms ease-out;
 }
 .pa-home:active .pa-bar { opacity: .45; transform: scaleX(.94); }
+
+/* ── 하단 내비게이션 ──────────────────────────────────── */
+/* 안드로이드의 세 버튼: 켠 창 · 홈 · 뒤로. 홈 인디케이터를 대신한다 —
+   앱 안에서도 홈으로 나가는 길이 늘 바닥에 있다. */
+.pn-nav {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  height: 44px;
+  background: var(--p-surface);
+  border-top: 1px solid var(--p-line);
+}
+.pn-key {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--p-ink);
+  opacity: .75;
+  cursor: pointer;
+}
+.pn-key:active { opacity: 1; background: rgba(0,0,0,.05); }
+.pn-key:disabled { opacity: .25; cursor: default; }
+.pn-key.on { opacity: 1; }
+.pn-recent { width: 13px; height: 13px; border: 2px solid currentColor; border-radius: 2px; }
+.pn-circle { width: 13px; height: 13px; border: 2px solid currentColor; border-radius: 50%; }
+
+/* 켠 창. 카드가 옆으로 늘어서고, 넘치면 가로로 민다. */
+.pn-recents {
+  position: absolute;
+  inset: 0 0 44px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  background: rgba(16, 19, 26, .55);
+  backdrop-filter: blur(6px);
+}
+.pn-recents-none { flex: 1; text-align: center; color: #fff; font-size: 13px; opacity: .8; }
+.pn-cards { display: flex; gap: 12px; padding: 0 16px; overflow-x: auto; }
+.pn-card { position: relative; flex: none; }
+.pn-card-face {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  width: 118px;
+  height: 168px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--p-surface);
+  color: var(--p-ink);
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-align: center;
+  cursor: pointer;
+}
+.pn-card-face:active { transform: scale(.97); }
+.pn-card-x {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #10131a;
+  color: #fff;
+  cursor: pointer;
+}

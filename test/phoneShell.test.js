@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { useGame } from '../src/engine/store.js'
 import { phoneApps, APPS } from '../src/apps/registry.jsx'
 
@@ -160,5 +161,53 @@ describe('restart()', () => {
     useGame.setState({ screens: ['app:mail', 'win:1'] })
     useGame.getState().restart()
     expect(useGame.getState().screens).toEqual([])
+  })
+})
+
+// 하단 내비게이션의 '켠 창'. 목록에서 하나를 고르면 그 위에 쌓인 화면을
+// 걷어낸다. 창 화면을 걷을 땐 창도 같이 닫아야 한다 — 스택에서만 빼면
+// 폰 셸이 그것을 '새로 생긴 창' 으로 보고 도로 밀어 넣는다.
+describe('켠 창 목록', () => {
+  const win = (id) => ({ id, key: 'k' + id, app: 'mail', props: {} })
+
+  beforeEach(() => useGame.setState({ screens: [], windows: [] }))
+
+  it('고른 화면 위에 쌓인 것을 걷어낸다', () => {
+    useGame.setState({ screens: ['app:messenger', 'app:photos', 'win:7'], windows: [win(7)] })
+    useGame.getState().goScreen('app:messenger')
+    expect(useGame.getState().screens).toEqual(['app:messenger'])
+  })
+
+  it('걷어낸 창은 닫는다', () => {
+    useGame.setState({ screens: ['app:messenger', 'win:7'], windows: [win(7), win(8)] })
+    useGame.getState().goScreen('app:messenger')
+    expect(useGame.getState().windows.map((w) => w.id)).toEqual([8])
+  })
+
+  it('없는 화면을 고르면 아무 일도 없다', () => {
+    useGame.setState({ screens: ['app:messenger'], windows: [] })
+    useGame.getState().goScreen('app:mail')
+    expect(useGame.getState().screens).toEqual(['app:messenger'])
+  })
+
+  it('목록에서 치우면 화면도 창도 사라진다', () => {
+    useGame.setState({ screens: ['app:messenger', 'win:7'], windows: [win(7)] })
+    useGame.getState().dropScreen('win:7')
+    expect(useGame.getState().screens).toEqual(['app:messenger'])
+    expect(useGame.getState().windows).toEqual([])
+  })
+
+  it('창이 아닌 화면을 치우면 창은 그대로다', () => {
+    useGame.setState({ screens: ['app:messenger'], windows: [win(7)] })
+    useGame.getState().dropScreen('app:messenger')
+    expect(useGame.getState().screens).toEqual([])
+    expect(useGame.getState().windows.map((w) => w.id)).toEqual([7])
+  })
+
+  // 홈으로 나가는 길이 늘 바닥에 있어야 한다. 앱 안에서도.
+  it('화면에 세 버튼이 있다', () => {
+    const src = readFileSync('src/shell/PhoneShell.jsx', 'utf8')
+    for (const label of ['켠 창', '홈', '뒤로']) expect(src).toContain(`aria-label="${label}"`)
+    expect(src).toContain('<NavBar')
   })
 })

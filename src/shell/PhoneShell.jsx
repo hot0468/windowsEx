@@ -3,6 +3,7 @@ import { useGame, objectiveDone, requestsOf, savedAt } from '../engine/store.js'
 import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
 import Icon from '../icons/Icon.jsx'
+import { ChevronLeft, X } from '../icons/line.jsx'
 
 const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 
@@ -145,6 +146,71 @@ function Home() {
   )
 }
 
+// 안드로이드의 세 버튼. 켠 창 · 홈 · 뒤로. 어느 화면에서든 바닥에 있으므로
+// 앱 안에서도 홈으로 나가는 길이 끊기지 않는다. 홈 인디케이터를 대신한다.
+function NavBar({ screens, windows, grants, onRecents, recents }) {
+  const goPhoneHome = useGame((s) => s.goPhoneHome)
+  const popScreen = useGame((s) => s.popScreen)
+  const closeWindow = useGame((s) => s.closeWindow)
+
+  // 뒤로는 팝스테이트가 하던 것과 같아야 한다 — 창 화면을 벗기면 창도 닫는다.
+  const back = () => {
+    const top = screens[screens.length - 1]
+    if (!top) return
+    popScreen()
+    if (top.startsWith('win:')) closeWindow(Number(top.slice(4)))
+  }
+
+  return (
+    <nav className="pn-nav">
+      <button className={'pn-key' + (recents ? ' on' : '')} onClick={onRecents}
+              aria-label="켠 창">
+        <span className="pn-recent" />
+      </button>
+      <button className="pn-key" onClick={() => { if (recents) onRecents(); goPhoneHome() }}
+              aria-label="홈">
+        <span className="pn-circle" />
+      </button>
+      <button className="pn-key" onClick={recents ? onRecents : back}
+              disabled={!recents && !screens.length} aria-label="뒤로">
+        <ChevronLeft size={20} strokeWidth={2.2} />
+      </button>
+    </nav>
+  )
+}
+
+// 켠 창 목록. 스택에 쌓인 순서 그대로, 맨 위(지금 보고 있는 것)가 앞에 온다.
+function Recents({ screens, windows, grants, onPick, onClose, onDismiss }) {
+  const cards = [...screens].reverse().map((key) => {
+    if (key.startsWith('win:')) {
+      const w = windows.find((x) => x.id === Number(key.slice(4)))
+      const cfg = w ? APPS[w.app] : null
+      return cfg ? { key, title: cfg.title, icon: cfg.icon } : null
+    }
+    const entry = phoneApps(grants).find((a) => 'app:' + a.id === key)
+    return entry ? { key, title: entry.title, icon: entry.icon } : null
+  }).filter(Boolean)
+
+  return (
+    <div className="pn-recents" onPointerDown={onDismiss}>
+      {cards.length === 0 && <div className="pn-recents-none">켠 창이 없습니다</div>}
+      <div className="pn-cards" onPointerDown={(e) => e.stopPropagation()}>
+        {cards.map((c) => (
+          <div key={c.key} className="pn-card">
+            <button className="pn-card-x" onClick={() => onClose(c.key)} aria-label="닫기">
+              <X size={13} strokeWidth={2.4} />
+            </button>
+            <button className="pn-card-face" onClick={() => onPick(c.key)}>
+              <Icon name={c.icon} size={30} />
+              <span>{c.title}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function PhoneShell() {
   const screens = useGame((s) => s.screens)
   const grants = useGame((s) => s.grants)
@@ -153,6 +219,9 @@ export default function PhoneShell() {
   const pushScreen = useGame((s) => s.pushScreen)
   const goPhoneHome = useGame((s) => s.goPhoneHome)
   const closeWindow = useGame((s) => s.closeWindow)
+  const goScreen = useGame((s) => s.goScreen)
+  const dropScreen = useGame((s) => s.dropScreen)
+  const [recents, setRecents] = useState(false)
   const windows = useGame((s) => s.windows)
 
   // 안드로이드의 뒤로가기 제스처는 그대로 두면 게임을 나가버린다. 한 겹
@@ -223,7 +292,6 @@ export default function PhoneShell() {
         <>
           <DayBar />
           <Home />
-          <div className="pa-home" aria-hidden="true"><span className="pa-bar" /></div>
         </>
       )}
       {winCfg && (
@@ -237,6 +305,14 @@ export default function PhoneShell() {
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />
         </PhoneApp>
       )}
+      {recents && (
+        <Recents screens={screens} windows={windows} grants={grants}
+                 onPick={(k) => { goScreen(k); setRecents(false) }}
+                 onClose={dropScreen}
+                 onDismiss={() => setRecents(false)} />
+      )}
+      <NavBar screens={screens} windows={windows} grants={grants}
+              recents={recents} onRecents={() => setRecents((v) => !v)} />
     </div>
   )
 }
