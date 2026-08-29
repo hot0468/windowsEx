@@ -1675,13 +1675,14 @@ export const SAFE_APPS = ['taskmgr', 'antivirus']
 export const opensWhileMining = (app) => SAFE_APPS.includes(app)
 
 // 창을 여러 개 띄울 수 있는 앱. 브라우저는 위키를 열어 둔 채 거래처 사이트를
-// 봐야 하는 일이 잦다 — 주소도 기록도 창마다 따로 들고 있으므로 서로 간섭하지
+// 봐야 하고, 파일 탐색기는 한쪽에서 찾은 파일을 다른 쪽으로 끌어다 놓아야
+// 한다 — 둘 다 자기 주소와 기록을 창마다 따로 들고 있으므로 서로 간섭하지
 // 않는다. 나머지 앱은 하나로 충분하다: 메일함이 둘이면 헷갈리기만 한다.
 //
 // 다만 새로 열지 말지는 앱이 아니라 **여는 쪽**이 정한다. 바탕화면 아이콘을
 // 다시 누르는 것은 "하나 더"라는 뜻이지만, 폰 홈에서 같은 아이콘을 누르는
 // 것은 "그 앱으로 가자"는 뜻이라 새 창이 쌓이면 안 된다.
-export const MULTI_APPS = ['browser']
+export const MULTI_APPS = ['browser', 'explorer']
 export const opensAnew = (app) => MULTI_APPS.includes(app)
 
 // What the task manager lists: the miner first, on top of the ordinary rows.

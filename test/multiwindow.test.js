@@ -12,8 +12,10 @@ describe('창을 여러 개 여는 앱', () => {
 
   it('브라우저가 그 목록에 있다', () => {
     expect(opensAnew('browser')).toBe(true)
+    expect(opensAnew('explorer')).toBe(true)
     expect(opensAnew('mail')).toBe(false)
     expect(MULTI_APPS).toContain('browser')
+    expect(MULTI_APPS).toContain('explorer')
   })
 
   it('새로 열라고 하면 창이 하나 더 생긴다', () => {
@@ -44,6 +46,23 @@ describe('창을 여러 개 여는 앱', () => {
     const mails = useGame.getState().windows.filter((w) => w.app === 'mail')
     expect(mails).toHaveLength(1)
     expect(mails[0].minimized).toBe(false)
+  })
+
+  // 폰 홈은 openWindow(app, props) 로만 부른다. 탐색기가 여러 개 열리는 앱이
+  // 되었다고 해서 폰에서 사진을 누를 때마다 창이 쌓이면 안 된다.
+  it('폰처럼 새로 열라는 말 없이 부르면 탐색기도 한 창을 다시 쓴다', () => {
+    const props = { startFolder: ['휴대폰', '갤러리'], roots: ['휴대폰'] }
+    useGame.getState().openWindow('explorer', props)
+    useGame.getState().openWindow('explorer', props)
+    expect(useGame.getState().windows.filter((w) => w.app === 'explorer')).toHaveLength(1)
+  })
+
+  // 같은 탐색기라도 보는 곳이 다르면 다른 창이다 — 사진과 문서 폴더가 한 창을
+  // 나눠 쓰면 폰에서 사진을 눌렀는데 문서가 열린다.
+  it('보는 곳이 다르면 다른 창이다', () => {
+    useGame.getState().openWindow('explorer', { startFolder: '문서' })
+    useGame.getState().openWindow('explorer', { startFolder: '다운로드' })
+    expect(useGame.getState().windows.filter((w) => w.app === 'explorer')).toHaveLength(2)
   })
 
   it('메일함은 새로 열라고 해도 목록에 없으므로 아무도 그렇게 부르지 않는다', () => {
