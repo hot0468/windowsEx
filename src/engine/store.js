@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'sealedSaid']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -187,6 +187,10 @@ const sayTime = (count) => SAY_FIRST + Math.max(0, count - 1) * SAY_GAP
 // And how long between consecutive lines of one conversation opening up:
 // short enough to read as one person typing, long enough to read each toast.
 const NUDGE_GAP = 2200
+// 부고를 본 뒤 마지막 말들이 도착하는 속도. 사람이 바뀔 때 한 박자 쉬고,
+// 마지막 줄 뒤에는 읽을 만큼 두었다가 엔딩으로 넘어간다.
+const SEAL_TURN = 1800
+const SEAL_TAIL = 3600
 // Who asks for the IP, and the thread's own `wait` — the scenario names the
 // same grant, so the conversation and its trigger cannot drift apart.
 export const IP_THREAD = 'security'
@@ -242,6 +246,10 @@ export const useGame = create((set, get) => ({
   unlocked: restored?.unlocked ?? {},
   grants: restored?.grants ?? {},
   // Whether the travel blog has been read to the end. The photos go with it.
+  // 부고를 본 뒤. 그 페이지가 떠 있던 창 하나만 남아 그 자리에 굳고, 마지막
+  // 말들이 차례로 도착한 다음 게임이 끝난다. 그동안 아무것도 열리지 않는다.
+  sealed: restored?.sealed ?? false,
+  sealedSaid: restored?.sealedSaid ?? [],
   dreamt: restored?.dreamt ?? false,
   // Whether 엄마's conversation has been unfolded all the way back. She answers
   // that once, and only for the player who went looking.
@@ -320,6 +328,13 @@ export const useGame = create((set, get) => ({
     // A save reloaded, or a crash rebooted, mid-day: the rest of the day is
     // still in the queue and nothing is left holding a timer for it.
     if (get().beatQueue.length) setTimeout(() => get().nextBeat(), BEAT_GAP)
+    // 굳은 채로 저장된 판을 다시 켰다. 마지막 말들을 물고 있던 타이머는
+    // 새로고침과 함께 사라졌으니, 여기서 되살리지 않으면 그 화면에 영영
+    // 갇힌다 — 이미 정해진 결말로 곧장 보낸다.
+    const g = get()
+    if (g.sealed && !g.ended) {
+      setTimeout(() => get().endGame(endingFor(g.scenario.ending, { ...g, days: g.scenario.days.length })), SEAL_TAIL)
+    }
   },
   // The id lets the view remount each toast so its entrance animation replays,
   // even when two toasts carry identical text.
@@ -421,6 +436,9 @@ export const useGame = create((set, get) => ({
     // A machine pinned at 96% cannot hold a new window: it appears and shuts.
     // The two ways out of this state are exempt, or the player would be stuck.
     const s0 = get()
+    // 굳은 뒤로는 아무것도 열리지 않는다. 바탕화면도 작업표시줄도 치웠지만,
+    // 알림이나 남아 있는 단축키가 여기로 들어올 수 있다.
+    if (s0.sealed) return s0
     if (s0.mining && !opensWhileMining(app)) {
       play('error')
       return s0.showToast({ from: s0.scenario.miner.symptoms.title, text: s0.scenario.miner.symptoms.lines[0], app: 'taskmgr' })
@@ -449,7 +467,7 @@ export const useGame = create((set, get) => ({
       }
     })
   },
-  closeWindow: (id) => set((s) => ({ windows: s.windows.filter((w) => w.id !== id) })),
+  closeWindow: (id) => set((s) => (s.sealed ? s : { windows: s.windows.filter((w) => w.id !== id) })),
   focusWindow: (id) =>
     set((s) => ({
       windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.nextZ, minimized: false } : w)),
@@ -665,17 +683,41 @@ export const useGame = create((set, get) => ({
   // The last clock-off brings either a weekend or the truth, depending on
   // what the player has read along the way.
   endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
-  // Opening the obituary is the moment the week stops making sense. It is
-  // remembered without a chime, and the boss answers a beat later.
+  // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
+  // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳고, 마지막 말들이
+  // 차례로 도착한 뒤 끝난다. 여기서 게임은 사실상 종료 절차에 들어간다.
   witness: () => {
     const s = get()
     if (s.grants[CLUE.obituary]) return
-    set({ grants: { ...s.grants, [CLUE.obituary]: true } })
+    // 어느 창이 그것을 띄우고 있는지는 창틀이 앱에 알려 주지 않는다. 방금
+    // 읽던 것은 맨 앞의 브라우저다.
+    const keep = s.windows.filter((w) => w.app === 'browser')
+      .reduce((top, w) => (!top || w.z > top.z ? w : top), null)
+    set({
+      grants: { ...s.grants, [CLUE.obituary]: true },
+      sealed: true,
+      sealedSaid: [],
+      windows: keep ? [{ ...keep, minimized: false }] : [],
+      screens: keep ? ['win:' + keep.id] : [],
+      beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, toast: null, closing: false
+    })
     const ev = s.scenario.ending.event
+    let at = ev.delay
+    for (const say of [ev, ...(s.scenario.ending.last ?? [])]) {
+      for (const text of say.lines) {
+        setTimeout(() => {
+          get().pushMessage(say.thread, { from: say.from, text })
+          set((st) => ({ sealedSaid: [...st.sealedSaid, { from: say.from, text }] }))
+        }, at)
+        at += SAY_GAP
+      }
+      at += SEAL_TURN
+    }
+    // 다 읽고 나면 넘어간다. 어느 엔딩인지는 그 주가 이미 정해 두었다.
     setTimeout(() => {
-      get().saying(ev.thread, ev.from, ev.lines)
-      get().showToast({ from: ev.from, text: ev.lines[ev.lines.length - 1], app: appOf(ev.source), source: ev.source, thread: ev.thread })
-    }, ev.delay)
+      const g = get()
+      g.endGame(endingFor(g.scenario.ending, { ...g, days: g.scenario.days.length }))
+    }, at + SEAL_TAIL)
   },
 
   // Reading the travel blog to the end is the moment the holiday stops being

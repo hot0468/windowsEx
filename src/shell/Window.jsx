@@ -18,6 +18,9 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   // 저장 안 한 것을 들고 있는 창은 그냥 닫지 않는다. 창틀은 무엇이 저장 안
   // 됐는지 모르고, 저장이라는 개념을 가진 앱이 있는지만 스토어에 묻는다.
   const unsaved = useGame((s) => unsavedFile(s, win))
+  // 부고를 본 뒤에는 이 창이 마지막 화면이다 — 움직이지도, 닫히지도, 스크롤
+  // 되지도 않는다.
+  const sealed = useGame((s) => s.sealed)
   const [asking, setAsking] = useState(false)
   const drag = useRef(null)
   const grab = useRef(null)
@@ -32,7 +35,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   }, [])
 
   const onPointerDown = (e) => {
-    if (e.target.closest('button')) return
+    if (sealed || e.target.closest('button')) return
     drag.current = { dx: e.clientX - win.x, dy: e.clientY - win.y }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
@@ -62,7 +65,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
       }
 
   return (
-    <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '')}
+    <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '') + (sealed ? ' sealed' : '')}
          style={style}
          onPointerDown={() => focusWindow(win.id)}>
       <div className={'titlebar' + (theme ? ' themed' : '')}
@@ -71,7 +74,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
            onPointerMove={onPointerMove} onPointerUp={onPointerUp}
            onDoubleClick={() => toggleMaximize(win.id)}>
         <span className="title"><Icon name={icon} size={16} />{title}</span>
-        <div className="win-buttons">
+        <div className="win-buttons" hidden={sealed}>
           <button onClick={() => minimizeWindow(win.id)} title="최소화"><Minus size={13} strokeWidth={1.5} /></button>
           <button onClick={() => toggleMaximize(win.id)} title="최대화"><Square size={11} strokeWidth={1.7} /></button>
           <button className="close" onClick={() => (unsaved ? setAsking(true) : closeWindow(win.id))}
@@ -94,7 +97,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
           </div>
         </div>
       )}
-      {!win.maximized && HANDLES.map((dir) => (
+      {!win.maximized && !sealed && HANDLES.map((dir) => (
         <span key={dir} className={`rz rz-${dir}`} onPointerDown={startResize(dir)}
               onPointerMove={onResizeMove} onPointerUp={endResize} />
       ))}

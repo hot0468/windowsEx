@@ -1820,3 +1820,12 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .st-ask { padding: 20px 16px; border-radius: 12px; background: #fff; }
 .st-ask p { font-size: 13.5px; line-height: 1.75; color: #1f2430; }
 .st-ask-row { display: flex; gap: 8px; margin-top: 18px; }
+
+/* 부고를 본 뒤. 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다 — 스크롤도
+   창틀도 움직이지 않고, 마지막 말들이 그 위에 쌓인다. */
+.window.sealed, .window.sealed * { overflow: hidden !important; }
+.window.sealed .titlebar { cursor: default; }
+.window.sealed::after { content: ''; position: absolute; inset: 0; }
+.desktop.sealed { filter: saturate(.55); }
+.seal-say { position: fixed; right: 16px; bottom: 16px; z-index: 9600; display: flex; flex-direction: column; gap: 8px; max-height: calc(100% - 32px); overflow: hidden; pointer-events: none; }
+.seal-say .toast { position: static; cursor: default; }

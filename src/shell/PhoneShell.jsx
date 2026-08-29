@@ -163,6 +163,7 @@ function Recents({ screens, windows, grants, onPick, onClose, onDismiss }) {
 
 export default function PhoneShell() {
   const screens = useGame((s) => s.screens)
+  const sealed = useGame((s) => s.sealed)
   const grants = useGame((s) => s.grants)
   const currentApp = useGame((s) => s.currentApp)
   const popScreen = useGame((s) => s.popScreen)
@@ -261,8 +262,11 @@ export default function PhoneShell() {
                  onClose={dropScreen}
                  onDismiss={() => setRecents(false)} />
       )}
-      <NavBar screens={screens} windows={windows} grants={grants}
-              recents={recents} onRecents={() => setRecents((v) => !v)} />
+      {/* 굳은 뒤에는 돌아갈 곳도 켤 것도 없다 — 그 페이지 하나만 남는다. */}
+      {!sealed && (
+        <NavBar screens={screens} windows={windows} grants={grants}
+                recents={recents} onRecents={() => setRecents((v) => !v)} />
+      )}
     </div>
   )
 }
