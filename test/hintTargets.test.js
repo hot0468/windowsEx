@@ -93,3 +93,40 @@ describe('등본의 칸 이름', () => {
     expect(JSON.stringify(cert)).toContain(when)
   })
 })
+
+// 위 검사는 C테크 한 곳만 본다. 회사 사이트가 늘 때마다 검사를 베껴 쓰는
+// 대신, 답이 실린 칸의 이름을 규칙으로 못 박는다 — 힌트가 "'오시는 길' 줄",
+// "'대표번호 · 팩스' 줄" 이라고 칸을 이름으로 부르기 때문이다.
+describe('회사 사이트가 답을 실어 둔 칸의 이름', () => {
+  const corps = scenario.sites.filter((s) => s.layout === 'corp')
+  const all = []
+  const gather = (n) => {
+    if (Array.isArray(n)) return n.forEach(gather)
+    if (n && typeof n === 'object') {
+      for (const a of [].concat(n.accept ?? [])) if (typeof a === 'string') all.push(a)
+      Object.values(n).forEach(gather)
+    }
+  }
+  gather(scenario)
+
+  it('회사 사이트가 둘 이상이다', () => {
+    expect(corps.length).toBeGreaterThan(1)
+  })
+
+  it('주소가 답인 곳은 그 칸 이름이 오시는 길이다', () => {
+    for (const c of corps) {
+      const addr = c.corp.map?.address
+      if (!addr || !all.some((a) => addr.includes(a))) continue
+      expect(c.corp.map.title, c.url).toBe('오시는 길')
+    }
+  })
+
+  it('연락처가 답인 곳은 대표번호와 팩스가 한 줄에 있다', () => {
+    for (const c of corps) {
+      const line = c.corp.footer?.contact
+      if (!line || !all.some((a) => line.includes(a))) continue
+      expect(line, c.url).toContain('대표번호')
+      expect(line, c.url).toContain('팩스')
+    }
+  })
+})
