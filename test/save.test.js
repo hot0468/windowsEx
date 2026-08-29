@@ -224,3 +224,30 @@ describe('되짚기가 남의 대화를 끌어오지 않는다', () => {
     expect(freshenAsks(scenario, { caller: stale }).caller.ok).toEqual(caller.ok)
   })
 })
+
+// 예전 되짚기가 남의 대화 질문을 세이브에 꽂아 놓았다. 새로 생기는 것은
+// 막았지만 이미 상한 세이브는 그대로라, 최민서가 부름의 마지막 대사를 했다.
+// 켤 때 알아보고 비운다 — 되돌릴 방법은 없고, 그 대화가 할 말이 없어질 뿐이다.
+describe('상한 세이브를 켤 때 비운다', () => {
+  const nights = Object.keys(scenario.summons.nights).map(Number).sort((a, b) => a - b)
+  // 첫 밤은 묻지 않고 고르게만 하므로, 물음이 있는 밤을 쓴다.
+  const callerAsk = scenario.summons.nights[nights.find((d) => scenario.summons.nights[d].ask)].ask
+
+  it('부름의 질문이 남의 대화에 꽂혀 있으면 비운다', () => {
+    freshenAsks(scenario, {})            // 자리표를 찍어 둔다
+    const out = freshenAsks(scenario, { minseo: callerAsk })
+    expect(out.minseo).toBe(null)
+  })
+
+  it('제 대화에 있으면 그대로 쓴다', () => {
+    freshenAsks(scenario, {})
+    expect(freshenAsks(scenario, { caller: callerAsk }).caller).toBe(callerAsk)
+  })
+
+  // 시나리오에 없는 질문(한 대화에 둘이 겹쳐 만들어진 것)은 임자를 알 수
+  // 없으므로 건드리지 않는다.
+  it('임자를 모르는 질문은 그대로 둔다', () => {
+    const merged = { placeholder: '합쳐진 질문', accept: ['x'], ok: ['그대로'] }
+    expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
+  })
+})

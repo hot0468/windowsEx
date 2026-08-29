@@ -56,6 +56,7 @@ export function freshenAsks(scenario, pending = {}) {
   // 끌어다 꽂는다 — 대화가 끝난 자리(null)가 부름의 마지막 빈칸 질문과
   // 열쇠가 같아, 지현이가 부름의 대사를 말한 적이 있다.
   const byText = new Map()
+  const owner = new Map()
   const put = (thread, a) => {
     if (!byText.has(thread)) byText.set(thread, new Map())
     byText.get(thread).set(askOf(a), a)
@@ -66,7 +67,7 @@ export function freshenAsks(scenario, pending = {}) {
       const t = node.thread ?? node.id ?? thread
       if (node.ask) {
         for (let x = node.ask; x; x = x.then) {
-          if (x[PATH]) byPath.set(x[PATH], x)
+          if (x[PATH]) { byPath.set(x[PATH], x); owner.set(x[PATH], t) }
           if (t) put(t, x)
         }
       }
@@ -80,7 +81,16 @@ export function freshenAsks(scenario, pending = {}) {
     // 열린 질문이 없는 자리는 없는 채로 둔다. 여기서 무엇이든 끌어오면
     // 끝난 대화가 되살아난다.
     if (!a || typeof a !== 'object') { out[id] = a; continue }
-    out[id] = byPath.get(a[PATH]) ?? byText.get(id)?.get(askOf(a)) ?? a
+    // 자리표로 찾을 때도 임자를 확인한다. 자리표만 보면 잘못 꽂힌 질문도
+    // '찾았다' 가 되어 그대로 남는다.
+    const viaPath = a[PATH] && owner.get(a[PATH]) === id ? byPath.get(a[PATH]) : null
+    const mine = viaPath ?? byText.get(id)?.get(askOf(a))
+    if (mine) { out[id] = mine; continue }
+    // 남의 대화 질문이 이 자리에 꽂혀 있으면 세이브가 상한 것이다. 예전
+    // 되짚기가 그렇게 만들었고, 그대로 두면 최민서가 부름의 대사를 한다.
+    // 고칠 방법은 없고 비우는 것이 맞다 — 그 대화는 할 말이 없어질 뿐이다.
+    const elsewhere = a[PATH] && owner.has(a[PATH]) && owner.get(a[PATH]) !== id
+    out[id] = elsewhere ? null : a
   }
   return out
 }
