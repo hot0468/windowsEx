@@ -3,9 +3,10 @@ import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hint
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
+import { useViewport } from '../shell/useViewport.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
 import {
-  BellOff, ChevronDown, HelpCircle, MessageSquare,
+  BellOff, ChevronDown, ChevronLeft, HelpCircle, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
 } from '../icons/line.jsx'
 
@@ -114,6 +115,8 @@ export default function Messenger({ source }) {
   const grant = useGame((s) => s.grant)
   const slip = useGame((s) => s.slip)
   const mercy = useGame((s) => s.mercy)
+  // 좁은 화면에서는 목록과 대화가 한 화면에 같이 못 선다.
+  const phone = useViewport() === 'phone'
   const hinted = useGame((s) => s.hinted)
   const markHinted = useGame((s) => s.markHinted)
   const typing = useGame((s) => s.typing)
@@ -361,7 +364,8 @@ export default function Messenger({ source }) {
   })
 
   return (
-    <div className={'mg mg-' + (source === 'workMessenger' ? 'work' : 'private')}>
+    <div className={'mg mg-' + (source === 'workMessenger' ? 'work' : 'private')
+      + (phone ? ' mg-phone' : '') + (phone && thread ? ' on' : '')}>
       <div className="mg-rail">
         <button className={'mg-rail-btn' + (tab === 'friends' ? ' on' : '')}
                 onClick={() => setTab('friends')} title="친구">
@@ -427,6 +431,12 @@ export default function Messenger({ source }) {
         {thread && (
           <>
             <div className="mg-chat-top">
+              {phone && (
+                <button className="mg-back" onClick={() => setOpenThread(source, null)}
+                        title="목록" aria-label="목록으로">
+                  <ChevronLeft size={18} strokeWidth={2.2} />
+                </button>
+              )}
               <Avatar t={thread} size={32} onOpen={setProfile} />
               <div className="mg-chat-who">
                 <div className="mg-chat-name">{thread.name}</div>

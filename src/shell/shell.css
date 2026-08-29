@@ -1119,6 +1119,20 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .mg-chat-name { font-size: 13px; }
 .mg-chat-sub { font-size: 11px; color: #999; }
 
+/* ── 좁은 화면의 메신저 ───────────────────────────────── */
+/* 데스크톱은 레일·목록·대화를 나란히 세우지만, 폰 폭에서는 셋이 같이 설 수
+   없어 글자가 한 자씩 세로로 접힌다. 한 번에 하나씩 꽉 채워 보여준다 —
+   목록을 보다가 상대를 고르면 대화로 넘어가고, 뒤로 누르면 목록으로 온다. */
+.mg-phone .mg-side { width: auto; min-width: 0; flex: 1; border-right: none; }
+.mg-phone .mg-conv { display: none; }
+.mg-phone.on .mg-rail,
+.mg-phone.on .mg-side { display: none; }
+.mg-phone.on .mg-conv { display: flex; }
+.mg-back { display: flex; align-items: center; padding: 4px; margin-left: -4px; color: #444; }
+/* 대화 안에서는 목록으로 가는 길이 뒤로 버튼뿐이다. */
+.mg-phone .mg-chat-top { gap: 8px; }
+
+
 /* pdf viewer */
 .pdf { height: 100%; display: flex; flex-direction: column; background: #4a4a52; }
 .pdf-badge { padding: 2px 8px; border-radius: 3px; background: #fbe9e7; color: #b3261e; font-size: 11px; }

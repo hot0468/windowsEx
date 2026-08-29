@@ -96,3 +96,30 @@ describe('오늘 할 일 패널은 버튼을 화면 안에 둔다', () => {
     }
   })
 })
+
+// 데스크톱 메신저는 레일·목록·대화를 나란히 세운다. 폰 폭에서는 셋이 같이 설
+// 수 없어 글자가 한 자씩 세로로 접혔다. 한 번에 한 칸만 꽉 채워 보여준다.
+describe('좁은 화면의 메신저는 한 번에 한 칸만 보여준다', () => {
+  const src = readFileSync('src/apps/Messenger.jsx', 'utf8')
+
+  it('폰이면 화면에 표시를 남긴다', () => {
+    expect(src).toContain("useViewport() === 'phone'")
+    expect(src).toContain("' mg-phone'")
+  })
+
+  it('대화를 열기 전에는 목록만, 열면 대화만', () => {
+    expect(bodies('.mg-phone .mg-conv').join(' ')).toContain('display: none')
+    expect(bodies('.mg-phone.on .mg-side').join(' ')).toContain('display: none')
+    expect(bodies('.mg-phone.on .mg-conv').join(' ')).toContain('display: flex')
+  })
+
+  it('목록이 남는 폭을 다 쓴다', () => {
+    expect(bodies('.mg-phone .mg-side').join(' ')).toContain('flex: 1')
+  })
+
+  // 대화만 보이면 목록으로 돌아갈 길이 없다.
+  it('대화에서 목록으로 돌아가는 버튼이 있다', () => {
+    expect(src).toContain('setOpenThread(source, null)')
+    expect(src).toContain('mg-back')
+  })
+})
