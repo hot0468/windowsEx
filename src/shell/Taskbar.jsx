@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame, savedAt } from '../engine/store.js'
+import { opensAnew, useGame, savedAt } from '../engine/store.js'
 import { APPS, knownWindows, startMenuApps } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
 import { FolderOpen, LayoutGrid, Lock, RotateCcw, Save, Volume, VolumeOff } from '../icons/line.jsx'
@@ -55,7 +55,7 @@ export default function Taskbar() {
           <div className="sm-grid">
             {startMenuApps(grants).map(([key, a]) => (
               <button key={key} className="sm-app"
-                      onClick={() => { openWindow(key); setStartOpen(false) }}>
+                      onClick={() => { openWindow(key, {}, opensAnew(key)); setStartOpen(false) }}>
                 <div className="glyph"><Icon name={a.icon} size={30} /></div>{a.title}
               </button>
             ))}

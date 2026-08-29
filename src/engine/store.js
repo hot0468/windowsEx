@@ -278,7 +278,7 @@ export const useGame = create((set, get) => ({
     return first?.startsWith('app:') ? first.slice(4) : null
   },
 
-  openWindow: (app, props = {}) => {
+  openWindow: (app, props = {}, anew = false) => {
     // A machine pinned at 96% cannot hold a new window: it appears and shuts.
     // The two ways out of this state are exempt, or the player would be stuck.
     const s0 = get()
@@ -288,7 +288,7 @@ export const useGame = create((set, get) => ({
     }
     return set((s) => {
       const key = app + JSON.stringify(props)
-      const existing = s.windows.find((w) => w.key === key)
+      const existing = anew ? null : s.windows.find((w) => w.key === key)
       if (existing) {
         return {
           windows: s.windows.map((w) =>
@@ -297,9 +297,12 @@ export const useGame = create((set, get) => ({
         }
       }
       const n = s.windows.length
+      // 여러 개를 띄우는 앱은 키도 창마다 달라야 한다 — 키가 같으면 다음에
+      // 열 때 그중 하나를 앞으로 끌어오게 된다.
+      const id = ++winId
       return {
         windows: [...s.windows, {
-          id: ++winId, key, app, props,
+          id, key: anew ? key + '#' + id : key, app, props,
           x: 120 + (n % 5) * 36, y: 60 + (n % 5) * 32,
           z: s.nextZ, minimized: false, maximized: false
         }],
@@ -1670,6 +1673,16 @@ export const installedShortcuts = (programs = {}, grants = {}) =>
 // out, so they always open.
 export const SAFE_APPS = ['taskmgr', 'antivirus']
 export const opensWhileMining = (app) => SAFE_APPS.includes(app)
+
+// 창을 여러 개 띄울 수 있는 앱. 브라우저는 위키를 열어 둔 채 거래처 사이트를
+// 봐야 하는 일이 잦다 — 주소도 기록도 창마다 따로 들고 있으므로 서로 간섭하지
+// 않는다. 나머지 앱은 하나로 충분하다: 메일함이 둘이면 헷갈리기만 한다.
+//
+// 다만 새로 열지 말지는 앱이 아니라 **여는 쪽**이 정한다. 바탕화면 아이콘을
+// 다시 누르는 것은 "하나 더"라는 뜻이지만, 폰 홈에서 같은 아이콘을 누르는
+// 것은 "그 앱으로 가자"는 뜻이라 새 창이 쌓이면 안 된다.
+export const MULTI_APPS = ['browser']
+export const opensAnew = (app) => MULTI_APPS.includes(app)
 
 // What the task manager lists: the miner first, on top of the ordinary rows.
 export function processList(miner, mining) {

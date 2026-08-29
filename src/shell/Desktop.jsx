@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { WORK_FOLDER, installedShortcuts, useGame, fileOpener, fsView, visible } from '../engine/store.js'
+import { WORK_FOLDER, installedShortcuts, opensAnew, useGame, fileOpener, fsView, visible } from '../engine/store.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { fileDragProps, useFileDrop } from '../apps/dragFile.js'
 
@@ -43,7 +43,7 @@ export default function Desktop() {
       {refused && <div className="di-refused">{gates.refuse}</div>}
       {icons.map((s) => (
         <button key={s.label} className="desktop-icon"
-                onDoubleClick={() => openWindow(s.app, s.props)}>
+                onDoubleClick={() => openWindow(s.app, s.props, opensAnew(s.app))}>
           <div className="glyph"><Icon name={s.icon} size={38} /></div>{s.label}
         </button>
       ))}
