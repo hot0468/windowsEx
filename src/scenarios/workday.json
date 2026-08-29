@@ -1116,7 +1116,8 @@
       "name": "한별",
       "sub": "제주도 D-1 🍊",
       "color": "#e0a33c",
-      "avatar": "me_chat"
+      "avatar": "me_chat",
+      "phone": "010-3382-7194"
     },
     "sections": [
       {
@@ -7510,7 +7511,8 @@
           "source": "privateMessenger",
           "thread": "gov",
           "from": "정부25",
-          "sms": "[정부25] 본인확인 인증번호 [{code}]\n인증번호를 화면에 입력해 주세요. 타인에게 절대 알려주지 마세요."
+          "sms": "[정부25] 본인확인 인증번호 [{code}]\n인증번호를 화면에 입력해 주세요. 타인에게 절대 알려주지 마세요.",
+          "phone": "010-3382-7194"
         },
         "security": {
           "title": "보안 프로그램 설치 필요",

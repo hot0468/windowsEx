@@ -60,6 +60,7 @@ const ProfileCard = ({ who, team, onChat, onClose }) => (
         {who.sub && <div className="mg-profile-sub">{who.sub}</div>}
         <dl className="mg-profile-meta">
           {team && <div><dt>소속</dt><dd>{team}</dd></div>}
+          {who.phone && <div><dt>번호</dt><dd>{who.phone}</dd></div>}
           <div>
             <dt>상태</dt>
             <dd className={who.online ? 'on' : ''}>{who.online ? '온라인' : '오프라인'}</dd>
@@ -369,7 +370,7 @@ export default function Messenger({ source }) {
         <div className="mg-list">
           <div className="mg-me">
             <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.sub,
-                             color: m.me.color, online: true }}
+                             color: m.me.color, phone: m.me.phone, online: true }}
                     size={42} onOpen={setProfile} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>

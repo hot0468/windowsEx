@@ -45,7 +45,11 @@ export default function Gov({ site }) {
   }
 
   const requestCode = () => {
-    if (name.trim() !== gov.verify.name || !PHONE.test(phone.trim())) {
+    // 번호가 아무거나 통하면 그 칸이 무엇을 묻는지 알 수 없다. 내 번호는
+    // 톡톡 내 프로필에 적혀 있다 — 형식만 맞는지가 아니라 그 번호인지 본다.
+    const digits = (v) => v.replace(/[^0-9]/g, '')
+    if (name.trim() !== gov.verify.name || !PHONE.test(phone.trim())
+        || (gov.verify.phone && digits(phone) !== digits(gov.verify.phone))) {
       return setError('입력하신 정보와 일치하는 회원이 없습니다. 이름과 휴대폰 번호를 확인해 주세요.')
     }
     setError('')

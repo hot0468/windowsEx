@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import scenario from '../src/scenarios/workday.json'
 import {
   allFiles, codeFits, fileOpener, findFile, fsView, searchSites, siteView, smsFor, useGame
@@ -86,5 +87,47 @@ describe('본인확인', () => {
     expect(setup).toBeTruthy()
     expect(setup.attached).toBe(true)
     expect(setup.program).toBe('anysign')
+  })
+})
+
+// 정부25의 본인확인은 형식만 맞으면 아무 번호나 통과했다. 그러면 그 칸이
+// 무엇을 묻는지 알 수 없고, 플레이어는 자기가 맞게 넣은 건지 모른 채 넘어간다.
+// 내 번호가 게임 안 어딘가에 적혀 있어야 그 칸이 질문이 된다.
+const me = scenario.privateMessenger.me
+
+describe('정부25 본인확인에 넣을 내 번호', () => {
+  it('톡톡 내 프로필에 적혀 있다', () => {
+    expect(me.phone, '내 번호가 어디에도 없다').toBeTruthy()
+    expect(me.phone).toMatch(/^01[016789]-\d{3,4}-\d{4}$/)
+  })
+
+  it('정부25가 확인하는 번호와 같다', () => {
+    expect(gov.verify.phone).toBe(me.phone)
+  })
+
+  it('화면이 실제로 그 번호를 확인한다', () => {
+    const src = readFileSync('src/apps/Gov.jsx', 'utf8')
+    expect(src).toContain('gov.verify.phone')
+  })
+
+  it('프로필 카드가 번호를 보여준다', () => {
+    const src = readFileSync('src/apps/Messenger.jsx', 'utf8')
+    expect(src).toContain('who.phone')
+    // 내 행에서 프로필을 열 때 번호가 딸려 가야 한다 — 안 그러면 카드가 빈다.
+    expect(src).toContain('phone: m.me.phone')
+  })
+
+  // 남의 번호를 내 번호로 쓰면 다른 요청의 답과 겹친다.
+  it('이미 임자가 있는 번호를 가져다 쓰지 않았다', () => {
+    const accepts = new Set()
+    const walk = (n) => {
+      if (Array.isArray(n)) return n.forEach(walk)
+      if (n && typeof n === 'object') {
+        for (const a of [].concat(n.accept ?? [])) if (typeof a === 'string') accepts.add(a)
+        Object.values(n).forEach(walk)
+      }
+    }
+    walk(scenario)
+    expect([...accepts]).not.toContain(me.phone)
   })
 })
