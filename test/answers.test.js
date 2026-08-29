@@ -66,3 +66,40 @@ describe('the answers the game actually asks for', () => {
     }
   })
 })
+
+// 숫자 답에 구분 기호까지 맞춰 치라고 요구하면, 제대로 아는 사람이 퇴짜를
+// 맞는다. 전화번호를 하이픈 없이, 금액을 쉼표 없이, 날짜를 점으로 적는 것은
+// 다른 답이 아니라 같은 답이다.
+describe('숫자 답의 구분 기호', () => {
+  const ask = (...accept) => ({ accept })
+
+  it('전화번호는 하이픈이 있든 없든 같다', () => {
+    const a = ask('010-0000-8102')
+    for (const t of ['010-0000-8102', '01000008102', '010 0000 8102', '010.0000.8102']) {
+      expect(answerFits(a, t), t).toBe(true)
+    }
+  })
+
+  it('금액은 쉼표가 있든 없든 같다', () => {
+    const a = ask('59,400')
+    for (const t of ['59,400', '59400', '59,400원']) expect(answerFits(a, t), t).toBe(true)
+  })
+
+  it('날짜는 하이픈이든 점이든 같다', () => {
+    const a = ask('2026-05-30')
+    for (const t of ['2026-05-30', '2026.05.30', '20260530']) expect(answerFits(a, t), t).toBe(true)
+  })
+
+  // 기호를 떼고 나서도 자릿수 경계는 지킨다 — 내선 1180 이 재고 180 의
+  // 답이 되면 안 된다.
+  it('그래도 다른 숫자 안에 묻혀 있으면 답이 아니다', () => {
+    expect(answerFits(ask('180'), '1180')).toBe(false)
+    expect(answerFits(ask('180'), '180개')).toBe(true)
+    expect(answerFits(ask('010-0000-8102'), '010-0000-81021')).toBe(false)
+  })
+
+  it('글자가 섞인 답은 예전처럼 그대로 본다', () => {
+    expect(answerFits(ask('00-1A-7D-4C-9E-21'), '001A7D4C9E21')).toBe(false)
+    expect(answerFits(ask('00-1A-7D-4C-9E-21'), '00-1A-7D-4C-9E-21')).toBe(true)
+  })
+})

@@ -1072,14 +1072,23 @@ export function answerFits(ask, text) {
 // A loose "does the answer mention this" test, except that a number has to
 // stand on its own. Without the digit boundary, typing the extension 1180
 // would also answer a question whose answer is the stock count 180.
+//
+// 숫자 답은 구분 기호까지 맞춰 치라고 요구하지 않는다. 전화번호를 하이픈
+// 없이, 금액을 쉼표 없이, 날짜를 점으로 적는 것은 틀린 답이 아니라 같은
+// 답이다 — 010-0000-8102 와 01000008102 는 같은 번호다. 자릿수 경계는
+// 기호를 뗀 뒤에도 그대로 지킨다.
+const bare = (v) => v.replace(/[-.,]/g, '')
+
 function contains(text, part) {
-  const hay = loose(text)
   const needle = loose(part)
-  if (!needle || !hay.includes(needle)) return false
+  if (!needle) return false
   // only numbers get the boundary; a word answer may sit inside a sentence
-  if (!/^[\d,.-]+$/.test(needle)) return true
-  for (let at = hay.indexOf(needle); at !== -1; at = hay.indexOf(needle, at + 1)) {
-    if (!isDigit(hay[at - 1]) && !isDigit(hay[at + needle.length])) return true
+  if (!/^[\d,.-]+$/.test(needle)) return loose(text).includes(needle)
+  const hay = bare(loose(text))
+  const digits = bare(needle)
+  if (!digits || !hay.includes(digits)) return false
+  for (let at = hay.indexOf(digits); at !== -1; at = hay.indexOf(digits, at + 1)) {
+    if (!isDigit(hay[at - 1]) && !isDigit(hay[at + digits.length])) return true
   }
   return false
 }
