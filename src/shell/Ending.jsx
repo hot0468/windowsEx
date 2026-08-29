@@ -5,6 +5,27 @@ import { useGame } from '../engine/store.js'
 // finishes the scene early or moves on to the next one.
 const LINE_MS = 1400
 
+// 한 줄에 문장이 여럿이면 문장마다 끊어 앉힌다. 가운데로 모아 놓은 화면에서
+// 줄이 문장 한가운데를 자르면 "이직이었습니 / 다."가 되어 읽는 눈이 걸린다.
+//
+// 끊는 자리는 마침표 다음의 빈칸이다. 빈칸을 조건으로 두어야 2026.08.27 같은
+// 것이 셋으로 쪼개지지 않는다.
+export const sentences = (line) => {
+  const bits = String(line).split(/([.!?]["'”’]?)\s+/)
+  const out = []
+  for (let i = 0; i < bits.length; i += 2) {
+    const s = (bits[i] ?? '') + (bits[i + 1] ?? '')
+    if (s) out.push(s)
+  }
+  return out
+}
+
+const Said = ({ className, children }) => (
+  <p className={className}>
+    {sentences(children).map((s, i) => <span key={i} className="end-sent">{s}</span>)}
+  </p>
+)
+
 export default function Ending() {
   const kind = useGame((s) => s.ended)
   const ending = useGame((s) => {
@@ -60,9 +81,9 @@ export default function Ending() {
         )}
         {scene.who && <div className="end-who">{scene.who}</div>}
         {scene.lines.slice(0, shown).map((line, k) => (
-          <p key={k} className="end-line">{line}</p>
+          <Said key={k} className="end-line">{line}</Said>
         ))}
-        {whole && scene.note && <p className="end-note">{scene.note}</p>}
+        {whole && scene.note && <Said className="end-note">{scene.note}</Said>}
       </div>
       <div className="end-hint">{whole ? '클릭하여 계속' : ''}</div>
     </div>
