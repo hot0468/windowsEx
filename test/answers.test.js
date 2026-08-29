@@ -103,3 +103,36 @@ describe('숫자 답의 구분 기호', () => {
     expect(answerFits(ask('00-1A-7D-4C-9E-21'), '00-1A-7D-4C-9E-21')).toBe(true)
   })
 })
+
+// 시각은 적는 방법이 여럿인데 정답은 한 가지 표기로만 적혀 있다. 물어본 대로
+// 답한 사람이 표기 때문에 틀렸다는 말을 들으면 안 된다.
+describe('시각 표기', () => {
+  const ask = (...accept) => ({ accept })
+
+  it('13:40 을 "13시 40분" 으로 답해도 같다', () => {
+    const a = ask('13:40')
+    for (const t of ['13:40', '13시 40분', '13시40분', '오후 1시 40분 아니고 13:40']) {
+      expect(answerFits(a, t), t).toBe(true)
+    }
+  })
+
+  it('한 자리 시각은 0을 채우든 안 채우든 같다', () => {
+    expect(answerFits(ask('08:20'), '8:20')).toBe(true)
+    expect(answerFits(ask('08:20'), '8시 20분')).toBe(true)
+  })
+
+  it('한글로 적힌 정답도 숫자로 답할 수 있다', () => {
+    expect(answerFits(ask('오전 8시 30분'), '오전 08:30')).toBe(true)
+    expect(answerFits(ask('오전 8시 30분'), '오전 8:30')).toBe(true)
+  })
+
+  it('분이 다르면 여전히 틀린 답이다', () => {
+    expect(answerFits(ask('13:40'), '13시 30분')).toBe(false)
+    expect(answerFits(ask('13:40'), '14:40')).toBe(false)
+  })
+
+  it('시각이 아닌 숫자는 건드리지 않는다', () => {
+    expect(answerFits(ask('1,410,000'), '1410000')).toBe(true)
+    expect(answerFits(ask('180'), '1180')).toBe(false)
+  })
+})

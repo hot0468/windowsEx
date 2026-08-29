@@ -1066,7 +1066,17 @@ export const quickSets = (thread) => lineSets(thread.quick ?? FALLBACK_QUICK)
 // Loose match: spacing and case are forgiven. An entry may be an array, in
 // which case every part of it has to appear — a pasted receipt has to carry both
 // the place and the time, not just one of them.
-const loose = (v) => v.replace(/\s/g, '').toLowerCase()
+// 시각은 적는 방법이 여럿이다. 13:40 과 "13시 40분" 은 같은 시각인데 글자로만
+// 대조하면 뒤엣것이 퇴짜를 맞는다 — 물어본 대로 답한 사람이 틀렸다는 말을
+// 듣는다. 양쪽을 같은 표기로 옮겨 놓고 견준다: N시 M분 → NN:MM, N시 → NN:00,
+// 그리고 한 자리 시각은 앞에 0을 채운다(8:30 과 08:30 은 같다).
+const pad = (v) => (v.length < 2 ? '0' + v : v)
+const timeish = (v) => v
+  .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/g, (_, h, m) => pad(h) + ':' + pad(m))
+  .replace(/(\d{1,2})\s*시(?!\s*\d)/g, (_, h) => pad(h) + ':00')
+  .replace(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/g, (_, h, m) => pad(h) + ':' + m)
+
+const loose = (v) => timeish(v).replace(/\s/g, '').toLowerCase()
 
 export function answerFits(ask, text) {
   // A question asked with no answer in the world takes whatever is typed: the
