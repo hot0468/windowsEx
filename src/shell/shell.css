@@ -1351,7 +1351,8 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
             border: 1px solid #dfe2e7; box-shadow: 0 2px 14px #0000000f; }
 .dcx-title { font-size: 17px; font-weight: 800; color: #123a7a; margin: 0 0 20px;
              padding-bottom: 12px; border-bottom: 2px solid #123a7a; }
-.dcx-text { font-size: 12.5px; line-height: 1.95; white-space: pre-wrap; margin: 0; color: #23262b; }
+.dcx-text { font-size: 12.5px; line-height: 1.95; white-space: pre-wrap; margin: 0; color: #23262b; user-select: text; }
+.dcx-title, .dcx-foot { user-select: text; }
 .dcx-foot { margin-top: 28px; padding-top: 10px; border-top: 1px dashed #cfd4da;
             font-size: 10.5px; color: #9aa0a8; text-align: center; }
 
