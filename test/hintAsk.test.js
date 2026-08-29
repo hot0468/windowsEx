@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import scenario from '../src/scenarios/workday.json'
-import { hintKey, hintReply } from '../src/engine/store.js'
+import { hintAfter, hintKey, hintReply } from '../src/engine/store.js'
 
 // 요청을 받고도 어디서부터 봐야 할지 모를 때, 입력줄 위의 버튼으로 되물어
 // 1번 힌트를 듣는다. 버튼은 화면에 그냥 떠 있으므로 그 문구 자체가 답이나
@@ -152,5 +152,42 @@ describe('되묻기 말투', () => {
         expect(a.hintAsk, t.id).not.toMatch(/(요|니다|까요)[?!.]?$/)
       }
     }
+  })
+})
+
+// 되묻기는 1단계가 아니라 2단계부터 준다. 힌트 1단계는 "그거 아닌데요, 복합기
+// 말고 진행표 보낸 PC요" 처럼 틀린 답을 바로잡는 말이라, 아직 아무 답도 안 낸
+// 사람에게는 무엇을 묻는지만 되풀이한다. 어디를 보라는 말은 2단계부터 나온다.
+describe('되묻기는 어디를 보라고 말한다', () => {
+  const ask = {
+    no: [
+      ['그 번호 아닌데요.', '복합기 말고 진행표 보낸 PC 자산번호요.'],
+      ['아직 안 맞아요.', '사내위키 자산 대장인데 사이드바엔 안 떠요.'],
+      ['wiki.ar.co.kr/asset 자산 대장 표에서요.', '그 행의 자산번호 그대로요.']
+    ]
+  }
+
+  it('아직 안 틀렸으면 2단계를 준다', () => {
+    expect(hintReply(ask, 1).lines).toEqual(['사내위키 자산 대장인데 사이드바엔 안 떠요.'])
+  })
+
+  it('그다음 오답은 3단계로 이어진다', () => {
+    expect(hintReply(ask, 1).step).toBe(2)
+    expect(hintAfter(ask, 2)).toEqual(ask.no[2])
+  })
+
+  it('화면이 1단계부터 주지 않는다', () => {
+    const src = readFileSync('src/apps/Messenger.jsx', 'utf8')
+    expect(src).toContain('Math.max(wrongs[thread.id] ?? 0, 1)')
+  })
+
+  // 이미 한 번 틀린 사람에게는 그 자리에서 이어 준다 — 되묻는다고 뒤로
+  // 물러나면 방금 들은 말을 다시 듣는다.
+  it('이미 틀린 뒤라면 그 자리에서 이어 준다', () => {
+    expect(hintReply(ask, 2).lines).toEqual(['그 행의 자산번호 그대로요.'])
+  })
+
+  it('시나리오의 모든 요청이 되묻기에 답할 말을 갖고 있다', () => {
+    for (const a of asks) expect(hintReply(a, 1).lines.length, JSON.stringify(a.no[0])).toBeGreaterThan(0)
   })
 })

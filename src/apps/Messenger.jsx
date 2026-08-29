@@ -298,7 +298,10 @@ export default function Messenger({ source }) {
   // 요청을 받고도 어디서부터 봐야 할지 모를 때 되묻는 자리. 문구는 요청이
   // 직접 들고 있으면 그것을, 없으면 어디에나 맞는 말을 쓴다.
   const askHint = () => {
-    const { lines, step } = hintReply(ask, wrongs[thread.id] ?? 0)
+    // 1단계는 "그거 말고 이거요" — 틀린 답을 바로잡는 말이라, 아직 아무
+    // 답도 안 낸 사람에게는 무엇을 묻는지만 되풀이하는 셈이 된다. 되묻는
+    // 사람에게 필요한 것은 어디를 보라는 말이고, 그건 2단계부터다.
+    const { lines, step } = hintReply(ask, Math.max(wrongs[thread.id] ?? 0, 1))
     say(thread.id, { text: hintAskOf(thread, ask) })
     setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
     // 다음 오답은 여기서 이어받는다.
