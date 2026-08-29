@@ -151,7 +151,12 @@ export function callerNight(s) {
   const su = s.scenario?.summons
   if (!su?.nights || s.grants[su.off]) return null
   const beat = su.nights[s.day]
-  return beat && !s.grants['called:' + s.day] ? beat : null
+  if (!beat || s.grants['called:' + s.day]) return null
+  // 계정은 플레이어가 본 것을 안다. 그 화면을 연 적이 있으면 그 말부터
+  // 시작한다 — 안 본 사람에게 말하면 협박이지만, 본 사람에게는 확인이다.
+  return beat.seen && s.grants[beat.seen.grant]
+    ? { ...beat, lines: [...beat.seen.lines, ...beat.lines] }
+    : beat
 }
 
 export function savedAt() {
@@ -389,6 +394,9 @@ export const useGame = create((set, get) => ({
   sawMissing: (program) => set((s) => (s.grants[missingKey(program)]
     ? s
     : { grants: { ...s.grants, [missingKey(program)]: true } })),
+  // 어떤 화면을 봤다는 표식. 퍼즐이 아니라 반응을 위한 것이다 — 근태의
+  // 빈칸을 본 사람에게만 부름이 그것을 짚는다.
+  notice: (key) => set((s) => (s.grants[key] ? s : { grants: { ...s.grants, [key]: true } })),
   clearToast: () => set({ toast: null }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),

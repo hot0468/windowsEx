@@ -330,3 +330,34 @@ describe('심박계 소리는 미리 들려 둔다', () => {
     }
   })
 })
+
+// 성실하게 일만 한 플레이어도 균열을 지나가야 한다. 5일차의 고정 요청이
+// 부고가 실린 바로 그 글로 보내고, 답만 집어 돌아선 사람은 그 직후의
+// 반응이 글 아래쪽으로 다시 끌어당긴다.
+describe('일이 균열을 지나간다', () => {
+  it('결혼식장 요청의 답은 부고가 실린 글 위쪽에 있다', () => {
+    expect(scenario.pool.fixed['5']).toContain('wedding_venue')
+    const ask = scenario.days[4].asks.find((a) => a.ask.grants === 'wedding_venue').ask
+    const post = obituary()
+    const above = post.sections.filter((s) => !s.mine)
+    expect(JSON.stringify(above)).toContain(ask.accept[0])
+    expect(JSON.stringify(post.sections.find((s) => s.mine))).not.toContain(ask.accept[0])
+  })
+
+  it('답만 집어 돌아선 사람을 다시 끌어당긴다', () => {
+    const pull = scenario.chatter.find((c) => c.after === 'wedding_venue')
+    expect(pull, 'wedding_venue 뒤에 오는 반응이 없다').toBeTruthy()
+    expect(JSON.stringify(pull.beat.lines)).toMatch(/아래/)
+  })
+
+  it('근태 요청은 쉬운 곡선에 있고, 목표가 있다', () => {
+    expect(scenario.pool.before.overtime_pay).toBe(3)
+    expect(scenario.objectives.some((o) => o.id === 'overtime_pay')).toBe(true)
+  })
+
+  it('5일차에는 어긋남이 셋 이상 있다', () => {
+    const off = scenario.chatter.filter((c) =>
+      c.egg?.includes('어긋남') && (c.days?.includes(5) || c.after === 'wedding_venue'))
+    expect(off.length).toBeGreaterThanOrEqual(3)
+  })
+})

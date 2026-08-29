@@ -448,9 +448,11 @@ describe('one holiday, one set of dates', () => {
   it('pays no August overtime without saying where it came from', () => {
     const pay = JSON.stringify(scenario.fs).match(/지급월 : 2026년 8월[\s\S]{0,1400}?발 행 처[^"]*/)?.[0] ?? ''
     expect(pay).toBeTruthy()
-    // the attendance page has no August row at all, so the slip has to explain
+    // the attendance page carries August as an empty row — the gate never
+    // saw her this month — so the slip has to explain the money on its own
     const att = hr['/hr/attendance'].attendance
-    expect(att.rows.some((r) => r[0] === '2026-08')).toBe(false)
+    const aug = att.rows.find((r) => r[0] === '2026-08')
+    expect(aug.slice(1).every((c) => c === '-')).toBe(true)
     if (/연장근로수당/.test(pay)) expect(pay).toMatch(/소급|근태 실적 없음/)
   })
 })

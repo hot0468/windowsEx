@@ -74,6 +74,10 @@ const Post = ({ post, onBack }) => (
 // Nobody is asked to open this — it is the company keeping score all along.
 const Attendance = ({ page, onBack }) => {
   const a = page.attendance
+  // 이 화면을 열었다는 것 자체가 사건이다. 8월 행이 비어 있는 것을 본
+  // 사람에게만 부름이 그 얘기를 꺼낸다.
+  const notice = useGame((s) => s.notice)
+  useEffect(() => notice('saw_gap'), [])
   return (
     <article className="pt-post pt-att">
       <button className="pt-back" onClick={onBack}>
