@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame, findFile } from '../engine/store.js'
+import { docBody, docTitle } from './docLayout.js'
 
 const ZOOMS = [100, 125, 150]
 
@@ -16,7 +17,10 @@ export default function Pdf({ fileId }) {
   const f = file.form
   // 영수증은 표가 아니라 좁은 전표다. 칸을 그리는 대신 줄을 세운다.
   const r = file.receipt
-  const [title, ...rest] = f ? [f.title] : file.content.split('\n')
+  // 제목이 어느 모양에 적혀 있는지는 docLayout 이 안다 — 뷰어와 검사가
+  // 같은 규칙을 쓴다.
+  const title = docTitle(file)
+  const body = docBody(file)
 
   return (
     <div className="pdf">
@@ -119,7 +123,7 @@ export default function Pdf({ fileId }) {
               {f.issuer && <div className="pdf-issuer">{f.issuer}</div>}
             </div>
           ) : (
-            <pre className="pdf-text">{rest.join('\n').replace(/^\n+/, '')}</pre>
+            <pre className="pdf-text">{body}</pre>
           )}
           <div className="pdf-seal">직인</div>
           <div className="hwp-pageno">1 / 1</div>

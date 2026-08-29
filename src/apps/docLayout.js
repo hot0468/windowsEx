@@ -123,3 +123,17 @@ export const isForm = (blocks) =>
     // says in the table, leaving too few `키: 값` lines to recognise it by
     (blocks.some((b) => b.kind === 'table') && blocks.some((b) => b.kind === 'fields'))) &&
   !blocks.some((b) => b.kind === 'text' && b.text.trim().length > 40)
+
+// PDF 로 열리는 문서는 셋 중 한 모양이다: 줄글(content), 서식(form), 전표
+// (receipt). 제목을 어디서 가져오는지가 모양마다 다른데, 뷰어가 그것을 제 손으로
+// 고르면 새 모양이 생겼을 때 없는 곳을 읽는다 — 전자영수증을 전표로 바꾸며
+// content 를 지웠을 때 그랬고, 렌더 도중 터지니 뷰어 하나가 아니라 화면
+// 전체가 내려갔다. 규칙을 여기 한 곳에 두고 뷰어와 검사가 같이 쓴다.
+export const docTitle = (file) =>
+  file?.form?.title ?? file?.receipt?.title ?? (file?.content ?? '').split('\n')[0]
+
+// 줄글 문서의 본문 — 제목 줄을 뺀 나머지. 서식·전표는 본문이 따로 없다.
+export const docBody = (file) =>
+  (file?.form || file?.receipt)
+    ? ''
+    : (file?.content ?? '').split('\n').slice(1).join('\n').replace(/^\n+/, '')

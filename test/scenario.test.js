@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
+import { docTitle } from '../src/apps/docLayout.js'
 import { allFiles, entriesAt, fileOpener, objectiveDone, quickSets, searchSites , goalFor } from '../src/engine/store.js'
 import { fileImage } from '../src/assets/photos.js'
 
@@ -98,6 +99,17 @@ describe('scenario integrity', () => {
       expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides)
         || Boolean(f.sheets) || Boolean(f.form) || Boolean(f.receipt), f.name).toBe(true)
     }
+  })
+
+  // PDF 로 열리는 문서는 셋 중 한 모양이다: 줄글 · 서식 · 전표. 뷰어가 제목을
+  // 제 손으로 골라 읽으면 새 모양이 생겼을 때 없는 곳을 읽는다 — 전자영수증을
+  // 전표로 바꾸며 content 를 지웠더니 제목을 뽑다가 터졌고, 렌더 도중이라
+  // 뷰어 하나가 아니라 화면 전체가 내려갔다. 규칙은 docLayout 한 곳에 있고
+  // 뷰어와 이 검사가 같이 쓴다.
+  it('every pdf has a title the viewer can find', () => {
+    const pdfs = files.filter((f) => fileOpener(f).app === 'pdf')
+    expect(pdfs.length).toBeGreaterThan(3)
+    for (const f of pdfs) expect(docTitle(f), f.name).toBeTruthy()
   })
 
   it('opens every workbook in the spreadsheet app with square rows', () => {
