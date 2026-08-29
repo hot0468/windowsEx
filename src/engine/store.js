@@ -1578,6 +1578,18 @@ export function parseAddress(raw = '') {
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
 
+// 주소창은 주소만 받는 자리가 아니다. 실제 브라우저처럼, 주소로 읽히지 않는
+// 것을 치면 검색으로 보낸다 — 사이트 이름만 아는 채로 '퇴근길' 이라고 쳤을 때
+// "찾을 수 없습니다" 를 띄우는 것은 퍼즐이 아니라 벌이다. 점이 있으면 주소로
+// 본다: 없는 도메인을 쳤을 때 오류가 나는 것은 실제 브라우저도 같고, hosts 를
+// 고쳐야 열리는 주소(sotong.ar.local)가 그 오류로 퍼즐을 이룬다.
+export const looksLikeAddress = (scenario, edits, raw = '') => {
+  const t = raw.trim()
+  if (!t || /\s/.test(t)) return false
+  const { host } = parseAddress(t)
+  return host.includes('.') || Boolean(resolveSite(scenario, edits, host))
+}
+
 // A site by its name — or, typed as an address, by whichever name the hosts
 // file (or the names the game hands out) maps to that address.
 export function resolveSite(scenario, edits, host) {

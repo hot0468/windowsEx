@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  hostResolves, latestNews, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
+  hostResolves, latestNews, looksLikeAddress, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
 } from '../engine/store.js'
 import Place from './Place.jsx'
 import TilePhoto from './TilePhoto.jsx'
@@ -102,11 +102,17 @@ export default function Browser() {
 
   // A path on its own ('/hr/events') stays on the site that is open.
   const open = (raw) => {
-    const typed = raw.trim().startsWith('/') && page.kind === 'site' ? page.url + raw.trim() : raw
+    const t = raw.trim()
+    const typed = t.startsWith('/') && page.kind === 'site' ? page.url + t : raw
+    setMenu(false)
+    // 주소로 읽히지 않는 것은 검색어다. 실제 브라우저의 주소창이 그렇다.
+    if (t && !t.startsWith('/') && !looksLikeAddress(scenario, edits, typed)) {
+      setQ(t)
+      return nav.go({ kind: 'search', q: t })
+    }
     const { host, path } = parseAddress(typed)
     setAddr(host + path)
     nav.go(host ? { kind: 'site', url: host, path } : { kind: 'home' })
-    setMenu(false)
   }
 
   const submitSearch = () => {
@@ -122,7 +128,7 @@ export default function Browser() {
   }
 
   useEffect(() => {
-    setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : '')
+    setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : page.kind === 'search' ? page.q : '')
   }, [page])
   useEffect(() => () => {
     useGame.getState().windows.filter((w) => w.app === 'devtools').forEach((w) => closeWindow(w.id))
