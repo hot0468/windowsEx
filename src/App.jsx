@@ -287,19 +287,6 @@ export default function App() {
   if (crashed) return <Crash />
   if (!booted) return <Boot />
 
-  // 굳은 뒤로는 그 페이지 하나뿐이다. 바탕화면도, 할 일 목록도, 작업표시줄도
-  // 없다 — 남은 요청은 이제 아무 의미가 없고, 마지막 말들만 도착한다.
-  if (sealed) {
-    if (shell === 'phone') return <><PhoneShell /><SealedSay /></>
-    return (
-      <div className="desktop sealed" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
-        <WindowLayer />
-        <SealedSay />
-      </div>
-    )
-  }
-
-
   // 오버레이는 두 셸이 함께 쓴다 — 이미 전체화면이라 폰에서도 그대로 선다.
   const overlays = (
     <>
@@ -313,15 +300,21 @@ export default function App() {
     </>
   )
 
-  if (shell === 'phone') return <><PhoneShell />{overlays}</>
+  if (shell === 'phone') return <><PhoneShell />{sealed ? <SealedSay /> : overlays}</>
 
+  // 굳은 뒤로는 그 페이지 하나뿐이다. 바탕화면도, 할 일 목록도, 작업표시줄도
+  // 없다 — 남은 요청은 이제 아무 의미가 없고, 마지막 말들만 도착한다.
+  //
+  // 창은 여기서 그리던 것을 그대로 그린다. 딴 가지로 빼면 리액트가 창을
+  // 새로 세워서, 굳어야 할 화면이 맨 위로 되감긴다.
   return (
-    <div className="desktop" style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
-      <Desktop />
-      <Progress />
+    <div className={'desktop' + (sealed ? ' sealed' : '')}
+         style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
+      {!sealed && <Desktop />}
+      {!sealed && <Progress />}
       <WindowLayer />
-      {overlays}
-      <Taskbar />
+      {sealed ? <SealedSay /> : overlays}
+      {!sealed && <Taskbar />}
     </div>
   )
 }

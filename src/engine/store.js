@@ -688,7 +688,9 @@ export const useGame = create((set, get) => ({
   // 차례로 도착한 뒤 끝난다. 여기서 게임은 사실상 종료 절차에 들어간다.
   witness: () => {
     const s = get()
-    if (s.grants[CLUE.obituary]) return
+    // 굳었는지로 따진다. 표식만 보고 돌아서면, 이 화면이 생기기 전에 부고를
+    // 이미 열어 둔 세이브는 다시 열어도 아무 일이 일어나지 않는다.
+    if (s.sealed) return
     // 어느 창이 그것을 띄우고 있는지는 창틀이 앱에 알려 주지 않는다. 방금
     // 읽던 것은 맨 앞의 브라우저다.
     const keep = s.windows.filter((w) => w.app === 'browser')
@@ -697,7 +699,8 @@ export const useGame = create((set, get) => ({
       grants: { ...s.grants, [CLUE.obituary]: true },
       sealed: true,
       sealedSaid: [],
-      windows: keep ? [{ ...keep, minimized: false }] : [],
+      // 띄운 창을 못 찾으면 그냥 다 굳힌다 — 화면을 통째로 비우는 것보다 낫다.
+      windows: keep ? [{ ...keep, minimized: false }] : s.windows,
       screens: keep ? ['win:' + keep.id] : [],
       beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, toast: null, closing: false
     })

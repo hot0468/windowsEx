@@ -196,6 +196,24 @@ describe('the two endings', () => {
       }
     })
 
+    // 이 화면이 생기기 전의 세이브에는 부고를 본 표식만 있고 굳은 자국이
+    // 없다. 표식을 보고 돌아서면 그런 판은 다시 열어도 아무 일이 없다.
+    it('부고를 이미 본 세이브도 다시 열면 굳는다', () => {
+      seal()
+      useGame.setState({ sealed: false, sealedSaid: [], windows: [{ id: 9, app: 'browser', key: 'b', z: 1 }] })
+      useGame.getState().witness()
+      expect(useGame.getState().sealed).toBe(true)
+      vi.runAllTimers()
+      expect(useGame.getState().ended).toBe('true')
+    })
+
+    it('띄운 창을 못 찾아도 화면을 비우지는 않는다', () => {
+      seal()
+      useGame.setState({ sealed: false, windows: [{ id: 4, app: 'explorer', key: 'e', z: 1 }] })
+      useGame.getState().witness()
+      expect(useGame.getState().windows.map((w) => w.id)).toEqual([4])
+    })
+
     it('굳은 채로 저장된 판을 다시 켜도 갇히지 않는다', () => {
       seal()
       // 새로고침: 타이머는 사라지고 저장된 상태만 남는다
