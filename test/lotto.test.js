@@ -42,14 +42,18 @@ describe('the slip, scattered', () => {
     expect(card.messages.some((m) => m.text.includes('동행복권'))).toBe(true)
   })
 
+  // 파일에서 플레이어가 읽을 수 있는 글. 캡처 화면은 content 대신 alt 로
+  // 적혀 있다 — 그림에 찍힌 글자를 옮겨 적은 것이라 읽히기는 매한가지다.
+  const readable = (f) => f.content ?? f.alt ?? ''
+
   it('splits the serial across the memo, a friend and the phone', () => {
-    expect(memo.content).toContain(groups[0] + '-' + groups[1])
+    expect(readable(memo)).toContain(groups[0] + '-' + groups[1])
     expect(jihyun.messages.some((m) => m.text.includes(groups[2]))).toBe(true)
-    expect(app.content).toContain(groups[3])
+    expect(readable(app)).toContain(groups[3])
     // each place holds its piece and no other
-    expect(memo.content).not.toContain(groups[2])
-    expect(memo.content).not.toContain(groups[3])
-    expect(app.content).not.toContain(groups[0])
+    expect(readable(memo)).not.toContain(groups[2])
+    expect(readable(memo)).not.toContain(groups[3])
+    expect(readable(app)).not.toContain(groups[0])
   })
 
   it('never writes the whole serial anywhere but the ending', () => {
