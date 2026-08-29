@@ -122,8 +122,11 @@ describe('going up', () => {
     expect(told).not.toContain(scenario.player.name)
     expect(scenario.ending.missing.scenes.length).toBeGreaterThan(3)
     for (const sc of scenario.ending.missing.scenes) expect(sc.lines.length).toBeGreaterThan(0)
-    // the log ends with the player's own badge number, not the missing person's
-    expect(told).toContain('AR-2104')
+    // the log ends with the player's own badge number, not the missing person's.
+    // 사번을 여기 베껴 적으면 사번이 바뀔 때 검사만 낡는다 — 포털이 들고 있는
+    // 것을 읽는다.
+    const empNo = scenario.sites.find((x) => x.layout === 'portal').portal.me.empNo
+    expect(told).toContain(empNo)
     expect(scenario.ending.missing.end.title).toBe('실종')
   })
 })
