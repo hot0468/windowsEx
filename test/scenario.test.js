@@ -91,10 +91,11 @@ describe('scenario integrity', () => {
     }
   })
 
-  it('every file carries text, a picture, slides, or sheets', () => {
+  it('every file carries text, a picture, slides, sheets, or a form', () => {
     for (const f of files) {
-      expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides) || Boolean(f.sheets))
-        .toBe(true)
+      // 통보서·증명서는 줄글이 아니라 칸으로 적힌다 — Pdf 가 서식으로 그린다.
+      expect(Boolean(f.content) || Boolean(f.image) || Boolean(f.slides)
+        || Boolean(f.sheets) || Boolean(f.form), f.name).toBe(true)
     }
   })
 

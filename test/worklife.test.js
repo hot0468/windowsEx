@@ -55,9 +55,13 @@ describe('the week that was already on record', () => {
 
   it('has the body keeping its own score', () => {
     const health = files.find((f) => f.name.includes('건강검진'))
-    expect(health.content).toContain('경계')
-    expect(health.content).toMatch(/수면/)
-    expect(health.content).toContain('재검 예약 이력 없음')
+    // 통보서는 줄글이 아니라 서식이다. 어느 칸에 적혔든 이 사실들이 남아야
+    // 한다 — 경계 판정, 수면 문진, 그리고 끝내 잡지 않은 재검.
+    const written = JSON.stringify(health)
+    expect(written).toContain('경계')
+    expect(written).toContain('수면')
+    expect(written).toContain('재검 예약')
+    expect(written).toContain('이력 없음')
     const run = files.find((f) => f.name === '운동_기록.txt')
     expect(run.content).toContain('그 뒤로 안 씀')
   })
