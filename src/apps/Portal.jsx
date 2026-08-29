@@ -376,6 +376,10 @@ export default function Portal({ site, path = '', onOpen }) {
   // today's banner replaces yesterday's, but the 소식 list keeps piling up
   const p = { ...site.portal, ...(today ?? {}), news: portalFeed(scenario, site.portal, day) }
   const [post, setPost] = useState(null)
+  // 글은 컴포넌트가 들고 있고 주소는 브라우저가 들고 있다. 로고나 상단 메뉴로
+  // 주소가 바뀌면 열어 둔 글도 닫는다 — 안 그러면 주소만 홈으로 가고 화면은
+  // 읽던 글에 그대로 머문다.
+  useEffect(() => { setPost(null) }, [path])
   // Which sub-page a path names. A page the portal has no view for shows the
   // portal instead of falling through to whichever view came last in a chain.
   const [Sub, , back] = SUBPAGES.find(([, key]) => site.pages?.[path]?.[key]) ?? []
@@ -385,11 +389,11 @@ export default function Portal({ site, path = '', onOpen }) {
       <div className="pt-top">
         {/* 로고는 어느 화면에서든 포털 홈으로. 하위 메뉴의 '뒤로'와 같은 자리다. */}
         {onOpen
-          ? <button className="pt-logo" onClick={() => onOpen('')}>AR</button>
+          ? <button className="pt-logo" onClick={() => { setPost(null); onOpen('') }}>AR</button>
           : <span className="pt-logo">AR</span>}
         <nav>
           {p.nav.map((n) => (p.navLinks?.[n] && onOpen
-            ? <button key={n} className="pt-nav-link" onClick={() => onOpen(p.navLinks[n])}>{n}</button>
+            ? <button key={n} className="pt-nav-link" onClick={() => { setPost(null); onOpen(p.navLinks[n]) }}>{n}</button>
             : <span key={n}>{n}</span>))}
         </nav>
         <span className="pt-top-icons">
