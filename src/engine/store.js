@@ -14,6 +14,30 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
   'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted']
 
+// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다. 시나리오의 대사를
+// 고쳐도 이미 열린 질문은 옛 사본 그대로 남아, 파일에는 새 말이 보이는데
+// 대화는 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다.
+// 켤 때, 묻는 말과 정답이 같은 질문이 시나리오에 있으면 그쪽으로 갈아 끼운다.
+// 두 질문이 한 대화에 겹쳐 만들어진 것(appendAsk)은 시나리오에 없으므로
+// 그대로 둔다.
+const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? a?.files ?? null)
+
+export function freshenAsks(scenario, pending = {}) {
+  const index = new Map()
+  const chain = (a) => { for (let x = a; x; x = x.then) index.set(askOf(x), x) }
+  const walk = (n) => {
+    if (Array.isArray(n)) return n.forEach(walk)
+    if (n && typeof n === 'object') {
+      if (n.ask) chain(n.ask)
+      Object.values(n).forEach(walk)
+    }
+  }
+  walk(scenario)
+  const out = {}
+  for (const [id, a] of Object.entries(pending)) out[id] = index.get(askOf(a)) ?? a
+  return out
+}
+
 const snapshot = (s) => {
   const out = { at: Date.now() }
   for (const k of PROGRESS) out[k] = s[k]
@@ -118,7 +142,7 @@ export const useGame = create((set, get) => ({
   extraMessages: restored?.extraMessages ?? {},
   // which small talk has already come, and on what day
   chatted: restored?.chatted ?? {},
-  pendingAsks: restored?.pendingAsks ?? {},
+  pendingAsks: freshenAsks(scenario, restored?.pendingAsks),
   // What the day still has to say, and the conversation it is waiting on
   // before it says the next thing.
   beatQueue: restored?.beatQueue ?? [],

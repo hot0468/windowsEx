@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
+import scenario from '../src/scenarios/workday.json'
+import { freshenAsks } from '../src/engine/store.js'
 
 // The store reads storage at import time, so each case stubs it, then imports.
 const mem = () => {
@@ -119,7 +121,9 @@ describe('what survives a reload', () => {
   const src = readFileSync('src/engine/store.js', 'utf8')
   const listed = src.match(/export const PROGRESS = \[([\s\S]*?)\]/)[1]
     .match(/'[^']+'/g).map((s) => s.slice(1, -1))
-  const restoredOnBoot = [...src.matchAll(/^ {2}(\w+): restored\?\./gm)].map((m) => m[1])
+  // 값을 그대로 되살리기도 하고(restored?.x ?? {}) 손을 봐서 되살리기도 한다
+  // (freshenAsks(scenario, restored?.x)). 어느 쪽이든 되살리는 것은 맞다.
+  const restoredOnBoot = [...src.matchAll(/^ {2}(\w+): [^\n]*restored\?\./gm)].map((m) => m[1])
 
   it('saves every field the store restores on boot', () => {
     expect(restoredOnBoot.filter((f) => !listed.includes(f))).toEqual([])
@@ -133,5 +137,37 @@ describe('what survives a reload', () => {
     for (const k of ['day', 'grants', 'dreamt', 'drawn', 'overtime', 'digging', 'rumor']) {
       expect(listed, k).toContain(k)
     }
+  })
+})
+
+// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다. 시나리오의 대사를
+// 고쳐도 이미 열린 질문은 옛 사본 그대로라, 파일에는 새 말이 보이는데 대화는
+// 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다. 켤 때
+// 시나리오의 같은 질문으로 갈아 끼운다.
+describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
+  const first = scenario.summons.beat.ask
+
+  it('옛 사본을 들고 있으면 시나리오 것으로 바꾼다', () => {
+    const stale = { placeholder: first.placeholder, accept: first.accept, ok: ['옛날 말'] }
+    const out = freshenAsks(scenario, { caller: stale })
+    expect(out.caller.ok).toEqual(first.ok)
+    expect(out.caller.ok).not.toContain('옛날 말')
+  })
+
+  it('이어지는 질문도 제 단계로 찾아간다', () => {
+    const step2 = first.then
+    const stale = { placeholder: step2.placeholder, accept: step2.accept, ok: ['옛날 말'] }
+    expect(freshenAsks(scenario, { caller: stale }).caller.ok).toEqual(step2.ok)
+  })
+
+  it('시나리오에 없는 질문은 그대로 둔다', () => {
+    // 한 대화에 질문이 둘 겹치면 그 자리에서 합쳐진 것이 저장된다.
+    const merged = { placeholder: '합쳐진 질문', accept: ['x'], ok: ['그대로'] }
+    expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
+  })
+
+  it('아무것도 안 열려 있으면 아무 일도 없다', () => {
+    expect(freshenAsks(scenario, {})).toEqual({})
+    expect(freshenAsks(scenario, undefined)).toEqual({})
   })
 })
