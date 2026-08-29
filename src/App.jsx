@@ -68,20 +68,6 @@ function Toast() {
   )
 }
 
-// 부고를 본 뒤 도착하는 마지막 말들. 사라지는 알림이 아니라 쌓인다 — 창은
-// 다 닫혔고 이제 열 수도 없어서, 여기 말고는 읽을 자리가 없다.
-function SealedSay() {
-  const said = useGame((s) => s.sealedSaid)
-  if (!said.length) return null
-  return (
-    <div className="seal-say">
-      {said.map((m, i) => (
-        <div key={i} className="toast"><b>{m.from}</b>{m.text}</div>
-      ))}
-    </div>
-  )
-}
-
 function WindowLayer() {
   const windows = useGame((s) => s.windows)
   return knownWindows(windows).map((win) => {
@@ -300,10 +286,10 @@ export default function App() {
     </>
   )
 
-  if (shell === 'phone') return <><PhoneShell />{sealed ? <SealedSay /> : overlays}</>
+  if (shell === 'phone') return <><PhoneShell />{!sealed && overlays}</>
 
-  // 굳은 뒤로는 그 페이지 하나뿐이다. 바탕화면도, 할 일 목록도, 작업표시줄도
-  // 없다 — 남은 요청은 이제 아무 의미가 없고, 마지막 말들만 도착한다.
+  // 굳은 뒤로는 바탕화면도, 할 일 목록도, 작업표시줄도 없다 — 남은 요청은
+  // 이제 아무 의미가 없다. 마지막 장면이 띄우는 창들만 뜬다.
   //
   // 창은 여기서 그리던 것을 그대로 그린다. 딴 가지로 빼면 리액트가 창을
   // 새로 세워서, 굳어야 할 화면이 맨 위로 되감긴다.
@@ -313,7 +299,7 @@ export default function App() {
       {!sealed && <Desktop />}
       {!sealed && <Progress />}
       <WindowLayer />
-      {sealed ? <SealedSay /> : overlays}
+      {!sealed && overlays}
       {!sealed && <Taskbar />}
     </div>
   )

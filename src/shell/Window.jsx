@@ -18,9 +18,10 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   // 저장 안 한 것을 들고 있는 창은 그냥 닫지 않는다. 창틀은 무엇이 저장 안
   // 됐는지 모르고, 저장이라는 개념을 가진 앱이 있는지만 스토어에 묻는다.
   const unsaved = useGame((s) => unsavedFile(s, win))
-  // 부고를 본 뒤에는 이 창이 마지막 화면이다 — 움직이지도, 닫히지도, 스크롤
-  // 되지도 않는다.
+  // 부고를 본 뒤에는 어떤 창도 움직이거나 닫히지 않는다. 그중 부고를 띄운
+  // 창 하나는 스크롤까지 선다 — 읽던 자리 그대로 굳는다.
   const sealed = useGame((s) => s.sealed)
+  const frozen = useGame((s) => s.frozen === win.id)
   const [asking, setAsking] = useState(false)
   const drag = useRef(null)
   const grab = useRef(null)
@@ -65,7 +66,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
       }
 
   return (
-    <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '') + (sealed ? ' sealed' : '')}
+    <div className={'window' + (win.minimized ? ' minimized' : '') + (win.maximized ? ' maximized' : '') + (sealed ? ' sealed' : '') + (frozen ? ' frozen' : '')}
          style={style}
          onPointerDown={() => focusWindow(win.id)}>
       <div className={'titlebar' + (theme ? ' themed' : '')}

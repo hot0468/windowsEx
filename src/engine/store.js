@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'sealedSaid']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -190,6 +190,9 @@ const NUDGE_GAP = 2200
 // 부고를 본 뒤 마지막 말들이 도착하는 속도. 사람이 바뀔 때 한 박자 쉬고,
 // 마지막 줄 뒤에는 읽을 만큼 두었다가 엔딩으로 넘어간다.
 const SEAL_TURN = 1800
+// 사고 기사가 뜨고 나서 계정이 입을 열 때까지 — 다 읽을 만큼은 아니어도,
+// 무엇이 뜬 것인지 알아볼 만큼은 된다.
+const SEAL_READ = 5200
 const SEAL_TAIL = 3600
 // Who asks for the IP, and the thread's own `wait` — the scenario names the
 // same grant, so the conversation and its trigger cannot drift apart.
@@ -249,7 +252,8 @@ export const useGame = create((set, get) => ({
   // 부고를 본 뒤. 그 페이지가 떠 있던 창 하나만 남아 그 자리에 굳고, 마지막
   // 말들이 차례로 도착한 다음 게임이 끝난다. 그동안 아무것도 열리지 않는다.
   sealed: restored?.sealed ?? false,
-  sealedSaid: restored?.sealedSaid ?? [],
+  // 그 자리에 굳은 창. 이것만 스크롤이 서고, 뒤이어 뜨는 창들은 읽을 수 있다.
+  frozen: restored?.frozen ?? null,
   dreamt: restored?.dreamt ?? false,
   // Whether 엄마's conversation has been unfolded all the way back. She answers
   // that once, and only for the player who went looking.
@@ -432,13 +436,14 @@ export const useGame = create((set, get) => ({
     return first?.startsWith('app:') ? first.slice(4) : null
   },
 
-  openWindow: (app, props = {}, anew = false) => {
+  openWindow: (app, props = {}, anew = false, forced = false) => {
     // A machine pinned at 96% cannot hold a new window: it appears and shuts.
     // The two ways out of this state are exempt, or the player would be stuck.
     const s0 = get()
-    // 굳은 뒤로는 아무것도 열리지 않는다. 바탕화면도 작업표시줄도 치웠지만,
-    // 알림이나 남아 있는 단축키가 여기로 들어올 수 있다.
-    if (s0.sealed) return s0
+    // 굳은 뒤로 플레이어는 아무것도 열지 못한다. 바탕화면도 작업표시줄도
+    // 치웠지만 알림이나 남은 단축키가 여기로 들어올 수 있다. 마지막 장면이
+    // 스스로 띄우는 창만 forced로 지나간다.
+    if (s0.sealed && !forced) return s0
     if (s0.mining && !opensWhileMining(app)) {
       play('error')
       return s0.showToast({ from: s0.scenario.miner.symptoms.title, text: s0.scenario.miner.symptoms.lines[0], app: 'taskmgr' })
@@ -684,8 +689,11 @@ export const useGame = create((set, get) => ({
   // what the player has read along the way.
   endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
   // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
-  // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳고, 마지막 말들이
-  // 차례로 도착한 뒤 끝난다. 여기서 게임은 사실상 종료 절차에 들어간다.
+  // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다.
+  //
+  // 그다음은 게임이 혼자 진행한다. 사람들이 차례로 말을 걸어오고(창이 스스로
+  // 뜬다), 닷새 내내 아무도 열어 보지 않았을 사고 기사가 뜨고, 나흘 밤 묻기만
+  // 하던 계정이 마지막으로 대답한다. 그러고 나서 끝난다.
   witness: () => {
     const s = get()
     // 굳었는지로 따진다. 표식만 보고 돌아서면, 이 화면이 생기기 전에 부고를
@@ -698,24 +706,36 @@ export const useGame = create((set, get) => ({
     set({
       grants: { ...s.grants, [CLUE.obituary]: true },
       sealed: true,
-      sealedSaid: [],
+      frozen: keep?.id ?? null,
       // 띄운 창을 못 찾으면 그냥 다 굳힌다 — 화면을 통째로 비우는 것보다 낫다.
       windows: keep ? [{ ...keep, minimized: false }] : s.windows,
-      screens: keep ? ['win:' + keep.id] : [],
+      screens: keep ? ['win:' + keep.id] : s.screens,
       beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, toast: null, closing: false
     })
-    const ev = s.scenario.ending.event
-    let at = ev.delay
-    for (const say of [ev, ...(s.scenario.ending.last ?? [])]) {
-      for (const text of say.lines) {
-        setTimeout(() => {
-          get().pushMessage(say.thread, { from: say.from, text })
-          set((st) => ({ sealedSaid: [...st.sealedSaid, { from: say.from, text }] }))
-        }, at)
-        at += SAY_GAP
-      }
-      at += SEAL_TURN
+    const e = s.scenario.ending
+    let at = 0
+    // 말하는 사람이 바뀔 때마다 그 메신저가 열리고 그 대화가 앞으로 온다 —
+    // 보고 있는 대화이므로 줄이 한 줄씩 도착한다.
+    const speaks = (say) => {
+      if (!say) return
+      at += say.delay ?? SEAL_TURN
+      const when = at
+      setTimeout(() => {
+        get().openWindow(appOf(say.source), {}, false, true)
+        get().setOpenThread(say.source, say.thread)
+        get().saying(say.thread, say.from, say.lines)
+      }, when)
+      at += sayTime(say.lines.length)
     }
+    speaks(e.event)
+    for (const say of e.last ?? []) speaks(say)
+    if (e.article) {
+      at += SEAL_TURN
+      const when = at
+      setTimeout(() => get().openWindow('browser', { start: { kind: 'news', id: e.article } }, true, true), when)
+      at += SEAL_READ
+    }
+    speaks(e.explain)
     // 다 읽고 나면 넘어간다. 어느 엔딩인지는 그 주가 이미 정해 두었다.
     setTimeout(() => {
       const g = get()

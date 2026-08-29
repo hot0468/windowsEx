@@ -133,7 +133,7 @@ describe('the two endings', () => {
   })
 
   it('answers the opened obituary with the boss, once, and counts it as no work done', () => {
-    useGame.setState({ extraMessages: {}, toast: null, sealed: false, sealedSaid: [], ended: null })
+    useGame.setState({ extraMessages: {}, toast: null, sealed: false, ended: null, windows: [] })
     useGame.getState().witness()
     useGame.getState().witness()
     expect(useGame.getState().grants[CLUE.obituary]).toBe(true)
@@ -148,9 +148,9 @@ describe('the two endings', () => {
   describe('그 주가 멈춘다', () => {
     const seal = () => {
       useGame.setState({
-        extraMessages: {}, toast: null, sealed: false, sealedSaid: [], ended: null,
+        extraMessages: {}, toast: null, sealed: false, frozen: null, ended: null,
         grants: {}, beatQueue: [{ thread: 'boss', lines: ['x'] }], beatAsk: 'boss',
-        pendingAsks: { boss: { text: 'x' } },
+        pendingAsks: { boss: { text: 'x' } }, openThread: {},
         windows: [
           { id: 1, app: 'explorer', key: 'a', z: 5 },
           { id: 2, app: 'browser', key: 'b', z: 7 },
@@ -165,11 +165,12 @@ describe('the two endings', () => {
       seal()
       const s = useGame.getState()
       expect(s.sealed).toBe(true)
+      expect(s.frozen).toBe(2)
       expect(s.windows.map((w) => w.id)).toEqual([2])
       expect(s.screens).toEqual(['win:2'])
     })
 
-    it('남은 요청은 사라지고 새 창도 열리지 않는다', () => {
+    it('남은 요청은 사라지고 플레이어는 아무것도 못 연다', () => {
       seal()
       expect(useGame.getState().beatQueue).toEqual([])
       expect(useGame.getState().beatAsk).toBe(null)
@@ -179,28 +180,43 @@ describe('the two endings', () => {
       expect(useGame.getState().windows.map((w) => w.id)).toEqual([2])
     })
 
-    it('마지막 말들이 한 줄씩 쌓이고, 다 오면 엔딩으로 넘어간다', () => {
+    // 마지막 말은 사라지는 알림이 아니라 대화창에 온다 — 그 창은 장면이
+    // 스스로 띄운다.
+    it('말하는 사람마다 그 메신저를 띄우고 그 대화를 연다', () => {
       seal()
-      const lines = [ending.event, ...ending.last].flatMap((s) => s.lines)
-      expect(useGame.getState().sealedSaid).toEqual([])
       vi.runAllTimers()
-      expect(useGame.getState().sealedSaid.map((m) => m.text)).toEqual(lines)
-      expect(useGame.getState().ended).toBe('true')
+      const s = useGame.getState()
+      for (const say of [ending.event, ...ending.last, ending.explain]) {
+        expect(s.windows.some((w) => w.app === (say.source === 'privateMessenger' ? 'chat' : 'messenger'))).toBe(true)
+        expect(s.extraMessages[say.thread].map((m) => m.text)).toEqual(say.lines)
+      }
+      // 마지막에 연 대화가 앞에 있다
+      expect(s.openThread[ending.explain.source]).toBe(ending.explain.thread)
     })
 
-    it('마지막 말들은 대화에도 남는다', () => {
+    it('마지막 말들 사이에 사고 기사를 띄운다', () => {
       seal()
       vi.runAllTimers()
-      for (const say of ending.last) {
-        expect(useGame.getState().extraMessages[say.thread].map((m) => m.text)).toEqual(say.lines)
-      }
+      const shown = useGame.getState().windows
+        .find((w) => w.app === 'browser' && w.props?.start)
+      expect(shown?.props.start).toEqual({ kind: 'news', id: ending.article })
+      expect(scenario.news.some((n) => n.id === ending.article)).toBe(true)
+      // 굳은 창은 그것대로 남아 있다
+      expect(useGame.getState().frozen).toBe(2)
+    })
+
+    it('다 오고 나면 엔딩으로 넘어간다', () => {
+      seal()
+      expect(useGame.getState().ended).toBe(null)
+      vi.runAllTimers()
+      expect(useGame.getState().ended).toBe('true')
     })
 
     // 이 화면이 생기기 전의 세이브에는 부고를 본 표식만 있고 굳은 자국이
     // 없다. 표식을 보고 돌아서면 그런 판은 다시 열어도 아무 일이 없다.
     it('부고를 이미 본 세이브도 다시 열면 굳는다', () => {
       seal()
-      useGame.setState({ sealed: false, sealedSaid: [], windows: [{ id: 9, app: 'browser', key: 'b', z: 1 }] })
+      useGame.setState({ sealed: false, windows: [{ id: 9, app: 'browser', key: 'b', z: 1 }] })
       useGame.getState().witness()
       expect(useGame.getState().sealed).toBe(true)
       vi.runAllTimers()
@@ -211,13 +227,14 @@ describe('the two endings', () => {
       seal()
       useGame.setState({ sealed: false, windows: [{ id: 4, app: 'explorer', key: 'e', z: 1 }] })
       useGame.getState().witness()
-      expect(useGame.getState().windows.map((w) => w.id)).toEqual([4])
+      expect(useGame.getState().windows.some((w) => w.id === 4)).toBe(true)
+      expect(useGame.getState().frozen).toBe(null)
     })
 
     it('굳은 채로 저장된 판을 다시 켜도 갇히지 않는다', () => {
       seal()
       // 새로고침: 타이머는 사라지고 저장된 상태만 남는다
-      useGame.setState({ booted: false, ended: null, sealedSaid: [] })
+      useGame.setState({ booted: false, ended: null })
       vi.clearAllTimers()
       useGame.getState().setBooted()
       vi.runAllTimers()
@@ -229,6 +246,16 @@ describe('the two endings', () => {
       for (const word of ['부고', '사망', '죽', '사고', '혼수', '병원']) {
         expect(said).not.toContain(word)
       }
+    })
+
+    // 설명은 계정의 몫이고, 부고와 기사를 다 본 뒤에만 온다. 여기서까지
+    // 말을 아끼면 닷새가 무엇이었는지 아무도 말해 주지 않는다.
+    it('계정은 마지막에 진실을 말한다', () => {
+      expect(ending.explain.thread).toBe(scenario.summons.thread)
+      const said = ending.explain.lines.join(' ')
+      expect(said).toContain('공항')
+      expect(said).toContain('제주도')
+      expect(said).toContain('병상')
     })
   })
 
