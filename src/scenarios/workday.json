@@ -8926,26 +8926,63 @@
     {
       "url": "partner.dyutong.co.kr",
       "title": "D유통 파트너 포털",
-      "layout": "vendor",
-      "vendor": {
+      "layout": "corp",
+      "corp": {
         "brand": "D유통 파트너 포털",
         "tagline": "협력사 전용 문서 서비스",
-        "theme": "corp",
-        "lines": [
-          "D유통과 거래하는 협력사를 위한 문서 서비스입니다.",
-          "당사가 발송하는 거래조건서·정산서는 파트너 전용 형식(.dcx)으로 제공됩니다.",
-          "아래 뷰어를 설치하시면 해당 문서를 열람하실 수 있습니다."
+        "nav": [
+          "공지사항",
+          "자료실",
+          "정산",
+          "문의"
         ],
-        "download": {
-          "fileId": "file_dyviewer",
-          "name": "DYViewer_Setup.exe",
-          "size": "26MB",
-          "label": "뷰어 다운로드"
+        "chip": "AR 주식회사 · 협력사",
+        "notice": {
+          "title": "[안내] 거래조건서·정산서 발송 형식 변경",
+          "lines": [
+            "당사가 발송하는 거래조건서·정산서는 파트너 전용 형식(.dcx)으로 제공됩니다.",
+            "자료실의 전용 뷰어를 설치하시면 해당 문서를 열람하실 수 있습니다."
+          ]
         },
-        "notes": [
-          "지원 환경: Windows 10 이상",
-          "문의: D유통 정보시스템팀 02-777-0200"
-        ]
+        "files": [
+          {
+            "desc": "D유통 파트너 전용 문서(.dcx) 열람용 뷰어입니다. 설치 후 문서를 두 번 눌러 여시면 됩니다.",
+            "download": {
+              "fileId": "file_dyviewer",
+              "name": "DYViewer_Setup.exe",
+              "size": "26MB",
+              "label": "뷰어 다운로드"
+            }
+          }
+        ],
+        "support": {
+          "title": "이용 안내",
+          "rows": [
+            {
+              "label": "지원 환경",
+              "value": "Windows 10 이상",
+              "icon": "settings"
+            },
+            {
+              "label": "문의",
+              "value": "D유통 정보시스템팀 02-777-0200",
+              "icon": "send"
+            },
+            {
+              "label": "계정",
+              "value": "협력사 담당자 계정으로 자동 로그인되어 있습니다.",
+              "icon": "lock"
+            }
+          ]
+        },
+        "footer": {
+          "rows": [
+            "상호 D유통 주식회사",
+            "서울 송파구 오금로 62 D유통빌딩",
+            "본 서비스는 등록된 협력사만 이용할 수 있습니다."
+          ],
+          "copyright": "© DYUTONG CO., LTD."
+        }
       }
     },
     {

@@ -44,16 +44,30 @@ describe('the partner document', () => {
 
 describe('the viewer that opens it', () => {
   const partner = scenario.sites.find((s) => s.url === 'partner.dyutong.co.kr')
+  // 뷰어를 페이지의 어느 절에 실어 두든, 파트너 사이트가 그것을 내주기만 하면
+  // 된다 — 자료실이든 한 줄짜리 안내든. 화면 모양이 아니라 그 사실을 본다.
+  const downloadsOf = (site) => {
+    const out = []
+    const walk = (n) => {
+      if (Array.isArray(n)) return n.forEach(walk)
+      if (n && typeof n === 'object') {
+        if (n.download?.fileId) out.push(n.download)
+        Object.values(n).forEach(walk)
+      }
+    }
+    walk(site)
+    return out
+  }
+  const viewer = downloadsOf(partner).find((d) => d.fileId === 'file_dyviewer')
 
   it('is handed out by the partner site, which you can find by searching', () => {
-    expect(partner.layout).toBe('vendor')
-    expect(partner.vendor.download.fileId).toBe('file_dyviewer')
+    expect(viewer, '파트너 사이트가 뷰어를 안 내준다').toBeTruthy()
     expect(searchSites(scenario.sites, 'D유통').map((s) => s.url)).toContain(partner.url)
   })
 
   it('is a program with a grant of its own', () => {
     const p = scenario.programs.dviewer
-    expect(p.setup).toBe(partner.vendor.download.name)
+    expect(p.setup).toBe(viewer.name)
     expect(p.grant).toBe('dviewer')
     expect(p.missing.lines.join(' ')).toContain(partner.url)
   })
