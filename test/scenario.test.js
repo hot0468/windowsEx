@@ -17,6 +17,8 @@ const offeredBy = (t) => [
   ...asksOf(t).flatMap((a) => a.next ?? []),
   // a consequence may hand the thread buttons of its own the next morning
   ...(scenario.ripples ?? []).filter((r) => r.beat.thread === t.id).flatMap((r) => r.beat.choices ?? []),
+  // 잡담도 선택지(next)를 걸 수 있다 — 엄마의 수상한 문자
+  ...(scenario.chatter ?? []).filter((c) => c.beat.thread === t.id).flatMap((c) => c.beat.next ?? []),
   // 하루를 마칠 때 오는 밤도 그 대화에 버튼을 건넨다
   ...Object.values(scenario.summons?.nights ?? {})
     .filter((b) => b.thread === t.id).flatMap((b) => b.choices ?? [])

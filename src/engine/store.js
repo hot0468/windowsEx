@@ -11,7 +11,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
-  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
+  'roomQuestions', 'boardPicks', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
   'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
@@ -305,6 +305,8 @@ export const useGame = create((set, get) => ({
   // How many questions the anonymous room has been asked, which ripples have
   // already landed, and whether today's wrong answers are being forgiven.
   roomQuestions: restored?.roomQuestions ?? 0,
+  // 게시판 글에 남긴 답들. {url/postId: {text, day}} — 답글이 다음날 달린다.
+  boardPicks: restored?.boardPicks ?? {},
   ripples: restored?.ripples ?? {},
   mercy: restored?.mercy ?? false,
   // The day the miner started and which day a table was booked for — two small
@@ -420,6 +422,15 @@ export const useGame = create((set, get) => ({
   }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
+
+  // 게시판 글에 남긴 답. 글쓴이의 답글은 다음날 아침에 달린다 — 글 하나에
+  // 한 번만 답할 수 있고, 무엇을 골랐는지가 남아야 답글이 짝을 찾는다.
+  pickOnPost: (url, postId, option) => {
+    const key = url + '/' + postId
+    if (get().boardPicks[key]) return
+    set((s) => ({ boardPicks: { ...s.boardPicks, [key]: { text: option.text, day: s.day } } }))
+    if (option.grant) get().grant(option.grant)
+  },
 
   // 폰 셸의 화면 스택. []면 홈이고, 'app:<id>'가 바닥에 깔린 뒤 앱이 제
   // 안에서 더 들어갈 때마다 쌓인다. 데스크톱 셸은 이 값을 보지 않는다.
@@ -951,6 +962,10 @@ export const useGame = create((set, get) => ({
     setTimeout(() => {
       const { beat } = chosen
       get().saying(beat.thread, beat.from, beat.lines)
+      // 잡담도 가끔은 대답을 기다린다. ask(막는 질문)는 잡담에 금지지만,
+      // next는 고르든 말든 하루를 막지 않는 선택지라 잡담이 얹을 수 있다 —
+      // 엄마가 수상한 문자를 물어올 때, 대답하지 않는 것도 대답이 된다.
+      if (beat.next) get().setBranch(beat.thread, beat.next)
       get().showToast({ from: beat.from, text: beat.lines[0], app: appOf(beat.source), source: beat.source, thread: beat.thread })
     }, 2600)
   },
@@ -1430,6 +1445,24 @@ export const visibleByDay = (items = [], day = 1) => items.filter((x) => (x.day 
 // The sort is stable, so the authored order inside a day survives.
 export const boardPosts = (posts = [], day = 1) =>
   [...visibleByDay(posts, day)].sort((a, b) => (b.day ?? 0) - (a.day ?? 0))
+
+// 답할 수 있는 글(picks)의 댓글 목록. 답을 남겼으면 내 댓글이 바로 붙고,
+// 글쓴이의 답글은 다음날 아침에 달린다 — 익명 게시판의 글쓴이는 메신저에
+// 없는 사람이라, 뒷이야기가 돌아올 자리는 여기뿐이다.
+export function postComments(post, pick, day = 1) {
+  const base = post.comments ?? []
+  if (!pick) return base
+  const option = (post.picks ?? []).find((o) => o.text === pick.text)
+  const mine = { author: '익명(나)', time: '오늘', text: pick.text, likes: 0, me: true }
+  if (!option?.reply || day <= pick.day) return [...base, mine]
+  return [...base, mine, option.reply]
+}
+
+// 답 버튼이 보이는 조건: 아직 답하지 않았고, 아는 사람만 답할 수 있는 글이면
+// 그 일을 실제로 해 본 사람(needs)이어야 한다 — 복합기를 고쳐 본 적 없는
+// 사람이 고치는 법을 알려 줄 수는 없다.
+export const canPick = (post, pick, grants = {}) =>
+  Boolean(post.picks?.length) && !pick && (!post.pickNeeds || Boolean(grants[post.pickNeeds]))
 
 // A wiki page as it stands today. Editing one puts her name on it for the rest
 // of the day; by the next morning the approved version is back, and the note
