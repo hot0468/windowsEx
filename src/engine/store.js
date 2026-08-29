@@ -856,6 +856,7 @@ export const useGame = create((set, get) => ({
           from: original.from,
           subject: 'RE: ' + original.subject,
           date: '방금',
+          at: justNow(s.scenario, s.day),
           body: verdict.reply
         }]
       }))
@@ -915,7 +916,7 @@ export const useGame = create((set, get) => ({
     const fill = (t = '') => t.replace('{to}', to).replace('{subject}', subject)
     const reply = verdict.reply ?? s.scenario.goal.bounce
     setTimeout(() => {
-      const mail = { ...reply, id: 'in_' + Date.now(), date: '방금', subject: fill(reply.subject), body: fill(reply.body) }
+      const mail = { ...reply, id: 'in_' + Date.now(), date: '방금', at: justNow(s.scenario, s.day), subject: fill(reply.subject), body: fill(reply.body) }
       set((st) => ({ extraMails: [...st.extraMails, mail] }))
       get().showToast({ from: mail.from, text: `새 메일이 도착했습니다: ${mail.subject}`, app: 'mail' })
       if (verdict.ok) setTimeout(() => get().grant(fetch.grants), 2200)
@@ -1729,6 +1730,14 @@ export const searchTerms = (list, q) =>
 // mail dates read like "8월 21일 (금) 16:42". a reply the player just sent is
 // dated "방금" — that one belongs at the very top, so it sorts as the latest.
 const JUST_NOW = 1e9
+
+// '방금' 은 화면에 보이는 말이지 시각이 아니다. 상수로 두면 그 메일이 영영
+// 맨 위에 박혀, 다음 날 아침에 온 진짜 새 메일이 어제 보낸 회신 밑으로
+// 내려간다. 그래서 목록을 세울 시각은 보낸 그 순간의 것으로 따로 박아 둔다 —
+// 그날의 끝으로 잡으면 오늘 온 메일보다는 위, 내일 올 메일보다는 아래가 된다.
+let mailSeq = 0
+export const justNow = (scenario, day) =>
+  mailTime((scenario.days[day - 1]?.date ?? '') + ' 23:59') + (++mailSeq)
 export function mailTime(date = '') {
   const day = date.match(/(\d+)월\s*(\d+)일/)
   if (!day) return JUST_NOW
@@ -1736,10 +1745,12 @@ export function mailTime(date = '') {
   return ((+day[1] * 31 + +day[2]) * 24 + +h) * 60 + +m
 }
 
-// newest first; same timestamp falls back to the order they arrived in
+// newest first; same timestamp falls back to the order they arrived in.
+// `at` 이 박혀 있으면 그것이 시각이다 — '방금' 처럼 날짜로 읽을 수 없는 것.
+const mailAt = (m) => m.at ?? mailTime(m.date)
 export const sortMails = (mails) => mails
   .map((m, i) => [m, i])
-  .sort(([a, i], [b, j]) => mailTime(b.date) - mailTime(a.date) || j - i)
+  .sort(([a, i], [b, j]) => mailAt(b) - mailAt(a) || j - i)
   .map(([m]) => m)
 
 // Sponsored results are not sites the portal indexed — they are bought, so they
