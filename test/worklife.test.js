@@ -38,10 +38,21 @@ describe('the week that was already on record', () => {
   it('shows overtime climbing and leave going unused', () => {
     const hours = (cell) => Number(String(cell).replace(/[^\d]/g, '')) || 0
     const overtime = att.attendance.rows.map((r) => hours(r[2]))
-    // the month before the holiday is the worst of them
-    expect(Math.max(...overtime)).toBe(overtime.at(-1))
+    // the month before the holiday is the worst of the recorded ones; the
+    // row after it is this month, and this month is the crack (below)
+    expect(Math.max(...overtime)).toBe(overtime.at(-2))
     expect(att.attendance.flags.length).toBeGreaterThan(1)
     expect(att.attendance.last).toMatch(/야간 출입/)
+  })
+
+  // 지금 '일하고 있는' 8월이 표에서 비어 있다 — 게이트가 이번 주의
+  // 김한별을 한 번도 찍지 못했다. 행이 아예 없으면 '표가 지난달까지만
+  // 보여 주나 보다'로 읽히고 만다. 빈 행이 있어야 이상함이 된다.
+  it('keeps an August row, and keeps it empty', () => {
+    const aug = att.attendance.rows.at(-1)
+    expect(aug[0]).toBe('2026-08')
+    expect(aug.slice(1).every((c) => c === '-')).toBe(true)
+    expect(att.attendance.flags.join(' ')).toContain('기록 없음')
   })
 
   it('does not contradict the last clock-out the ending reads out', () => {
@@ -74,9 +85,17 @@ describe('the week that was already on record', () => {
     expect(said('mom')).toMatch(/몸부터|회사에서 잤/)   // and her mother
   })
 
+  // 예전에는 이 화면이 아무 질문에도 답하지 않았다 — 아무도 열 이유가
+  // 없어서, 빈 8월도 아무도 못 봤다. 이제 요청 하나(overtime_pay)가 정당한
+  // 이유로 여기를 지나간다. 답은 그 하나뿐이어야 한다.
+  it('answers exactly the one question that walks the player here', () => {
+    const mine = scenario.pool.requests.find((r) => r.id === 'overtime_pay').beat.ask.accept
+    const found = wholeAnswers.filter((a) => a.length >= 3 && JSON.stringify(att).includes(a))
+    expect(found).toEqual(mine)
+  })
+
   it('says none of it in a way that answers a question', () => {
     const surfaces = [
-      JSON.stringify(att),
       JSON.stringify(['junho', 'soyoung', 'jihyun', 'mom'].map((id) => thread(id).messages))
     ]
     for (const blob of surfaces) {

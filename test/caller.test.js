@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import scenario from '../src/scenarios/workday.json'
 import { callerNight, useGame } from '../src/engine/store.js'
 
@@ -58,5 +59,30 @@ describe('밤마다 오는 부름', () => {
       .filter((a) => a.grants === scenario.summons.grant)
     expect(granting).toHaveLength(1)
     expect(steps(last.ask)).toContain(granting[0])
+  })
+})
+
+// 계정은 플레이어가 본 것을 안다. 근태의 빈 8월을 연 적이 있으면 그날 밤
+// 그 말부터 시작한다 — 안 본 사람에게는 꺼내지 않는다.
+describe('본 것만 짚는다', () => {
+  const night = Object.entries(scenario.summons.nights).find(([, b]) => b.seen)
+
+  it('본 사람에게는 그 말부터 시작한다', () => {
+    expect(night, 'seen 이 달린 밤이 없다').toBeTruthy()
+    const [day, beat] = night
+    const s = { scenario, day: Number(day), grants: { [beat.seen.grant]: true } }
+    expect(callerNight(s).lines.slice(0, beat.seen.lines.length)).toEqual(beat.seen.lines)
+  })
+
+  it('안 본 사람에게는 꺼내지 않는다', () => {
+    const [day, beat] = night
+    expect(callerNight({ scenario, day: Number(day), grants: {} }).lines).toEqual(beat.lines)
+  })
+
+  it('그 표식은 실제로 그 화면이 준다', () => {
+    // Portal 의 근태 화면이 notice('saw_gap') 을 부른다. 화면 쪽이 이름을
+    // 바꾸면 부름이 영영 조용해지니, 소스에서 직접 확인한다.
+    const src = readFileSync('src/apps/Portal.jsx', 'utf8')
+    expect(src).toContain("notice('" + night[1].seen.grant + "')")
   })
 })
