@@ -218,6 +218,23 @@ export default function App() {
   const sealed = useGame((s) => s.sealed)
   const shell = useViewport()
 
+  // 개발 중에만 여는 문. ?ending=seal 이면 5일차 경조사 게시판을 띄운 채로
+  // 시작한다 — 부고를 열어 끝까지 내리면 마지막 장면이 실제와 똑같이 돈다.
+  // ?ending=true 처럼 이름을 주면 그 엔딩 화면으로 바로 간다.
+  //
+  // 부팅 전에 돈다. 굳은 채로 저장된 판을 복구하는 길과 부딪히면 미리보기가
+  // 시작하자마자 끝나 버린다.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const want = new URLSearchParams(window.location.search).get('ending')
+    if (!want) return
+    const g = useGame.getState()
+    if (want !== 'seal') return g.endGame(want)
+    useGame.setState({ day: g.scenario.days.length, sealed: false, frozen: null, ended: false })
+    g.unlockSite('portal.ar.co.kr')
+    g.openWindow('browser', { start: { kind: 'site', url: 'portal.ar.co.kr', path: '/hr/bereavement' } })
+  }, [])
+
   // Ctrl+Alt+L locks on the spot; leaving the machine alone locks it too.
   useEffect(() => {
     if (!booted) return
