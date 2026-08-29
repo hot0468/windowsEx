@@ -299,3 +299,34 @@ describe('the easter eggs', () => {
     expect(JSON.stringify(ending.true)).toContain('2026-07-23')
   })
 })
+
+// wake 엔딩은 "닷새 내내 모니터 소리인 줄 알았던 것은 심박계였습니다"로
+// 끝난다. 그 소리가 게임 안에서 한 번도 난 적이 없으면, 그 줄은 없던 것을
+// 되짚는 셈이 된다.
+describe('심박계 소리는 미리 들려 둔다', () => {
+  const beeps = scenario.chatter.filter((c) => c.egg?.includes('심박계'))
+
+  it('wake가 그 소리를 되짚는다', () => {
+    expect(JSON.stringify(ending.wake.scenes)).toContain('삐')
+  })
+
+  it('주 내내 여러 번 난다', () => {
+    expect(beeps.length).toBeGreaterThanOrEqual(3)
+    for (const c of beeps) expect(JSON.stringify(c.beat.lines)).toMatch(/소리|삐/)
+  })
+
+  it('그중 하나는 운에 맡기지 않는다', () => {
+    // 한가한 잡담은 무작위로 뽑힌다. 하나는 1일차의 고정 요청에 붙여, 어느
+    // 판에서든 반드시 한 번은 들리게 해 둔다.
+    const sure = beeps.find((c) => c.after)
+    expect(sure, '고정 요청에 붙은 것이 없다').toBeTruthy()
+    expect(scenario.days[0].requests).toContain(sure.after)
+  })
+
+  it('아무도 그 소리를 같이 듣지는 않는다', () => {
+    // 남이 들어 버리면 그것은 진짜 기계 소리가 되고, 엔딩이 뒤집을 것이 없다.
+    for (const c of beeps) {
+      expect(JSON.stringify(c.beat.lines), c.id).not.toMatch(/나도 들|들리는데$/)
+    }
+  })
+})

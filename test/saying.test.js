@@ -80,7 +80,7 @@ describe('여러 줄을 밀어 넣는 자리는 한 곳뿐이다', () => {
   it('store 안에 줄을 한꺼번에 쏟는 코드가 saying 말고는 없다', () => {
     const src = readFileSync('src/engine/store.js', 'utf8')
     // saying 자신은 안 보고 있을 때 실제로 한꺼번에 넣는다. 그 한 줄만 빼고 본다.
-    const at = src.indexOf('  saying: (threadId, from, lines) => {')
+    const at = src.indexOf('  saying: (threadId, from, lines, gap) => {')
     expect(at, 'saying 이 없어졌다').toBeGreaterThan(-1)
     const outside = src.slice(0, at) + src.slice(src.indexOf('  },', at))
     const burst = outside.split('\n').filter((l) =>

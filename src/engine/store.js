@@ -183,13 +183,16 @@ const BEAT_GAP = 3600
 // 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
 const SAY_FIRST = 1200
 const SAY_GAP = 1500
-const sayTime = (count) => SAY_FIRST + Math.max(0, count - 1) * SAY_GAP
+const sayTime = (count, gap = SAY_GAP) => SAY_FIRST + Math.max(0, count - 1) * gap
 // And how long between consecutive lines of one conversation opening up:
 // short enough to read as one person typing, long enough to read each toast.
 const NUDGE_GAP = 2200
 // 부고를 본 뒤 마지막 말들이 도착하는 속도. 사람이 바뀔 때 한 박자 쉬고,
 // 마지막 줄 뒤에는 읽을 만큼 두었다가 엔딩으로 넘어간다.
-const SEAL_TURN = 1800
+// 마지막 장면은 일부러 느리다. 여기서 오는 말은 처리할 일이 아니라 읽을
+// 것이다 — 평소 속도로 흘리면 다 지나간 뒤에야 무슨 말이었는지 안다.
+const SEAL_SAY = 2600
+const SEAL_TURN = 3000
 // 사고 기사가 뜨고 나서 계정이 입을 열 때까지 — 다 읽을 만큼은 아니어도,
 // 무엇이 뜬 것인지 알아볼 만큼은 된다.
 const SEAL_READ = 5200
@@ -723,9 +726,9 @@ export const useGame = create((set, get) => ({
       setTimeout(() => {
         get().openWindow(appOf(say.source), {}, false, true)
         get().setOpenThread(say.source, say.thread)
-        get().saying(say.thread, say.from, say.lines)
+        get().saying(say.thread, say.from, say.lines, SEAL_SAY)
       }, when)
-      at += sayTime(say.lines.length)
+      at += sayTime(say.lines.length, SEAL_SAY)
     }
     speaks(e.event)
     for (const say of e.last ?? []) speaks(say)
@@ -964,20 +967,20 @@ export const useGame = create((set, get) => ({
   // The other side writes for a beat, then answers a line at a time. The
   // timers live here rather than in the window, so a reply already started
   // finishes even if the player closes the messenger halfway through it.
-  sayBack: (threadId, from, lines) => {
+  sayBack: (threadId, from, lines, gap = SAY_GAP) => {
     get().setTyping(threadId, true)
     lines.forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
       if (i === lines.length - 1) get().setTyping(threadId, false)
-    }, SAY_FIRST + i * SAY_GAP))
+    }, SAY_FIRST + i * gap))
   },
   // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
   // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
   // 네 줄이 한 번에 튀어나오면 사람이 친 말로 읽히지 않는다.
-  saying: (threadId, from, lines) => {
+  saying: (threadId, from, lines, gap) => {
     const s = get()
     const source = sourceOf(s.scenario, threadId)
-    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines)
+    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines, gap)
     else lines.forEach((text) => get().pushMessage(threadId, { from, text }))
   },
   // Which set of choices a conversation has reached.
