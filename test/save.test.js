@@ -171,3 +171,35 @@ describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
     expect(freshenAsks(scenario, undefined)).toEqual({})
   })
 })
+
+// 대사가 바뀌었을 때는 묻는 말과 정답으로 짝을 찾을 수 있었지만, 정답 자체가
+// 바뀌면 그 방법으로는 짝을 잃는다 — 입사년을 옮기던 날 부름이 옛 정답을
+// 계속 요구했다. 자리표로 찾으면 대사도 정답도 바뀐 질문을 알아본다.
+describe('정답이 바뀐 질문도 켤 때 새로 읽는다', () => {
+  const first = scenario.summons.beat.ask
+  const step = first.then.then          // 입사일을 묻는 자리
+
+  it('시나리오의 질문마다 자리표가 찍혀 있다', () => {
+    freshenAsks(scenario, {})
+    // 자리표는 세이브에 같이 실려야 다음에 켤 때 짚을 수 있다.
+    expect(step.__at, '자리표가 없다').toBeTruthy()
+    expect(JSON.parse(JSON.stringify(step)).__at).toBe(step.__at)
+  })
+
+  it('대사도 정답도 바뀐 사본을 알아본다', () => {
+    const stale = { ...step, accept: ['옛날 정답'], ok: ['옛날 말'] }
+    const out = freshenAsks(scenario, { caller: stale })
+    expect(out.caller.accept).toEqual(step.accept)
+    expect(out.caller.ok).toEqual(step.ok)
+  })
+
+  it('자리표가 없던 옛 세이브는 묻는 말과 정답으로 찾는다', () => {
+    const old = { placeholder: step.placeholder, accept: step.accept, ok: ['옛날 말'] }
+    expect(freshenAsks(scenario, { caller: old }).caller.ok).toEqual(step.ok)
+  })
+
+  it('시나리오에 없는 질문은 그대로 둔다', () => {
+    const merged = { placeholder: '합쳐진 질문', accept: ['x'], ok: ['그대로'] }
+    expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
+  })
+})

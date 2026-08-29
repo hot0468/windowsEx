@@ -14,27 +14,62 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
   'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted']
 
-// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다. 시나리오의 대사를
-// 고쳐도 이미 열린 질문은 옛 사본 그대로 남아, 파일에는 새 말이 보이는데
-// 대화는 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다.
-// 켤 때, 묻는 말과 정답이 같은 질문이 시나리오에 있으면 그쪽으로 갈아 끼운다.
-// 두 질문이 한 대화에 겹쳐 만들어진 것(appendAsk)은 시나리오에 없으므로
-// 그대로 둔다.
-const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? a?.files ?? null)
+// 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
+// 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
+// 파일에는 새 말이 보이는데 대화는 옛 말을 하고 옛 답을 받는다 — 만드는 동안
+// 플레이하면 이것이 버그처럼 보인다.
+//
+// 그래서 시나리오의 질문마다 자리표를 하나 찍어 둔다. 자리표는 훑는 순서로
+// 매기므로 대사나 정답이 바뀌어도 그대로다 — 묻는 말과 정답으로 짝을 찾으면
+// 정작 정답이 바뀐 판에서 짝을 잃는다. 질문을 새로 넣거나 빼면 그 뒤 자리표가
+// 밀리는데, 그때는 옛 방식으로 한 번 더 찾아본다.
+const PATH = '__at'
 
-export function freshenAsks(scenario, pending = {}) {
-  const index = new Map()
-  const chain = (a) => { for (let x = a; x; x = x.then) index.set(askOf(x), x) }
-  const walk = (n) => {
-    if (Array.isArray(n)) return n.forEach(walk)
-    if (n && typeof n === 'object') {
-      if (n.ask) chain(n.ask)
-      Object.values(n).forEach(walk)
+export function stampAsks(scenario) {
+  let n = 0
+  const chain = (a, owner) => {
+    let d = 0
+    for (let x = a; x; x = x.then) {
+      // 자리표는 세이브에 같이 실려야 한다. 숨기면 저장될 때 떨어져 나가,
+      // 다음에 켤 때 짚을 것이 없다.
+      if (!x[PATH]) x[PATH] = owner + ':' + d
+      d++
+    }
+  }
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.forEach(walk)
+    if (node && typeof node === 'object') {
+      if (node.ask) chain(node.ask, 'a' + n++)
+      Object.values(node).forEach(walk)
     }
   }
   walk(scenario)
+  return scenario
+}
+
+// 자리표가 없던 옛 세이브를 위한 되짚기 — 묻는 말과 정답이 같으면 같은 질문.
+const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? a?.files ?? null)
+
+export function freshenAsks(scenario, pending = {}) {
+  const byPath = new Map()
+  const byText = new Map()
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.forEach(walk)
+    if (node && typeof node === 'object') {
+      if (node.ask) {
+        for (let x = node.ask; x; x = x.then) {
+          if (x[PATH]) byPath.set(x[PATH], x)
+          byText.set(askOf(x), x)
+        }
+      }
+      Object.values(node).forEach(walk)
+    }
+  }
+  walk(stampAsks(scenario))
   const out = {}
-  for (const [id, a] of Object.entries(pending)) out[id] = index.get(askOf(a)) ?? a
+  for (const [id, a] of Object.entries(pending)) {
+    out[id] = (a?.[PATH] && byPath.get(a[PATH])) ?? byText.get(askOf(a)) ?? a
+  }
   return out
 }
 
