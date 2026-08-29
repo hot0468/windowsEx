@@ -509,10 +509,13 @@ export default function Messenger({ source }) {
                 ))
               ) : ask ? (
                 <>
+                  {/* 상대가 아직 치고 있는 동안에는 다음 질문을 미리 보여주지
+                      않는다 — 답을 맞히자마자 입력칸이 다음 질문으로 바뀌면,
+                      상대가 그 질문을 말하기도 전에 답부터 알게 된다. */}
                   <input className="quick-input" value={draft} disabled={busy}
                          onChange={(e) => setDraft(e.target.value)}
                          onKeyDown={(e) => e.key === 'Enter' && !busy && answer()}
-                         placeholder={ask.placeholder} aria-label={ask.placeholder} />
+                         placeholder={busy ? '' : ask.placeholder} aria-label={ask.placeholder} />
                   <button className="quick-send" disabled={busy || !draft.trim()}
                           onClick={answer}>전송</button>
                 </>
