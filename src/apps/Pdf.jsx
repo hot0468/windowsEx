@@ -14,6 +14,8 @@ export default function Pdf({ fileId }) {
   // 통보서·증명서는 줄글이 아니라 서식이다. 서식으로 적힌 문서는 칸을 그려
   // 주고, 그렇지 않은 것은 예전처럼 받은 그대로 펼친다.
   const f = file.form
+  // 영수증은 표가 아니라 좁은 전표다. 칸을 그리는 대신 줄을 세운다.
+  const r = file.receipt
   const [title, ...rest] = f ? [f.title] : file.content.split('\n')
 
   return (
@@ -29,9 +31,30 @@ export default function Pdf({ fileId }) {
       <div className="hwp-canvas">
         {/* 서식은 칸이 여럿이라 줄글보다 넓은 종이가 필요하다 — 좁으면 이름과
             날짜가 글자 단위로 접힌다. */}
-        <div className="pdf-page" style={{ width: `${ZOOMS[zoom] * (f ? 6.9 : 5.2)}px` }}>
+        <div className="pdf-page" style={{ width: `${ZOOMS[zoom] * (f ? 6.9 : r ? 3.4 : 5.2)}px` }}>
           <h1 className="pdf-title">{title}</h1>
-          {f ? (
+          {r ? (
+            <div className="pdf-receipt">
+              {r.store.map((l) => <div key={l} className="pdf-rc-store">{l}</div>)}
+              <div className="pdf-rc-rule" />
+              {r.rows.map(([k, v], i) => (
+                <div key={i} className={'pdf-rc-row' + (v ? '' : ' sub')}>
+                  <span>{k}</span><b>{v}</b>
+                </div>
+              ))}
+              <div className="pdf-rc-rule" />
+              <div className="pdf-rc-row pdf-rc-total">
+                <span>{r.total[0]}</span><b>{r.total[1]}</b>
+              </div>
+              <div className="pdf-rc-rule" />
+              <div className="pdf-rc-head">{r.approval.title}</div>
+              {r.approval.pairs.map(([k, v]) => (
+                <div key={k} className="pdf-rc-row"><span>{k}</span><b>{v}</b></div>
+              ))}
+              <div className="pdf-rc-rule" />
+              {r.notes.map((l) => <div key={l} className="pdf-rc-note">{l}</div>)}
+            </div>
+          ) : f ? (
             <div className="pdf-form">
               {f.meta && (
                 <div className="pdf-meta">
