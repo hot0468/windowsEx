@@ -23,7 +23,7 @@ const acceptsOf = (id) => {
   return out
 }
 // 이 페이지에서 찾게 되어 있는 답: 팩스번호(cfax)와 새 본사 주소(h_deck_ctech).
-const onThisPage = (id) => acceptsOf(id).filter((a) => here.includes(a))
+const onThisPage = (id, text = here) => acceptsOf(id).filter((a) => text.includes(a))
 
 describe('힌트가 이름으로 부르는 자리는 실제로 있다', () => {
   it('C테크 홈페이지가 열린다', () => {
@@ -51,5 +51,45 @@ describe('힌트가 이름으로 부르는 자리는 실제로 있다', () => {
   it('이 페이지에서 답을 찾는 요청이 둘 다 답을 찾는다', () => {
     expect(onThisPage('cfax')).toHaveLength(1)
     expect(onThisPage('h_deck_ctech')).toHaveLength(1)
+  })
+})
+
+// 주민등록표 등본도 같은 자리다. 힌트가 "'주소' 줄이 있어요", "전입일 칸을
+// 그대로", "주소 줄 맨 끝" 이라고 칸을 이름으로 부른다 — 서식을 다시 짜면서
+// 그 이름이 사라지면 게임은 멀쩡히 도는데 안내만 없는 곳을 가리킨다.
+describe('등본의 칸 이름', () => {
+  const files = []
+  const walk = (list) => {
+    for (const c of list) {
+      files.push(c)
+      if (c.children) walk(c.children)
+    }
+  }
+  for (const v of Object.values(scenario.fs)) walk(v)
+  const cert = files.find((f) => f.id === 'file_resident_cert')
+  const form = cert?.form
+  const pairs = () => form.blocks.flatMap((b) => b.pairs ?? [])
+  const columns = () => form.blocks.flatMap((b) => b.columns ?? [])
+
+  it('서식으로 적혀 있다', () => {
+    expect(form, '등본이 서식이 아니다').toBeTruthy()
+  })
+
+  it("'주소' 라는 이름의 줄이 있다", () => {
+    const [addr] = onThisPage('homeaddr', JSON.stringify(cert))
+    const row = pairs().find(([k]) => k === '주소')
+    expect(row, "'주소' 줄이 없다").toBeTruthy()
+    expect(row[1]).toContain(addr)
+  })
+
+  it('주소 줄 맨 끝에 호수가 있다', () => {
+    const row = pairs().find(([k]) => k === '주소')
+    expect(row[1].trim().endsWith('302호'), row[1]).toBe(true)
+  })
+
+  it("'전입일' 이라는 이름의 칸이 있다", () => {
+    const [when] = onThisPage('p2_movein', JSON.stringify(cert))
+    expect(columns()).toContain('전입일')
+    expect(JSON.stringify(cert)).toContain(when)
   })
 })

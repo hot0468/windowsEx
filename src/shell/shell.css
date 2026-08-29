@@ -1122,22 +1122,23 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .pdf-title { margin-bottom: 34px; text-align: center; font-family: '바탕', Batang, serif; font-size: 22px; letter-spacing: 6px; color: #1f2430; }
 .pdf-text { font-family: '바탕', Batang, '맑은 고딕', serif; font-size: 13px; line-height: 2; white-space: pre-wrap; user-select: text; }
 /* 통보서·증명서 서식. 종이 양식처럼 칸을 그린다 — 줄글로 흘리면 어디가
-   판정 줄인지 눈에 안 들어온다. */
+   판정 줄인지, 어디가 주소 줄인지 눈에 안 들어온다. 실제 서식의 짜임만
+   빌리고 내용은 게임의 것으로 채운다. */
 .pdf-form { font-size: 12px; color: #1f2430; user-select: text; }
-.pdf-form table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.pdf-form table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
 .pdf-form th, .pdf-form td { border: 1px solid #6b7280; padding: 7px 10px; text-align: left; vertical-align: middle; }
 .pdf-form th { background: #eef0f4; font-weight: 600; color: #23262b; white-space: nowrap; }
 
-.pdf-head th { width: 92px; }
-.pdf-head td { width: auto; }
+.pdf-meta { display: flex; justify-content: space-between; margin: -14px 0 12px; color: #7b8089; font-size: 10.5px; }
+.pdf-lead { margin-bottom: 12px; font-size: 11.5px; color: #4a5058; line-height: 1.7; }
+.pdf-pairs th { width: 108px; }
 .pdf-grid thead th { text-align: center; background: #e4e7ec; }
 .pdf-grid .pdf-group { width: 84px; text-align: center; background: #f4f6fa; }
 .pdf-mark { color: #b0553f; font-weight: 700; text-align: center; }
-.pdf-verdict th { width: 92px; }
-.pdf-verdict td { font-size: 13px; font-weight: 700; }
-.pdf-verdict tr + tr td { font-size: 12px; font-weight: 400; line-height: 1.8; }
-.pdf-foot { margin-bottom: 0; }
-.pdf-foot th { width: 92px; }
+.pdf-lines { margin: 0 0 12px; line-height: 1.9; }
+.pdf-lines div:first-child { font-weight: 600; }
+.pdf-notes { margin: 16px 0 0 16px; padding: 10px 0 0; border-top: 1px solid #cfd4da; color: #7b8089; font-size: 10.5px; line-height: 1.7; }
+.pdf-issuer { margin-top: 18px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
 .pdf-seal { position: absolute; right: 60px; bottom: 74px; width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(200,40,30,.75); border-radius: 6px; color: rgba(200,40,30,.75); font-family: '바탕', Batang, serif; font-size: 15px; letter-spacing: 3px; transform: rotate(-8deg); }
 
 /* 정부25 */

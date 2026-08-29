@@ -31,43 +31,67 @@ export default function Pdf({ fileId }) {
           <h1 className="pdf-title">{title}</h1>
           {f ? (
             <div className="pdf-form">
-              <table className="pdf-head">
-                <tbody>
-                  {f.head.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}
-                </tbody>
-              </table>
+              {f.meta && (
+                <div className="pdf-meta">
+                  {f.meta.map((m) => <span key={m}>{m}</span>)}
+                </div>
+              )}
+              {f.lead && <p className="pdf-lead">{f.lead}</p>}
 
-              <table className="pdf-grid">
-                <thead>
-                  <tr><th>구분</th><th>검사항목</th><th>검사결과</th><th>판정</th></tr>
-                </thead>
-                <tbody>
-                  {f.groups.flatMap((g) => g.rows.map(([item, value, mark], i) => (
-                    <tr key={g.title + item}>
-                      {i === 0 && <th className="pdf-group" rowSpan={g.rows.length}>{g.title}</th>}
-                      <td>{item}</td>
-                      <td>{value}</td>
-                      <td className={mark ? 'pdf-mark' : ''}>{mark}</td>
-                    </tr>
-                  )))}
-                </tbody>
-              </table>
+              {f.blocks.map((b, i) => {
+                if (b.pairs) {
+                  return (
+                    <table key={i} className="pdf-pairs">
+                      <tbody>
+                        {b.pairs.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}
+                      </tbody>
+                    </table>
+                  )
+                }
+                if (b.columns) {
+                  // merge 가 가리키는 칸은 위 줄과 값이 같으면 하나로 합친다.
+                  // 실제 서식이 '구분' 칸을 그렇게 묶는다.
+                  const span = (r, c) => {
+                    if (b.merge !== c) return 1
+                    if (r > 0 && b.rows[r - 1][c] === b.rows[r][c]) return 0
+                    let n = 1
+                    while (b.rows[r + n] && b.rows[r + n][c] === b.rows[r][c]) n++
+                    return n
+                  }
+                  return (
+                    <table key={i} className="pdf-grid">
+                      <thead>
+                        <tr>{b.columns.map((c) => <th key={c}>{c}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {b.rows.map((row, r) => (
+                          <tr key={r}>
+                            {row.map((cell, c) => {
+                              const n = span(r, c)
+                              if (!n) return null
+                              return c === b.merge
+                                ? <th key={c} className="pdf-group" rowSpan={n}>{cell}</th>
+                                : <td key={c} className={b.mark === c && cell ? 'pdf-mark' : ''}>{cell}</td>
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )
+                }
+                return (
+                  <div key={i} className="pdf-lines">
+                    {b.lines.map((l) => <div key={l}>{l}</div>)}
+                  </div>
+                )
+              })}
 
-              <table className="pdf-grid pdf-verdict">
-                <tbody>
-                  <tr><th>{f.verdict.label}</th><td>{f.verdict.value}</td></tr>
-                  <tr>
-                    <th>{f.opinion.label}</th>
-                    <td>{f.opinion.lines.map((l) => <div key={l}>{l}</div>)}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <table className="pdf-head pdf-foot">
-                <tbody>
-                  {f.foot.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}
-                </tbody>
-              </table>
+              {f.notes && (
+                <ol className="pdf-notes">
+                  {f.notes.map((n) => <li key={n}>{n}</li>)}
+                </ol>
+              )}
+              {f.issuer && <div className="pdf-issuer">{f.issuer}</div>}
             </div>
           ) : (
             <pre className="pdf-text">{rest.join('\n').replace(/^\n+/, '')}</pre>
