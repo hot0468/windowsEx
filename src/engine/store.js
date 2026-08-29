@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -52,23 +52,35 @@ const askOf = (a) => (a?.placeholder ?? '') + '|' + JSON.stringify(a?.accept ?? 
 
 export function freshenAsks(scenario, pending = {}) {
   const byPath = new Map()
+  // 되짚기는 대화별로 나눠 둔다. 묻는 말과 정답만 보면 남의 대화 질문을
+  // 끌어다 꽂는다 — 대화가 끝난 자리(null)가 부름의 마지막 빈칸 질문과
+  // 열쇠가 같아, 지현이가 부름의 대사를 말한 적이 있다.
   const byText = new Map()
-  const walk = (node) => {
-    if (Array.isArray(node)) return node.forEach(walk)
+  const put = (thread, a) => {
+    if (!byText.has(thread)) byText.set(thread, new Map())
+    byText.get(thread).set(askOf(a), a)
+  }
+  const walk = (node, thread) => {
+    if (Array.isArray(node)) return node.forEach((x) => walk(x, thread))
     if (node && typeof node === 'object') {
+      const t = node.thread ?? node.id ?? thread
       if (node.ask) {
         for (let x = node.ask; x; x = x.then) {
           if (x[PATH]) byPath.set(x[PATH], x)
-          byText.set(askOf(x), x)
+          if (t) put(t, x)
         }
       }
-      Object.values(node).forEach(walk)
+      Object.values(node).forEach((x) => walk(x, t))
     }
   }
-  walk(stampAsks(scenario))
+  walk(stampAsks(scenario), null)
+
   const out = {}
   for (const [id, a] of Object.entries(pending)) {
-    out[id] = (a?.[PATH] && byPath.get(a[PATH])) ?? byText.get(askOf(a)) ?? a
+    // 열린 질문이 없는 자리는 없는 채로 둔다. 여기서 무엇이든 끌어오면
+    // 끝난 대화가 되살아난다.
+    if (!a || typeof a !== 'object') { out[id] = a; continue }
+    out[id] = byPath.get(a[PATH]) ?? byText.get(id)?.get(askOf(a)) ?? a
   }
   return out
 }
@@ -94,6 +106,32 @@ function write(key, value) {
     return true
   } catch {
     return false
+  }
+}
+
+// 게임 안의 시각. 실제 시계를 그대로 걸면 토요일 밤에 플레이하는 사람이
+// 게임 속에서도 주말 야근을 하고 있는 것처럼 보인다 — 화면의 날짜와 게임의
+// 날짜가 다른 이야기를 한다.
+//
+// 날짜는 그날 것을 쓰고, 시각은 출근 시각에서 시작해 논 만큼 흐른다. 실제
+// 1분이 게임 30분이다: 하루를 십몇 분에 끝내도 퇴근 무렵이 되고, 오래 붙들고
+// 있어도 퇴근 시각을 넘지 않는다. 야근을 고른 날은 저녁부터 센다.
+const CLOCK_SPEED = 30
+const MORNING = 9 * 60
+const EVENING = 18 * 60
+const NIGHT_IN = 19 * 60
+const NIGHT_OUT = 23 * 60 + 30
+
+export function gameClock(scenario, { day = 1, overtime = {}, dayAt = 0 } = {}, nowMs = Date.now()) {
+  const night = Boolean(overtime[day])
+  const from = night ? NIGHT_IN : MORNING
+  const until = night ? NIGHT_OUT : EVENING
+  const run = dayAt ? Math.floor((nowMs - dayAt) / 60000) * CLOCK_SPEED : 0
+  const at = Math.min(from + Math.max(0, run), until)
+  const p = (v) => String(v).padStart(2, '0')
+  return {
+    date: scenario?.days?.[day - 1]?.date ?? '',
+    time: `${p(Math.floor(at / 60))}:${p(at % 60)}`
   }
 }
 
@@ -242,6 +280,8 @@ export const useGame = create((set, get) => ({
   // 주소를 직접 알아내야 닿는 곳은 북마크 바에 실려 나오지 않는다 — 소통방은
   // hosts를 고쳐야 열린다. 플레이어가 직접 별을 눌러 얹은 주소가 여기 쌓인다.
   myBookmarks: restored?.myBookmarks ?? [],
+  // 이 날이 시작한 실제 시각. 게임 시계가 여기서부터 흐른다.
+  dayAt: restored?.dayAt ?? Date.now(),
   // 시트에서 아직 저장하지 않은 편집. PROGRESS에 넣지 않는다 — 저장 안 한 것이
   // 다음 세션까지 살아남으면 '저장'이라는 말이 뜻을 잃는다.
   sheetDrafts: {},
@@ -563,6 +603,7 @@ export const useGame = create((set, get) => ({
     const s = get()
     const day = s.scenario.days[n - 1]
     if (!day) return
+    set({ dayAt: Date.now() })
     const drawn = s.drawn[n] ?? drawFor(s.scenario, n, s.drawn)
     // What the player did yesterday decides what today says to them.
     const landing = ripplesFor(s.scenario, n, s)

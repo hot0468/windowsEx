@@ -203,3 +203,22 @@ describe('정답이 바뀐 질문도 켤 때 새로 읽는다', () => {
     expect(freshenAsks(scenario, { boss: merged }).boss).toBe(merged)
   })
 })
+
+// 되짚기가 남의 대화 질문을 끌어다 꽂은 적이 있다. 대화가 끝나면 그 자리에
+// null 이 남는데, 그 열쇠가 부름의 마지막 빈칸 질문(묻는 말도 정답도 없는
+// 것)과 같아서 — 지현이가 부름의 마지막 대사를 말했다.
+describe('되짚기가 남의 대화를 끌어오지 않는다', () => {
+  it('끝난 대화 자리는 빈 채로 둔다', () => {
+    const out = freshenAsks(scenario, { jihyun: null })
+    expect(out.jihyun).toBe(null)
+  })
+
+  it('묻는 말이 같아도 다른 대화의 질문은 가져오지 않는다', () => {
+    const caller = scenario.summons.beat.ask
+    const stale = { placeholder: caller.placeholder, accept: caller.accept, ok: ['옛날 말'] }
+    // 같은 열쇠라도 대화가 다르면 그대로 둔다.
+    expect(freshenAsks(scenario, { jihyun: stale }).jihyun).toBe(stale)
+    // 제 대화에서는 갈아 끼운다.
+    expect(freshenAsks(scenario, { caller: stale }).caller.ok).toEqual(caller.ok)
+  })
+})

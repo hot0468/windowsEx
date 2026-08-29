@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { gameClock, useGame } from '../engine/store.js'
 import { play } from './sound.js'
 import { Lock as LockIcon } from '../icons/line.jsx'
 
-const hhmm = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 
 // Windows' lock screen: the clock, who is signed in, and a password box. The
 // hint is on the screen itself so a locked-out player is never stuck.
 export default function Lock() {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
+  const overtime = useGame((s) => s.overtime)
+  const dayAt = useGame((s) => s.dayAt)
+  const clock = gameClock(scenario, { day, overtime, dayAt })
   const unlock = useGame((s) => s.unlock)
   const [pw, setPw] = useState('')
   const [missed, setMissed] = useState(false)
-  const [now, setNow] = useState(new Date())
+  const [, setTick] = useState(0)
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 10000)
+    const t = setInterval(() => setTick((v) => v + 1), 10000)
     return () => clearInterval(t)
   }, [])
 
@@ -30,7 +32,7 @@ export default function Lock() {
   return (
     <div className="lock">
       <div className="lock-clock">
-        <div className="lock-time">{hhmm(now)}</div>
+        <div className="lock-time">{clock.time}</div>
         <div className="lock-date">{scenario.days[day - 1]?.date}</div>
       </div>
       <div className="lock-card">
