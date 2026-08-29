@@ -1937,10 +1937,15 @@ export function mailTime(date = '') {
 
 // newest first; same timestamp falls back to the order they arrived in.
 // `at` 이 박혀 있으면 그것이 시각이다 — '방금' 처럼 날짜로 읽을 수 없는 것.
+//
+// 안 읽은 것이 먼저 온다. 회신에 딸려 온 답장은 그날 끝의 시각을 달고 오므로,
+// 시각만으로 세우면 아침에 온 새 메일이 오늘 주고받은 답장 밑으로 내려간다 —
+// 정작 아직 안 읽은 것이 안 보인다. 읽고 나면 제 날짜 자리로 내려간다.
 const mailAt = (m) => m.at ?? mailTime(m.date)
-export const sortMails = (mails) => mails
+export const sortMails = (mails, read = {}) => mails
   .map((m, i) => [m, i])
-  .sort(([a, i], [b, j]) => mailAt(b) - mailAt(a) || j - i)
+  .sort(([a, i], [b, j]) =>
+    (read[a.id] ? 1 : 0) - (read[b.id] ? 1 : 0) || mailAt(b) - mailAt(a) || j - i)
   .map(([m]) => m)
 
 // Sponsored results are not sites the portal indexed — they are bought, so they

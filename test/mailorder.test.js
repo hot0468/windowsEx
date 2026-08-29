@@ -68,3 +68,34 @@ describe('방금 온 메일과 어제 보낸 회신', () => {
     expect(sortMails(dated)[0].date).toBe('8월 21일 (금) 16:42')
   })
 })
+
+// 회신에 딸려 온 답장은 그날 끝의 시각을 달고 온다. 시각만으로 세우면 아침에
+// 온 새 메일이 오늘 주고받은 답장 밑으로 내려가, 정작 아직 안 읽은 것이 안
+// 보인다. 안 읽은 것을 위로 올리고, 그 안에서 최신이 앞에 온다.
+describe('안 읽은 메일이 위로', () => {
+  const morning = { id: 'new', date: '8월 27일 (금) 08:41' }
+  const reply = { id: 'r1', date: '방금', at: 999_999_999 }
+
+  it('안 읽은 것이 오늘 주고받은 답장보다 위에 온다', () => {
+    expect(sortMails([reply, morning], { r1: true })[0]).toBe(morning)
+  })
+
+  it('둘 다 안 읽었으면 최신이 앞', () => {
+    expect(sortMails([morning, reply], {})[0]).toBe(reply)
+  })
+
+  it('둘 다 읽었으면 최신이 앞', () => {
+    expect(sortMails([morning, reply], { r1: true, new: true })[0]).toBe(reply)
+  })
+
+  it('읽고 나면 제 날짜 자리로 내려간다', () => {
+    const before = sortMails([reply, morning], { r1: true }).map((m) => m.id)
+    const after = sortMails([reply, morning], { r1: true, new: true }).map((m) => m.id)
+    expect(before).toEqual(['new', 'r1'])
+    expect(after).toEqual(['r1', 'new'])
+  })
+
+  it('읽음 표를 안 주면 예전처럼 시각으로만 센다', () => {
+    expect(sortMails([morning, reply])[0]).toBe(reply)
+  })
+})

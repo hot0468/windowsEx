@@ -20,7 +20,8 @@ export default function Mail() {
   const [sent, setSent] = useState(false)
   const [q, setQ] = useState('')
 
-  const all = sortMails([...scenario.mails, ...extraMails])
+  // 안 읽은 것이 위로. 읽고 나면 제 날짜 자리로 내려간다.
+  const all = sortMails([...scenario.mails, ...extraMails], readMails)
   const term = q.trim().toLowerCase()
   const mails = term
     ? all.filter((m) => `${m.subject} ${m.from} ${m.body}`.toLowerCase().includes(term))
