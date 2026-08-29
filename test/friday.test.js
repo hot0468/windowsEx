@@ -683,3 +683,35 @@ describe('every picture the game asks for', () => {
     expect(wallpaper).toBeTruthy()
   })
 })
+
+// 본인 부고 끝에 놓인 표식이 화면에 들어오면 그것을 본 것으로 친다. 글이 한
+// 화면에 다 들어가면 열자마자 발동해, 내려가며 알게 되는 대목이 통째로
+// 사라진다 — 큰 모니터에서 창을 키우면 그렇게 된다. 위에 몇 건이 쌓여 있어야
+// 한 번은 밀어 내리게 된다.
+describe('본인 부고는 한 화면에 담기지 않는다', () => {
+  const board = scenario.sites.find((s) => s.url === 'portal.ar.co.kr')
+    .pages['/hr/bereavement'].board
+  const post = board.posts.find((p) => p.obituary)
+
+  it('부고가 실린 글이 하나 있다', () => {
+    expect(post).toBeTruthy()
+    expect(board.posts.filter((p) => p.obituary)).toHaveLength(1)
+  })
+
+  it('본인 것은 맨 아래에 있다', () => {
+    const at = post.sections.findIndex((s) => s.mine)
+    expect(at).toBe(post.sections.length - 1)
+  })
+
+  it('그 위에 넉넉히 쌓여 있다', () => {
+    const above = post.sections.slice(0, -1)
+    expect(above.length).toBeGreaterThanOrEqual(4)
+    // 줄 수로도 재 둔다. 절만 늘리고 내용이 비면 여전히 한 화면에 들어간다.
+    const rows = above.reduce((n, s) => n + s.rows.length, 0)
+    expect(rows).toBeGreaterThanOrEqual(14)
+  })
+
+  it('본인 것이 아닌 절에는 표식이 없다', () => {
+    expect(post.sections.filter((s) => s.mine)).toHaveLength(1)
+  })
+})
