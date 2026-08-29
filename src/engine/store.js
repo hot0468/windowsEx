@@ -1033,8 +1033,15 @@ export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold
 
 // A conversation someone came back to was read long ago, so only what the week
 // itself brought can still be unread — and never what the player typed.
+// 어디까지 읽은 것으로 치는가. 세이브에 남은 열람 수와, 이번 주 전에 이미
+// 오간 기록 중 뒤엣것이다 — 처음 여는 대화라도 지난 기록까지 안 읽은 것으로
+// 세면 뱃지가 수십 개로 뜬다. 안 읽은 줄 수를 세는 쪽과 "여기까지 읽었습니다"
+// 금을 긋는 쪽이 같은 자리를 가리켜야 하므로 규칙은 여기 한 곳에 둔다.
+export const readUpTo = (all, seen = 0) =>
+  Math.max(seen, all.filter((msg) => msg.date !== undefined).length)
+
 export const unreadCount = (all, seen = 0) => {
-  const read = Math.max(seen, all.filter((msg) => msg.date !== undefined).length)
+  const read = readUpTo(all, seen)
   return all.filter((msg, i) => i >= read && !msg.me).length
 }
 

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, threadMessages, unreadCount } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
@@ -167,6 +167,15 @@ export default function Messenger({ source }) {
   const people = Object.fromEntries(threads.map((t) => [t.name, t]))
   const matches = (t) => !q.trim() || t.name.includes(q.trim())
   const totalUnread = threads.reduce((n, t) => n + unreadOf(t), 0)
+
+  // 대화를 열면 곧바로 다 읽은 것으로 표시되므로, 그 전에 어디까지 읽었는지를
+  // 붙잡아 둔다. 이 값은 대화를 바꿀 때만 다시 잡는다 — 보고 있는 동안 새 줄이
+  // 와도 선이 따라 내려가면 어디부터가 새 말인지 알 수 없다.
+  const [readMark, setReadMark] = useState(0)
+  useEffect(() => {
+    const t = threads.find((x) => x.id === openId)
+    setReadMark(t ? readUpTo(msgsOf(t), seen[t.id] ?? 0) : 0)
+  }, [openId])
 
   useEffect(() => {
     const t = threads.find((x) => x.id === openId)
@@ -439,8 +448,14 @@ export default function Messenger({ source }) {
                 const label = dateOf(msg)
                 const dated = label !== null && label !== dateOf(prev)
                 const date = dated && <div className="msg-date">{label}</div>
+                // 열었을 때 안 읽고 있던 첫 줄 앞에 금을 긋는다. 오늘 날짜
+                // 안에서도 어디부터가 새로 온 말인지 보이게.
+                const fresh = readMark > hidden && i === readMark - hidden && (
+                  <div className="msg-unread"><span>여기까지 읽었습니다</span></div>
+                )
                 if (msg.me) return (
                   <Fragment key={i}>
+                    {fresh}
                     {date}
                     <div className={'bubble me' + (msg.file ? ' file' : '')}>
                       {!msg.file && <>{msg.text}{attached(msg)}</>}
@@ -457,6 +472,7 @@ export default function Messenger({ source }) {
                 const who = people[msg.from] ?? thread
                 return (
                   <Fragment key={i}>
+                    {fresh}
                     {date}
                     <div className="msg-row">
                       <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>

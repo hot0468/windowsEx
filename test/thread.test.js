@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { findFile, threadMessages, useGame } from '../src/engine/store.js'
+import { findFile, readUpTo, threadMessages, unreadCount, useGame } from '../src/engine/store.js'
 
 beforeEach(() => useGame.setState({ openThread: {}, seenThreads: {}, typing: {}, readMails: {}, starred: {} }))
 
@@ -182,5 +182,35 @@ describe('a photo reaction only lands once', () => {
       const already = (t.messages ?? []).map((m) => m.text)
       expect(already, t.id + ' / ' + r.files.join(',')).not.toContain(r.reply[0])
     }
+  })
+})
+
+// 대화를 열면 곧바로 다 읽은 것으로 표시되므로, 열기 직전의 자리를 붙잡아
+// "여기까지 읽었습니다" 금을 긋는다. 그 자리는 뱃지가 세는 자리와 같아야
+// 한다 — 다르면 "안 읽음 3" 인데 금 아래에 두 줄만 있는 식이 된다.
+describe('여기까지 읽었습니다', () => {
+  const old = (n) => Array.from({ length: n }, (_, i) => ({ from: 'x', text: 't' + i, date: '8월 1일' }))
+  const today = (n) => Array.from({ length: n }, (_, i) => ({ from: 'x', text: 'n' + i, day: 2 }))
+
+  it('금 아래 남는 줄 수가 안 읽음 수와 같다', () => {
+    const msgs = [...old(5), ...today(3)]
+    const at = readUpTo(msgs, 0)
+    expect(msgs.length - at).toBe(unreadCount(msgs, 0))
+  })
+
+  it('처음 여는 대화라도 지난 기록 위에는 긋지 않는다', () => {
+    const msgs = [...old(5), ...today(3)]
+    expect(readUpTo(msgs, 0)).toBe(5)
+  })
+
+  it('읽은 뒤 다시 열면 금이 사라진다', () => {
+    const msgs = [...old(5), ...today(3)]
+    expect(readUpTo(msgs, msgs.length)).toBe(msgs.length)
+    expect(unreadCount(msgs, msgs.length)).toBe(0)
+  })
+
+  it('내가 한 말은 안 읽음으로 세지 않는다', () => {
+    const msgs = [...old(2), { me: true, text: '네' }]
+    expect(unreadCount(msgs, 2)).toBe(0)
   })
 })

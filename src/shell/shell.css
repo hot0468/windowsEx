@@ -891,6 +891,10 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .msg-av { width: 32px; flex-shrink: 0; }
 .bubble.me { align-self: flex-end; background: var(--mg-mine, #0067c0); color: #fff; border-top-right-radius: 4px; }
 .msg-empty { color: #99a; text-align: center; margin-top: 40px; }
+/* 열었을 때 안 읽고 있던 첫 줄 앞의 금. 날짜 구분선과 헷갈리지 않게 색을 준다. */
+.msg-unread { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; color: #d0455f; font-size: 11px; }
+.msg-unread::before, .msg-unread::after { content: ''; flex: 1; border-top: 1px solid #f0b7c2; }
+.msg-unread span { white-space: nowrap; }
 .msg-date { align-self: center; margin: 6px 0; padding: 4px 12px; border-radius: 12px; background: rgba(0,0,0,.07); color: #667; font-size: 11px; }
 .msg-more { align-self: center; display: flex; align-items: center; gap: 7px; margin: 2px 0 6px; padding: 6px 14px; border: 0; border-radius: 13px; background: rgba(0,0,0,.05); color: #667; font: inherit; font-size: 12px; cursor: pointer; }
 .msg-more:hover { background: rgba(0,0,0,.09); }
