@@ -79,7 +79,13 @@ const ProfileCard = ({ who, team, onChat, onClose }) => (
 // 약한 단서라 "어디"를 알려주지 않는 경우가 많다 — 버튼이 장소를 물으면
 // 답이 질문을 비껴가고, 플레이어는 그 문서가 없다고 읽는다. 무엇이 돌아오든
 // 말이 되는 문구를 쓴다.
+//
+// 말투는 상대에 따라 갈린다. 지현이한테 "조금만 더 알려주시겠어요?" 라고 하면
+// 그 한 줄만 남의 대화처럼 뜬다 — 대화가 반말이면 되묻기도 반말이다.
 const HINT_ASK = '조금만 더 알려주시겠어요?'
+const HINT_ASK_CASUAL = '조금만 더 알려줘'
+const hintAskOf = (thread, ask) =>
+  ask?.hintAsk ?? (thread?.casual ? HINT_ASK_CASUAL : HINT_ASK)
 
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
@@ -284,7 +290,7 @@ export default function Messenger({ source }) {
   // 직접 들고 있으면 그것을, 없으면 어디에나 맞는 말을 쓴다.
   const askHint = () => {
     const { lines, step } = hintReply(ask, wrongs[thread.id] ?? 0)
-    say(thread.id, { text: ask.hintAsk ?? HINT_ASK })
+    say(thread.id, { text: hintAskOf(thread, ask) })
     setAnsweredAt((a) => ({ ...a, [thread.id]: arrived }))
     // 다음 오답은 여기서 이어받는다.
     setWrongs((w) => ({ ...w, [thread.id]: step }))
@@ -470,7 +476,7 @@ export default function Messenger({ source }) {
               <div className="quick-hint-row">
                 <button className="quick-hint" disabled={busy} onClick={askHint}>
                   <HelpCircle size={14} strokeWidth={2} />
-                  {ask.hintAsk ?? HINT_ASK}
+                  {hintAskOf(thread, ask)}
                 </button>
               </div>
             )}

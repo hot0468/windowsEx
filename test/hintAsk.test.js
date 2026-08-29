@@ -26,7 +26,7 @@ describe('되묻기 버튼', () => {
   it('문구를 안 적어 둔 요청도 쓸 말이 있다', () => {
     const src = readFileSync('src/apps/Messenger.jsx', 'utf8')
     expect(src).toContain('const HINT_ASK =')
-    expect(src).toContain('ask.hintAsk ?? HINT_ASK')
+    expect(src).toContain('ask?.hintAsk ??')
   })
 
   it('버튼 문구가 정답을 흘리지 않는다', () => {
@@ -113,5 +113,44 @@ describe('되묻기는 요청마다 한 번', () => {
     const src = readFileSync('src/engine/store.js', 'utf8')
     const listed = src.match(/export const PROGRESS = \[([\s\S]*?)\]/)[1]
     expect(listed).toContain('hinted')
+  })
+})
+
+// 되묻기 버튼은 플레이어가 하는 말이다. 지현이한테 "조금만 더 알려주시겠어요?"
+// 라고 하면 그 한 줄만 남의 대화처럼 뜬다 — 대화가 반말이면 되묻기도 반말이다.
+describe('되묻기 말투', () => {
+  const all = [scenario.workMessenger, scenario.privateMessenger]
+    .flatMap((m) => m.sections.flatMap((s) => s.threads))
+  const casual = all.filter((t) => t.casual)
+
+  it('화면이 대화마다 말투를 고른다', () => {
+    const src = readFileSync('src/apps/Messenger.jsx', 'utf8')
+    expect(src).toContain('HINT_ASK_CASUAL')
+    expect(src).toContain('thread?.casual')
+  })
+
+  it('반말로 말을 거는 상대가 반말로 표시돼 있다', () => {
+    const ids = casual.map((t) => t.id)
+    for (const id of ['jihyun', 'junho', 'soyoung', 'mom', 'room_school']) {
+      expect(ids, id).toContain(id)
+    }
+  })
+
+  // 상대가 나에게 존댓말을 쓰는데 내가 반말로 되물으면 그게 더 어색하다.
+  it('존댓말로 말을 거는 상대는 반말로 표시되지 않는다', () => {
+    for (const id of ['boss', 'security', 'payroll', 'guesthouse', 'minseo']) {
+      expect(casual.map((t) => t.id), id).not.toContain(id)
+    }
+  })
+
+  // 요청이 직접 들고 있는 문구도 그 대화의 말투를 따라야 한다.
+  it('반말 대화에 적어 둔 문구가 존댓말로 끝나지 않는다', () => {
+    for (const t of casual) {
+      const asks = [t.ask, ...(t.reactions ?? []).map((r) => r.ask)].filter(Boolean)
+      for (const a of asks) {
+        if (!a.hintAsk) continue
+        expect(a.hintAsk, t.id).not.toMatch(/(요|니다|까요)[?!.]?$/)
+      }
+    }
   })
 })
