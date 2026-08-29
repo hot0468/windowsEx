@@ -74,8 +74,11 @@ const ProfileCard = ({ who, team, onChat, onClose }) => (
   </div>
 )
 
-// 요청마다 문구를 적어 두지 않은 곳에서 쓰는 되묻기.
-const HINT_ASK = '어디서 찾으면 될까요?'
+// 요청마다 문구를 적어 두지 않은 곳에서 쓰는 되묻기. 1번 힌트는 설계상 가장
+// 약한 단서라 "어디"를 알려주지 않는 경우가 많다 — 버튼이 장소를 물으면
+// 답이 질문을 비껴가고, 플레이어는 그 문서가 없다고 읽는다. 무엇이 돌아오든
+// 말이 되는 문구를 쓴다.
+const HINT_ASK = '조금만 더 알려주시겠어요?'
 
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
