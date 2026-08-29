@@ -145,7 +145,8 @@ describe('what survives a reload', () => {
 // 옛 말을 한다 — 만드는 동안 플레이하면 이것이 버그처럼 보인다. 켤 때
 // 시나리오의 같은 질문으로 갈아 끼운다.
 describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
-  const first = scenario.summons.beat.ask
+  // 부름은 밤마다 나뉘어 온다. 물음이 있는 첫 밤을 쓴다.
+  const first = scenario.summons.nights[2].ask
 
   it('옛 사본을 들고 있으면 시나리오 것으로 바꾼다', () => {
     const stale = { placeholder: first.placeholder, accept: first.accept, ok: ['옛날 말'] }
@@ -176,8 +177,9 @@ describe('열려 있던 질문을 켤 때 새로 읽는다', () => {
 // 바뀌면 그 방법으로는 짝을 잃는다 — 입사년을 옮기던 날 부름이 옛 정답을
 // 계속 요구했다. 자리표로 찾으면 대사도 정답도 바뀐 질문을 알아본다.
 describe('정답이 바뀐 질문도 켤 때 새로 읽는다', () => {
-  const first = scenario.summons.beat.ask
-  const step = first.then.then          // 입사일을 묻는 자리
+  // 부름은 밤마다 나뉘어 온다. 물음이 있는 첫 밤을 쓴다.
+  const first = scenario.summons.nights[2].ask
+  const step = first.then               // 이어지는 자리
 
   it('시나리오의 질문마다 자리표가 찍혀 있다', () => {
     freshenAsks(scenario, {})
@@ -214,7 +216,7 @@ describe('되짚기가 남의 대화를 끌어오지 않는다', () => {
   })
 
   it('묻는 말이 같아도 다른 대화의 질문은 가져오지 않는다', () => {
-    const caller = scenario.summons.beat.ask
+    const caller = scenario.summons.nights[2].ask
     const stale = { placeholder: caller.placeholder, accept: caller.accept, ok: ['옛날 말'] }
     // 같은 열쇠라도 대화가 다르면 그대로 둔다.
     expect(freshenAsks(scenario, { jihyun: stale }).jihyun).toBe(stale)

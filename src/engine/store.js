@@ -135,6 +135,15 @@ export function gameClock(scenario, { day = 1, overtime = {}, dayAt = 0 } = {}, 
   }
 }
 
+// 오늘 밤 부름이 보낼 것. 거절했으면 아무 밤도 오지 않고, 이미 보낸 밤은
+// 다시 오지 않는다.
+export function callerNight(s) {
+  const su = s.scenario?.summons
+  if (!su?.nights || s.grants[su.off]) return null
+  const beat = su.nights[s.day]
+  return beat && !s.grants['called:' + s.day] ? beat : null
+}
+
 export function savedAt() {
   return read(SAVE_KEY)?.at ?? null
 }
@@ -487,7 +496,16 @@ export const useGame = create((set, get) => ({
   restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false, screens: [] }),
   // Finishing the last request does nothing on its own; the player clocks off
   // from the request list, and only then the evening (offer, then the door) begins.
-  closeDay: () => set({ closing: true }),
+  // 하루를 마치면 결과가 뜨기 전에 그날 밤 몫이 먼저 도착한다. 답은 다음
+  // 날 하게 되어 있다 — 마감 화면이 대화를 덮으므로 그 자리에서는 못 쓴다.
+  closeDay: () => {
+    const s = get()
+    const night = callerNight(s)
+    if (!night) return set({ closing: true })
+    s.grant('called:' + s.day)
+    s.queueBeats([night], 300)
+    setTimeout(() => set({ closing: true }), 2600)
+  },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
   lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
@@ -623,9 +641,8 @@ export const useGame = create((set, get) => ({
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
     // The caller waits until the day's work has been asked for: it speaks last,
     // and only on its own night.
-    const called = s.scenario.summons?.day === n ? [s.scenario.summons.beat] : []
     get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
-      ...beatsFor(s.scenario, drawn), ...called].filter(Boolean), 3600)
+      ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
   },
   finishDay: () => {
     const s = get()

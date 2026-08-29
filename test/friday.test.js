@@ -513,11 +513,17 @@ describe('the account with no name', () => {
   const thread = scenario.privateMessenger.sections
     .flatMap((sec) => sec.threads).find((t) => t.id === summons?.thread)
   const steps = (ask) => (ask ? [ask, ...steps(ask.then)] : [])
-  const chain = steps(summons?.beat?.ask)
+  // 하룻밤에 몰아 묻지 않고 며칠 저녁에 나눠 묻는다. 물음을 세는 자리는
+  // 밤을 순서대로 이어 붙인 것이다.
+  const nights = Object.keys(summons?.nights ?? {}).map(Number).sort((a, b) => a - b)
+  const chain = nights.flatMap((d) => steps(summons.nights[d].ask))
+  const said = JSON.stringify(summons)
 
-  it('arrives on the night he dies, from nobody', () => {
+  it('며칠 저녁에 걸쳐, 이름 없는 자리에서 온다', () => {
     expect(summons).toBeTruthy()
-    expect(summons.day).toBe(scenario.days.length - 1)
+    expect(nights.length).toBeGreaterThan(2)
+    // 마지막 밤은 답할 다음 날이 있어야 한다 — 마지막 날 밤에 물으면 못 답한다.
+    expect(Math.max(...nights)).toBeLessThan(scenario.days.length)
     expect(thread).toBeTruthy()
     // no name, no face, no last-seen: it must not read as a person
     expect(thread.name).toMatch(/알 수 없|^$/)
@@ -526,15 +532,27 @@ describe('the account with no name', () => {
   })
 
   it('opens like spam and then knows something only he could know', () => {
-    const [hook, proof] = summons.beat.lines
+    const [hook, proof] = summons.nights[nights[0]].lines
     expect(hook).toMatch(/진실/)
     // the second line quotes the cloud backup receipt verbatim
     const cloud = scenario.privateMessenger.sections
       .flatMap((sec) => sec.threads).find((t) => t.id === 'cloud')
     const backup = cloud.messages[0].text
     expect(backup).toContain('23:41')
-    expect(backup).toContain('13장')
     expect(proof).toContain('23:41')
+  })
+
+  // 첫 밤은 묻지 않고 고르게 한다. 받으면 며칠 저녁이 이어지고, 물리면 끝난다.
+  it('첫 밤은 받을지 물릴지 고르게 한다', () => {
+    const first = summons.nights[nights[0]]
+    expect(first.choices).toHaveLength(2)
+    const answers = (thread.reactions ?? []).map((r) => r.choice)
+    for (const c of first.choices) expect(answers, c).toContain(c)
+    // 물리는 쪽은 표를 세워 그 뒤 밤을 막는다.
+    const off = (thread.reactions ?? []).find((r) => r.grants === summons.off)
+    expect(off, '물릴 길이 없다').toBeTruthy()
+    expect(summons.off).toBeTruthy()
+    expect(summons.off).not.toBe(summons.grant)
   })
 
   it('asks enough to build the case, and every answer is already in the game', () => {
@@ -550,7 +568,6 @@ describe('the account with no name', () => {
   })
 
   it('never states the conclusion — it only ever asks', () => {
-    const said = JSON.stringify(summons.beat)
     for (const word of ['사고', '교통사고', '중환자', '혼수', '의식불명', '죽', '숨졌', '부고', '영안']) {
       expect(said, word).not.toContain(word)
     }
