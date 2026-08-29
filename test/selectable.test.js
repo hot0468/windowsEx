@@ -70,3 +70,29 @@ describe('창 폭을 꽉 쓰는 화면은 패딩을 두 번 빼지 않는다', (
     })
   }
 })
+
+// 할 일이 길어지면 목록이 아래로 자라 '오늘 업무 마치기' 를 화면 밖으로,
+// 또는 작업표시줄 뒤로 밀어냈다. 하루를 끝낼 수가 없으니 그 자리에서 막힌다.
+// 패널이 화면에 맞춰 묶여 있고, 줄어드는 쪽이 목록이어야 한다.
+describe('오늘 할 일 패널은 버튼을 화면 안에 둔다', () => {
+  const pg = bodies('.pg').join(' ')
+  const list = bodies('.pg-list').join(' ')
+
+  it('패널의 키가 화면에 묶여 있다', () => {
+    expect(pg).toContain('max-height')
+    expect(pg).toContain('100vh')
+  })
+
+  it('패널이 세로로 쌓이고, 넘치면 줄어드는 쪽은 목록이다', () => {
+    expect(pg).toContain('flex-direction: column')
+    expect(list).toContain('overflow-y: auto')
+    // min-height: 0 이 없으면 flex 아이템이 내용만큼 버티며 안 줄어든다.
+    expect(list).toContain('min-height: 0')
+  })
+
+  it('버튼은 줄어들지 않는다', () => {
+    for (const sel of ['.pg-badge', '.pg-close']) {
+      expect(bodies(sel).join(' '), sel).toContain('flex-shrink: 0')
+    }
+  })
+})
