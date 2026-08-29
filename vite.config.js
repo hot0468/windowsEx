@@ -11,5 +11,14 @@ export default defineConfig({
   // browser scopes to the origin: let vite wander to 5174 when 5173 is busy
   // and the game comes up with no memory of the week. Failing loudly on a
   // taken port is better than silently starting somewhere the save is not.
-  server: { host: '127.0.0.1', port: 5173, strictPort: true }
+  //
+  // 캡처 이미지를 assets 에 떨어뜨리는 동안 파일이 아직 잠겨 있으면 감시자가
+  // EBUSY 로 죽고 서버가 통째로 내려간다. 게임이 읽는 것은 webp 뿐이고 png 는
+  // 변환되기 전에 잠깐 머무는 것이라, 감시에서 뺀다.
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+    watch: { ignored: ['**/src/assets/**/*.png'] }
+  }
 })
