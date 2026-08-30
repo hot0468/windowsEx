@@ -110,6 +110,75 @@ describe('걸려오는 전화', () => {
   })
 })
 
+// 스팸은 대본이 아니라 확률로 온다. 오는 것 자체가 장면이므로 아무것도
+// 주지 않고, 하루에 한 번을 넘지 않아야 방해가 아니라 생활이 된다.
+describe('스팸 전화', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useGame.setState({ call: null, callSeq: 0, callLog: [], calledIn: {}, spammedOn: 0, day: 1 })
+  })
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
+
+  it('스팸에는 목표도 정답도 없다', () => {
+    expect(scenario.calls.spam.length).toBeGreaterThan(0)
+    for (const c of scenario.calls.spam) {
+      expect(c.lines.length).toBeGreaterThan(0)
+      expect(c.grants).toBeUndefined()
+      expect(c.ask).toBeUndefined()
+    }
+  })
+
+  it('번호가 다른 연락처와 겹치지 않는다', () => {
+    const digits = (n) => n.replace(/[^0-9]/g, '')
+    const all = [...scenario.calls.spam, ...scenario.calls.people, ...scenario.calls.contacts]
+      .map((c) => digits(c.number))
+    expect(new Set(all).size).toBe(all.length)
+  })
+
+  it('하루에 한 번을 넘지 않는다', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)      // 늘 걸리는 날
+    expect(useGame.getState().maybeSpam()).toBe(true)
+    expect(useGame.getState().maybeSpam()).toBe(false)
+    useGame.setState({ day: 2 })
+    expect(useGame.getState().maybeSpam()).toBe(true)
+  })
+
+  it('같은 곳이 두 번 걸지 않는다', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    useGame.getState().maybeSpam()
+    vi.advanceTimersByTime(11000)
+    const first = useGame.getState().call.id
+    useGame.getState().declineCall()
+    useGame.setState({ day: 2 })
+    useGame.getState().maybeSpam()
+    vi.advanceTimersByTime(11000)
+    expect(useGame.getState().call.id).not.toBe(first)
+  })
+
+  // 받지 않으면 벨이 영원히 울리는 대신 끊기고 부재중으로 남는다.
+  it('안 받으면 끊기고 부재중으로 남는다', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    useGame.getState().maybeSpam()
+    vi.advanceTimersByTime(11000)
+    expect(useGame.getState().call.stage).toBe('ringing')
+    vi.advanceTimersByTime(15000)
+    expect(useGame.getState().call).toBe(null)
+    expect(useGame.getState().callLog[0].dir).toBe('missed')
+  })
+
+  // 받으면 제 할 말을 하고 스스로 끊는다 — 말 상대가 필요한 전화가 아니다.
+  it('받으면 말하고 스스로 끊는다', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    useGame.getState().maybeSpam()
+    vi.advanceTimersByTime(11000)
+    useGame.getState().answerCall()
+    expect(useGame.getState().call.stage).toBe('talking')
+    expect(useGame.getState().call.asking).toBeFalsy()
+    vi.advanceTimersByTime(20000)
+    expect(useGame.getState().call).toBe(null)
+  })
+})
+
 describe('통화로 푸는 길', () => {
   const spoken = calls.contacts.find((c) => !mailOf(c.id).requiredAttachment)
 

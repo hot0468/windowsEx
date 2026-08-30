@@ -13,7 +13,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -370,6 +370,8 @@ export const useGame = create((set, get) => ({
   call: null,
   callSeq: 0,
   callLog: restored?.callLog ?? [],
+  // 스팸이 마지막으로 온 날. 하루에 한 번을 넘지 않는다.
+  spammedOn: restored?.spammedOn ?? 0,
   calledIn: restored?.calledIn ?? {},
   // Whether this PC is registered with the copier. Set on the copier's own web
   // page and read by the print dialog, so it lives here rather than in either.
@@ -1017,6 +1019,9 @@ export const useGame = create((set, get) => ({
     // 이 일이 끝나기를 기다리던 전화. 폰에만 오는 것이라 아무것도 막지 않는다.
     const ring = (get().scenario.calls?.incoming ?? []).find((c) => c.after === key && !get().calledIn[c.id])
     if (ring && onPhoneNow()) setTimeout(() => get().ringIn(ring.id), ring.delay ?? 6000)
+    // 대본에 없는 전화도 온다. 하루 한 번, 그것도 가끔 — 일하는 중에 울리는
+    // 것이 스팸의 본질이라 여기(일 하나가 끝나는 자리)에 붙인다.
+    else if (onPhoneNow()) get().maybeSpam()
     get().caughtSlacking()
     // finishing one request is what opens the next conversation
     const now = heldThreads(get().scenario, get().day, get())
@@ -1316,19 +1321,54 @@ export const useGame = create((set, get) => ({
   // 어느 쪽으로 하든 같은 목표가, 같은 조건에서 열린다.
   ringIn: (id) => {
     const s = get()
-    const spec = (s.scenario.calls?.incoming ?? []).find((c) => c.id === id)
+    const spec = [...s.scenario.calls?.incoming ?? [], ...s.scenario.calls?.spam ?? []]
+      .find((c) => c.id === id)
     if (!spec || s.call || s.calledIn[id]) return
     set({ call: { kind: 'in', id, name: spec.from, number: spec.number, stage: 'ringing', said: [] } })
     play('notify')
+    // 벨이 영원히 울리지는 않는다. 안 받으면 끊기고 부재중으로 남는다.
+    setTimeout(() => {
+      const now = get().call
+      if (now?.id === id && now.stage === 'ringing') get().declineCall()
+    }, 14000)
   },
-  answerCall: () => set((s) => (s.call?.kind !== 'in' ? s : {
-    call: {
-      ...s.call,
-      stage: 'talking',
-      said: (s.scenario.calls.incoming.find((c) => c.id === s.call.id)?.lines ?? []).map((text) => ({ them: true, text }))
-    },
-    calledIn: { ...s.calledIn, [s.call.id]: true }
-  })),
+  answerCall: () => {
+    const s0 = get()
+    const spec = [...s0.scenario.calls?.incoming ?? [], ...s0.scenario.calls?.spam ?? []]
+      .find((c) => c.id === s0.call?.id)
+    // 건 사람이 제 할 말을 마치면 스스로 끊는다 — 끊는 말이 있는 전화만.
+    if (spec?.bye) {
+      const id = spec.id
+      setTimeout(() => {
+        const now = get().call
+        if (now?.id !== id || now.stage !== 'talking') return
+        // 끊는 말은 한 줄일 때도, 여러 줄일 때도 있다.
+        const bye = [].concat(spec.bye).map((text) => ({ them: true, text }))
+        set({ call: { ...now, said: [...now.said, ...bye] } })
+        setTimeout(() => { if (get().call?.id === id) get().hangUp() }, 2600)
+      }, 1200 + (spec.lines?.length ?? 1) * 1600)
+    }
+    set((s) => (s.call?.kind !== 'in' ? s : {
+      call: {
+        ...s.call,
+        stage: 'talking',
+        said: (spec?.lines ?? []).map((text) => ({ them: true, text }))
+      },
+      calledIn: { ...s.calledIn, [s.call.id]: true }
+    }))
+  },
+  // 스팸 전화. 하루에 한 번을 넘지 않고, 같은 곳이 두 번 걸지 않는다.
+  // 확률로 거는 것이라 일부러 부를 수도 있게 한 조각으로 떼어 둔다.
+  maybeSpam: (chance = 0.3) => {
+    const s = get()
+    if (s.call || s.spammedOn === s.day) return false
+    const left = (s.scenario.calls?.spam ?? []).filter((c) => !s.calledIn[c.id])
+    if (!left.length || Math.random() > chance) return false
+    const pick = left[Math.floor(Math.random() * left.length)]
+    set({ spammedOn: s.day })
+    setTimeout(() => get().ringIn(pick.id), 4000 + Math.random() * 6000)
+    return true
+  },
   // 받지 않은 전화도 기록에는 남는다 — 다시 걸 수 있어야 놓친 것이 되지 않는다.
   declineCall: () => set((s) => (!s.call ? s : {
     call: null,
