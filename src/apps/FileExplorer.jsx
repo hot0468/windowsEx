@@ -19,11 +19,17 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const toggleHidden = useGame((s) => s.toggleHidden)
   const dreamt = useGame((s) => s.dreamt)
   const tiles = useGame((s) => s.tiles)
+  const placed = useGame((s) => s.placed)
+  const clipboard = useGame((s) => s.clipboard)
+  const cutFile = useGame((s) => s.cutFile)
+  const placeFile = useGame((s) => s.placeFile)
+  const renameFile = useGame((s) => s.renameFile)
+  const [renaming, setRenaming] = useState(null)   // { id, value }
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
   const [viewOpen, setViewOpen] = useState(false)
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, scenario })
   const roots = only ?? Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 
@@ -44,6 +50,23 @@ export default function FileExplorer({ startFolder, roots: only }) {
     e.preventDefault()
     const box = e.currentTarget.closest('.ex-body').getBoundingClientRect()
     setMenu({ file, x: e.clientX - box.left, y: e.clientY - box.top })
+  }
+  // 빈자리 우클릭: 잘라낸 것이 있을 때만 붙여넣기 메뉴가 뜬다.
+  const onBlank = (e) => {
+    if (e.target !== e.currentTarget || !clipboard) return
+    e.preventDefault()
+    const box = e.currentTarget.closest('.ex-body').getBoundingClientRect()
+    setMenu({ paste: true, x: e.clientX - box.left, y: e.clientY - box.top })
+  }
+  // 휴지통과 작업 폴더에는 붙여 넣지 않는다 — 하나는 지운 것, 하나는 복사본이다.
+  const canPaste = !inTrash && !inWork && !searching
+  const paste = () => { placeFile(clipboard, nav.path.join('/')); setMenu(null) }
+  // 이름 바꾸기는 본문만. 확장자가 바뀌면 여는 앱이 바뀌어 버린다.
+  const ext = (name) => name.slice(name.lastIndexOf('.'))
+  const commitRename = () => {
+    const v = renaming.value.trim()
+    if (v) renameFile(renaming.id, v + ext(renaming.name))
+    setRenaming(null)
   }
 
   return (
@@ -126,7 +149,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
             ))}
           </div>
         ) : (
-          <div className="ex-main">
+          <div className="ex-main" onContextMenu={onBlank}>
             {entries.length === 0 && <div className="ex-empty">이 폴더는 비어 있습니다</div>}
             {folders.map((f) => (
               <button key={f.name} className={'ex-file' + (f.hidden ? ' dim' : '')}
@@ -142,10 +165,16 @@ export default function FileExplorer({ startFolder, roots: only }) {
                 </span>
               )
               : (
-                <button key={f.id} className="ex-file" {...(inTrash ? {} : fileDragProps(f))}
+                <button key={f.id} className={'ex-file' + (clipboard === f.id ? ' cut' : '')} {...(inTrash ? {} : fileDragProps(f))}
                         onContextMenu={onContext(f)}
                         onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
-                  <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
+                  <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>
+                  {renaming?.id === f.id ? (
+                    <input className="ex-rename" autoFocus value={renaming.value}
+                           onChange={(e) => setRenaming({ ...renaming, value: e.target.value })}
+                           onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenaming(null) }}
+                           onBlur={commitRename} onClick={(e) => e.stopPropagation()} />
+                  ) : f.name}
                 </button>
               )))}
           </div>
@@ -156,21 +185,35 @@ export default function FileExplorer({ startFolder, roots: only }) {
             <div className="ctx-catch" onPointerDown={() => setMenu(null)}
                  onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} />
             <div className="ctx" style={{ left: menu.x, top: menu.y }}>
-              <button onClick={() => { openWindow(fileOpener(menu.file).app, { fileId: menu.file.id }); setMenu(null) }}>
-                열기
-              </button>
-              {inTrash ? (
-                menu.file.deleted && (
-                  <button onClick={() => { restoreFile(menu.file.id); setMenu(null) }}>복원</button>
-                )
-              ) : inWork ? (
-                <button onClick={() => { unpinFile(menu.file.id); setMenu(null) }}>
-                  {WORK_FOLDER}에서 빼기
-                </button>
+              {menu.paste ? (
+                <button disabled={!canPaste} onClick={paste}>붙여넣기</button>
               ) : (
-                <button onClick={() => { pinFile(menu.file.id); setMenu(null) }}>
-                  {WORK_FOLDER}에 복사
-                </button>
+                <>
+                  <button onClick={() => { openWindow(fileOpener(menu.file).app, { fileId: menu.file.id }); setMenu(null) }}>
+                    열기
+                  </button>
+                  {inTrash ? (
+                    menu.file.deleted && (
+                      <button onClick={() => { restoreFile(menu.file.id); setMenu(null) }}>복원</button>
+                    )
+                  ) : inWork ? (
+                    <button onClick={() => { unpinFile(menu.file.id); setMenu(null) }}>
+                      {WORK_FOLDER}에서 빼기
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={() => { pinFile(menu.file.id); setMenu(null) }}>
+                        {WORK_FOLDER}에 복사
+                      </button>
+                      <button onClick={() => { cutFile(menu.file.id); setMenu(null) }}>잘라내기</button>
+                      <button onClick={() => {
+                        const n = menu.file.name
+                        setRenaming({ id: menu.file.id, name: n, value: n.slice(0, n.lastIndexOf('.')) })
+                        setMenu(null)
+                      }}>이름 바꾸기</button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           </>

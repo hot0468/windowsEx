@@ -1831,3 +1831,7 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 
 /* 행동으로 푸는 질문: 입력칸 자리에 안내문만 */
 .quick-deed { color: #6b7280; font-style: italic; }
+
+/* 탐색기: 잘라낸 파일과 이름 바꾸기 입력 */
+.ex-file.cut { opacity: .5; }
+.ex-rename { width: 100%; font: inherit; font-size: 12px; text-align: center; padding: 1px 3px; border: 1px solid #0078d4; border-radius: 2px; outline: none; }

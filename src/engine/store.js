@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -262,6 +262,12 @@ export const useGame = create((set, get) => ({
   sealed: restored?.sealed ?? false,
   // 그 자리에 굳은 창. 이것만 스크롤이 서고, 뒤이어 뜨는 창들은 읽을 수 있다.
   frozen: restored?.frozen ?? null,
+  // 옮기거나 이름을 바꾼 파일. 뷰(fsView)가 적용한다 — 원본 트리는 그대로다.
+  placed: restored?.placed ?? {},
+  // 드라이브 페이지에 올린 파일 id들. Task 4 가 쓴다.
+  uploaded: restored?.uploaded ?? {},
+  // 잘라낸 파일. 세이브에는 안 실린다.
+  clipboard: null,
   dreamt: restored?.dreamt ?? false,
   // Whether 엄마's conversation has been unfolded all the way back. She answers
   // that once, and only for the player who went looking.
@@ -819,6 +825,24 @@ export const useGame = create((set, get) => ({
     set({ mfpFixed: true })
     return 'done'
   },
+  cutFile: (fileId) => set({ clipboard: fileId }),
+  placeFile: (fileId, into) => {
+    set((s) => ({ placed: { ...s.placed, [fileId]: { ...s.placed[fileId], into } }, clipboard: null }))
+    get().checkPlaced()
+  },
+  renameFile: (fileId, name) => {
+    set((s) => ({ placed: { ...s.placed, [fileId]: { ...s.placed[fileId], name } } }))
+    get().checkPlaced()
+  },
+  // 옮기기·이름 목표. 셀 목표와 같은 식이다 — 자리가 맞는 순간 켜진다.
+  checkPlaced: () => {
+    const { scenario, placed, grants, grant } = get()
+    scenario.objectives
+      .filter((o) => !grants[o.grant] && (
+        (o.move && placed[o.move.file]?.into === o.move.into) ||
+        (o.rename && placed[o.rename.file]?.name === o.rename.name)))
+      .forEach((o) => grant(o.grant))
+  },
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
   editCell: (fileId, sheet, r, c, value) => {
@@ -1224,7 +1248,7 @@ export const tileShots = (scenario, kind, key) =>
 
 // The bin is a view: a file flagged `deleted` in the scenario sits in 휴지통
 // until restored, then reappears where the data always kept it.
-export function fsView(fs, { pinned = [], restored = {}, tiles = [], scenario } = {}) {
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
@@ -1235,7 +1259,30 @@ export function fsView(fs, { pinned = [], restored = {}, tiles = [], scenario } 
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))
   out['휴지통'] = [...(out['휴지통'] ?? []), ...binned]
-  return fsWithTiles(scenario, fsWithPinned(out, pinned), tiles)
+  return fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles)
+}
+
+// 옮기거나 이름을 바꾼 파일. 원래 자리에서 빼서 목적 폴더 끝에 넣는다 —
+// 목적 폴더가 없으면 그 자리에 둔다. id는 그대로라 첨부·목표·힌트는 아무것도
+// 눈치채지 못한다. 트리는 새로 만들어 돌려주므로 원본은 손대지 않는다.
+export function place(fs, placed = {}) {
+  if (!Object.keys(placed).length) return fs
+  const folderAt = (tree, path) => path.slice(1).reduce(
+    (es, name) => es?.find((e) => e.children && e.name === name)?.children ?? null,
+    tree[path[0]] ?? null)
+  const moving = []
+  const pull = (entries) => entries.flatMap((e) => {
+    if (e.children) return [{ ...e, children: pull(e.children) }]
+    const p = placed[e.id]
+    if (!p) return [e]
+    const named = p.name ? { ...e, name: p.name } : e
+    if (!p.into || !folderAt(fs, p.into.split('/'))) return [named]
+    moving.push([p.into, named])
+    return []
+  })
+  const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, pull(entries)]))
+  for (const [into, file] of moving) folderAt(out, into.split('/')).push(file)
+  return out
 }
 
 // Once the blog has been read, the photos it was lending are gone. The rows
