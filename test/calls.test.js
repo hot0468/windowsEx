@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { useGame } from '../src/engine/store.js'
+import { requestsOf, useGame } from '../src/engine/store.js'
 
 const calls = scenario.calls
 const mailOf = (id) => scenario.objectives.find((o) => o.grant === id)?.mail
@@ -67,13 +67,17 @@ describe('걸려오는 전화', () => {
 })
 
 describe('통화로 푸는 길', () => {
+  const spoken = calls.contacts.find((c) => !mailOf(c.id).requiredAttachment)
+
   beforeEach(() => {
     vi.useFakeTimers()
-    useGame.setState({ call: null, callSeq: 0, callLog: [], calledIn: {}, grants: {} })
+    // 전화로 푸는 길은 '오늘 부탁받은 일'일 때만 열린다 — 그 조건을 만들어 둔다.
+    useGame.setState({
+      call: null, callSeq: 0, callLog: [], calledIn: {}, grants: {},
+      day: 1, overtime: {}, ripples: {}, drawn: { 1: [spoken.id] }
+    })
   })
   afterEach(() => vi.useRealTimers())
-
-  const spoken = calls.contacts.find((c) => !mailOf(c.id).requiredAttachment)
 
   // 실제 전화처럼 신호가 먼저 간다. 누르자마자 통화가 되면 건 것이 아니라
   // 열린 것이다.
@@ -115,6 +119,23 @@ describe('통화로 푸는 길', () => {
     expect(useGame.getState().sayOnCall(`확인해 보니 ${key} 입니다`)).toBe(true)
     vi.advanceTimersByTime(1000)
     expect(useGame.getState().grants[spoken.id]).toBe(true)
+  })
+
+  // 아무도 시키지 않은 일을 상대가 먼저 꺼내면, 없는 요청이 하나 생긴 것처럼
+  // 들린다. 오늘 부탁받은 일이 아니면 상대는 바빠서 못 받는다.
+  it('오늘 일이 아니면 용건을 꺼내지 않는다', () => {
+    // grants 도 오늘 요청도 없는 상태에서 건다
+    useGame.setState({ day: 1, drawn: {}, overtime: {}, ripples: {}, grants: {} })
+    const far = calls.contacts.find((c) => !requestsOf(
+      scenario, 1, {}, {}, {}).some((o) => o.id === c.id))
+    useGame.getState().dial(far.number)
+    vi.advanceTimersByTime(2300)
+    const call = useGame.getState().call
+    expect(call.stage).toBe('talking')
+    expect(call.asking).toBeFalsy()
+    const said = call.said.map((l) => l.text).join(' ')
+    expect(said).not.toMatch(/메일|첨부/)
+    for (const line of calls.busy) expect(call.said.some((l) => l.text === line)).toBe(true)
   })
 
   it('끊으면 기록에 남는다', () => {

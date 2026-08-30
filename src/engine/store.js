@@ -1363,18 +1363,26 @@ export const useGame = create((set, get) => ({
       const now = get().call
       if (now?.seq !== seq) return           // 그 사이 끊었다
       if (!who) return get().noAnswer()
-      const done = Boolean(get().grants[who.id])
+      const st = get()
+      const done = Boolean(st.grants[who.id])
+      // 오늘 그 일을 부탁받았는가. 아무도 시키지 않은 일을 상대가 먼저 꺼내면
+      // 없는 요청이 하나 생긴 것처럼 들린다 — 그럴 때는 바빠서 못 받는다.
+      const live = !done && requestsOf(st.scenario, st.day, st.overtime, st.drawn, st.ripples)
+        .some((o) => o.id === who.id)
       const lines = [
         ...who.greet ?? [],
-        // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
-        ...(who.needsMail ?? (done ? who.done ?? [] : who.asking ?? []))
+        ...(done ? who.done ?? []
+          : live
+            // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
+            ? who.needsMail ?? who.asking ?? []
+            : st.scenario.calls?.busy ?? [])
       ]
       set({
         call: {
           ...now,
           stage: 'talking',
-          // 말할 수 있는 상태인지: 아직 안 끝난 일이고, 첨부를 요구하지 않는 상대.
-          asking: !done && !who.needsMail,
+          // 말할 수 있는 상태인지: 오늘 부탁받은 일이고, 첨부를 요구하지 않는 상대.
+          asking: live && !who.needsMail,
           said: lines.map((text) => ({ them: true, text }))
         }
       })
