@@ -240,6 +240,8 @@ describe('scenario integrity', () => {
     const asks = [...threads.flatMap(asksOf), ...scenario.days.flatMap((d) => (d.asks ?? []).flatMap((a) => chain(a.ask)))]
     expect(asks.some((a) => a.files)).toBe(true)
     for (const a of asks) {
+      // 행동으로 푸는 질문은 칠 것도 낼 파일도 없다 — 기다리는 grant 만 있다
+      if (a.deed) { expect(a.accept ?? a.files).toBeUndefined(); continue }
       expect(Boolean(a.accept?.length) !== Boolean(a.files?.length)).toBe(true)
       for (const id of a.files ?? []) expect(known.has(id)).toBe(true)
     }

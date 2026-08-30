@@ -11213,6 +11213,234 @@
       "id": "overtime_pay",
       "title": "회계팀에 6월 연장근로 시간 알려주기",
       "grant": "overtime_pay"
+    },
+    {
+      "id": "deed_cell_orders_c",
+      "title": "발주현황 시트에서 C테크 상태 고치기",
+      "grant": "deed_cell_orders_c",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 2,
+        "col": 3,
+        "value": "납품 완료"
+      }
+    },
+    {
+      "id": "deed_cell_stock_bw50",
+      "title": "재고현황 시트에서 BW-50 입고예정 고치기",
+      "grant": "deed_cell_stock_bw50",
+      "cell": {
+        "file": "file_xls_stock",
+        "sheet": "재고",
+        "row": 1,
+        "col": 3,
+        "value": "70"
+      }
+    },
+    {
+      "id": "deed_cell_orders_b",
+      "title": "발주현황 시트의 B물산 상태를 일정표에 맞추기",
+      "grant": "deed_cell_orders_b",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 1,
+        "col": 3,
+        "value": "출고 대기"
+      }
+    },
+    {
+      "id": "deed_cell_ws_sec",
+      "title": "워크숍 참가 현황에서 정보보안팀 전원 참가로 고치기",
+      "grant": "deed_cell_ws_sec",
+      "cell": {
+        "file": "file_c_wsapply",
+        "sheet": "부서별집계",
+        "row": 6,
+        "col": 2,
+        "value": "9명"
+      }
+    },
+    {
+      "id": "deed_mail_qc",
+      "title": "C테크 구매팀에 견적서 메일 보내기",
+      "grant": "deed_mail_qc",
+      "mail": {
+        "to": "purchase@ctech.co.kr",
+        "requiredAttachment": "file_qc",
+        "requiredKeywords": [
+          "견적서"
+        ],
+        "reply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 견적서 잘 받았습니다.\n검토 후 연락드리겠습니다.\n\nC테크 구매팀 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 저희 견적서가 아닌 것 같습니다.\nC테크 앞으로 된 파일로 다시 부탁드립니다.\n\nC테크 구매팀 드림"
+        },
+        "unclearReply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n어떤 자료를 보내신 건지 본문에 한 줄 적어 주시면 정리에 도움이 되겠습니다.\n\nC테크 구매팀 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_form",
+      "title": "F상사에 견적서 양식 보내기",
+      "grant": "deed_mail_form",
+      "mail": {
+        "to": "jh.park@fsangsa.co.kr",
+        "requiredAttachment": "file_form_quote",
+        "requiredKeywords": [
+          "양식"
+        ],
+        "reply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 양식 잘 받았습니다. 감사합니다.\n\n박정훈 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 양식 파일이 아닌 것 같습니다.\n다시 한번 부탁드립니다.\n\n박정훈 드림"
+        },
+        "unclearReply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 무엇을 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n박정훈 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_qd",
+      "title": "D유통 담당자에게 견적서 메일 보내기",
+      "grant": "deed_mail_qd",
+      "mail": {
+        "to": "sa.yoon@dyutong.co.kr",
+        "requiredAttachment": "file_qd",
+        "requiredKeywords": [
+          "견적서"
+        ],
+        "reply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 견적서 잘 받았습니다.\n내부 검토 후 회신드리겠습니다.\n\n윤성아 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부하신 파일이 초안이거나 저희 것이 아닌 것 같습니다.\n최종 견적서로 다시 부탁드립니다.\n\n윤성아 드림"
+        },
+        "unclearReply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 어떤 문서를 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n윤성아 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_gsan",
+      "title": "G산업 담당자에게 회의록 메일 보내기",
+      "grant": "deed_mail_gsan",
+      "mail": {
+        "to": "jh.han@gsanup.co.kr",
+        "requiredAttachment": "file_h_gminutes",
+        "requiredKeywords": [
+          "회의록"
+        ],
+        "reply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 회의록 잘 받았습니다. 감사합니다.\n\n한지호 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 지난 회의록이 아닌 것 같습니다.\n다시 부탁드립니다.\n\n한지호 드림"
+        },
+        "unclearReply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 무엇을 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n한지호 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_move_ppt",
+      "title": "회의자료_최종.pptx를 발표자료 폴더로 옮기기",
+      "grant": "deed_move_ppt",
+      "move": {
+        "file": "file_ppt_meeting",
+        "into": "문서/발표자료"
+      }
+    },
+    {
+      "id": "deed_rename_ppt",
+      "title": "회의자료_최종_final.pptx 이름 바꾸기",
+      "grant": "deed_rename_ppt",
+      "rename": {
+        "file": "file_dummy_082",
+        "name": "회의자료_0825.pptx"
+      }
+    },
+    {
+      "id": "deed_move_gminutes",
+      "title": "G산업 회의록을 G산업 폴더로 옮기기",
+      "grant": "deed_move_gminutes",
+      "move": {
+        "file": "file_h_gminutes",
+        "into": "문서/업무자료/2026/G산업"
+      }
+    },
+    {
+      "id": "deed_move_wsplan",
+      "title": "워크숍 진행표를 워크샵 폴더로 옮기기",
+      "grant": "deed_move_wsplan",
+      "move": {
+        "file": "file_p2_wsplan",
+        "into": "문서/개인/워크샵"
+      }
+    },
+    {
+      "id": "deed_up_equote",
+      "title": "E마트 재거래 견적서 드라이브에 올리기",
+      "grant": "deed_up_equote",
+      "upload": {
+        "file": "file_e_quote",
+        "page": "q3"
+      }
+    },
+    {
+      "id": "deed_up_bminutes",
+      "title": "B물산 회의록 드라이브에 올리기",
+      "grant": "deed_up_bminutes",
+      "upload": {
+        "file": "file_bminutes",
+        "page": "delivery"
+      }
+    },
+    {
+      "id": "deed_up_sendbook",
+      "title": "계약서 발송대장 드라이브에 올리기",
+      "grant": "deed_up_sendbook",
+      "upload": {
+        "file": "file_d_sendbook",
+        "page": "contracts"
+      }
+    },
+    {
+      "id": "deed_up_creview",
+      "title": "C테크 신규거래 검토서 드라이브에 올리기",
+      "grant": "deed_up_creview",
+      "upload": {
+        "file": "file_ctech_review",
+        "page": "owner"
+      }
     }
   ],
   "places": [
@@ -15531,7 +15759,15 @@
       "h_ot_meal_list": 4,
       "h_reunion": 4,
       "h_jh_shoes": 4,
-      "h_mom_checkup": 4
+      "h_mom_checkup": 4,
+      "deed_cell_orders_b": 4,
+      "deed_cell_ws_sec": 4,
+      "deed_mail_qd": 4,
+      "deed_mail_gsan": 4,
+      "deed_move_gminutes": 4,
+      "deed_move_wsplan": 4,
+      "deed_up_sendbook": 4,
+      "deed_up_creview": 4
     },
     "before": {
       "stock": 3,
@@ -15565,7 +15801,15 @@
       "cfax": 3,
       "rsvp": 3,
       "console": 3,
-      "overtime_pay": 3
+      "overtime_pay": 3,
+      "deed_cell_orders_c": 3,
+      "deed_cell_stock_bw50": 3,
+      "deed_mail_qc": 3,
+      "deed_mail_form": 3,
+      "deed_move_ppt": 3,
+      "deed_rename_ppt": 3,
+      "deed_up_equote": 3,
+      "deed_up_bminutes": 3
     },
     "requests": [
       {
@@ -22685,6 +22929,517 @@
               ]
             ],
             "next": []
+          }
+        }
+      },
+      {
+        "id": "deed_cell_orders_c",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 발주현황 시트 좀 손봐 줘요.",
+            "문서 > 업무자료 > 2026의 거래처_발주현황.xlsx, 2026 시트에서 C테크 상태를 \"납품 완료\"로 바꾸고 저장해요."
+          ],
+          "ask": {
+            "deed": "deed_cell_orders_c",
+            "grants": "deed_cell_orders_c",
+            "next": [],
+            "placeholder": "거래처_발주현황.xlsx의 C테크 상태를 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "확인했어요. 시트가 바로 반영되네요.",
+              "고마워요."
+            ],
+            "no": [
+              [
+                "아직 그대로예요. 저장했어요?",
+                "고치고 나서 저장 버튼(또는 Ctrl+S)을 눌러야 반영돼요."
+              ],
+              [
+                "C테크 줄이에요. 상태 칸만 바꾸면 돼요."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 거래처_발주현황.xlsx, \"2026\" 시트의 C테크 행 \"상태\" 칸을 \"납품 완료\"로 고치고 저장이요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_stock_bw50",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 재고현황 하나만 고쳐 줘.",
+            "업무자료 2026 폴더의 재고현황.xlsx에서 BW-50 입고예정을 70으로. 공장에서 20 더 보낸대."
+          ],
+          "ask": {
+            "deed": "deed_cell_stock_bw50",
+            "grants": "deed_cell_stock_bw50",
+            "next": [],
+            "placeholder": "재고현황.xlsx의 BW-50 입고예정을 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "됐다. 고맙다."
+            ],
+            "no": [
+              [
+                "아직 안 바뀐 것 같은데. 저장했어?"
+              ],
+              [
+                "BW-50 줄의 입고예정 칸이야. 현재고 말고."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 재고현황.xlsx, \"재고\" 시트 BW-50 행의 \"입고예정\"을 70으로 고치고 저장."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_orders_b",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 발주현황의 B물산 상태가 옛날 거예요.",
+            "납품 일정표에 적힌 지금 상태로 맞춰서 저장해 둬요."
+          ],
+          "ask": {
+            "deed": "deed_cell_orders_b",
+            "grants": "deed_cell_orders_b",
+            "next": [],
+            "placeholder": "발주현황의 B물산 상태를 일정표대로 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "맞네요. 두 파일이 이제 같은 말을 하네요."
+            ],
+            "no": [
+              [
+                "아직이에요. 일정표에 뭐라고 적혀 있는지 먼저 봐요."
+              ],
+              [
+                "납품 일정표는 업무자료 2026 폴더에 있어요. 거기 B물산 줄의 상태를 그대로 옮기면 돼요."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 납품_일정_2026.xlsx의 B물산 \"상태\"를 보고, 거래처_발주현황.xlsx \"2026\" 시트 B물산 행의 \"상태\" 칸에 똑같이 적고 저장이요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_ws_sec",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "워크숍 참가 현황 네가 갖고 있지?",
+            "정보보안팀 남은 한 명도 간대. 그 팀은 이제 전원 참가로 고쳐 줘."
+          ],
+          "ask": {
+            "deed": "deed_cell_ws_sec",
+            "grants": "deed_cell_ws_sec",
+            "next": [],
+            "placeholder": "워크숍 참가 현황의 정보보안팀 참가 확정을 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "오케이. 인사총무팀에 넘길게."
+            ],
+            "no": [
+              [
+                "아직 안 바뀌었는데. 저장은 했어?"
+              ],
+              [
+                "정보보안팀 줄이야. 재직 인원이 몇인지 같은 줄에 있잖아. 참가 확정을 그 수로."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 워크숍_참가신청_현황.xlsx \"부서별집계\" 시트, 정보보안팀 행의 \"참가 확정\"을 \"9명\"으로 고치고 저장."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_qc",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, C테크 구매팀에서 견적서를 메일로 다시 받고 싶으시대요.",
+            "업무자료 2026 > C테크 폴더의 견적서_C테크.hwp를 purchase@ctech.co.kr로 보내 주시겠어요? 본문에 견적서라고 적어 주시고요."
+          ],
+          "ask": {
+            "deed": "deed_mail_qc",
+            "grants": "deed_mail_qc",
+            "next": [],
+            "placeholder": "견적서_C테크.hwp를 첨부해 C테크 구매팀에 메일을 보내면 확인됩니다",
+            "ok": [
+              "답장 왔대요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 못 받으셨대요. 메일 앱에서 새 메일로 보내셔야 해요."
+              ],
+              [
+                "받는 사람은 purchase@ctech.co.kr, 첨부는 C테크 폴더의 견적서예요."
+              ],
+              [
+                "메일 > 새 메일: 받는 사람 purchase@ctech.co.kr, 첨부 문서 > 업무자료 > 2026 > C테크 > 견적서_C테크.hwp, 본문에 \"견적서\"를 넣어서요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_form",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, F상사 박정훈 씨가 우리 견적서 양식을 달래.",
+            "jh.park@fsangsa.co.kr로 공통양식 폴더의 견적서_양식.hwp 보내 줘. 본문에 양식이라고 적고."
+          ],
+          "ask": {
+            "deed": "deed_mail_form",
+            "grants": "deed_mail_form",
+            "next": [],
+            "placeholder": "견적서_양식.hwp를 첨부해 F상사에 메일을 보내면 확인됩니다",
+            "ok": [
+              "받았대. 땡큐."
+            ],
+            "no": [
+              [
+                "아직 안 갔대. 새 메일로 보내야 해."
+              ],
+              [
+                "받는 사람 jh.park@fsangsa.co.kr, 첨부는 공통양식에 있는 견적서 양식."
+              ],
+              [
+                "메일 > 새 메일: jh.park@fsangsa.co.kr 앞으로, 문서 > 업무자료 > 2026 > 공통양식 > 견적서_양식.hwp 첨부, 본문에 \"양식\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_qd",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, D유통 담당자한테 견적서를 메일로 한 부 보내 줘요.",
+            "주소는 우리가 받은 문서에 있을 거예요. 본문에 견적서라고 밝히고요."
+          ],
+          "ask": {
+            "deed": "deed_mail_qd",
+            "grants": "deed_mail_qd",
+            "next": [],
+            "placeholder": "D유통 담당자에게 견적서_D유통.hwp를 첨부해 메일을 보내면 확인됩니다",
+            "ok": [
+              "D유통에서 받았다고 연락 왔어요. 수고했어요."
+            ],
+            "no": [
+              [
+                "아직이에요. D유통 담당자 주소부터 찾아요."
+              ],
+              [
+                "D유통 폴더의 검토 문서나 계약서 발송대장에 담당자 메일이 적혀 있어요. 첨부는 초안 말고 최종 견적서요."
+              ],
+              [
+                "메일 > 새 메일: sa.yoon@dyutong.co.kr 앞으로, 문서 > 업무자료 > 2026 > D유통 > 견적서_D유통.hwp 첨부, 본문에 \"견적서\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_gsan",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "G산업 쪽에서 지난번 회의록 사본 달래.",
+            "담당자 주소는 회의록에 적혀 있을 거야. 본문에 회의록이라고 써 줘."
+          ],
+          "ask": {
+            "deed": "deed_mail_gsan",
+            "grants": "deed_mail_gsan",
+            "next": [],
+            "placeholder": "G산업 담당자에게 회의록을 첨부해 메일을 보내면 확인됩니다",
+            "ok": [
+              "받았대. 고마워."
+            ],
+            "no": [
+              [
+                "아직 안 갔대. 회의록 파일부터 찾아."
+              ],
+              [
+                "그 회의록은 엉뚱한 폴더에 저장돼 있어 — 업무자료 바로 아래 \"새 폴더\". 담당자 주소도 그 안에 있어."
+              ],
+              [
+                "메일 > 새 메일: jh.han@gsanup.co.kr 앞으로, 문서 > 업무자료 > 새 폴더 > 회의록_20260812.hwp 첨부, 본문에 \"회의록\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_ppt",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 다운로드 폴더에 회의자료_최종.pptx 굴러다니죠?",
+            "문서 > 발표자료로 옮겨 놔요. 탐색기에서 잘라내서 붙여 넣으면 돼요."
+          ],
+          "ask": {
+            "deed": "deed_move_ppt",
+            "grants": "deed_move_ppt",
+            "next": [],
+            "placeholder": "회의자료_최종.pptx를 문서 > 발표자료로 옮기면 확인됩니다",
+            "ok": [
+              "정리됐네요. 고마워요."
+            ],
+            "no": [
+              [
+                "아직 다운로드에 있어요. 우클릭 > 잘라내기, 목적 폴더 빈자리에서 우클릭 > 붙여넣기예요."
+              ],
+              [
+                "파일은 다운로드에, 목적지는 문서 안의 발표자료 폴더예요."
+              ],
+              [
+                "다운로드 > 회의자료_최종.pptx 우클릭 > 잘라내기, 그다음 문서 > 발표자료 빈자리 우클릭 > 붙여넣기요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_rename_ppt",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, 다운로드에 회의자료_최종_final.pptx요, 이름이 너무 헷갈려요.",
+            "회의자료_0825로 이름 바꿔 주시면 안 될까요? 확장자는 그대로요."
+          ],
+          "ask": {
+            "deed": "deed_rename_ppt",
+            "grants": "deed_rename_ppt",
+            "next": [],
+            "placeholder": "회의자료_최종_final.pptx의 이름을 회의자료_0825로 바꾸면 확인됩니다",
+            "ok": [
+              "훨씬 낫네요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 그대로예요. 파일 우클릭에 이름 바꾸기가 있어요."
+              ],
+              [
+                "다운로드 폴더의 회의자료_최종_final.pptx예요. 이름만 회의자료_0825로요."
+              ],
+              [
+                "다운로드 > 회의자료_최종_final.pptx 우클릭 > 이름 바꾸기 > \"회의자료_0825\" 입력 후 Enter요. 확장자 .pptx는 자동으로 붙어요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_gminutes",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 지난주 G산업 회의록 어디 엉뚱한 데 저장해 둔 것 같은데.",
+            "G산업 쪽에 있어야 할 거 아냐. 제자리로 옮겨 줘."
+          ],
+          "ask": {
+            "deed": "deed_move_gminutes",
+            "grants": "deed_move_gminutes",
+            "next": [],
+            "placeholder": "G산업 회의록을 G산업 폴더로 옮기면 확인됩니다",
+            "ok": [
+              "찾았네. 이제 제자리다."
+            ],
+            "no": [
+              [
+                "아직 G산업 폴더에 없는데. 회의록부터 찾아 봐."
+              ],
+              [
+                "업무자료 바로 아래 \"새 폴더\"라는 게 하나 있어. 거기 들어 있을 거야."
+              ],
+              [
+                "문서 > 업무자료 > 새 폴더 > 회의록_20260812.hwp 우클릭 > 잘라내기, 문서 > 업무자료 > 2026 > G산업 빈자리 우클릭 > 붙여넣기."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_wsplan",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "워크숍 진행표 네가 받아 놨지? 다운로드에 두지 말고 워크샵 자료 모아 두는 데로 옮겨 줘."
+          ],
+          "ask": {
+            "deed": "deed_move_wsplan",
+            "grants": "deed_move_wsplan",
+            "next": [],
+            "placeholder": "워크숍_진행표.hwp를 개인 > 워크샵 폴더로 옮기면 확인됩니다",
+            "ok": [
+              "됐다. 나중에 찾기 편하겠네."
+            ],
+            "no": [
+              [
+                "아직 다운로드에 있어."
+              ],
+              [
+                "문서 > 개인 아래에 워크샵 폴더가 있어. 거기."
+              ],
+              [
+                "다운로드 > 워크숍_진행표.hwp 우클릭 > 잘라내기, 문서 > 개인 > 워크샵 빈자리 우클릭 > 붙여넣기."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_equote",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, E마트 재거래 견적서 사내 드라이브에도 올려 둬요.",
+            "영업1팀 공유 > 3분기 실적자료 페이지에 업로드 버튼 있어요."
+          ],
+          "ask": {
+            "deed": "deed_up_equote",
+            "grants": "deed_up_equote",
+            "next": [],
+            "placeholder": "드라이브 3분기 실적자료 페이지에 견적서_E마트_재거래.hwp를 올리면 확인됩니다",
+            "ok": [
+              "올라왔네요. 팀에서 다 볼 수 있겠어요."
+            ],
+            "no": [
+              [
+                "아직 안 보여요. 드라이브는 VPN 켜고 들어가야 해요."
+              ],
+              [
+                "드라이브 영업1팀 공유 폴더의 3분기 실적자료 페이지를 열면 위에 업로드가 있어요. 파일은 E마트 폴더에요."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 3분기 실적자료 > 업로드 > 문서 > 업무자료 > 2026 > E마트 > 견적서_E마트_재거래.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_bminutes",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, B물산 납기 조율한 회의록 드라이브에 올려 주실 수 있어요?",
+            "거래처 납품 이력 페이지요. B물산 폴더에 8월 5일자 회의록 있어요."
+          ],
+          "ask": {
+            "deed": "deed_up_bminutes",
+            "grants": "deed_up_bminutes",
+            "next": [],
+            "placeholder": "드라이브 거래처 납품 이력 페이지에 회의록_20260805.hwp를 올리면 확인됩니다",
+            "ok": [
+              "확인했어요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 안 올라왔어요. 드라이브 들어가셨어요?"
+              ],
+              [
+                "영업1팀 공유 > 거래처 납품 이력 페이지의 업로드요. 파일은 B물산 폴더에 있어요."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 거래처 납품 이력 > 업로드 > 문서 > 업무자료 > 2026 > B물산 > 회의록_20260805.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_sendbook",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 계약서 발송대장 드라이브에 올려 줘. 계약 관련 페이지에."
+          ],
+          "ask": {
+            "deed": "deed_up_sendbook",
+            "grants": "deed_up_sendbook",
+            "next": [],
+            "placeholder": "드라이브의 계약 관련 페이지에 계약서_발송대장.hwp를 올리면 확인됩니다",
+            "ok": [
+              "올라왔다. 고맙다."
+            ],
+            "no": [
+              [
+                "아직 안 보여. 드라이브 페이지 열어서 업로드 눌러야 해."
+              ],
+              [
+                "발송대장은 D유통 폴더에 있어. 드라이브에서 계약이라는 말이 붙은 페이지를 찾아."
+              ],
+              [
+                "drive.ar.local에서 제목에 계약이 들어간 페이지(주소창에 /contracts) > 업로드 > 문서 > 업무자료 > 2026 > D유통 > 계약서_발송대장.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_creview",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "C테크 신규거래 검토한 거 드라이브에 올려 둬. 담당 이력 페이지."
+          ],
+          "ask": {
+            "deed": "deed_up_creview",
+            "grants": "deed_up_creview",
+            "next": [],
+            "placeholder": "드라이브 거래처 담당 이력 페이지에 신규거래_검토.hwp를 올리면 확인됩니다",
+            "ok": [
+              "확인. 고마워."
+            ],
+            "no": [
+              [
+                "아직 안 올라왔어."
+              ],
+              [
+                "영업1팀 공유 > 거래처 담당 이력 페이지. 파일은 C테크 폴더."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 거래처 담당 이력 > 업로드 > 문서 > 업무자료 > 2026 > C테크 > 신규거래_검토.hwp."
+              ]
+            ]
           }
         }
       }
