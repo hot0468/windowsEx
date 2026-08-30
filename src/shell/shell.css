@@ -2092,3 +2092,9 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .desktop-back { position: absolute; inset: 0; }
 .ctx-line { height: 1px; margin: 4px 6px; background: #eceef3; }
 .ctx-check { display: inline-block; width: 14px; color: #2f6fd0; }
+
+/* 창을 가장자리로 밀었을 때 미리 보이는 자리. 창보다 아래에 깔리고(z), 마우스를
+   가로채지 않는다 — 끌고 있는 중이라 포인터를 뚝 가로채면 놓기가 끊긴다. */
+.snap-hint { position: fixed; z-index: 5; pointer-events: none; border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.75); background: rgba(120,170,255,.22);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.18) inset; }

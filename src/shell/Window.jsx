@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, fitY, resizeRect, unsavedFile } from '../engine/store.js'
+import { useGame, fitY, resizeRect, snapRect, snapZone, unsavedFile } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
 import { Minus, Square, X } from '../icons/line.jsx'
 
 const TASKBAR = 48
 const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
+
+// 놓기 전에 보이는 틀. 진짜 윈도우도 창을 끌면 자리가 먼저 나타난다 —
+// 놓고 나서 알게 되면 실수로 느껴진다.
+function SnapHint({ zone }) {
+  const box = zone === 'max'
+    ? { left: 0, top: 0, right: 0, bottom: TASKBAR }
+    : zone === 'left'
+      ? { left: 0, top: 0, width: '50%', bottom: TASKBAR }
+      : { right: 0, top: 0, width: '50%', bottom: TASKBAR }
+  return <div className="snap-hint" style={box} />
+}
 
 export default function Window({ win, title, icon, theme, width = 640, height = 440, children }) {
   const focusWindow = useGame((s) => s.focusWindow)
@@ -24,6 +35,8 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   const frozen = useGame((s) => s.frozen === win.id)
   const [asking, setAsking] = useState(false)
   const drag = useRef(null)
+  // 끌고 있는 동안 미리 보여 주는 자리. 놓기 전에 어디로 갈지 알아야 한다.
+  const [snap, setSnap] = useState(null)
   const grab = useRef(null)
 
   // A window keeps the app's default size until the player resizes it.
@@ -43,8 +56,18 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
   const onPointerMove = (e) => {
     if (!drag.current || win.maximized) return
     moveWindow(win.id, e.clientX - drag.current.dx, Math.max(0, e.clientY - drag.current.dy))
+    setSnap(snapZone(e.clientX, e.clientY, window.innerWidth, window.innerHeight))
   }
-  const onPointerUp = () => { drag.current = null }
+  // 놓는 순간에 자리가 정해진다. 가장자리가 아니면 끌려간 그대로 둘다.
+  const onPointerUp = () => {
+    drag.current = null
+    const zone = snap
+    setSnap(null)
+    if (!zone) return
+    if (zone === 'max') return win.maximized || toggleMaximize(win.id)
+    const rect = snapRect(zone, window.innerWidth, window.innerHeight, TASKBAR)
+    if (rect) resizeWindow(win.id, rect)
+  }
 
   const startResize = (dir) => (e) => {
     grab.current = { dir, x0: e.clientX, y0: e.clientY, rect: { x: win.x, y: win.y, w, h } }
@@ -98,6 +121,7 @@ export default function Window({ win, title, icon, theme, width = 640, height = 
           </div>
         </div>
       )}
+      {snap && <SnapHint zone={snap} />}
       {!win.maximized && !sealed && HANDLES.map((dir) => (
         <span key={dir} className={`rz rz-${dir}`} onPointerDown={startResize(dir)}
               onPointerMove={onResizeMove} onPointerUp={endResize} />

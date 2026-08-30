@@ -1879,13 +1879,13 @@ export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
 // Which app opens a file, decided by its name the way an OS does it.
 export const fileOpener = (file) =>
   file.image ? { app: 'viewer', icon: 'image' }
-    : file.name.endsWith('.exe') ? { app: 'installer', icon: 'cmd' }
+    : file.name.endsWith('.exe') ? { app: 'installer', icon: 'exe' }
       : file.name.endsWith('.xlsx') ? { app: 'sheet', icon: 'xls' }
       : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
         : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
           : file.name.endsWith('.pdf') ? { app: 'pdf', icon: 'pdf' }
             : file.name.endsWith('.dcx') ? { app: 'dcx', icon: 'doc' }
-              : { app: 'notepad', icon: 'doc' }
+              : { app: 'notepad', icon: 'notepad' }
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
@@ -2202,6 +2202,26 @@ export const MIN_SIZE = { w: 360, h: 220 }
 // New rect for a resize drag. `dir` names the edges being pulled ('se', 'n', …).
 // Dragging a left or top edge moves the window's corner, but only by as much as
 // the window actually shrank — so it stops dead once it hits the minimum.
+// 창을 화면 가장자리로 밀었을 때 어디에 놀지. 포인터 위치로만 따진다 —
+// 창의 모서리로 따지면 큰 창은 가운데서 놓아도 물고 작은 창은 끝까지 밀어도 안 물린다.
+export const SNAP_EDGE = 14
+export function snapZone(px, py, vw, vh, edge = SNAP_EDGE) {
+  if (py <= edge) return 'max'
+  if (px <= edge) return 'left'
+  if (px >= vw - edge) return 'right'
+  return null
+}
+
+// 반쪽짜리 자리. 작업 표시줄 위까지만 차지하고, 홈수가 남지 않게 오른쪽이
+// 나머지를 전부 가져간다. 'max' 는 자리가 아니라 상태라 여기서 다루지 않는다.
+export function snapRect(zone, vw, vh, taskbar = 48, min = MIN_SIZE) {
+  if (zone !== 'left' && zone !== 'right') return null
+  const h = Math.max(min.h, vh - taskbar)
+  const half = Math.max(min.w, Math.round(vw / 2))
+  return zone === 'left'
+    ? { x: 0, y: 0, w: half, h }
+    : { x: vw - half, y: 0, w: vw - half, h }
+}
 export function resizeRect(start, dir, dx, dy, min = MIN_SIZE) {
   const rect = { x: start.x, y: start.y, w: start.w, h: start.h }
   if (dir.includes('e')) rect.w = Math.max(min.w, start.w + dx)
