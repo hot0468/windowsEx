@@ -244,7 +244,7 @@ export default function PhoneShell() {
   const win = cfg ? windows.find((w) => w.key === key) : null
 
   return (
-    <div className="phone">
+    <div className={'phone' + (sealed ? ' sealed' : '')}>
       <div className="ph-drag"
            onPointerDown={(e) => { if (!shade) setGrab(e.clientY) }}
            onPointerMove={(e) => {

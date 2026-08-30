@@ -13,7 +13,14 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: var(--p-bg);
+  /* 바탕화면. 앱 화면(.phone-app)과 내비바는 불투명하므로 이 그라데이션은
+     홈과 상태바에서만 보인다 — 회사 파랑이 아닌, 창가에 든 이른 빛 쪽으로. */
+  background:
+    radial-gradient(130% 78% at 12% 0%, #dde6f5 0%, rgba(221, 230, 245, 0) 58%),
+    radial-gradient(115% 68% at 96% 6%, #f4e3e6 0%, rgba(244, 227, 230, 0) 52%),
+    radial-gradient(120% 60% at 50% 104%, #e7ecf4 0%, rgba(231, 236, 244, 0) 62%),
+    linear-gradient(180deg, #f4f6fb 0%, #f8f9fb 46%, #eef1f6 100%);
+  background-attachment: fixed;
   color: var(--p-ink);
   font-family: Pretendard, -apple-system, 'Malgun Gothic', sans-serif;
   font-size: 15px;
@@ -158,9 +165,11 @@
   width: 62px;
   height: 62px;
   border-radius: 18px;
-  background: var(--p-surface);
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(8px);
   color: var(--p-accent);
-  box-shadow: 0 1px 3px rgba(16, 19, 26, .08), 0 6px 16px rgba(16, 19, 26, .05);
+  box-shadow: 0 1px 2px rgba(16, 19, 26, .1), 0 8px 18px rgba(16, 19, 26, .08),
+              inset 0 0 0 1px rgba(255, 255, 255, .6);
 }
 .ph-label {
   max-width: 74px;
@@ -174,7 +183,7 @@
 /* 앱 */
 .phone-app {
   position: absolute;
-  inset: 40px 0 0;             /* 상태바 아래 */
+  inset: 40px 0 44px;          /* 상태바 아래, 내비바 위 */
   display: flex;
   flex-direction: column;
   background: var(--p-bg);
@@ -185,6 +194,7 @@
   from { opacity: 0; transform: translateX(100%); }
   to { opacity: 1; transform: none; }
 }
+.phone.sealed .phone-app { bottom: 0; }   /* 굳은 뒤에는 내비바가 없다 */
 .pa-head {
   display: flex;
   align-items: center;
@@ -251,6 +261,11 @@
 /* 안드로이드의 세 버튼: 켠 창 · 홈 · 뒤로. 홈 인디케이터를 대신한다 —
    앱 안에서도 홈으로 나가는 길이 늘 바닥에 있다. */
 .pn-nav {
+  /* 앱을 열면 홈(flex:1)이 사라져 내비바가 상태바 밑까지 올라온다.
+     세로로 남는 자리를 위쪽 여백으로 먹어 언제나 바닥에 붙는다. */
+  margin-top: auto;
+  position: relative;
+  z-index: 50;
   flex: none;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
