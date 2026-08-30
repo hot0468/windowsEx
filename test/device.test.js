@@ -73,6 +73,25 @@ describe('폰 카메라', () => {
   })
 })
 
+// 지도는 브라우저의 장소 검색과 같은 자료를 본다. 두 벌이 되면 한쪽만
+// 고쳐지고 다른 쪽이 거짓말을 하게 된다.
+describe('지도', () => {
+  it('모든 장소가 자리를 가진다', () => {
+    for (const p of scenario.places) {
+      expect(p.name, '이름 없는 장소').toBeTruthy()
+      expect(p.address, p.name + ' 에 주소가 없다').toBeTruthy()
+      // 주소에서 자리를 뽑으므로 숫자가 하나는 있어야 한다
+      expect(p.address).toMatch(/\d/)
+    }
+  })
+
+  it('장소 페이지로 이어진다', () => {
+    // 지도의 '장소 페이지 열기'가 브라우저에 넘기는 이름이 실제로 있는 이름이어야 한다
+    const names = new Set(scenario.places.map((p) => p.name))
+    for (const p of scenario.places) expect(names.has(p.name)).toBe(true)
+  })
+})
+
 describe('바탕화면 보기', () => {
   beforeEach(() => useGame.setState({
     peeked: [],
