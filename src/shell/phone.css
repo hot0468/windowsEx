@@ -588,3 +588,11 @@
 
 /* 메신저 — 받은 파일 말풍선이 화면보다 넓었다. */
 .phone .bubble.them.file { min-width: min(240px, 100%); }
+
+/* 솔리테어 — 7열이 한 화면에 들어가야 한다. 여백과 간격을 줄여 카드 폭을
+   벌고, 카드가 작아진 만큼 무늬 숫자도 줄인다. */
+.phone .sol { padding: 8px; --sp-3: 6px; --sp-4: 10px; --fs-3xl: 20px; --fs-sm: 10.5px; }
+.phone .sol-corner { top: 2px; left: 3px; }
+.phone .sol-pip { right: 4px; bottom: 2px; }
+.phone .sol-bar { flex-wrap: wrap; gap: 6px; }
+.phone .sol-btn { padding: 5px 9px; font-size: 11.5px; }

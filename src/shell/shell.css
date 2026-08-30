@@ -1909,8 +1909,10 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
   --sol-back: #1d4ed8; --sol-back-2: #1e3a8a;
   --sol-slot-line: rgba(255,255,255,.45);
   /* 카드 폭을 px로 박지 않는다 — 7열을 px로 박으면 창 폭에서 몇 px이 모자라
-     가로 스크롤이 생긴다. 폭은 격자가 나눠 주고 높이는 비율이 따라온다. */
-  --sol-card-min: 64px; --sol-card-ratio: 88 / 124;
+     가로 스크롤이 생긴다. 최소 폭도 마찬가지였다: 64px 일곱 장에 간격까지
+     더하면 폰 화면(430px)보다 90px 넓어 판 전체가 옆으로 밀렸다. 폭은
+     격자가 나눠 주고, 높이는 비율이 따라온다. */
+  --sol-card-ratio: 88 / 124;
   height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-3);
   padding: var(--sp-4); box-sizing: border-box;
   /* 가로 스크롤은 판 전체가 함께 진다 — 윗줄과 작업 더미가 같은 격자를 쓰므로
@@ -1928,7 +1930,7 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .sol-status { margin: 0; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; color: rgba(255,255,255,.86); }
 /* 윗줄은 아랫줄(작업 더미 7)과 같은 격자를 쓴다 — 산이 1열, 뽑은 카드가 2열,
    기초 더미가 4~7열에 정확히 맞아떨어진다(실제 솔리테어의 배치다). */
-.sol-top, .sol-table { display: grid; grid-template-columns: repeat(7, minmax(var(--sol-card-min), 1fr)); gap: var(--sp-3); }
+.sol-top, .sol-table { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--sp-3); }
 /* 3열은 비운다 — 산 묶음과 기초 더미 묶음을 갈라 놓는 자리다. */
 .sol-top > :nth-child(3) { grid-column: 4; }
 .sol-slot { width: 100%; aspect-ratio: var(--sol-card-ratio); padding: 0; border: none;
