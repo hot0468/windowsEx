@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   canMove, deal, draw, isRed, isWon, move, rankLabel, sendToFoundation,
   SUIT_NAMES, SUIT_SYMBOLS, SUITS
@@ -8,10 +8,11 @@ import {
 // 넣지 않는다. 창을 닫으면 판이 끝난다(실제 윈도우 솔리테어와 같다).
 //
 // 옮기는 길이 둘이고 둘 다 남긴다:
-//   ① 끌어다 놓기(HTML5 drag) — 카드 게임에서 기대되는 손놀림
+//   ① 끌어다 놓기 — 마우스는 HTML5 drag, 손가락은 포인터 이벤트(touchProps).
+//      모바일 브라우저는 dragstart/drop 을 아예 보내지 않으므로 길이 갈린다.
 //   ② 카드를 누르고 → 놓을 자리를 누르기
-// ②를 지우면 폰에서 판을 끝낼 수 없다 — HTML5 드래그는 터치에서 동작하지 않는다.
-// 두 길은 applyMove 하나를 지나므로 규칙이 갈릴 수 없다.
+// ②도 남긴다 — 좁은 화면에서는 겨누는 것보다 두 번 누르는 편이 확실하다.
+// 세 길 모두 applyMove 하나를 지나므로 규칙이 갈릴 수 없다.
 
 // 새 판의 시드. 화면이 정한다 — 규칙 쪽은 시드를 받기만 한다.
 const newSeed = () => Date.now()
@@ -68,6 +69,8 @@ export default function Solitaire() {
   const [held, setHeld] = useState(null)
   // 지금 끌고 있는 카드. 눌러서 집는 것(held)과 달리 놓는 순간 사라진다.
   const [drag, setDrag] = useState(null)
+  // 손가락으로 놓은 직후 따라오는 click 한 번을 흘려보내는 표시.
+  const dropped = useRef(false)
   const won = isWon(state)
   const targets = drag ? dropTargetsFor(state, drag) : null
 
@@ -90,7 +93,33 @@ export default function Solitaire() {
     setHeld(null)
   }
 
+  // 터치에는 HTML5 끌기(dragstart/dragover/drop)가 아예 오지 않는다 — 모바일
+  // 브라우저는 손가락 끌기를 스크롤로 쓴다. 손가락은 포인터 이벤트로 따로 받아,
+  // 뗀 자리 밑에 있는 더미(data-pile)로 옮긴다. 끄는 동안 보이는 표시는 눌러서
+  // 집었을 때와 같다 — 같은 뜻이기 때문이다.
+  const touchProps = (pile, index) => ({
+    onPointerDown: (e) => {
+      if (e.pointerType !== 'touch') return
+      // 지난 끌기가 남긴 표시는 여기서 지운다 — 브라우저가 놓은 뒤 click 을
+      // 보내지 않는 경우가 있어, 그대로 두면 다음 탭 한 번이 삼켜진다.
+      dropped.current = false
+      setDrag({ pile, index })
+      setHeld(null)
+      // 손가락이 카드 밖으로 나가도 이 카드가 계속 이벤트를 받는다.
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+    },
+    onPointerUp: (e) => {
+      if (e.pointerType !== 'touch' || !drag) return
+      const to = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-pile]')?.dataset.pile
+      // 집은 자리에서 그대로 뗀 것은 끌기가 아니라 탭이다 — clickCard 가 받는다.
+      if (to && to !== drag.pile && applyMove(drag, to)) dropped.current = true
+      setDrag(null)
+    },
+    onPointerCancel: () => setDrag(null)
+  })
+
   const dragProps = (pile, index) => ({
+    ...touchProps(pile, index),
     draggable: true,
     onDragStart: (e) => {
       // 파이어폭스는 데이터가 없으면 끌기 자체를 시작하지 않는다.
@@ -103,7 +132,10 @@ export default function Solitaire() {
   })
 
   // 놓을 수 있는 자리에만 붙는다. 못 받는 자리는 preventDefault를 안 해 커서가 거절을 알린다.
+  // data-pile 은 손가락으로 끌 때 쓴다 — 뗀 좌표 밑의 요소에서 이 표식을 찾아
+  // 어느 더미에 놓았는지 안다(터치에는 onDrop 이 오지 않는다).
   const dropProps = (pile) => ({
+    'data-pile': pile,
     onDragOver: (e) => { if (targets?.has(pile)) e.preventDefault() },
     onDrop: (e) => {
       e.preventDefault()
@@ -114,6 +146,9 @@ export default function Solitaire() {
 
   // 카드를 눌렀다. 집은 게 없으면 집고, 있으면 그 자리로 옮겨 본다.
   const clickCard = (pile, index, card) => {
+    // 손가락으로 끌어 놓은 직후에도 브라우저는 click 을 한 번 더 보낸다.
+    // 그대로 두면 방금 옮긴 카드가 다시 집힌 채로 남는다.
+    if (dropped.current) { dropped.current = false; return }
     if (!card.faceUp) return
     if (held && (held.pile !== pile || held.index !== index)) {
       // 옮길 수 없는 자리를 눌렀으면 그 카드를 새로 집는다 — 아무 일도 안 일어나는

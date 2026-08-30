@@ -596,3 +596,7 @@
 .phone .sol-pip { right: 4px; bottom: 2px; }
 .phone .sol-bar { flex-wrap: wrap; gap: 6px; }
 .phone .sol-btn { padding: 5px 9px; font-size: 11.5px; }
+/* 카드 위에서 시작한 손짓은 화면 넘김이 아니라 카드 끌기다. 이걸 막지 않으면
+   브라우저가 먼저 스크롤로 채가고 포인터 이벤트가 끊긴다(pointercancel).
+   더미가 화면보다 길어지는 일은 드물어 세로 스크롤은 카드 사이 여백으로 한다. */
+.phone .sol-slot, .phone .sol-stacked { touch-action: none; }
