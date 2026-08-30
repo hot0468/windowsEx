@@ -2077,3 +2077,18 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .bd-write-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .bd-write-keys { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f2f3f7;
   color: #b8bcc6; font-size: 11px; text-align: right; }
+
+/* 트레이의 상태표시. 누를 수 있는 것(tb-tray)과 보여주기만 하는 것(tb-stat)을
+   같은 크기로 둘되, 커서로 가른다. */
+.tb-stat { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+  border-radius: 5px; color: rgba(255,255,255,.72); cursor: default; }
+.tb-tray.on { color: #7fd6a4; }
+.tb-tray.warn, .tb-stat.warn { color: #f0a03c; }
+/* 끊긴 네트워크는 눈에 걸려야 한다 — 그것만 깜박인다. */
+@keyframes tb-blink { 0%, 70% { opacity: 1 } 85% { opacity: .35 } 100% { opacity: 1 } }
+.tb-stat.warn { animation: tb-blink 2.4s ease-in-out infinite; }
+
+/* 빈 바탕화면을 받는 층. 아이콘과 창보다 아래에 깔린다. */
+.desktop-back { position: absolute; inset: 0; }
+.ctx-line { height: 1px; margin: 4px 6px; background: #eceef3; }
+.ctx-check { display: inline-block; width: 14px; color: #2f6fd0; }

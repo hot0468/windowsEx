@@ -31,6 +31,12 @@ export default function Desktop() {
   const takeTile = useGame((s) => s.takeTile)
   const gates = scenario.nineGates
   const [refused, setRefused] = useState(null)
+  // 바탕화면 오른쪽 단추. 탐색기에만 있던 것을 여기에도 둔다 — 숨긴 항목
+  // 스위치가 폴더 안에만 있으면, 힌트가 '숨긴 항목'을 말해도 찾을 곳이 없다.
+  const [menu, setMenu] = useState(null)
+  const toggleHidden = useGame((s) => s.toggleHidden)
+  // 새로 고침은 진짜 윈도우에서도 아이콘을 다시 그리는 것이 전부다.
+  const [drawn, redraw] = useState(0)
   const gather = useFileDrop((id) => {
     if (gates?.shots.some((x) => x.id === id)) return takeTile(id)
     setRefused(id)
@@ -40,7 +46,24 @@ export default function Desktop() {
   const dropFor = (name) => (name === WORK_FOLDER ? work : name === gates?.folder ? gather : NO_DROP)
   const icons = [...SHORTCUTS, ...installedShortcuts(scenario.programs, grants)]
   return (
-    <div className="desktop-icons">
+    <>
+      {/* 빈 바탕화면만 받는다. 창 위의 오른 단추는 그 창이 가져간다. */}
+      <div className="desktop-back"
+           onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }) }} />
+      {menu && (
+        <>
+          <div className="ctx-catch" onPointerDown={() => setMenu(null)}
+               onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} />
+          <div className="ctx" style={{ left: menu.x, top: menu.y }}>
+            <button onClick={() => { redraw((n) => n + 1); setMenu(null) }}>새로 고침</button>
+            <div className="ctx-line" />
+            <button onClick={() => { toggleHidden(); setMenu(null) }}>
+              <span className="ctx-check">{showHidden ? '✓' : ''}</span>숨긴 항목 표시
+            </button>
+          </div>
+        </>
+      )}
+    <div className="desktop-icons" key={drawn}>
       {refused && <div className="di-refused">{gates.refuse}</div>}
       {icons.map((s) => (
         <button key={s.label} className="desktop-icon"
@@ -70,5 +93,6 @@ export default function Desktop() {
         </button>
       )))}
     </div>
+    </>
   )
 }
