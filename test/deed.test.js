@@ -216,6 +216,17 @@ describe('행동 요청의 스펙', () => {
   Object.entries(scenario.fs).forEach(([r, es]) => { folders.add(r); walk(es, r) })
   const drive = scenario.sites.find((s) => s.layout === 'drive').wiki.pages
   const world = JSON.stringify(scenario)
+  // 게임 전체의 ask 뿌리를 훑어 accept 문자열을 다 모은다 — scripts/query.mjs
+  // 의 roots()와 같은 자리들.
+  const threads = [scenario.workMessenger, scenario.privateMessenger].flatMap((m) => m.sections.flatMap((x) => x.threads))
+  const askRoots = [
+    ...threads.flatMap((t) => [t.ask, ...(t.reactions ?? []).map((r) => r.ask)]),
+    ...scenario.days.flatMap((d) => (d.asks ?? []).map((a) => a.ask)),
+    ...Object.values(scenario.overtime.days).flatMap((d) => d.asks.map((a) => a.ask)),
+    ...scenario.pool.requests.map((r) => r.beat.ask),
+    ...Object.values(scenario.summons.nights ?? {}).map((b) => b.ask)
+  ].filter(Boolean)
+  const everyAccept = () => askRoots.flatMap(steps).flatMap((a) => (a.accept ?? []).flat())
 
   it('열여섯 건이 있고 종류당 넷이다', () => {
     expect(deeds.length).toBeGreaterThanOrEqual(16)
@@ -245,6 +256,14 @@ describe('행동 요청의 스펙', () => {
       if (o.move) { expect(files.has(o.move.file), a.deed).toBe(true); expect(folders.has(o.move.into), a.deed).toBe(true) }
       if (o.rename) { expect(files.has(o.rename.file), a.deed).toBe(true); expect(o.rename.name, a.deed).toMatch(/\.[a-z]+$/) }
       if (o.upload) { expect(files.has(o.upload.file), a.deed).toBe(true); expect(drive[o.upload.page], a.deed).toBeTruthy() }
+    }
+  })
+
+  it('셀 목표는 다른 요청의 정답을 덮어쓰지 않는다', () => {
+    const accepts = new Set(everyAccept())
+    for (const o of scenario.objectives.filter((x) => x.cell)) {
+      const sheet = allFiles(scenario.fs).find((f) => f.id === o.cell.file).sheets.find((s) => s.name === o.cell.sheet)
+      expect(accepts.has(sheet.rows[o.cell.row][o.cell.col]), o.id).toBe(false)
     }
   })
 
