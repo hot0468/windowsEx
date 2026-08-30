@@ -16,8 +16,9 @@ export default function FileDialog({ start = '문서', onPick, onClose }) {
   const dreamt = useGame((s) => s.dreamt)
   const tiles = useGame((s) => s.tiles)
   const placed = useGame((s) => s.placed)
+  const touched = useGame((s) => s.touched)
   // a photo the dream gave back is not a file you can attach either
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, scenario })
   // a binned file is not a file you can attach
   const roots = Object.keys(fs).filter((r) => r !== '휴지통')
   const nav = useFolderNav(start)

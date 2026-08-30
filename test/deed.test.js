@@ -307,3 +307,37 @@ describe('행동 요청의 스펙', () => {
     }
   })
 })
+
+// 이번 주에 손댄 것은 그때가 남는다 — 저장한 시트는 수정한 날짜가 오늘이고,
+// 드라이브에 올린 시각은 시계가 가도 그대로다. 아니면 목요일에 올린 파일이
+// 금요일에는 금요일에 올린 것이 된다.
+describe('손댄 시각', () => {
+  beforeEach(() => useGame.setState({
+    grants: {}, touched: {}, uploaded: {}, sheetEdits: {}, sheetDrafts: {},
+    pendingAsks: {}, extraMessages: {}, day: 2, dayAt: 0, overtime: {}
+  }))
+
+  it('시트를 저장하면 그 파일의 수정한 날짜가 오늘이 된다', () => {
+    useGame.getState().draftCell('file_xls_orders', '2026', 1, 3, '출고 완료')
+    useGame.getState().saveSheet('file_xls_orders')
+    const st = useGame.getState()
+    expect(st.touched.file_xls_orders).toMatch(/^2026-08-24 \d\d:\d\d$/)
+    const f = allFiles(fsView(scenario.fs, { touched: st.touched, scenario })).find((x) => x.id === 'file_xls_orders')
+    expect(f.date).toBe(st.touched.file_xls_orders)
+  })
+
+  it('고친 것 없이 저장하면 날짜도 그대로다', () => {
+    useGame.getState().saveSheet('file_xls_orders')
+    expect(useGame.getState().touched.file_xls_orders).toBeUndefined()
+  })
+
+  it('올린 시각은 올린 그때로 남는다', () => {
+    useGame.getState().uploadTo('q3', 'file_qb')
+    expect(useGame.getState().touched['q3/file_qb']).toMatch(/^2026-08-24 \d\d:\d\d$/)
+  })
+
+  it('touched는 세이브에 실린다', async () => {
+    const { PROGRESS } = await import('../src/engine/store.js')
+    expect(PROGRESS).toContain('touched')
+  })
+})

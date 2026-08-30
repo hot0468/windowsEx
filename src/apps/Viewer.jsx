@@ -22,9 +22,10 @@ export default function Viewer({ fileId }) {
   const tiles = useGame((s) => s.tiles)
   const takeTile = useGame((s) => s.takeTile)
   const placed = useGame((s) => s.placed)
+  const touched = useGame((s) => s.touched)
   const [menu, setMenu] = useState(null)
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, scenario })
   const gallery = galleryOf(fs, fileId, showHidden)
   const at = gallery.findIndex((f) => f.id === shown)
   const file = findFile(fs, shown)

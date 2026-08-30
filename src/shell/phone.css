@@ -429,3 +429,26 @@
 .ph-shade-end:disabled { background: #eef0f4; color: var(--p-mute); cursor: default; }
 .ph-shade-grip { display: block; width: 100%; padding: 8px 0 4px; border: 0; background: none; cursor: pointer; }
 .ph-shade-grip i { display: block; width: 42px; height: 4px; margin: 0 auto; border-radius: 2px; background: #d3d7de; }
+
+/* ── 폰에서 보는 웹 페이지 ─────────────────────────────────
+   창 하나가 곧 화면 전체다. 데스크톱 창(≈900px)을 전제로 짠 폭들을
+   여기서 되돌린다. 데스크톱은 그대로 두려고 .phone 아래로만 건다. */
+
+/* 브라우저 크롬 — 좁으면 여백부터 줄인다. */
+.phone .page { padding: 16px 14px; }
+
+/* 포털 홈. 로고가 화면을 다 먹지 않게, 기사 카드는 한 줄에 하나씩. */
+.phone .portal { padding-top: 22px; }
+.phone .portal-logo { font-size: 34px; }
+.phone .portal-cal { top: 8px; right: 10px; padding: 5px 10px; font-size: 12px; }
+.phone .portal-search { margin: 20px 0 26px; }
+.phone .portal-search .btn-primary { padding: 8px 16px; }
+.phone .portal-news { padding: 0 2px 20px; }
+.phone .pn-grid { grid-template-columns: 1fr; gap: 0; }
+.phone .pn-thumb { width: 108px; height: 74px; }
+.phone .pn-card { gap: 10px; }
+/* 언론사 이름과 '구독 +' 가 한 줄에 다 들어가지 못하면 접힌다 —
+   기존에는 안 접혀 이름이 글자당 한 줄씩 세로로 찢어졌다. */
+.phone .pn-press { flex-wrap: wrap; gap: 4px 6px; font-size: 12px; }
+.phone .pn-press em { margin-left: 0; }
+.phone .pn-title { font-size: 13.5px; }

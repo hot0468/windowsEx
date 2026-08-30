@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -145,6 +145,14 @@ export function gameClock(scenario, { day = 1, overtime = {}, dayAt = 0 } = {}, 
   }
 }
 
+// 지금 이 순간을 파일 날짜 꼴('YYYY-MM-DD HH:MM')로. 저장하거나 올린 것이
+// 언제였는지는 그 뒤로 시계가 가도 그대로 남아야 한다.
+export const nowStamp = (s) => {
+  const c = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+  const m = /(\d+)월\s*(\d+)일/.exec(c.date)
+  return m ? `${GAME_YEAR}-${pad2(+m[1])}-${pad2(+m[2])} ${c.time}` : ''
+}
+
 // 오늘 밤 부름이 보낼 것. 거절했으면 아무 밤도 오지 않고, 이미 보낸 밤은
 // 다시 오지 않는다.
 export function callerNight(s) {
@@ -268,6 +276,7 @@ export const useGame = create((set, get) => ({
   placed: restored?.placed ?? {},
   // 드라이브 페이지에 올린 파일 id들. Task 4 가 쓴다.
   uploaded: restored?.uploaded ?? {},
+  touched: restored?.touched ?? {},
   // 게임 창을 켜 둔 채로 일을 끝내다 팀장에게 걸렸는가. 한 번뿐이다.
   slacked: restored?.slacked ?? false,
   // 잘라낸 파일. 세이브에는 안 실린다.
@@ -890,7 +899,10 @@ export const useGame = create((set, get) => ({
       .forEach((o) => grant(o.grant))
   },
   uploadTo: (page, fileId) => {
-    set((s) => ({ uploaded: { ...s.uploaded, [page]: [...new Set([...(s.uploaded[page] ?? []), fileId])] } }))
+    set((s) => ({
+      uploaded: { ...s.uploaded, [page]: [...new Set([...(s.uploaded[page] ?? []), fileId])] },
+      touched: { ...s.touched, [page + '/' + fileId]: nowStamp(s) }
+    }))
     get().checkUploaded()
   },
   checkUploaded: () => {
@@ -927,7 +939,8 @@ export const useGame = create((set, get) => ({
       sheetEdits[k] = sheetDrafts[k]
       delete sheetDrafts[k]
     }
-    set({ sheetEdits, sheetDrafts })
+    // 저장한 파일은 오늘 고친 파일이다 — 탐색기의 수정한 날짜가 그렇게 보인다.
+    set({ sheetEdits, sheetDrafts, touched: { ...s.touched, [fileId]: nowStamp(s) } })
     get().checkCells()
   },
   // 저장하지 않고 닫을 때. 들고 있던 것을 버린다.
@@ -1354,10 +1367,12 @@ export const tileShots = (scenario, kind, key) =>
 
 // The bin is a view: a file flagged `deleted` in the scenario sits in 휴지통
 // until restored, then reappears where the data always kept it.
-export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, scenario } = {}) {
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
+    // 이번 주에 저장한 파일은 그때가 수정한 날짜다
+    if (touched[e.id]) e = { ...e, date: touched[e.id] }
     if (e.deleted && !restored[e.id]) { binned.push(e); return [] }
     // a mail attachment is nowhere until it is saved from the mail
     if (e.attached && !restored[e.id]) return []

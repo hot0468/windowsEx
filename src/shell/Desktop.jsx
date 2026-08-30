@@ -23,7 +23,8 @@ export default function Desktop() {
   const showHidden = useGame((st) => st.showHidden)
   const tiles = useGame((st) => st.tiles)
   const placed = useGame((s) => s.placed)
-  const desktop = visible(fsView(scenario.fs, { pinned, restored, tiles, placed, scenario })['바탕화면'], showHidden)
+  const touched = useGame((s) => s.touched)
+  const desktop = visible(fsView(scenario.fs, { pinned, restored, tiles, placed, touched, scenario })['바탕화면'], showHidden)
   const work = useFileDrop(pinFile)
   // The tile folder takes a drop too, but only a photograph with a tile in it
   // belongs there. Anything else is put back with a word about why, rather

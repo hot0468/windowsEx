@@ -10501,7 +10501,7 @@
     },
     {
       "id": "edu",
-      "title": "정보보안팀에 보안교육 이수일 알려주기",
+      "title": "보안교육 이수확인서 파일명을 이수 연월로 바꾸기",
       "grant": "edu",
       "rename": {
         "file": "file_dummy_031",
@@ -10635,7 +10635,7 @@
     },
     {
       "id": "ext",
-      "title": "한소영에게 총무팀 내선 번호 알려주기",
+      "title": "경비 처리 지침 문서에 법인카드 사용내역 올리기",
       "grant": "ext",
       "upload": {
         "file": "file_xls_cardlog2608",
@@ -10777,7 +10777,7 @@
     },
     {
       "id": "e_leaveend",
-      "title": "회계팀에 휴가 종료일 확인해 주기",
+      "title": "인사총무팀에 휴가신청서 사본 메일로 보내기",
       "grant": "e_leaveend",
       "mail": {
         "to": "ga@ar.co.kr",
@@ -11063,7 +11063,7 @@
     },
     {
       "id": "p2_wsdeadline",
-      "title": "한소영에게 워크숍 참가 표명 마감일 알려주기",
+      "title": "워크숍 참가 현황 영업2팀 비고에 표명 마감일 적기",
       "grant": "p2_wsdeadline",
       "cell": {
         "file": "file_c_wsapply",
@@ -11075,7 +11075,7 @@
     },
     {
       "id": "p2_wsplace",
-      "title": "한소영에게 워크숍 장소 알려주기",
+      "title": "워크숍 사진 정리목록을 개인 워크샵 폴더로 옮기기",
       "grant": "p2_wsplace",
       "move": {
         "file": "file_dummy_033",
@@ -11104,7 +11104,7 @@
     },
     {
       "id": "p2_hostsdate",
-      "title": "정보보안팀에 hosts 배포본 배포일 알려주기",
+      "title": "정보전략팀에 hosts 배포본 배포일 메일로 보내기",
       "grant": "p2_hostsdate",
       "mail": {
         "to": "it@ar.co.kr",
@@ -11125,7 +11125,7 @@
     },
     {
       "id": "p2_educourse",
-      "title": "정보보안팀에 이수한 교육 과정명 알려주기",
+      "title": "사내보안 교육 파일명을 이수확인서 규칙으로 바꾸기",
       "grant": "p2_educourse",
       "rename": {
         "file": "file_dummy_016",
@@ -11139,7 +11139,7 @@
     },
     {
       "id": "p2_mealcap",
-      "title": "회계팀에 야근 식대 한도 알려주기",
+      "title": "경비 정산 시트 회의비 줄 대사 완료 표시하기",
       "grant": "p2_mealcap",
       "cell": {
         "file": "file_xls_expense2608",
@@ -11151,7 +11151,7 @@
     },
     {
       "id": "p2_staycap",
-      "title": "회계팀에 출장 숙박 한도 알려주기",
+      "title": "경비 정산 시트 사무용품 줄 대사 완료 표시하기",
       "grant": "p2_staycap",
       "cell": {
         "file": "file_xls_expense2608",
@@ -11163,7 +11163,7 @@
     },
     {
       "id": "p2_claimdays",
-      "title": "회계팀에 경비 청구 기한 알려주기",
+      "title": "경비 정산 시트 교통·운송 줄 대사 완료 표시하기",
       "grant": "p2_claimdays",
       "cell": {
         "file": "file_xls_expense2608",
@@ -11332,7 +11332,7 @@
     },
     {
       "id": "trip_may",
-      "title": "회계팀에 5월 대전 출장비 알려주기",
+      "title": "경비 정산 파일명에 결재 문서번호 붙이기",
       "grant": "trip_may",
       "rename": {
         "file": "file_xls_expense2608",
@@ -11362,7 +11362,7 @@
     },
     {
       "id": "warranty",
-      "title": "한소영에게 하자보증 기간 알려주기",
+      "title": "재고현황 BS-200 비고에 하자보증 기간 덧붙이기",
       "grant": "warranty",
       "cell": {
         "file": "file_xls_stock",

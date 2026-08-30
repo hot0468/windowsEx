@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, FolderOpen, LayoutGrid, List, Search } from '../icons/line.jsx'
-import { findFile, gameClock, useGame } from '../engine/store.js'
+import { findFile, fmtStampShort, gameClock, parseStamp, useGame } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import WikiDoc from './wikiDoc.jsx'
 
@@ -8,6 +8,9 @@ import WikiDoc from './wikiDoc.jsx'
 // 올려 두는 공유 폴더다. 둘이 똑같이 생겨서 어느 쪽을 보고 있는지 구분이 안
 // 됐다. 여기서는 문서함이 아니라 파일 목록으로 그린다: 폴더를 열고, 이름 ·
 // 소유자 · 수정 날짜로 훑고, 하나를 눌러 연다. 데이터는 그대로다.
+// 올린 시각은 올린 그때다. 시계가 가도, 날이 바뀌어도 그대로다.
+const uploadedAt = (stamp) => { const st = parseStamp(stamp); return st ? fmtStampShort(st) : null }
+
 export default function Drive({ site, path = '' }) {
   const w = site.wiki
   // 주소로 곧장 지목한 페이지 — 사이드바에 없는 것도 열린다
@@ -37,6 +40,7 @@ export default function Drive({ site, path = '' }) {
   const rows = section?.pages ?? []
 
   const uploaded = useGame((s) => s.uploaded)
+  const touched = useGame((s) => s.touched)
   const uploadTo = useGame((s) => s.uploadTo)
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
@@ -100,7 +104,7 @@ export default function Drive({ site, path = '' }) {
                     <tr key={f.id}>
                       <td><List size={16} strokeWidth={1.8} />{f.name}</td>
                       <td className="dr-col-who">{scenario.player.name}</td>
-                      <td className="dr-col-when">{clock.date} {clock.time}</td>
+                      <td className="dr-col-when">{uploadedAt(touched[open + '/' + f.id]) ?? `${clock.date} ${clock.time}`}</td>
                     </tr>
                   ))}
                 </tbody>

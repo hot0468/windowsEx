@@ -22,6 +22,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const dreamt = useGame((s) => s.dreamt)
   const tiles = useGame((s) => s.tiles)
   const placed = useGame((s) => s.placed)
+  const touched = useGame((s) => s.touched)
   const clipboard = useGame((s) => s.clipboard)
   const cutFile = useGame((s) => s.cutFile)
   const placeFile = useGame((s) => s.placeFile)
@@ -42,7 +43,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
   // 폰에는 우클릭이 없다 — 같은 메뉴를 여는 손잡이를 대신 그린다.
   const phone = useViewport() === 'phone'
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, scenario })
   const roots = only ?? Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 
