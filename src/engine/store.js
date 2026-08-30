@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -289,6 +289,9 @@ export const useGame = create((set, get) => ({
   closing: false,
   // 하루가 기다리는 대화. 그 창을 닫을 때까지 저녁이 오지 않는다.
   awaitingCaller: null,
+  // 내가 보낸 메일. 되돌려받은 것도 남긴다 — 잘못 보냈다는 것을
+  // 보려면 무엇을 보냈는지가 남아 있어야 한다.
+  sentMails: restored?.sentMails ?? [],
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -1159,10 +1162,25 @@ export const useGame = create((set, get) => ({
   openHistory: (id, n) =>
     set((s) => (s.openedHistory[id] === n ? s : { openedHistory: { ...s.openedHistory, [id]: n } })),
 
+  // 보낸 것을 보낸메일함에 남긴다. 두 길(회신·새 메일)이 여기를 지나므로
+  // 한쪽만 남고 한쪽은 사라지는 일이 없다.
+  keepSent: ({ to, subject, body, attachmentId = null }) => {
+    const s = get()
+    const file = attachmentId ? findFile(s.scenario.fs, attachmentId) : null
+    set((st) => ({
+      sentMails: [...st.sentMails, {
+        id: 'sent_' + Date.now() + '_' + st.sentMails.length,
+        to, subject, body, sent: true,
+        attach: file ? { name: file.name, fileId: file.id } : null,
+        date: '방금', at: justNow(s.scenario, s.day), day: s.day
+      }]
+    }))
+  },
   sendReply: ({ attachmentId, subject, body }) => {
     const s = get()
     const goal = goalFor(s.scenario, s.day)
     const original = [...s.scenario.mails, ...s.extraMails].find((m) => m.id === goal.replyToMail)
+    get().keepSent({ to: original.from, subject, body, attachmentId })
     const verdict = checkGoal(goal, { attachmentId, body })
     // 예절은 일과 별개다. 메일은 그대로 나가고 목표도 정상 처리되며, 실수
     // 횟수에도 들어가지 않는다. 잠시 뒤 박 팀장이 거래처 말을 옮길 뿐이다.
@@ -1239,6 +1257,7 @@ export const useGame = create((set, get) => ({
     ].filter(Boolean)
     const same = (a, b) => String(a).replace(/[,\s]/g, '').toLowerCase() === String(b).replace(/[,\s]/g, '').toLowerCase()
     const spec = specs.find((f) => same(f.to, to)) ?? null
+    get().keepSent({ to, subject, body, attachmentId })
     const verdict = checkOutbound(spec, { to, subject, body, attachmentId }, s.scenario.etiquette, s.scenario.player)
     // 요청 단위의 메일은 예절로 막지 않는다. 일은 되고, 잠시 뒤 팀장이 한마디 한다.
     if (verdict.ok && !spec.rudeReplies) get().scold({ subject, body, outbound: true })
@@ -2197,6 +2216,62 @@ export function entriesAt(fs, path) {
 }
 
 // Smallest a window may be dragged down to, in px.
+// 시트의 =SUM(). 이 게임의 표는 숫자를 단위와 함께 쓴다 — '1,410,000원',
+// '40대'. 쉼표와 단위를 떼고 남는 것이 숫자다. 숫자가 없으면 0으로 친다
+// (진짜 스프레드시트도 글자는 더하기에서 빠뜼린다).
+export function cellNumber(v) {
+  const n = Number(String(v ?? '').replace(/[^0-9.-]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+// A1 표기. 머리글이 1행이라 화면의 줄 번호와 그대로 맞는다.
+export function cellRef(name) {
+  const m = /^([A-Z]+)([0-9]+)$/.exec(String(name).trim().toUpperCase())
+  if (!m) return null
+  let c = 0
+  for (const ch of m[1]) c = c * 26 + (ch.charCodeAt(0) - 64)
+  return { c: c - 1, r: Number(m[2]) - 1 }
+}
+
+export const SHEET_ERR = '#REF!'
+
+// 한 칸의 보이는 값. '=' 로 시작하면 식이고, 아니면 적힌 그대로다.
+// 식이 자기를 도로 가리키면 여기서 멈춘다 — 안 그러면 칸 하나가 창을 멈추게 한다.
+export function sheetCell(rows, r, c, seen = new Set()) {
+  const raw = rows[r]?.[c]
+  if (raw === undefined) return ''
+  const text = String(raw)
+  if (!text.startsWith('=')) return text
+  const key = r + ':' + c
+  if (seen.has(key)) return SHEET_ERR
+  return evalFormula(text, rows, new Set([...seen, key]))
+}
+
+// 아는 식은 SUM 하나다. 범위(A2:A9)와 나열(A2,B4) 둘 다 받는다.
+// 더 받기 시작하면 파서가 되고, 반쪽짜리 파서는 도구가 아니라 함정이다.
+export function evalFormula(text, rows, seen = new Set()) {
+  const m = /^=\s*SUM\s*\(([^)]*)\)\s*$/i.exec(text)
+  if (!m) return SHEET_ERR
+  let total = 0
+  let counted = 0
+  for (const part of m[1].split(',')) {
+    const span = part.split(':')
+    if (span.length > 2) return SHEET_ERR
+    const a = cellRef(span[0])
+    const b = cellRef(span[span.length - 1])
+    if (!a || !b) return SHEET_ERR
+    for (let r = Math.min(a.r, b.r); r <= Math.max(a.r, b.r); r++) {
+      for (let c = Math.min(a.c, b.c); c <= Math.max(a.c, b.c); c++) {
+        const v = sheetCell(rows, r, c, seen)
+        if (v === SHEET_ERR) return SHEET_ERR
+        total += cellNumber(v)
+        counted++
+      }
+    }
+  }
+  return counted ? total.toLocaleString('ko-KR') : SHEET_ERR
+}
+
 export const MIN_SIZE = { w: 360, h: 220 }
 
 // New rect for a resize drag. `dir` names the edges being pulled ('se', 'n', …).

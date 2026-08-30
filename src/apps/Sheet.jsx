@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, cellKey, findFile } from '../engine/store.js'
+import { useGame, cellKey, findFile, sheetCell } from '../engine/store.js'
 import { Save } from '../icons/line.jsx'
 
 const colName = (i) => String.fromCharCode(65 + i)
@@ -81,7 +81,7 @@ export default function Sheet({ fileId }) {
                                if (e.key === 'Enter') commit()
                                if (e.key === 'Escape') setEditing(null)
                              }} />
-                    ) : value}
+                    ) : sheetCell(rows, r, c)}
                   </td>
                 ))}
               </tr>
