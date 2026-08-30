@@ -292,10 +292,11 @@ describe('행동 요청의 스펙', () => {
     }
   })
 
-  it('옮기는 파일은 이미 받은 것이어야 한다', () => {
-    // 메일 첨부(attached)는 저장하기 전엔 어디에도 없다. 그런 파일을 옮기라고
-    // 하면 못 받은 판에서 영영 못 푼다.
-    const attached = new Set(allFiles(scenario.fs).filter((f) => f.attached).map((f) => f.id))
+  it('옮기는 파일은 지금 보이는 것이어야 한다', () => {
+    // 메일 첨부(attached)는 저장하기 전엔 어디에도 없다. 휴지통(deleted)과
+    // 숨김(hidden)은 보이려면 별도 조작이 필요하다. 그런 파일을 옮기라고
+    // 하면 못 받은/안 보이는 판에서 영영 못 푼다.
+    const attached = new Set(allFiles(scenario.fs).filter((f) => f.attached || f.deleted || f.hidden).map((f) => f.id))
     for (const a of deeds) {
       const o = scenario.objectives.find((x) => x.id === a.deed)
       for (const id of [o.move?.file, o.rename?.file, o.upload?.file, o.mail?.requiredAttachment].filter(Boolean)) {
