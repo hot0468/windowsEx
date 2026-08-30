@@ -238,6 +238,9 @@ export default function PhoneShell() {
     if (typeof window === 'undefined') return
     const onPop = () => {
       const s = useGame.getState()
+      // 통화 중에는 뒤로가기도 막는다 — 화면은 통화가 덮고 있는데 그 뒤에서
+      // 스택만 벗겨지면, 끊고 나왔을 때 엉뚱한 자리에 서 있게 된다.
+      if (s.call) { window.history.pushState(null, ''); return }
       if (!s.screens.length) return          // 홈이면 진짜로 나간다
       const top = s.screens[s.screens.length - 1]
       s.popScreen()

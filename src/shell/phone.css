@@ -692,8 +692,12 @@
 .cl-back:disabled, .cl-go:disabled { opacity: .45; cursor: default; }
 
 /* 통화 중 */
-.cl-talk { height: 100%; display: flex; flex-direction: column; padding: 16px 14px 14px;
-           background: linear-gradient(180deg, #10151f 0%, #1a2130 100%); color: #fff; }
+/* 통화 화면은 내비바까지 덮는다 — 끊기 전에는 나갈 곳이 없다. */
+.cl-talk { position: fixed; inset: 0; z-index: 9991; display: flex; flex-direction: column;
+           padding: 16px 14px 14px; color: #fff;
+           background: linear-gradient(180deg, #10151f 0%, #1a2130 100%);
+           animation: cl-open .2s var(--p-ease); }
+@keyframes cl-open { from { opacity: 0; } }
 .cl-who { flex: none; text-align: center; padding: 8px 0 14px; }
 .cl-who-name { font-size: 21px; font-weight: 600; }
 .cl-who-num { margin-top: 4px; color: rgba(255, 255, 255, .6); font-size: 12.5px; }

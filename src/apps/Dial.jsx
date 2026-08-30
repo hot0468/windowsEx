@@ -10,7 +10,10 @@ import { Phone, PhoneOff, Send } from '../icons/line.jsx'
 const TABS = [['recent', '최근 기록'], ['contacts', '연락처'], ['keypad', '키패드']]
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#']
 
-function Talking() {
+// 통화 화면은 앱 안이 아니라 화면 전체를 덮는다(App 의 오버레이가 그린다) —
+// 통화 중에 홈으로 나가거나 다른 앱으로 넘어갈 수 없어야 한다. 실제 폰은
+// 나갈 수 있지만, 여기서는 통화가 곧 하나의 장면이다.
+export function CallScreen() {
   const call = useGame((s) => s.call)
   const hangUp = useGame((s) => s.hangUp)
   const sayOnCall = useGame((s) => s.sayOnCall)
@@ -18,6 +21,9 @@ function Talking() {
   const tail = useRef(null)
 
   useEffect(() => { tail.current?.scrollIntoView({ block: 'end' }) }, [call?.said.length])
+
+  // 울리는 중(수신)은 Ringing 이 그린다. 통화가 없으면 이 자리는 비어 있다.
+  if (!call || call.stage === 'ringing') return null
 
   const say = () => {
     if (!text.trim()) return
@@ -100,7 +106,6 @@ function Row({ title, sub, note, open, onOpen, onCall }) {
 
 export default function Dial() {
   const scenario = useGame((s) => s.scenario)
-  const call = useGame((s) => s.call)
   const callLog = useGame((s) => s.callLog)
   const dial = useGame((s) => s.dial)
   const [tab, setTab] = useState('recent')
@@ -108,7 +113,7 @@ export default function Dial() {
   // 펼쳐 놓은 줄 하나. 전화 버튼은 그 줄에만 있다.
   const [open, setOpen] = useState(null)
 
-  if (call) return <Talking />
+  // 통화 중이면 오버레이가 화면을 덮고 있다 — 목록은 그 뒤에 그대로 둔다.
 
   const contacts = scenario.calls?.contacts ?? []
   const nameOf = (number) => contacts.find((c) => c.number === number)?.name

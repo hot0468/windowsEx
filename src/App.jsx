@@ -3,6 +3,7 @@ import {
   useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending, scriptLeft
 } from './engine/store.js'
 import { APPS, knownWindows, phoneApps } from './apps/registry.jsx'
+import { CallScreen } from './apps/Dial.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
@@ -352,6 +353,7 @@ export default function App() {
     <>
       <Toast />
       <Ringing />
+      <CallScreen />
       {locked && <Lock />}
       {rumorPending(rumor) && !failed && <RumorOverlay />}
       {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}
