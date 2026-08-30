@@ -56,6 +56,14 @@ describe('행동을 기다리는 질문', () => {
     expect(useGame.getState().pendingAsks.boss).toBe(null)
     expect(useGame.getState().extraMessages.boss.map((m) => m.text)).toEqual(DEED.ok)
   })
+
+  it('부탁받기 전에 이미 해 둔 일이면 묻자마자 답한다', () => {
+    useGame.setState({ grants: { orders: true }, pendingAsks: {} })
+    useGame.getState().queueAsk('boss', DEED)
+    vi.runAllTimers()
+    expect(useGame.getState().pendingAsks.boss).toBe(null)
+    expect(useGame.getState().extraMessages.boss.map((m) => m.text)).toEqual(DEED.ok)
+  })
 })
 
 // 새 메일 쓰기는 그날의 fetch 하나만 알았다. 이제 아직 안 켜진 메일 목표

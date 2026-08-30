@@ -1015,11 +1015,13 @@ export const useGame = create((set, get) => ({
   },
   // A day can raise two questions in the same conversation. The second waits
   // behind the first instead of replacing it, so neither goes unanswered.
-  queueAsk: (threadId, ask) =>
-    set((s) => {
-      const waiting = s.pendingAsks[threadId]
-      return { pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }
-    }),
+  queueAsk: (threadId, ask) => {
+    const waiting = get().pendingAsks[threadId]
+    set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }))
+    // 부탁받기 전에 이미 해 둔 일. 머리에 온 질문이 켜진 grant 를 기다리는
+    // 것이면 지금 답한다 — 안 그러면 그날의 나머지가 영영 오지 않는다.
+    if (!waiting && ask?.deed && get().grants[ask.deed]) get().finishDeeds(ask.deed)
+  },
   // A conversation belongs to the game, not to the window drawing it. Both
   // halves of it go where every other pushed line goes, so closing the
   // messenger cannot take the exchange with it.
