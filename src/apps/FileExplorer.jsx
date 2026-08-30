@@ -6,6 +6,7 @@ import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Monitor, Search } from '../icons/line.jsx'
+import { useViewport } from '../shell/useViewport.js'
 
 export default function FileExplorer({ startFolder, roots: only }) {
   const scenario = useGame((s) => s.scenario)
@@ -28,6 +29,8 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
   const [viewOpen, setViewOpen] = useState(false)
+  // 폰에는 우클릭이 없다 — 같은 메뉴를 여는 손잡이를 대신 그린다.
+  const phone = useViewport() === 'phone'
 
   const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, scenario })
   const roots = only ?? Object.keys(fs)
@@ -129,6 +132,9 @@ export default function FileExplorer({ startFolder, roots: only }) {
               </>
             )}
           </div>
+          {phone && clipboard && canPaste && (
+            <button className="ex-paste" onClick={paste}>붙여넣기</button>
+          )}
           <div className="ex-search">
             <input value={q} onChange={(e) => setQ(e.target.value)}
                    placeholder={`${here} 검색`} aria-label="파일 검색" spellCheck={false} />
@@ -172,6 +178,10 @@ export default function FileExplorer({ startFolder, roots: only }) {
                 <button key={f.id} className={'ex-file' + (clipboard === f.id ? ' cut' : '')} {...(inTrash ? {} : fileDragProps(f))}
                         onContextMenu={onContext(f)}
                         onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                  {phone && (
+                    <span role="button" className="ex-more" aria-label="더 보기"
+                          onClick={(e) => { e.stopPropagation(); onContext(f)(e) }}>⋯</span>
+                  )}
                   <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>
                   {renaming?.id === f.id ? (
                     <input className="ex-rename" autoFocus value={renaming.value}

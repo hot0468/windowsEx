@@ -211,8 +211,12 @@ dd { user-select: text; }
 .ctx button { display: block; width: 100%; padding: 8px 12px; border-radius: 4px; text-align: left; font-size: 13px; }
 .ctx button:hover { background: #e5f1fb; }
 .ex-main { flex: 1; overflow: auto; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
-.ex-file { width: 96px; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; word-break: break-all; }
+.ex-file { position: relative; width: 96px; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; word-break: break-all; }
 .ex-file:hover { background: #e5f1fb; }
+/* 우클릭이 없는 폰에서 같은 메뉴를 여는 손잡이 */
+.ex-more { position: absolute; top: 4px; right: 6px; padding: 2px 6px; border-radius: 4px; background: rgba(0, 0, 0, .06); font-size: 16px; line-height: 1; }
+.ex-paste { flex-shrink: 0; padding: 5px 10px; border: 1px solid #e2e2e8; border-radius: 14px; background: #fafafc; color: #444; font-size: 12px; white-space: nowrap; }
+.ex-paste:hover { background: #f0f2f6; }
 .ex-file .glyph { display: flex; justify-content: center; align-items: center;
   min-height: 54px; margin-bottom: 4px; }
 /* a photo whose file is no longer there: the name stays, greyed, and says so */
