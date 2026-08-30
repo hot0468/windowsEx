@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -266,6 +266,8 @@ export const useGame = create((set, get) => ({
   placed: restored?.placed ?? {},
   // 드라이브 페이지에 올린 파일 id들. Task 4 가 쓴다.
   uploaded: restored?.uploaded ?? {},
+  // 게임 창을 켜 둔 채로 일을 끝내다 팀장에게 걸렸는가. 한 번뿐이다.
+  slacked: restored?.slacked ?? false,
   // 잘라낸 파일. 세이브에는 안 실린다.
   clipboard: null,
   dreamt: restored?.dreamt ?? false,
@@ -933,6 +935,7 @@ export const useGame = create((set, get) => ({
     }))
     get().chat(key)
     get().finishDeeds(key)
+    get().caughtSlacking()
     // finishing one request is what opens the next conversation
     const now = heldThreads(get().scenario, get().day, get())
     if (was && now) for (const id of was) if (!now.has(id)) get().nudge(id)
@@ -957,6 +960,22 @@ export const useGame = create((set, get) => ({
       if (ask.grants && !get().grants[ask.grants]) get().grant(ask.grants)
       get().saying(threadId, t?.name ?? '', ask.ok ?? [])
     }
+  },
+  // 지뢰찾기나 솔리테어를 켜 둔 채로 일을 하나 끝내면 팀장이 그걸 본다.
+  // 게임 자체는 아무것도 기록하지 않는다 — 창이 열려 있다는 사실이 전부고,
+  // 그래서 잔소리도 딱 한 번이다(두 번째부터는 잔소리가 아니라 소음이다).
+  caughtSlacking: () => {
+    const s = get()
+    const nag = s.scenario.slacking
+    if (!nag || s.slacked || !s.windows.some((w) => nag.apps.includes(w.app))) return
+    set({ slacked: true })
+    setTimeout(() => {
+      get().saying(nag.thread, nag.from, nag.lines)
+      get().showToast({
+        from: nag.from, text: nag.lines[0],
+        app: appOf(nag.source), source: nag.source, thread: nag.thread
+      })
+    }, nag.delay)
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),

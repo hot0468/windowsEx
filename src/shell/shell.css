@@ -1845,3 +1845,131 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .dr-upload:hover { background: #f3f4f6; }
 .dr-uploaded { margin-top: 22px; }
 .dr-uploaded td:first-child { display: flex; align-items: center; gap: 6px; }
+
+/* ── 딴짓거리: 지뢰찾기 · 솔리테어 ─────────────────────────────────────────
+   판은 창 안에서만 산다. 색은 이 두 블록 안에 가둔다 — 전역 팔레트를 게임 둘
+   때문에 부풀리지 않는다. 간격·글자 크기 토큰도 안에서 정의한다. */
+
+/* 지뢰찾기 — 클래식 윈도우 회색 베벨.
+   숫자 색은 클래식 배색이되 #c0c0c0 판 위 대비 4.5:1을 넘도록 낮춰 잡았다:
+   2 초록 #005c00 · 3 빨강 #a00000 · 6 청록 #005555 · 8 회색 #404040. */
+.ms {
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px;
+  --fs-lg: 16px;
+  --ms-face: #c0c0c0; --ms-hi: #ffffff; --ms-lo: #808080; --ms-grid: #9a9a9a;
+  --ms-led-bg: #000000; --ms-led: #ff2020; --ms-boom: #a00000;
+  --ms-n1: #0000ff; --ms-n2: #005c00; --ms-n3: #a00000; --ms-n4: #000080;
+  --ms-n5: #800000; --ms-n6: #005555; --ms-n7: #000000; --ms-n8: #404040;
+  /* 칸 한 변. 클래식 16px는 요즘 포인터에 너무 작다 — 9칸 판이 창 폭에 들어오는 상한. */
+  --ms-cell: 32px;
+  min-height: 100%; display: flex; justify-content: center; box-sizing: border-box;
+  background: var(--ms-face); padding: var(--sp-3); color: var(--ms-n7); }
+/* 바깥 판 — 클래식의 돋은 베벨 프레임. */
+.ms-panel { display: flex; flex-direction: column; gap: var(--sp-3); align-self: flex-start;
+  background: var(--ms-face); border: 3px solid;
+  border-color: var(--ms-hi) var(--ms-lo) var(--ms-lo) var(--ms-hi); padding: var(--sp-3); }
+/* 카운터·리셋 줄 — 파인 베벨 홈. */
+.ms-head { display: flex; align-items: center; justify-content: space-between; border: 2px solid;
+  border-color: var(--ms-lo) var(--ms-hi) var(--ms-hi) var(--ms-lo); padding: var(--sp-2); }
+/* LED 계기판. 흰 글자가 아니라 클래식 빨강 — 검정 위 5.5:1로 AA를 넘는다. */
+.ms-led { font-family: Consolas, monospace; font-size: var(--fs-lg); font-weight: 700; line-height: 1;
+  color: var(--ms-led); background: var(--ms-led-bg); padding: var(--sp-1) var(--sp-2);
+  border: 1px solid; border-color: var(--ms-lo) var(--ms-hi) var(--ms-hi) var(--ms-lo); }
+.ms-face { display: grid; place-items: center; width: calc(var(--ms-cell) + 2px); height: calc(var(--ms-cell) + 2px);
+  background: var(--ms-face); border: 3px solid;
+  border-color: var(--ms-hi) var(--ms-lo) var(--ms-lo) var(--ms-hi); cursor: pointer;
+  font-size: 17px; line-height: 1; color: inherit; }
+.ms-face:active { border-color: var(--ms-lo) var(--ms-hi) var(--ms-hi) var(--ms-lo); }
+/* 지뢰밭 — 파인 베벨 안의 9열 격자. */
+.ms-grid { display: grid; grid-template-columns: repeat(9, var(--ms-cell)); border: 3px solid;
+  border-color: var(--ms-lo) var(--ms-hi) var(--ms-hi) var(--ms-lo); width: max-content; }
+.ms-cell { box-sizing: border-box; width: var(--ms-cell); height: var(--ms-cell); display: grid;
+  place-items: center; padding: 0; background: var(--ms-face); border: 3px solid;
+  border-color: var(--ms-hi) var(--ms-lo) var(--ms-lo) var(--ms-hi);
+  font-size: var(--fs-lg); font-weight: 700; line-height: 1; color: inherit; cursor: pointer; }
+/* 연 칸 — 도드라진 베벨이 사라지고 얇은 격자선만 남는다. */
+.ms-cell.ms-open { border: 1px solid var(--ms-grid); border-width: 1px 0 0 1px; cursor: default; }
+/* 밟은 지뢰만 빨갛다 — 진 원인이 한눈에 갈린다. */
+.ms-cell.ms-boom { background: var(--ms-boom); }
+.ms-cell.ms-n1 { color: var(--ms-n1); }
+.ms-cell.ms-n2 { color: var(--ms-n2); }
+.ms-cell.ms-n3 { color: var(--ms-n3); }
+.ms-cell.ms-n4 { color: var(--ms-n4); }
+.ms-cell.ms-n5 { color: var(--ms-n5); }
+.ms-cell.ms-n6 { color: var(--ms-n6); }
+.ms-cell.ms-n7 { color: var(--ms-n7); }
+.ms-cell.ms-n8 { color: var(--ms-n8); }
+/* 깃발 모드. 우클릭이 없는 폰에서 판을 끝낼 수 있는 유일한 길이라 늘 보인다. */
+.ms-mode { padding: var(--sp-2); background: var(--ms-face); border: 3px solid;
+  border-color: var(--ms-hi) var(--ms-lo) var(--ms-lo) var(--ms-hi);
+  font-size: 12px; color: inherit; cursor: pointer; }
+.ms-mode.on { border-color: var(--ms-lo) var(--ms-hi) var(--ms-hi) var(--ms-lo); font-weight: 700; }
+
+/* 솔리테어(클론다이크) — 초록 펠트 테이블.
+   무늬는 색이 아니라 기호(♠♥♦♣)가 가르고, 집은 카드는 테두리 + 들림으로도 알린다. */
+.sol {
+  --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --fs-sm: 12px; --fs-md: 13px; --fs-lg: 16px; --fs-3xl: 32px;
+  --r-sm: 4px; --r-md: 6px;
+  --el-1: 0 1px 2px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.08);
+  --el-2: 0 2px 4px rgba(0,0,0,.1), 0 8px 20px rgba(0,0,0,.14);
+  --sol-felt: #166534; --sol-felt-hi: #15803d; --sol-gold: #d97706; --sol-red: #dc2626;
+  --sol-ink: #0f172a; --sol-card: #ffffff; --sol-card-line: #cbd5e1;
+  /* 카드 뒷면 무늬. 펠트 계열이 아닌 색이어야 한다 — 초록 빗금은 테이블 위에서
+     카드가 아니라 빈 자리로 보인다. */
+  --sol-back: #1d4ed8; --sol-back-2: #1e3a8a;
+  --sol-slot-line: rgba(255,255,255,.45);
+  /* 카드 폭을 px로 박지 않는다 — 7열을 px로 박으면 창 폭에서 몇 px이 모자라
+     가로 스크롤이 생긴다. 폭은 격자가 나눠 주고 높이는 비율이 따라온다. */
+  --sol-card-min: 64px; --sol-card-ratio: 88 / 124;
+  height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-3);
+  padding: var(--sp-4); box-sizing: border-box;
+  /* 가로 스크롤은 판 전체가 함께 진다 — 윗줄과 작업 더미가 같은 격자를 쓰므로
+     각자 스크롤하게 두면 좁은 화면에서 위아래 칸이 어긋난다. */
+  overflow-x: auto;
+  background: radial-gradient(120% 90% at 50% 0%, var(--sol-felt-hi), var(--sol-felt));
+  color: #fff; font-size: var(--fs-md); }
+/* 펠트 위에서는 시스템 파랑 초점 링이 잠긴다 — 흰 링으로 바꾼다. */
+.sol :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.sol-bar { display: flex; align-items: center; gap: var(--sp-3); }
+.sol-btn { padding: var(--sp-2) var(--sp-4); border: 1px solid rgba(255,255,255,.35);
+  border-radius: var(--r-sm); background: rgba(255,255,255,.12); color: #fff;
+  font-family: inherit; font-size: var(--fs-md); cursor: pointer; transition: background-color 150ms ease-out; }
+.sol-btn:hover { background: rgba(255,255,255,.22); }
+.sol-status { margin: 0; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; color: rgba(255,255,255,.86); }
+/* 윗줄은 아랫줄(작업 더미 7)과 같은 격자를 쓴다 — 산이 1열, 뽑은 카드가 2열,
+   기초 더미가 4~7열에 정확히 맞아떨어진다(실제 솔리테어의 배치다). */
+.sol-top, .sol-table { display: grid; grid-template-columns: repeat(7, minmax(var(--sol-card-min), 1fr)); gap: var(--sp-3); }
+/* 3열은 비운다 — 산 묶음과 기초 더미 묶음을 갈라 놓는 자리다. */
+.sol-top > :nth-child(3) { grid-column: 4; }
+.sol-slot { width: 100%; aspect-ratio: var(--sol-card-ratio); padding: 0; border: none;
+  border-radius: var(--r-md); background: none; cursor: pointer; }
+/* 비어 있는 자리 = 윤곽선만. 옅은 흰 선이라 펠트가 비친다. */
+.sol-slot-empty { border: 1px solid var(--sol-slot-line); background: rgba(0,0,0,.12); }
+.sol-card { display: block; width: 100%; height: 100%; box-sizing: border-box;
+  border: 1px solid var(--sol-card-line); border-radius: var(--r-md);
+  background: var(--sol-card); box-shadow: var(--el-1); }
+/* 뒷면. 이미지가 아니라 CSS 무늬다. 안쪽(content-box)만 빗금, 나머지는 카드
+   흰색 — 흰 테두리가 펠트 위에서 카드의 윤곽을 먼저 읽히게 한다. */
+.sol-card-back { border-color: var(--sol-card-line); padding: 5px;
+  background: repeating-linear-gradient(45deg, var(--sol-back) 0 6px, var(--sol-back-2) 6px 12px) content-box,
+    var(--sol-card) padding-box; }
+/* 집어 든 카드. 색만으로 알리지 않는다 — 금색 테두리 + 들림이 함께 간다. */
+.sol-card-held { border-color: var(--sol-gold); box-shadow: 0 0 0 2px var(--sol-gold), var(--el-2); transform: translateY(-4px); }
+/* 끌고 있을 때 받아 줄 수 있는 자리. 끌기 전에는 아무 표시도 없다 — 상시로
+   밝히면 판 전체가 늘 반짝여 정보가 아니라 소음이 된다. */
+.sol-drop { outline: 2px dashed #fff; outline-offset: 2px; border-radius: var(--r-md); }
+/* 앞면 내용물. 왼쪽 위 숫자 + 가운데 큰 무늬 — 겹쳐 쌓아도 왼쪽 위만 보이면 읽힌다. */
+.sol-face { display: block; position: relative; width: 100%; height: 100%; color: var(--sol-ink); font-variant-numeric: tabular-nums; }
+.sol-red { color: var(--sol-red); }
+.sol-corner { position: absolute; top: 4px; left: 6px; display: flex; align-items: baseline; gap: 2px;
+  font-size: var(--fs-lg); font-weight: 600; line-height: 1; }
+.sol-corner-suit { font-size: var(--fs-sm); }
+.sol-pip { position: absolute; right: 8px; bottom: 4px; font-size: var(--fs-3xl); line-height: 1; opacity: .55; }
+/* 쌓인 카드가 길어지면 이 상자만 세로로 스크롤한다(도구 줄과 윗줄은 제자리에 남는다). */
+.sol-table { flex: 1; overflow-y: auto; min-height: 0; align-content: start; }
+.sol-col { position: relative; min-height: 100%; }
+/* 빈 더미 자리. 카드가 쌓이면 그 아래에 깔린다. */
+.sol-col-base { position: absolute; inset: 0 0 auto 0; }
+.sol-stacked { position: absolute; left: 0; width: 100%; aspect-ratio: var(--sol-card-ratio);
+  padding: 0; border: none; background: none; cursor: pointer; }

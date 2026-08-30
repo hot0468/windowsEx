@@ -15,6 +15,8 @@ import Settings from './Settings.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
+import Minesweeper from './Minesweeper.jsx'
+import Solitaire from './Solitaire.jsx'
 
 const WorkMessenger = () => <Messenger source="workMessenger" />
 const PrivateMessenger = () => <Messenger source="privateMessenger" />
@@ -40,7 +42,12 @@ export const APPS = {
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
-  vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8', grant: 'vpnInstalled' }
+  vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8', grant: 'vpnInstalled' },
+  // 회사 PC에 딸려 오는 딴짓거리. 업무 상태를 한 톨도 건드리지 않는다 —
+  // 판은 창 안에서만 살고 창을 닫으면 사라진다. 다만 켜 둔 채로 일을 끝내면
+  // 팀장이 그걸 본다(store.js의 slacking).
+  mine: { title: '지뢰찾기', icon: 'mine', comp: Minesweeper, w: 400, h: 500 },
+  solitaire: { title: '솔리테어', icon: 'cards', comp: Solitaire, w: 760, h: 600, theme: '#166534' }
 }
 
 // The start menu lists programs, not the windows other things open: the dev
