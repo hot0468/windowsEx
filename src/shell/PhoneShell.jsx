@@ -48,6 +48,7 @@ function DayBar() {
   const drawn = useGame((s) => s.drawn)
   const ripples = useGame((s) => s.ripples)
   const closing = useGame((s) => s.closing)
+  const awaiting = useGame((s) => Boolean(s.awaitingCaller))
   const closeDay = useGame((s) => s.closeDay)
 
   const list = requestsOf(scenario, day, overtime, drawn, ripples)
@@ -61,7 +62,7 @@ function DayBar() {
         {overtime[day] && <i> · 야근</i>}
       </span>
       {finished && (
-        <button className="ph-day-end" onClick={closeDay} disabled={closing}>
+        <button className="ph-day-end" onClick={closeDay} disabled={closing || awaiting}>
           오늘 업무 마치기
         </button>
       )}

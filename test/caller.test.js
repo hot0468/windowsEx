@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import scenario from '../src/scenarios/workday.json'
-import { callerNight, useGame } from '../src/engine/store.js'
+import { appOf, callerNight, sourceOf, useGame } from '../src/engine/store.js'
 
 // 이름 없는 계정은 하룻밤에 몰아 묻지 않고 며칠 저녁에 나눠 묻는다. 하루를
 // 마칠 때, 결과가 뜨기 전에 그날 몫이 도착한다. 첫 밤에 물리면 그 뒤로는
@@ -41,8 +41,12 @@ describe('밤마다 오는 부름', () => {
       vi.advanceTimersByTime(3000)
       // 시간이 지나도 덮이지 않는다 — 무슨 말을 했는지 읽을 틈을 준다.
       expect(useGame.getState().closing).toBe(false)
-      // 그 대화를 닫는 것이(또는 퇴근을 다시 누르는 것이) 저녁을 부른다.
+      // 그 대화를 닫는 것이 저녁을 부른다. 퇴근을 다시 눌러서는 안 온다.
       useGame.getState().closeDay()
+      expect(useGame.getState().closing).toBe(false)
+      const app = appOf(sourceOf(scenario, useGame.getState().awaitingCaller))
+      useGame.setState({ windows: [{ id: 99, key: app, app, z: 1 }] })
+      useGame.getState().closeWindow(99)
       expect(useGame.getState().closing).toBe(true)
     } finally {
       vi.useRealTimers()

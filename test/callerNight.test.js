@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { useGame, appOf, sourceOf } from '../src/engine/store.js'
+import { CALLER_DELAY, useGame, appOf, sourceOf } from '../src/engine/store.js'
 
 // 하루 끝에 이름 없는 계정이 말을 건다. 그 말은 지나가는 알림이 아니라 하루를
 // 붙잡고 서 있는 것이다 — 깨지는 방식은 둘. 알림이 스스로 사라져 무슨 말이었는지
@@ -65,15 +65,26 @@ describe('부름이 오는 밤', () => {
     expect(useGame.getState().awaitingCaller).toBe(su.thread)
   })
 
-  it('알림을 지나쳐도 갇히지 않는다 — 퇴근을 다시 누르면 저녁이 온다', () => {
-    // 대화를 한 번도 안 열면 닫을 창도 없다. 그 자리에서 하루가 멈추면
-    // 소프트락이므로, 퇴근 버튼이 두 번째에는 그냥 하루를 닫아야 한다.
+  it('다시 눌러도 하루는 끝나지 않는다 — 읽고 닫는 것만이 끝낸다', () => {
+    // 버튼은 죽어 있지만, 죽은 버튼을 우회해 부르는 길이 있어도 같아야 한다.
     fresh(NIGHT)
     useGame.getState().closeDay()
     vi.runAllTimers()
     expect(useGame.getState().closing).toBe(false)
     useGame.getState().closeDay()
-    expect(useGame.getState().closing).toBe(true)
+    expect(useGame.getState().closing).toBe(false)
+    expect(useGame.getState().awaitingCaller).toBe(su.thread)
+  })
+
+  it('말은 버튼이 죽고 살짝 뒤에 온다 — 곧바로 오면 버튼이 부른 것처럼 읽힌다', () => {
+    fresh(NIGHT)
+    useGame.getState().closeDay()
+    expect(useGame.getState().awaitingCaller).toBe(su.thread)
+    expect(useGame.getState().toast).toBe(null)
+    vi.advanceTimersByTime(CALLER_DELAY - 1)
+    expect(useGame.getState().toast).toBe(null)
+    vi.advanceTimersByTime(1)
+    expect(useGame.getState().toast?.thread).toBe(su.thread)
   })
 })
 

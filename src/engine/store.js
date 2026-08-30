@@ -186,6 +186,8 @@ let toastId = 0
 // How long the day waits between two things being said.
 const BEAT_GAP = 3600
 // 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
+// 마치기를 누르고 이름 없는 계정이 말을 걸기까지.
+export const CALLER_DELAY = 2200
 const SAY_FIRST = 1200
 const SAY_GAP = 1500
 const sayTime = (count, gap = SAY_GAP) => SAY_FIRST + Math.max(0, count - 1) * gap
@@ -578,14 +580,18 @@ export const useGame = create((set, get) => ({
   // 날 하게 되어 있다 — 마감 화면이 대화를 덮으므로 그 자리에서는 못 쓴다.
   closeDay: () => {
     const s = get()
+    // 부름을 기다리는 중이면 버튼은 이미 죽어 있다. 다시 눌러도 하루는 그
+    // 대화를 읽고 닫아야만 끝난다 — 지나칠 수 있는 말이면 밤에 올 이유가 없다.
+    if (s.awaitingCaller) return
     const night = callerNight(s)
     if (!night) return set({ closing: true })
     s.grant('called:' + s.day)
     // 알림은 사라지지 않고, 마감 화면도 아직 오지 않는다. 받은 사람이
     // 읽고 대화를 닫는 것이 오늘을 끝낸다 — 이름 없는 계정이 말을 건는데
     // 2.6초 뒤 퇴근 화면이 덮어버리면 무슨 말을 했는지 보지도 못한다.
-    s.queueBeats([{ ...night, sticky: true }], 300)
+    // 말은 버튼이 죽고 살짝 뒤에 온다. 곧바로 오면 버튼이 부른 것처럼 읽힌다.
     set({ awaitingCaller: night.thread })
+    s.queueBeats([{ ...night, sticky: true }], CALLER_DELAY)
   },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.

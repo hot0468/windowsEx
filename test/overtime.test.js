@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { dayDone, endingFor, overtimeOffer, requestsOf, useGame, workedEveryNight } from '../src/engine/store.js'
+import { appOf, dayDone, endingFor, overtimeOffer, requestsOf, sourceOf, useGame, workedEveryNight } from '../src/engine/store.js'
 import { grantsRaised, playDay } from './playDay.js'
 
 const days = scenario.days.length
@@ -63,7 +63,12 @@ describe('the offer to stay late', () => {
   const clockOff = () => {
     useGame.getState().closeDay()
     vi.advanceTimersByTime(3000)
-    if (useGame.getState().awaitingCaller) useGame.getState().closeDay()
+    const waiting = useGame.getState().awaitingCaller
+    if (waiting) {
+      const app = appOf(sourceOf(scenario, waiting))
+      useGame.setState({ windows: [{ id: 99, key: app, app, z: 1 }] })
+      useGame.getState().closeWindow(99)
+    }
   }
 
   it('waits for the player to clock off, and asks again after a late night', () => {
