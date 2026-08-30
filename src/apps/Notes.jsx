@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame } from '../engine/store.js'
+import { noteOpens, useGame } from '../engine/store.js'
 
 // A scratch notes server the last occupant of this desk left running. Nothing
 // here is an answer to anything — it is what was on the machine before it was
@@ -13,6 +13,8 @@ export default function Notes({ site }) {
   const writeNote = useGame((s) => s.writeNote)
   const days = useGame((s) => s.scenario.days)
   const [draft, setDraft] = useState('')
+  // 그를 충분히 알게 된 사람에게만 마지막 문장이 이어져 있다. 알림은 없다 — 그냥 이어져 있다.
+  const opened = useGame((s) => noteOpens(s.scenario, s))
 
   const save = () => {
     if (!draft.trim()) return
@@ -34,13 +36,14 @@ export default function Notes({ site }) {
       </div>
 
       {n.entries.map((e, i) => (
-        <article key={i} className={'nt-entry' + (e.cut ? ' cut' : '')}>
+        <article key={i} className={'nt-entry' + (e.cut && !(opened && e.more) ? ' cut' : '')}>
           <div className="nt-meta">
             <span className="nt-date">{e.date}</span>
             {e.title && <span className="nt-title">{e.title}</span>}
           </div>
           {e.lines.map((line, k) => <p key={k}>{line}</p>)}
-          {e.cut && <span className="nt-caret" />}
+          {opened && e.more?.map((line, k) => <p key={'m' + k}>{line}</p>)}
+          {e.cut && !(opened && e.more) && <span className="nt-caret" />}
         </article>
       ))}
 

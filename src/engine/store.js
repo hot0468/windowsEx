@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited', 'traces']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -294,6 +294,8 @@ export const useGame = create((set, get) => ({
   sentMails: restored?.sentMails ?? [],
   // 이번 주에 실제로 열린 곳들. 최근이 앞이다.
   visited: restored?.visited ?? [],
+  // 이 자리의 전 사용자가 남긴 흔적 중 본 것. 메모 서버의 끓긴 문장이 이걸로 이어진다.
+  traces: restored?.traces ?? {},
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -840,6 +842,7 @@ export const useGame = create((set, get) => ({
   noteVisit: (url, title) => set((s) => ({
     visited: [{ url, title, day: s.day }, ...s.visited.filter((v) => v.url !== url)].slice(0, VISITS)
   })),
+  sawTrace: (key) => set((s) => (s.traces[key] ? s : { traces: { ...s.traces, [key]: true } })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
   // A maintenance command sent to the copier. Out of order, the paper jams
@@ -2301,6 +2304,15 @@ export function addressHints(q, { visited = [], bookmarks = [], history = [] } =
     if (out.length === limit) break
   }
   return out
+}
+
+// 끓긴 문장이 이어지는가. 네 가지 흔적 — 8층 방을 캐물은 것, 이름을 찾은 것(근태·복합기),
+// 자동복구 문서, 소통방 글 — 중 셔이면 된다. 8층 로그는 세지 않는다: 여는 순간 주가 끝난다.
+export function noteOpens(scenario, { digging = {}, traces = {} } = {}) {
+  const n = scenario.sites.find((x) => x.layout === 'notes')?.notes
+  if (!n?.traces) return false
+  const seen = [digging.asked, digging.found, ...Object.keys(n.traces).map((k) => traces[k])]
+  return seen.filter(Boolean).length >= (n.opens ?? 3)
 }
 
 export const MIN_SIZE = { w: 360, h: 220 }

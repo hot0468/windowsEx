@@ -90,6 +90,10 @@ export default function Hwp({ fileId }) {
   // Watching the document refuse to open is what gives the player something to
   // report to 정보보안팀.
   useEffect(() => { if (file && !installed) sawMissing('hangul') }, [file, installed])
+  // 전 사용자의 자동복구 문서를 실제로 읽었다. 열리지 않는 창은 본 것이 아니다.
+  const traces = useGame((s) => s.scenario.sites.find((x) => x.layout === 'notes')?.notes.traces)
+  const sawTrace = useGame((s) => s.sawTrace)
+  useEffect(() => { if (file && installed && file.id === traces?.recover) sawTrace('recover') }, [file, installed])
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
   // Windows can name the file it cannot open, and nothing else about it.

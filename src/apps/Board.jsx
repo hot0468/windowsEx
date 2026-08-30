@@ -21,6 +21,10 @@ export default function Board({ site }) {
   const mine = b.compose ? myPosts(scenario, { posted, day }, site.url) : []
   const posts = [...mine, ...boardPosts(b.posts, day)]
   const post = posts.find((p) => p.id === id)
+  // 전 사용자를 말하는 글을 열었다. 메모 서버가 이걸 센다.
+  const traces = scenario.sites.find((x) => x.layout === 'notes')?.notes.traces
+  const sawTrace = useGame((s) => s.sawTrace)
+  useEffect(() => { if (post && post.id === traces?.sotong) sawTrace('sotong') }, [post?.id])
   // A post of hers that is no longer listed was taken down. Saying so is the
   // whole point — silently bouncing back to the list would read as a bug.
   const removed = !post && id
