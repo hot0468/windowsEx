@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -292,6 +292,8 @@ export const useGame = create((set, get) => ({
   // 내가 보낸 메일. 되돌려받은 것도 남긴다 — 잘못 보냈다는 것을
   // 보려면 무엇을 보냈는지가 남아 있어야 한다.
   sentMails: restored?.sentMails ?? [],
+  // 이번 주에 실제로 열린 곳들. 최근이 앞이다.
+  visited: restored?.visited ?? [],
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -833,6 +835,11 @@ export const useGame = create((set, get) => ({
   })),
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
+  // 열린 곳만 기록에 남는다. 주소만 치고 못 들어간 곳까지 쌓으면, 기록이
+  // 가 본 적 없는 데를 가리키게 된다(북마크와 같은 규칙).
+  noteVisit: (url, title) => set((s) => ({
+    visited: [{ url, title, day: s.day }, ...s.visited.filter((v) => v.url !== url)].slice(0, VISITS)
+  })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
   // A maintenance command sent to the copier. Out of order, the paper jams
@@ -2270,6 +2277,30 @@ export function evalFormula(text, rows, seen = new Set()) {
     }
   }
   return counted ? total.toLocaleString('ko-KR') : SHEET_ERR
+}
+
+// 기록에 남기는 수. 메뉴 하나에 들어갈 만큼만 남긴다.
+export const VISITS = 12
+
+// 주소창이 거드는 곳들.
+//
+// ⚠ 시나리오의 사이트 목록에서 거들면 안 된다. 공유기 주소도, 8층도,
+// 피싱 도메인도 거기 있다 — 찾아내는 것이 퍼즘인 주소를 주소창이 먼저
+// 말해 버린다. 이미 아는 곳 — 북마크, 가 본 곳, 한별이가 휴가 전에 본 곳 — 만 내민다.
+export function addressHints(q, { visited = [], bookmarks = [], history = [] } = {}, limit = 6) {
+  const term = String(q ?? '').trim().toLowerCase()
+  if (!term) return []
+  const out = []
+  const seen = new Set()
+  for (const h of [...visited, ...bookmarks, ...history]) {
+    if (!h?.url || seen.has(h.url)) continue
+    const title = h.title ?? h.url
+    if (!`${h.url} ${title}`.toLowerCase().includes(term)) continue
+    seen.add(h.url)
+    out.push({ url: h.url, title, blog: h.blog })
+    if (out.length === limit) break
+  }
+  return out
 }
 
 export const MIN_SIZE = { w: 360, h: 220 }
