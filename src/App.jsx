@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending, scriptLeft
+  useGame, dayDone, dreamGallery, findFile, laidOff, objectiveDone, overtimeOffer,
+  requestsOf, rumorPending, scriptLeft
 } from './engine/store.js'
 import { APPS, knownWindows, phoneApps } from './apps/registry.jsx'
 import { CallScreen } from './apps/Dial.jsx'
@@ -15,7 +16,7 @@ import PhoneShell from './shell/PhoneShell.jsx'
 import { useViewport } from './shell/useViewport.js'
 import './shell/phone.css'
 import Icon from './icons/Icon.jsx'
-import { wallpaper } from './assets/photos.js'
+import { fileImage, wallpaper } from './assets/photos.js'
 
 import { Info, LayoutGrid, Phone, PhoneOff } from './icons/line.jsx'
 
@@ -265,6 +266,14 @@ export default function App() {
   const locked = useGame((s) => s.locked)
   const ended = useGame((s) => s.ended)
   const sealed = useGame((s) => s.sealed)
+  // 바탕에 걸어 둔 사진. 그 사진이 사라진 날에는(관측하면 사라진다) 아무 말
+  // 없이 기본 배경으로 돌아간다 — 없는 사진을 붙들면 바탕이 검게 남는다.
+  const wall = useGame((s) => s.wall)
+  const dreamt = useGame((s) => s.dreamt)
+  const shot = wall && !(dreamt && scenario.dream?.photos?.includes(wall))
+    ? findFile(dreamGallery(scenario, scenario.fs, dreamt), wall)?.image
+    : null
+  const paper = (shot && fileImage(shot)) || wallpaper
   const shell = useViewport()
 
   // 개발 중에만 여는 문.
@@ -309,6 +318,11 @@ export default function App() {
       if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'l') {
         e.preventDefault()
         useGame.getState().lock()
+      }
+      // 바탕화면 보기. 실제 윈도우와 같은 자리에 둔다(Win 또는 Meta+D).
+      if (e.metaKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        useGame.getState().showDesktop()
       }
       arm()
     }
@@ -372,7 +386,7 @@ export default function App() {
   // 새로 세워서, 굳어야 할 화면이 맨 위로 되감긴다.
   return (
     <div className={'desktop' + (sealed ? ' sealed' : '')}
-         style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
+         style={paper ? { backgroundImage: `url(${paper})` } : undefined}>
       {!sealed && <Desktop />}
       {!sealed && <Progress />}
       <WindowLayer />

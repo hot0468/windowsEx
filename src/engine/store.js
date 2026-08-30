@@ -13,7 +13,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -363,6 +363,10 @@ export const useGame = create((set, get) => ({
   vpnDialing: false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
+  // Win+D 로 한꺼번에 내린 창들. 다시 누르면 이것만 올라온다.
+  peeked: [],
+  // 바탕화면에 걸어 둔 사진(갤러리의 file id). 기본 배경이면 null.
+  wall: restored?.wall ?? null,
   // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
   // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
   // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
@@ -551,6 +555,19 @@ export const useGame = create((set, get) => ({
     })),
   minimizeWindow: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, minimized: true } : w)) })),
+  // 바탕화면 보기(Win+D). 한 번 누르면 모두 내려가고, 한 번 더 누르면 방금
+  // 내린 것들만 돌아온다 — 원래 내려가 있던 창은 그대로 둔다.
+  showDesktop: () => set((s) => {
+    const open = s.windows.filter((w) => !w.minimized).map((w) => w.id)
+    if (open.length) {
+      return { windows: s.windows.map((w) => ({ ...w, minimized: true })), peeked: open }
+    }
+    const back = new Set(s.peeked ?? [])
+    return {
+      windows: s.windows.map((w) => (back.has(w.id) ? { ...w, minimized: false } : w)),
+      peeked: []
+    }
+  }),
   toggleMaximize: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, maximized: !w.maximized } : w)) })),
   moveWindow: (id, x, y) => {
@@ -962,6 +979,9 @@ export const useGame = create((set, get) => ({
       sheetDrafts: Object.fromEntries(
         Object.entries(s.sheetDrafts).filter(([k]) => !k.startsWith(fileId + ':')))
     })),
+  // 배경 바꾸기. 사진이 사라지면(관측하면 사라진다) 기본 배경으로 돌아간다 —
+  // 없는 사진을 붙들고 있으면 바탕화면이 검은 채로 남는다.
+  setWall: (fileId) => { play('click'); set({ wall: fileId }) },
   setVpn: (on) => set({ vpn: on }),
   // VPN 연결. 클라이언트 창과 트레이 팝오버가 같은 길을 쓴다 — 이름이 hosts 에 없으면
   // 어느 쪽에서도 못 붙는다. 끊기가 창에 있으면 팝오버는 그 사이를 몰랐다.

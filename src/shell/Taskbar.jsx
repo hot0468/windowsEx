@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { gameClock, opensAnew, useGame, savedAt } from '../engine/store.js'
+import { findFile, gameClock, opensAnew, useGame, savedAt } from '../engine/store.js'
 import { APPS, knownWindows, startMenuApps } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
-import { Activity, ChevronUp, FolderOpen, LayoutGrid, Lock, RotateCcw, Save, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/line.jsx'
+import { Activity, ChevronUp, FolderOpen, LayoutGrid, Lock, Monitor, RotateCcw, Save, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/line.jsx'
 import { isMuted, play, setMuted } from './sound.js'
 
 const when = (at) =>
@@ -11,6 +11,18 @@ const when = (at) =>
 const CONFIRM = {
   new: '진행 중인 게임을 버리고 처음부터 시작합니다. 저장한 게임은 그대로 남습니다.',
   load: '저장한 시점으로 되돌아갑니다. 지금까지의 진행 상황은 사라집니다.'
+}
+
+// 창 하나가 지금 무엇을 열고 있는지. 미리보기의 아랫줄이 된다 —
+// 같은 앱이 여럿 열렸을 때 어느 것이 어느 것인지는 이것으로만 갈린다.
+function titleOf(win, fs) {
+  const id = win.props?.fileId ?? win.props?.id
+  const file = id ? findFile(fs, id) : null
+  if (file) return file.name
+  const folder = win.props?.startFolder
+  if (folder) return [].concat(folder).join(' / ')
+  if (win.props?.url) return win.props.url
+  return win.minimized ? '최소화됨' : '열려 있음'
 }
 
 export default function Taskbar() {
@@ -29,6 +41,7 @@ export default function Taskbar() {
   const [saved, setSaved] = useState(null)
   const [tick, setTick] = useState(0)
   const scenario = useGame((s) => s.scenario)
+  const fs = scenario.fs
   const day = useGame((s) => s.day)
   const overtime = useGame((s) => s.overtime)
   const dayAt = useGame((s) => s.dayAt)
@@ -44,6 +57,9 @@ export default function Taskbar() {
   const busy = mining && !cleaned
   // 숨겨진 아이콘 팝오버. 설치된 클라이언트만 여기 실린다 — 지금은 VPN 하나다.
   const [trayOpen, setTrayOpen] = useState(false)
+  // 지금 가리키고 있는 작업표시줄 단추. 미리보기가 붙는 자리.
+  const [peek, setPeek] = useState(null)
+  const showDesktop = useGame((s) => s.showDesktop)
   const [trayErr, setTrayErr] = useState('')
   const vpnDialing = useGame((s) => s.vpnDialing)
   const dialVpn = useGame((s) => s.dialVpn)
@@ -124,11 +140,24 @@ export default function Taskbar() {
           <button className="tb-icon" title="시작" onClick={toggleStart}>
             <LayoutGrid size={19} strokeWidth={1.8} />
           </button>
+          {/* 바탕화면 보기. 실제 윈도우처럼 Win+D 로도 된다. */}
+          <button className="tb-icon" title="바탕화면 보기 (Win+D)" onClick={showDesktop}>
+            <Monitor size={19} strokeWidth={1.8} />
+          </button>
           {knownWindows(windows).map((w) => (
-            <button key={w.id} className="tb-icon" title={APPS[w.app].title}
-                    onClick={() => clickWindow(w)}>
+            /* 미리보기. 창이 열 개 쌓이면 아이콘만으로는 어느 것이 어느 것인지
+               알 수 없다 — 어떤 문서를 열고 있는지까지 말해 준다. */
+            <button key={w.id} className={'tb-icon' + (w.minimized ? ' down' : '')}
+                    onClick={() => clickWindow(w)}
+                    onPointerEnter={() => setPeek(w.id)} onPointerLeave={() => setPeek(null)}>
               <Icon name={APPS[w.app].icon} size={23} />
               <span className="dot" />
+              {peek === w.id && (
+                <span className="tb-peek">
+                  <b>{APPS[w.app].title}</b>
+                  <i>{titleOf(w, fs)}</i>
+                </span>
+              )}
             </button>
           ))}
         </div>
