@@ -320,3 +320,97 @@
   color: #fff;
   cursor: pointer;
 }
+
+/* 상단 알림창. 상태바를 아래로 끌면 내려온다. */
+.ph-drag { flex: none; touch-action: none; cursor: grab; }
+.ph-shade-wrap {
+  position: absolute;
+  inset: 0 0 44px;
+  z-index: 45;
+  background: rgba(16, 19, 26, .45);
+}
+.ph-shade {
+  padding: 12px 14px 6px;
+  border-radius: 0 0 18px 18px;
+  background: var(--p-surface);
+  box-shadow: 0 10px 30px rgba(16, 19, 26, .28);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: ph-shade-in .22s var(--p-ease);
+}
+@keyframes ph-shade-in { from { transform: translateY(-100%); } }
+.ph-tiles { display: flex; gap: 8px; flex: none; }
+.ph-tile {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 12px 6px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: #eef0f4;
+  color: var(--p-mute);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ph-tile span { color: var(--p-ink); font-size: 12.5px; font-weight: 600; }
+.ph-tile i { font-style: normal; font-size: 11px; }
+.ph-tile.on { background: var(--p-accent); color: rgba(255,255,255,.72); }
+.ph-tile.on span { color: #fff; }
+.ph-tile.flat { cursor: default; }
+.ph-tile.warn { color: #c9803a; }
+.ph-tile:disabled { opacity: .6; cursor: default; }
+.ph-shade-err { margin: 8px 2px 0; color: #c0392b; font-size: 12px; line-height: 1.6; }
+.ph-shade-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 2px 6px;
+  color: var(--p-mute);
+  font-size: 11.5px;
+  flex: none;
+}
+.ph-shade-head b { color: var(--p-ink); font-size: 13px; }
+.ph-todo { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.ph-todo li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 2px;
+  color: var(--p-mute);
+  font-size: 13px;
+  line-height: 1.5;
+  border-top: 1px solid var(--p-line);
+}
+.ph-todo li.ok { color: var(--p-ink); }
+.ph-todo-mark {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex: none;
+  border: 1px solid #ccd0d8;
+  border-radius: 5px;
+  color: #fff;
+}
+.ph-todo li.ok .ph-todo-mark { background: #2fbf5f; border-color: #2fbf5f; }
+.ph-shade-end {
+  margin: 10px 0 2px;
+  padding: 11px;
+  flex: none;
+  border: 0;
+  border-radius: 12px;
+  background: var(--p-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ph-shade-end:disabled { background: #eef0f4; color: var(--p-mute); cursor: default; }
+.ph-shade-grip { display: block; width: 100%; padding: 8px 0 4px; border: 0; background: none; cursor: pointer; }
+.ph-shade-grip i { display: block; width: 42px; height: 4px; margin: 0 auto; border-radius: 2px; background: #d3d7de; }

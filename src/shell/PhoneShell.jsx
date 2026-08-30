@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { gameClock, useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
+import PhoneShade from './PhoneShade.jsx'
 import Icon from '../icons/Icon.jsx'
 import { ChevronLeft, X } from '../icons/line.jsx'
 
@@ -99,7 +100,7 @@ function Home() {
 
 // 안드로이드의 세 버튼. 켠 창 · 홈 · 뒤로. 어느 화면에서든 바닥에 있으므로
 // 앱 안에서도 홈으로 나가는 길이 끊기지 않는다. 홈 인디케이터를 대신한다.
-function NavBar({ screens, windows, grants, onRecents, recents }) {
+function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade }) {
   const goPhoneHome = useGame((s) => s.goPhoneHome)
   const popScreen = useGame((s) => s.popScreen)
   const closeWindow = useGame((s) => s.closeWindow)
@@ -118,12 +119,13 @@ function NavBar({ screens, windows, grants, onRecents, recents }) {
               aria-label="켠 창">
         <span className="pn-recent" />
       </button>
-      <button className="pn-key" onClick={() => { if (recents) onRecents(); goPhoneHome() }}
+      <button className="pn-key" onClick={() => { if (recents) onRecents(); if (shade) onShade(); goPhoneHome() }}
               aria-label="홈">
         <span className="pn-circle" />
       </button>
-      <button className="pn-key" onClick={recents ? onRecents : back}
-              disabled={!recents && !screens.length} aria-label="뒤로">
+      {/* 알림창이 내려와 있으면 뒤로는 그것부터 걷는다 — 안드로이드와 같다. */}
+      <button className="pn-key" onClick={recents ? onRecents : shade ? onShade : back}
+              disabled={!recents && !shade && !screens.length} aria-label="뒤로">
         <ChevronLeft size={20} strokeWidth={2.2} />
       </button>
     </nav>
@@ -174,6 +176,10 @@ export default function PhoneShell() {
   const goScreen = useGame((s) => s.goScreen)
   const dropScreen = useGame((s) => s.dropScreen)
   const [recents, setRecents] = useState(false)
+  // 상단에서 끌어내리는 알림창. 누르는 곳(pointerdown)의 y와 비교해 아래로
+  // 끌면 열고, 그냥 톡 누르면(마우스로 보는 경우) 그것도 연다.
+  const [shade, setShade] = useState(false)
+  const [grab, setGrab] = useState(null)
   const windows = useGame((s) => s.windows)
 
   // 안드로이드의 뒤로가기 제스처는 그대로 두면 게임을 나가버린다. 한 겹
@@ -239,7 +245,15 @@ export default function PhoneShell() {
 
   return (
     <div className="phone">
-      <StatusBar />
+      <div className="ph-drag"
+           onPointerDown={(e) => { if (!shade) setGrab(e.clientY) }}
+           onPointerMove={(e) => {
+             if (grab != null && e.clientY - grab > 24) { setGrab(null); setShade(true) }
+           }}
+           onPointerUp={() => { if (grab != null) setShade(true); setGrab(null) }}
+           onPointerCancel={() => setGrab(null)}>
+        <StatusBar />
+      </div>
       {!entry && !winCfg && (
         <>
           <DayBar />
@@ -257,6 +271,7 @@ export default function PhoneShell() {
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />
         </PhoneApp>
       )}
+      {shade && !sealed && <PhoneShade onClose={() => setShade(false)} />}
       {recents && (
         <Recents screens={screens} windows={windows} grants={grants}
                  onPick={(k) => { goScreen(k); setRecents(false) }}
@@ -266,7 +281,8 @@ export default function PhoneShell() {
       {/* 굳은 뒤에는 돌아갈 곳도 켤 것도 없다 — 그 페이지 하나만 남는다. */}
       {!sealed && (
         <NavBar screens={screens} windows={windows} grants={grants}
-                recents={recents} onRecents={() => setRecents((v) => !v)} />
+                recents={recents} onRecents={() => setRecents((v) => !v)}
+                shade={shade} onShade={() => setShade(false)} />
       )}
     </div>
   )
