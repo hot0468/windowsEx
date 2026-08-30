@@ -10,7 +10,7 @@ const nights = Object.keys(scenario.summons.nights).map(Number).sort((a, b) => a
 const state = (over = {}) => ({ scenario, grants: {}, day: 1, ...over })
 
 describe('밤마다 오는 부름', () => {
-  beforeEach(() => useGame.setState({ grants: {}, day: 1, closing: false, beatQueue: [], beatAsk: null }))
+  beforeEach(() => useGame.setState({ grants: {}, day: 1, closing: false, beatQueue: [], beatAsk: null , awaitingCaller: null }))
 
   it('밤이 정해진 날에만 온다', () => {
     for (const d of [1, 2, 3, 4, 5]) {
@@ -39,6 +39,10 @@ describe('밤마다 오는 부름', () => {
       expect(useGame.getState().closing).toBe(false)
       expect(useGame.getState().beatQueue.length).toBeGreaterThan(0)
       vi.advanceTimersByTime(3000)
+      // 시간이 지나도 덮이지 않는다 — 무슨 말을 했는지 읽을 틈을 준다.
+      expect(useGame.getState().closing).toBe(false)
+      // 그 대화를 닫는 것이(또는 퇴근을 다시 누르는 것이) 저녁을 부른다.
+      useGame.getState().closeDay()
       expect(useGame.getState().closing).toBe(true)
     } finally {
       vi.useRealTimers()

@@ -44,6 +44,9 @@ function Toast() {
   useEffect(() => {
     if (!toast) return
     setLeaving(false)
+    // 머무는 알림은 스스로 가지 않는다. 하루를 막고 서 있는 말이라
+    // 4초 뒤 사라지면 무언가 온 것만 보고 내용을 못 읽는다.
+    if (toast.sticky) return
     const out = setTimeout(() => setLeaving(true), 4200)
     const gone = setTimeout(clearToast, 4500)
     return () => { clearTimeout(out); clearTimeout(gone) }

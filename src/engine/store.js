@@ -287,6 +287,8 @@ export const useGame = create((set, get) => ({
   // Whether the player has pressed "finish today" — view state, so a reload
   // simply asks for the click again.
   closing: false,
+  // 하루가 기다리는 대화. 그 창을 닫을 때까지 저녁이 오지 않는다.
+  awaitingCaller: null,
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -367,6 +369,10 @@ export const useGame = create((set, get) => ({
     // A message that lands in the conversation already on screen needs no
     // notification: the player is watching it arrive.
     if (watchingThread(s, toast)) return
+    // 머무는 알림은 하루를 봐줘 달라는 말이다. 그 위로 잡담을 덮지 않는다 —
+    // 덮으면 이름 없는 계정이 부른 줄을 모른 채 하루가 멈춰 있게 된다.
+    // 말 자체는 대화창에 그대로 쌓인다. 알림만 건너뛴다.
+    if (s.toast?.sticky && !toast.sticky) return
     play('notify')
     set({ toast: { ...toast, id: ++toastId } })
   },
@@ -491,7 +497,18 @@ export const useGame = create((set, get) => ({
       }
     })
   },
-  closeWindow: (id) => set((s) => (s.sealed ? s : { windows: s.windows.filter((w) => w.id !== id) })),
+  closeWindow: (id) => set((s) => {
+    if (s.sealed) return s
+    // 하루가 이 대화를 기다리고 있었다면, 그 창을 닫는 순간이 퇴근이다.
+    // 폰도 화면을 내릴 때 여기를 지나므로 꼬리는 자리는 하나다.
+    const gone = s.windows.find((w) => w.id === id)
+    const wanted = s.awaitingCaller && appOf(sourceOf(s.scenario, s.awaitingCaller))
+    const evening = wanted && gone?.app === wanted
+    return {
+      windows: s.windows.filter((w) => w.id !== id),
+      ...(evening ? { closing: true, awaitingCaller: null, toast: null } : {})
+    }
+  }),
   focusWindow: (id) =>
     set((s) => ({
       windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.nextZ, minimized: false } : w)),
@@ -555,8 +572,11 @@ export const useGame = create((set, get) => ({
     const night = callerNight(s)
     if (!night) return set({ closing: true })
     s.grant('called:' + s.day)
-    s.queueBeats([night], 300)
-    setTimeout(() => set({ closing: true }), 2600)
+    // 알림은 사라지지 않고, 마감 화면도 아직 오지 않는다. 받은 사람이
+    // 읽고 대화를 닫는 것이 오늘을 끝낸다 — 이름 없는 계정이 말을 건는데
+    // 2.6초 뒤 퇴근 화면이 덮어버리면 무슨 말을 했는지 보지도 못한다.
+    s.queueBeats([{ ...night, sticky: true }], 300)
+    set({ awaitingCaller: night.thread })
   },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
@@ -1017,7 +1037,7 @@ export const useGame = create((set, get) => ({
     // a question with buttons: the thread's own reactions answer it
     if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
     get().showToast({
-      from: beat.from, text: beat.lines[0],
+      from: beat.from, text: beat.lines[0], sticky: beat.sticky,
       app: appOf(beat.source), source: beat.source, thread: beat.thread
     })
     if (rest.length) {
