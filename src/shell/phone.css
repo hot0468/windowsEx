@@ -751,3 +751,25 @@
 }
 @keyframes ph-drawer-up { from { transform: translateY(100%); opacity: .6; } }
 .ph-drawer .ph-grid { flex: 1; align-content: start; overflow-y: auto; padding-top: 4px; }
+
+/* 목록의 한 줄 — 눌러 펼치고, 전화는 그 안에서 한 번 더 눌러야 걸린다. */
+.cl-item { border-bottom: 1px solid var(--p-line); background: var(--p-surface); }
+.cl-item .cl-row { border-bottom: 0; }
+.cl-item.open { background: #eef2f8; }
+.cl-actions { display: flex; padding: 0 16px 14px; }
+.cl-call { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+           padding: 12px; border: 0; border-radius: 12px; background: #2f9e5c; color: #fff;
+           font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cl-call:active { background: #268a4e; }
+
+/* 거는 중 · 끊김. 통화가 아니므로 말할 칸이 없다. */
+.cl-calling { justify-content: center; gap: 30px; }
+.cl-calling .cl-who { padding: 0; }
+.cl-state { margin-top: 14px; color: rgba(255, 255, 255, .72); font-size: 13.5px;
+            animation: cl-wait 1.4s ease-in-out infinite; }
+.cl-state.off { color: #ffb4a8; animation: cl-blink .5s steps(1, end) 3; }
+@keyframes cl-wait { 50% { opacity: .4; } }
+@keyframes cl-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cl-state { animation: none; }
+}

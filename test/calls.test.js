@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import { useGame } from '../src/engine/store.js'
 
@@ -67,37 +67,62 @@ describe('걸려오는 전화', () => {
 })
 
 describe('통화로 푸는 길', () => {
-  beforeEach(() => useGame.setState({ call: null, callLog: [], calledIn: {}, grants: {} }))
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useGame.setState({ call: null, callSeq: 0, callLog: [], calledIn: {}, grants: {} })
+  })
+  afterEach(() => vi.useRealTimers())
 
   const spoken = calls.contacts.find((c) => !mailOf(c.id).requiredAttachment)
 
-  it('아는 번호로 걸면 그 사람이 받는다', () => {
+  // 실제 전화처럼 신호가 먼저 간다. 누르자마자 통화가 되면 건 것이 아니라
+  // 열린 것이다.
+  it('걸면 먼저 신호가 가고, 그다음에 받는다', () => {
     useGame.getState().dial(spoken.number)
+    expect(useGame.getState().call.stage).toBe('dialing')
+    vi.advanceTimersByTime(2300)
     const call = useGame.getState().call
+    expect(call.stage).toBe('talking')
     expect(call.name).toBe(spoken.name)
     expect(call.asking).toBe(true)
-    expect(call.said.length).toBeGreaterThan(0)
   })
 
-  it('모르는 번호로 걸면 아무도 받지 않는다', () => {
+  it('모르는 번호는 신호만 가다 끊긴다', () => {
     useGame.getState().dial('02-9999-9999')
-    expect(useGame.getState().call.asking).toBeFalsy()
+    vi.advanceTimersByTime(2300)
+    expect(useGame.getState().call.stage).toBe('ended')
+    // 끊겼다는 말을 잠깐 보여 준 뒤 걸던 화면으로 돌아간다
+    vi.advanceTimersByTime(1700)
+    expect(useGame.getState().call).toBe(null)
+    expect(useGame.getState().callLog[0].dir).toBe('missed')
+  })
+
+  // 신호가 가는 동안 끊고 다시 걸어도, 늦게 온 타이머가 지워진 통화를
+  // 되살리지 않아야 한다.
+  it('신호 중에 끊으면 그 전화는 되살아나지 않는다', () => {
+    useGame.getState().dial(spoken.number)
+    useGame.getState().hangUp()
+    vi.advanceTimersByTime(3000)
+    expect(useGame.getState().call).toBe(null)
   })
 
   // 메일과 같은 판정을 지난다: 필요한 값을 말하면 열리고, 아니면 되묻는다.
-  it('필요한 값을 말하면 메일과 같은 목표가 열린다', async () => {
+  it('필요한 값을 말하면 메일과 같은 목표가 열린다', () => {
     useGame.getState().dial(spoken.number)
+    vi.advanceTimersByTime(2300)
     expect(useGame.getState().sayOnCall('잠시만요, 확인해 볼게요')).toBe(false)
     const key = mailOf(spoken.id).requiredKeywords[0]
     expect(useGame.getState().sayOnCall(`확인해 보니 ${key} 입니다`)).toBe(true)
-    await new Promise((r) => setTimeout(r, 1100))
+    vi.advanceTimersByTime(1000)
     expect(useGame.getState().grants[spoken.id]).toBe(true)
   })
 
   it('끊으면 기록에 남는다', () => {
     useGame.getState().dial(spoken.number)
+    vi.advanceTimersByTime(2300)
     useGame.getState().hangUp()
     expect(useGame.getState().call).toBe(null)
     expect(useGame.getState().callLog[0].number).toBe(spoken.number)
+    expect(useGame.getState().callLog[0].dir).toBe('out')
   })
 })

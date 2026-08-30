@@ -368,6 +368,7 @@ export const useGame = create((set, get) => ({
   // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
   // 벨이 다시 울리면 그건 같은 전화가 아니다).
   call: null,
+  callSeq: 0,
   callLog: restored?.callLog ?? [],
   calledIn: restored?.calledIn ?? {},
   // Whether this PC is registered with the copier. Set on the copier's own web
@@ -1336,35 +1337,57 @@ export const useGame = create((set, get) => ({
   })),
   hangUp: () => set((s) => (!s.call ? s : {
     call: null,
-    callLog: s.call.stage === 'talking'
-      ? [{ dir: s.call.kind, name: s.call.name, number: s.call.number, id: s.call.id, day: s.day }, ...s.callLog].slice(0, 30)
-      : s.callLog
+    // 신호만 가다 끊긴 것도 건 기록이다 — 다시 걸 수 있어야 한다.
+    callLog: [{
+      dir: s.call.stage === 'talking' ? s.call.kind : 'missed',
+      name: s.call.name, number: s.call.number, id: s.call.id, day: s.day
+    }, ...s.callLog].slice(0, 30)
   })),
   // 내가 건다. 아는 번호면 그 사람이 받고, 아니면 아무도 받지 않는다.
+  // 내가 건다. 신호가 먼저 가고, 받는 사람이 있으면 그때 통화가 된다.
+  // 아무도 없는 번호는 신호만 가다 끊긴다 — 실제 전화가 그렇다.
   dial: (number) => {
     const s = get()
     if (s.call) return
     const dialed = String(number).replace(/[^0-9]/g, '')
     const who = (s.scenario.calls?.contacts ?? []).find(
       (c) => c.number.replace(/[^0-9]/g, '') === dialed)
-    if (!who) {
-      set({ call: { kind: 'out', id: null, name: '없는 번호', number, stage: 'talking', said: [{ them: true, text: s.scenario.calls?.noAnswer ?? '지금 거신 번호는 없는 번호입니다.' }] } })
-      return
-    }
-    const done = Boolean(s.grants[who.id])
-    const lines = [
-      ...who.greet ?? [],
-      // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
-      ...(who.needsMail ?? (done ? who.done ?? [] : who.asking ?? []))
-    ]
+    // 신호 가는 동안 끊고 다시 걸 수 있다. 그 사이 늦게 도착한 타이머가
+    // 지워진 통화를 되살리지 않도록 통화마다 번호를 붙인다.
+    const seq = (s.callSeq ?? 0) + 1
     set({
-      call: {
-        kind: 'out', id: who.id, name: who.name, number: who.number, stage: 'talking',
-        // 말할 수 있는 상태인지: 아직 안 끝난 일이고, 첨부를 요구하지 않는 상대.
-        asking: !done && !who.needsMail,
-        said: lines.map((text) => ({ them: true, text }))
-      }
+      callSeq: seq,
+      call: { kind: 'out', seq, id: who?.id ?? null, name: who?.name ?? number, number, stage: 'dialing', said: [] }
     })
+    setTimeout(() => {
+      const now = get().call
+      if (now?.seq !== seq) return           // 그 사이 끊었다
+      if (!who) return get().noAnswer()
+      const done = Boolean(get().grants[who.id])
+      const lines = [
+        ...who.greet ?? [],
+        // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
+        ...(who.needsMail ?? (done ? who.done ?? [] : who.asking ?? []))
+      ]
+      set({
+        call: {
+          ...now,
+          stage: 'talking',
+          // 말할 수 있는 상태인지: 아직 안 끝난 일이고, 첨부를 요구하지 않는 상대.
+          asking: !done && !who.needsMail,
+          said: lines.map((text) => ({ them: true, text }))
+        }
+      })
+    }, 2200)
+  },
+  // 받지 않았다. 끊겼다는 말을 잠깐 보여 주고 걸던 화면으로 돌아간다.
+  noAnswer: () => {
+    const seq = get().call?.seq
+    set((st) => (st.call ? { call: { ...st.call, stage: 'ended' } } : st))
+    setTimeout(() => {
+      if (get().call?.seq !== seq) return
+      get().hangUp()
+    }, 1600)
   },
   // 통화 중에 값을 말한다. 메일 본문에 적었어야 할 그 값이다.
   sayOnCall: (text) => {

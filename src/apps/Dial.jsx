@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../engine/store.js'
-import { PhoneOff, Send } from '../icons/line.jsx'
+import { Phone, PhoneOff, Send } from '../icons/line.jsx'
 
 // 전화. 폰에만 있는 앱이다 — 메일로 묻던 것을 목소리로 묻는 자리이자,
 // 하루에 한두 번 남이 먼저 거는 자리.
@@ -23,6 +23,27 @@ function Talking() {
     if (!text.trim()) return
     sayOnCall(text.trim())
     setText('')
+  }
+
+  // 신호가 가는 동안, 그리고 끊긴 뒤 잠깐. 둘 다 통화가 아니라서 말할 칸이 없다.
+  if (call.stage !== 'talking') {
+    const ended = call.stage === 'ended'
+    return (
+      <div className="cl-talk cl-calling">
+        <div className="cl-who">
+          <div className="cl-who-name">{call.name}</div>
+          <div className="cl-who-num">{call.number}</div>
+          <div className={'cl-state' + (ended ? ' off' : '')}>
+            {ended ? '통화가 종료되었습니다' : '전화 거는 중입니다'}
+          </div>
+        </div>
+        {!ended && (
+          <button className="cl-end" onClick={hangUp}>
+            <PhoneOff size={20} strokeWidth={1.9} />통화 종료
+          </button>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -54,6 +75,29 @@ function Talking() {
   )
 }
 
+// 목록의 한 줄. 눌러야 펼쳐지고, 전화는 펼친 뒤 한 번 더 눌러야 걸린다 —
+// 이름을 스치듯 눌렀다고 전화가 걸리면 안 된다.
+function Row({ title, sub, note, open, onOpen, onCall }) {
+  return (
+    <div className={'cl-item' + (open ? ' open' : '')}>
+      <button className="cl-row" onClick={onOpen}>
+        <span className="cl-row-mid">
+          <b>{title}</b>
+          <em>{sub}</em>
+        </span>
+        {note && <span className="cl-row-day">{note}</span>}
+      </button>
+      {open && (
+        <div className="cl-actions">
+          <button className="cl-call" onClick={onCall}>
+            <Phone size={17} strokeWidth={1.9} />전화 걸기
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dial() {
   const scenario = useGame((s) => s.scenario)
   const call = useGame((s) => s.call)
@@ -61,6 +105,8 @@ export default function Dial() {
   const dial = useGame((s) => s.dial)
   const [tab, setTab] = useState('recent')
   const [typed, setTyped] = useState('')
+  // 펼쳐 놓은 줄 하나. 전화 버튼은 그 줄에만 있다.
+  const [open, setOpen] = useState(null)
 
   if (call) return <Talking />
 
@@ -81,15 +127,10 @@ export default function Dial() {
         <div className="cl-list">
           {callLog.length === 0 && <p className="cl-none">통화 기록이 없습니다</p>}
           {callLog.map((c, i) => (
-            <button key={i} className="cl-row" onClick={() => dial(c.number)}>
-              <span className="cl-row-mid">
-                <b className={c.dir === 'missed' ? 'cl-missed' : undefined}>{c.name}</b>
-                <em>{c.number}</em>
-              </span>
-              <span className="cl-row-day">
-                {c.dir === 'missed' ? '부재중' : c.dir === 'in' ? '수신' : '발신'} · {c.day}일차
-              </span>
-            </button>
+            <Row key={i} open={open === 'r' + i} onOpen={() => setOpen(open === 'r' + i ? null : 'r' + i)}
+                 onCall={() => dial(c.number)}
+                 title={c.name} sub={c.number}
+                 note={`${c.dir === 'missed' ? '부재중' : c.dir === 'in' ? '수신' : '발신'} · ${c.day}일차`} />
           ))}
         </div>
       )}
@@ -97,12 +138,9 @@ export default function Dial() {
       {tab === 'contacts' && (
         <div className="cl-list">
           {contacts.map((c) => (
-            <button key={c.id} className="cl-row" onClick={() => dial(c.number)}>
-              <span className="cl-row-mid">
-                <b>{c.name}</b>
-                <em>{c.org} · {c.number}</em>
-              </span>
-            </button>
+            <Row key={c.id} open={open === c.id} onOpen={() => setOpen(open === c.id ? null : c.id)}
+                 onCall={() => dial(c.number)}
+                 title={c.name} sub={`${c.org} · ${c.number}`} />
           ))}
         </div>
       )}
