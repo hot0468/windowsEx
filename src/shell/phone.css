@@ -609,3 +609,50 @@
    브라우저가 먼저 스크롤로 채가고 포인터 이벤트가 끊긴다(pointercancel).
    더미가 화면보다 길어지는 일은 드물어 세로 스크롤은 카드 사이 여백으로 한다. */
 .phone .sol-slot, .phone .sol-stacked { touch-action: none; }
+
+/* ── 폰 잠금화면 ─────────────────────────────────────────
+   실제 폰처럼 두 겹이다. 시계가 있는 화면이 먼저 서고, 밀어 올려야
+   비밀번호를 묻는다. 시계는 위로 붙는다 — 아래는 손이 닿는 자리다. */
+.lock-phone {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 12vh 24px 6vh;
+  touch-action: none;
+  background:
+    radial-gradient(120% 80% at 50% 22%, rgba(190, 200, 235, .22), rgba(10, 14, 30, 0) 62%),
+    linear-gradient(180deg, #0d1226 0%, #141a33 46%, #0a0e1d 100%);
+  backdrop-filter: none;
+}
+.lock-phone .lock-time { font-size: 62px; font-weight: 200; letter-spacing: -1px; }
+.lock-phone .lock-date { margin-top: 6px; font-size: 15px; opacity: .8; }
+
+/* 화면을 미세요. 아래에 붙어 천천히 오르내린다 — 밀라는 말은 움직여야 읽힌다. */
+.lock-swipe {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, .75);
+  font-size: 13px;
+  animation: lock-nudge 2.4s ease-in-out infinite;
+}
+@keyframes lock-nudge {
+  0%, 100% { transform: translateY(4px); opacity: .7; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lock-swipe { animation: none; }
+}
+
+/* 비밀번호 판. 밀어 올린 자리에서 올라온다. */
+.lock-phone.on .lock-card {
+  margin-top: auto;
+  width: 100%;
+  gap: 14px;
+  animation: lock-rise .26s cubic-bezier(.32, .72, 0, 1);
+}
+@keyframes lock-rise { from { opacity: 0; transform: translateY(24px); } }
+.lock-phone .lock-card input { width: 100%; max-width: 300px; padding: 12px 14px; border-radius: 12px; font-size: 15px; text-align: center; }
+.lock-phone .lock-face { width: 66px; height: 66px; }
+.lock-phone .lock-err { padding: 0 10px; line-height: 1.6; }
