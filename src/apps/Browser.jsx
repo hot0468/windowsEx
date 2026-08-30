@@ -6,7 +6,7 @@ import Place from './Place.jsx'
 import TilePhoto from './TilePhoto.jsx'
 import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
-import News from './News.jsx'
+import News, { Article } from './News.jsx'
 import Wiki from './Wiki.jsx'
 import Drive from './Drive.jsx'
 import Board from './Board.jsx'
@@ -90,6 +90,7 @@ export default function Browser({ start }) {
   const [addr, setAddr] = useState('')
   const nav = useHistory(start ?? { kind: 'home' })
   const page = nav.at
+  const pageRef = useRef(null)
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(false)
   const openWindow = useGame((s) => s.openWindow)
@@ -132,6 +133,12 @@ export default function Browser({ start }) {
   useEffect(() => {
     setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : page.kind === 'search' ? page.q : '')
   }, [page])
+  // 새 쪽으로 가면 맨 위부터 읽는다. 기사 아래의 관련 기사를 누르고 나서
+  // 화면이 그 자리에 머물면 다음 기사의 한복판이 열린 것처럼 보인다 —
+  // 링크가 어디로 가든 같은 문제라, 창을 여는 곳 한 군데에서 한 번만 되돌린다.
+  // ponytail: 뒤로 가기도 맨 위로 간다. 실제 브라우저처럼 읽던 자리를 되살리려면
+  // 방문 기록이 스크롤 위치를 함께 들고 다녀야 한다(folderNav.js의 useHistory).
+  useEffect(() => { if (pageRef.current) pageRef.current.scrollTop = 0 }, [page])
   useEffect(() => () => {
     useGame.getState().windows.filter((w) => w.app === 'devtools').forEach((w) => closeWindow(w.id))
   }, [])
@@ -229,7 +236,7 @@ export default function Browser({ start }) {
         ))}
       </div>
 
-      <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
+      <div ref={pageRef} className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <button className="portal-cal" onClick={() => open('calendar.daon.com')} title="캘린더">
@@ -405,13 +412,13 @@ export default function Browser({ start }) {
 
         {page.kind === 'news' && (() => {
           const a = news.find((x) => x.id === page.id)
+          // 기사는 그 기사를 실은 신문 지면 안에서 읽힌다 — 목록으로 돌아가는
+          // 길이 화면 안에 있어야 뒤로 가기만 남지 않는다.
+          const paper = scenario.sites.find((x) => x.layout === 'news')
           return (
-            <article className="art">
-              <div className="art-press">{a.press}</div>
-              <h1>{a.title}</h1>
-              <div className="art-by">{a.date} · {a.reporter}</div>
-              {a.body.map((para, i) => <p key={i}>{para}</p>)}
-            </article>
+            <Article a={a} site={paper} news={news}
+                     onOpen={(id) => nav.go({ kind: 'news', id })}
+                     onHome={() => open(paper.url)} />
           )
         })()}
 
