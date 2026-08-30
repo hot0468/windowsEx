@@ -1456,10 +1456,15 @@ export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold
 // 이미 적혀 있는 안내가 명령 프롬프트를 가리킬 때(차민혁의 'IPv4 주소 확인
 // 방법'처럼) 폰에서는 없는 앱을 찾게 된다. 말풍선을 새로 만들면 안 읽은 수가
 // 하나 늘어나므로 같은 말풍선 끝에 한 문장을 붙인다.
-const withPhonePath = (m) => (
-  onPhoneNow() && typeof m.text === 'string' && WIN_ONLY.test(m.text)
+const withPhonePath = (m) => {
+  if (!onPhoneNow()) return m
+  // 폰에서 할 말을 따로 적어 둔 줄은 그것으로 갈아 끼운다 — 괄호를 덧붙이는
+  // 것보다 사람이 한 말처럼 읽힌다.
+  if (m.phoneText) return { ...m, text: m.phoneText }
+  // 적어 두지 않은 나머지는 한 문장을 붙여 갈 곳만은 알려 준다.
+  return typeof m.text === 'string' && WIN_ONLY.test(m.text)
     ? { ...m, text: m.text + ' ' + PHONE_POINTER } : m
-)
+}
 
 // A conversation someone came back to was read long ago, so only what the week
 // itself brought can still be unread — and never what the player typed.
@@ -1695,9 +1700,14 @@ export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
 export const appendAsk = (ask, next) =>
   ask.then ? { ...ask, then: appendAsk(ask.then, next) } : { ...ask, then: next }
 
+// 힌트도 화면에 따라 갈린다. 폰에서 '명령 프롬프트를 여세요'는 없는 앱을
+// 가리키는 말이라, 그 요청은 noPhone 에 폰에서 갈 곳을 따로 적어 둔다.
+export const hintSets = (ask) =>
+  lineSets(onPhoneNow() && ask?.noPhone ? ask.noPhone : ask?.no)
+
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
 export const hintAfter = (ask, wrongs, mercy = false) => {
-  const sets = lineSets(ask.no)
+  const sets = hintSets(ask)
   // the morning after a late night, nobody makes you work for the hint
   return sets[Math.min(mercy ? wrongs + 1 : wrongs, sets.length - 1)]
 }
@@ -1709,7 +1719,7 @@ export const hintAfter = (ask, wrongs, mercy = false) => {
 // 듣는 것보다는 한 단계 더 주는 편이 낫다. step 은 그다음 오답이 이어받을
 // 자리다.
 export function hintReply(ask, from = 0) {
-  const sets = lineSets(ask.no)
+  const sets = hintSets(ask)
   for (let i = Math.min(from, sets.length - 1); i < sets.length; i++) {
     const rest = sets[i].slice(1)
     if (rest.length) return { lines: rest, step: i + 1 }

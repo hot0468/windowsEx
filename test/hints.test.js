@@ -45,6 +45,25 @@ describe('every question guides the player', () => {
       expect(hintAfter(ask, 99).join(' ').length).toBeGreaterThan(10)
     }
   })
+
+  // 폰에서 갈 곳을 따로 적어 둔 요청(noPhone)은 PC 쪽과 같은 규칙을 지켜야
+  // 한다 — 단계가 있고, 마지막이 자리를 지목하고, 답을 흘리지 않는다.
+  it('폰용 힌트도 같은 규칙을 지킨다', () => {
+    const withPhone = asks.filter((a) => a.noPhone)
+    expect(withPhone.length).toBeGreaterThan(0)
+    for (const ask of withPhone) {
+      const sets = lineSets(ask.noPhone)
+      expect(sets.length).toBe(lineSets(ask.no).length)
+      for (const set of sets) expect(set.length).toBeGreaterThan(0)
+      const all = sets.flat().join(' ')
+      expect(all.length).toBeGreaterThan(10)
+      // 폰에 없는 앱을 가리키면 그 요청은 폰에서 막다른 길이 된다
+      expect(all).not.toMatch(/명령 프롬프트|ipconfig/)
+      for (const answer of ask.accept ?? []) {
+        for (const one of [answer].flat()) expect(all).not.toContain(one)
+      }
+    }
+  })
 })
 
 describe('fileFits', () => {
