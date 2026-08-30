@@ -345,6 +345,8 @@ export const useGame = create((set, get) => ({
   hinted: restored?.hinted ?? {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
+  // 연결 중. 저장하지 않는다 — 다시 켜면 타이머는 없다.
+  vpnDialing: false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
   // Whether this PC is registered with the copier. Set on the copier's own web
@@ -926,6 +928,17 @@ export const useGame = create((set, get) => ({
         Object.entries(s.sheetDrafts).filter(([k]) => !k.startsWith(fileId + ':')))
     })),
   setVpn: (on) => set({ vpn: on }),
+  // VPN 연결. 클라이언트 창과 트레이 팝오버가 같은 길을 쓴다 — 이름이 hosts 에 없으면
+  // 어느 쪽에서도 못 붙는다. 끊기가 창에 있으면 팝오버는 그 사이를 몰랐다.
+  dialVpn: () => {
+    const s = get()
+    if (s.vpn || s.vpnDialing) return true
+    if (!hostResolves(s.scenario, s.edits, s.scenario.vpn.server)) return false
+    set({ vpnDialing: true })
+    setTimeout(() => { set({ vpnDialing: false, vpn: true }); play('ok') }, 1800)
+    return true
+  },
+  dropVpn: () => { set({ vpn: false, vpnDialing: false }); play('click') },
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   // The router's admin page. Stopping DHCP takes the floor down until it is
   // started again; changing the default password is the one thing worth doing.

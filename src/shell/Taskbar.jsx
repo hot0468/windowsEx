@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { gameClock, opensAnew, useGame, savedAt } from '../engine/store.js'
 import { APPS, knownWindows, startMenuApps } from '../apps/registry.jsx'
 import Icon from '../icons/Icon.jsx'
-import { Activity, FolderOpen, LayoutGrid, Lock, RotateCcw, Save, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/line.jsx'
+import { Activity, ChevronUp, FolderOpen, LayoutGrid, Lock, RotateCcw, Save, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/line.jsx'
 import { isMuted, play, setMuted } from './sound.js'
 
 const when = (at) =>
@@ -42,6 +42,19 @@ export default function Taskbar() {
   const mining = useGame((s) => s.mining)
   const cleaned = useGame((s) => s.cleaned)
   const busy = mining && !cleaned
+  // 숨겨진 아이콘 팝오버. 설치된 클라이언트만 여기 실린다 — 지금은 VPN 하나다.
+  const [trayOpen, setTrayOpen] = useState(false)
+  const [trayErr, setTrayErr] = useState('')
+  const vpnDialing = useGame((s) => s.vpnDialing)
+  const dialVpn = useGame((s) => s.dialVpn)
+  const dropVpn = useGame((s) => s.dropVpn)
+  const vpnInstalled = Boolean(grants.vpnInstalled)
+  const toggleVpn = () => {
+    if (vpn) return dropVpn()
+    if (dialVpn()) return setTrayErr('')
+    play('error')
+    setTrayErr(scenario.vpn.notFound)
+  }
 
   const toggleStart = () => {
     if (!startOpen) setSaved(savedAt())
@@ -121,6 +134,30 @@ export default function Taskbar() {
         </div>
         {/* 네트워크는 보여주기만 한다. 누르면 공유기 관리 페이지로 가는 것이
             자연스럽지만, 그 주소를 찾는 것 자체가 퍼즘이라 열어 주면 답이 샌다. */}
+        {vpnInstalled && (
+          <button className={'tb-tray' + (trayOpen ? ' on-flat' : '')} title="숨겨진 아이콘 표시"
+                  onClick={() => { setTrayOpen(!trayOpen); setTrayErr(''); setStartOpen(false) }}>
+            <ChevronUp size={15} strokeWidth={2} />
+          </button>
+        )}
+        {trayOpen && (
+          <>
+            <div className="ctx-catch" onPointerDown={() => setTrayOpen(false)} />
+            <div className="tray-pop">
+              <div className="tray-row">
+                <ShieldCheck size={18} strokeWidth={1.8} />
+                <span className="tray-mid">
+                  <span>AR VPN</span>
+                  <span className="tray-sub">{vpn ? '연결됨 · ' + scenario.vpn.server : vpnDialing ? '연결 중…' : '연결 안 됨'}</span>
+                </span>
+                <button className={'tray-switch' + (vpn ? ' on' : '')} role="switch" aria-checked={vpn}
+                        aria-label="AR VPN" disabled={vpnDialing} onClick={toggleVpn}><i /></button>
+              </div>
+              {trayErr && <p className="tray-err">{trayErr}</p>}
+              <button className="tray-open" onClick={() => { setTrayOpen(false); openWindow('vpn') }}>클라이언트 열기</button>
+            </div>
+          </>
+        )}
         <span className={'tb-stat' + (routerDown ? ' warn' : '')}
               title={routerDown ? '네트워크 연결 없음' : '사내망 연결됨'}>
           {routerDown ? <WifiOff size={16} strokeWidth={1.8} /> : <Wifi size={16} strokeWidth={1.8} />}

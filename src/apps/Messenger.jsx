@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, fileOpener, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { useViewport } from '../shell/useViewport.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
+import Icon from '../icons/Icon.jsx'
 import {
   BellOff, ChevronDown, ChevronLeft, HelpCircle, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
@@ -493,13 +494,26 @@ export default function Messenger({ source }) {
                       <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
                       {/* 받은 파일. 메일의 첨부처럼 저장을 누르면 다운로드 폴더에 생긴다. */}
                       {msg.fileId ? (
-                        <div className="bubble them file">
-                          {opens && <b>{msg.from}</b>}
-                          <span className="bubble-file"><Paperclip size={13} strokeWidth={2} />{msg.file}<i>{msg.size}</i></span>
-                          <button className="bubble-save" disabled={!!restored[msg.fileId]}
-                                  onClick={() => restoreFile(msg.fileId)}>
-                            {restored[msg.fileId] ? '다운로드 폴더에 저장됨' : '저장'}
-                          </button>
+                        <div className="bubble-stack">
+                          {/* 파일 카드: 종류 아이콘 · 이름 · 용량. 동작은 말풍선 밖에 줄로 선다 —
+                              카카오톡이 그렇다. 세 동작 중 실제로 하는 것은 저장뿐이다. */}
+                          <div className="bubble them file">
+                            {opens && <b>{msg.from}</b>}
+                            <span className="bubble-file">
+                              <Icon name={fileOpener({ name: msg.file }).icon} size={34} />
+                              <span className="bubble-file-mid">
+                                <span className="bubble-file-name">{msg.file}</span>
+                                <span className="bubble-file-size">용량: {msg.size}</span>
+                              </span>
+                            </span>
+                          </div>
+                          <div className="bubble-acts">
+                            <button disabled={!!restored[msg.fileId]} onClick={() => restoreFile(msg.fileId)}>
+                              {restored[msg.fileId] ? '저장됨' : '저장'}
+                            </button>
+                            <button disabled={!!restored[msg.fileId]} onClick={() => restoreFile(msg.fileId)}>다른 이름으로 저장</button>
+                            <button disabled>전달</button>
+                          </div>
                         </div>
                       ) : (
                         <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
