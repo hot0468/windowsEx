@@ -452,3 +452,13 @@
 .phone .pn-press { flex-wrap: wrap; gap: 4px 6px; font-size: 12px; }
 .phone .pn-press em { margin-left: 0; }
 .phone .pn-title { font-size: 13.5px; }
+
+/* 사내포털. 왼쪽 메뉴 · 본문 · 오른쪽 위젯 3열이 폰에서는 세로로 선다. */
+.phone .pt-grid { grid-template-columns: 1fr; padding: 10px; }
+
+/* 다온뉴스. 본문 + 오른쪽 300px 사이드가 한 줄씩. */
+.phone .nw-cols { grid-template-columns: 1fr; gap: 18px; }
+.phone .nw > * { padding-left: 14px; padding-right: 14px; }
+.phone .nw-lead { flex-direction: column; gap: 12px; }
+.phone .nw-lead-shot { width: 100%; max-width: none; }
+.phone .nw-crumb { flex-wrap: wrap; }

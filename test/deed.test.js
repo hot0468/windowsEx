@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { allFiles, fsView, place, useGame } from '../src/engine/store.js'
+import { allFiles, fileById, fsView, place, useGame } from '../src/engine/store.js'
 
 // 요청의 86%가 '찾아서 타이핑'이었다. 행동으로 푸는 요청은 ask가 텍스트
 // 대신 grant를 기다린다 — 그 행동이 일어나면 창이 닫혀 있어도 답이 온다.
@@ -339,5 +339,24 @@ describe('손댄 시각', () => {
   it('touched는 세이브에 실린다', async () => {
     const { PROGRESS } = await import('../src/engine/store.js')
     expect(PROGRESS).toContain('touched')
+  })
+})
+
+// 이름을 바꾼 파일은 어디서 불러도 그 이름이다 — 문서 창 제목줄, 드라이브에
+// 올린 목록, 보낸 메일의 첨부까지. 탐색기만 새 이름이면 이름을 바꾼 일이
+// 없던 일이 된다.
+describe('바꾼 이름으로 부른다', () => {
+  beforeEach(() => useGame.setState({ placed: {}, sentMails: [], grants: {}, pendingAsks: {}, extraMessages: {}, day: 2 }))
+
+  it('문서 앱이 여는 파일은 바뀐 이름을 단다', () => {
+    useGame.getState().renameFile('file_ppt_meeting', '회의자료_0819.pptx')
+    expect(fileById(useGame.getState(), 'file_ppt_meeting').name).toBe('회의자료_0819.pptx')
+    expect(fileById(useGame.getState(), 'file_qc').name).toBe('견적서_C테크.hwp')
+  })
+
+  it('보낸 메일의 첨부도 바뀐 이름이다', () => {
+    useGame.getState().renameFile('file_ppt_meeting', '회의자료_0819.pptx')
+    useGame.getState().keepSent({ to: 'x@y.kr', subject: 's', body: 'b', attachmentId: 'file_ppt_meeting' })
+    expect(useGame.getState().sentMails.at(-1).attach.name).toBe('회의자료_0819.pptx')
   })
 })

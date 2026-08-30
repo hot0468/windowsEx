@@ -1220,7 +1220,7 @@ export const useGame = create((set, get) => ({
       sentMails: [...st.sentMails, {
         id: 'sent_' + Date.now() + '_' + st.sentMails.length,
         to, subject, body, sent: true,
-        attach: file ? { name: file.name, fileId: file.id } : null,
+        attach: file ? { name: s.placed[file.id]?.name ?? file.name, fileId: file.id } : null,
         date: '방금', at: justNow(s.scenario, s.day), day: s.day
       }]
     }))
@@ -1959,6 +1959,14 @@ export const fileOpener = (file) =>
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
+}
+
+// 파일 하나, 이름을 바꿨으면 바뀐 이름으로. 문서 창·올린 목록·보낸 메일이
+// 탐색기와 다른 이름을 부르면 이름을 바꾼 일이 없던 일이 된다.
+export const fileById = (s, id) => {
+  const f = findFile(s.scenario.fs, id)
+  const name = s.placed?.[id]?.name
+  return f && name ? { ...f, name } : f
 }
 
 // What the boss says after a bad reply, and whether that was the last straw.

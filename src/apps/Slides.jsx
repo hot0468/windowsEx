@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, fileById } from '../engine/store.js'
 import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
 
 export default function Slides({ fileId }) {
-  const fs = useGame((s) => s.scenario.fs)
   const [at, setAt] = useState(0)
-  const file = findFile(fs, fileId)
+  const file = useGame((s) => fileById(s, fileId))
   if (!file?.slides?.length) return <div className="sl-none">슬라이드를 열 수 없습니다.</div>
 
   const deck = file.slides

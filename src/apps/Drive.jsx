@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, FolderOpen, LayoutGrid, List, Search } from '../icons/line.jsx'
-import { findFile, fmtStampShort, gameClock, parseStamp, useGame } from '../engine/store.js'
+import { fileById, fmtStampShort, gameClock, parseStamp, useGame } from '../engine/store.js'
 import FileDialog from './FileDialog.jsx'
 import WikiDoc from './wikiDoc.jsx'
 
@@ -48,7 +48,8 @@ export default function Drive({ site, path = '' }) {
   const dayAt = useGame((s) => s.dayAt)
   const clock = gameClock(scenario, { day, overtime, dayAt })
   const [picking, setPicking] = useState(false)
-  const mine = (uploaded[open] ?? []).map((id) => findFile(scenario.fs, id)).filter(Boolean)
+  const placed = useGame((s) => s.placed)
+  const mine = (uploaded[open] ?? []).map((id) => fileById({ scenario, placed }, id)).filter(Boolean)
 
   return (
     <div className="dr">
