@@ -54,7 +54,10 @@ export default function Gallery() {
                   title={file.name}>
             {file.image || cameraShot(file.shot?.lens) ? (
               <img src={fileImage(file.image) ?? cameraShot(file.shot.lens)}
-                   alt={file.alt ?? file.name} draggable="false" />
+                   alt={file.alt ?? file.name} draggable="false"
+                   style={file.shot?.frame
+                     ? { objectPosition: `${file.shot.frame.x}% ${file.shot.frame.y}%` }
+                     : undefined} />
             ) : file.shot ? (
               /* 찍은 사진에는 아직 그림이 없다 — 언제 무엇을 찍었는지가 대신 선다. */
               <span className="gl-shot">

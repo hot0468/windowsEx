@@ -95,6 +95,9 @@ export default function Viewer({ fileId }) {
         <div className="vw-stage" style={{ width: `${ZOOMS[zoom] * 100}%`, height: `${ZOOMS[zoom] * 100}%` }}>
           {/* Blown up on screen is where the tile in the corner is noticed. */}
           <img src={src} alt={file.alt ?? file.name}
+               style={file.shot?.frame
+                 ? { objectFit: 'cover', objectPosition: `${file.shot.frame.x}% ${file.shot.frame.y}%` }
+                 : undefined}
                title={file.tile && !tiles.includes(file.id) ? gates?.hint : undefined}
                onContextMenu={(e) => {
                  if (!file.tile || tiles.includes(file.id)) return

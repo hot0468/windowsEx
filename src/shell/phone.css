@@ -891,5 +891,13 @@
            color: #b0553f; font-size: 10.5px; line-height: 1.4; text-align: center; background: #f4eeec; }
 .gl-none { padding: 26px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
 
-/* 카메라 렌즈에 사진이 깔리면 그 위에 격자와 시각이 얹힌다. */
-.cam-lens { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* 카메라 렌즈에 사진이 깔리면 그 위에 격자와 시각이 얹힌다. 사진은 뷰파인더보다
+   커서, 기기를 기울이거나 손으로 끌면 그 안을 둘러본다. */
+.cam-view { touch-action: none; }
+.cam-lens { position: absolute; left: 50%; top: 50%; object-fit: cover;
+            transform-origin: center; translate: -50% -50%; will-change: transform;
+            transition: transform 120ms ease-out; }
+.cam-tilt { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+            padding: 8px 14px; border: 0; border-radius: 999px;
+            background: rgba(255, 255, 255, .92); color: #10131a;
+            font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
