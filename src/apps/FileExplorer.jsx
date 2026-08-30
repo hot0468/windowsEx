@@ -62,10 +62,14 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const canPaste = !inTrash && !inWork && !searching
   const paste = () => { placeFile(clipboard, nav.path.join('/')); setMenu(null) }
   // 이름 바꾸기는 본문만. 확장자가 바뀌면 여는 앱이 바뀌어 버린다.
-  const ext = (name) => name.slice(name.lastIndexOf('.'))
+  // 점이 없는 이름(hosts)은 통째로 본문이다.
+  const split = (name) => {
+    const i = name.lastIndexOf('.')
+    return i < 0 ? [name, ''] : [name.slice(0, i), name.slice(i)]
+  }
   const commitRename = () => {
     const v = renaming.value.trim()
-    if (v) renameFile(renaming.id, v + ext(renaming.name))
+    if (v) renameFile(renaming.id, v + split(renaming.name)[1])
     setRenaming(null)
   }
 
@@ -173,7 +177,9 @@ export default function FileExplorer({ startFolder, roots: only }) {
                     <input className="ex-rename" autoFocus value={renaming.value}
                            onChange={(e) => setRenaming({ ...renaming, value: e.target.value })}
                            onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenaming(null) }}
-                           onBlur={commitRename} onClick={(e) => e.stopPropagation()} />
+                           onBlur={commitRename} onClick={(e) => e.stopPropagation()}
+                           onDoubleClick={(e) => e.stopPropagation()}
+                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation() }} />
                   ) : f.name}
                 </button>
               )))}
@@ -208,7 +214,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
                       <button onClick={() => { cutFile(menu.file.id); setMenu(null) }}>잘라내기</button>
                       <button onClick={() => {
                         const n = menu.file.name
-                        setRenaming({ id: menu.file.id, name: n, value: n.slice(0, n.lastIndexOf('.')) })
+                        setRenaming({ id: menu.file.id, name: n, value: split(n)[0] })
                         setMenu(null)
                       }}>이름 바꾸기</button>
                     </>

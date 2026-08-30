@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { fsView, place, useGame } from '../src/engine/store.js'
+import { allFiles, fsView, place, useGame } from '../src/engine/store.js'
 
 // 요청의 86%가 '찾아서 타이핑'이었다. 행동으로 푸는 요청은 ask가 텍스트
 // 대신 grant를 기다린다 — 그 행동이 일어나면 창이 닫혀 있어도 답이 온다.
@@ -133,6 +133,13 @@ describe('파일을 옮기고 이름을 바꾼다', () => {
     expect(f.name).toBe('회의자료_0825.pptx')
   })
 
+  it('점이 없는 이름도 그대로 바꿀 수 있다', () => {
+    const fs = place(scenario.fs, { file_hosts: { name: 'hosts_old' } })
+    const etc = ['로컬 디스크 (C:)', 'Windows', 'System32', 'drivers', 'etc']
+    const f = at(fs, etc).find((e) => e.id === 'file_hosts')
+    expect(f?.name).toBe('hosts_old')
+  })
+
   it('fsView가 placed를 받는다', () => {
     const fs = fsView(scenario.fs, { placed: { file_ppt_meeting: { into: '문서/발표자료' } }, scenario })
     expect(ids(at(fs, ['문서', '발표자료']))).toContain('file_ppt_meeting')
@@ -186,5 +193,71 @@ describe('드라이브에 올린다', () => {
   it('uploaded는 세이브에 실린다', async () => {
     const { PROGRESS } = await import('../src/engine/store.js')
     expect(PROGRESS).toContain('uploaded')
+  })
+})
+
+// 행동으로 푸는 요청은 accept 검사를 면제받는 대신 이것을 지킨다: 기다리는
+// objective 가 검사 스펙을 갖고, 그 스펙이 가리키는 파일·폴더·페이지·주소가
+// 실제로 게임 안에 있다. 하나라도 어긋나면 그 요청은 영영 못 푼다.
+describe('행동 요청의 스펙', () => {
+  const steps = (a) => (a ? [a, ...steps(a.then)] : [])
+  const deeds = scenario.pool.requests.flatMap((r) => steps(r.beat.ask)).filter((a) => a.deed)
+  const files = new Set(allFiles(scenario.fs).map((f) => f.id))
+  const folders = new Set()
+  const walk = (es, trail) => es.forEach((e) => { if (e.children) { folders.add(trail + '/' + e.name); walk(e.children, trail + '/' + e.name) } })
+  Object.entries(scenario.fs).forEach(([r, es]) => { folders.add(r); walk(es, r) })
+  const drive = scenario.sites.find((s) => s.layout === 'drive').wiki.pages
+  const world = JSON.stringify(scenario)
+
+  it('열여섯 건이 있고 종류당 넷이다', () => {
+    expect(deeds.length).toBeGreaterThanOrEqual(16)
+    const kinds = deeds.map((a) => {
+      const o = scenario.objectives.find((x) => x.id === a.deed)
+      return ['cell', 'mail', 'move', 'rename', 'upload'].find((k) => o?.[k])
+    })
+    for (const k of ['cell', 'mail', 'upload']) expect(kinds.filter((x) => x === k).length, k).toBeGreaterThanOrEqual(4)
+    expect(kinds.filter((x) => x === 'move' || x === 'rename').length).toBeGreaterThanOrEqual(4)
+    expect(kinds.every(Boolean)).toBe(true)
+  })
+
+  it('스펙이 가리키는 것이 다 실존한다', () => {
+    for (const a of deeds) {
+      const o = scenario.objectives.find((x) => x.id === a.deed)
+      if (o.cell) {
+        const sheet = allFiles(scenario.fs).find((f) => f.id === o.cell.file)?.sheets?.find((s) => s.name === o.cell.sheet)
+        expect(sheet?.rows[o.cell.row]?.[o.cell.col], a.deed).toBeDefined()
+        expect(sheet.rows[o.cell.row][o.cell.col], a.deed).not.toBe(o.cell.value)
+      }
+      if (o.mail) {
+        expect(world, a.deed).toContain(o.mail.to)
+        if (o.mail.requiredAttachment) { expect(files.has(o.mail.requiredAttachment), a.deed).toBe(true); expect(o.mail.wrongAttachmentReply, a.deed).toBeTruthy() }
+        if (o.mail.requiredKeywords?.length) expect(o.mail.unclearReply, a.deed).toBeTruthy()
+        expect(o.mail.reply?.body, a.deed).toBeTruthy()
+      }
+      if (o.move) { expect(files.has(o.move.file), a.deed).toBe(true); expect(folders.has(o.move.into), a.deed).toBe(true) }
+      if (o.rename) { expect(files.has(o.rename.file), a.deed).toBe(true); expect(o.rename.name, a.deed).toMatch(/\.[a-z]+$/) }
+      if (o.upload) { expect(files.has(o.upload.file), a.deed).toBe(true); expect(drive[o.upload.page], a.deed).toBeTruthy() }
+    }
+  })
+
+  it('말할 것과 힌트가 있다', () => {
+    for (const a of deeds) {
+      expect(a.placeholder, a.deed).toBeTruthy()
+      expect(a.ok?.length, a.deed).toBeGreaterThan(0)
+      expect(a.no?.length, a.deed).toBe(3)
+      expect(a.next, a.deed).toEqual([])
+    }
+  })
+
+  it('옮기는 파일은 이미 받은 것이어야 한다', () => {
+    // 메일 첨부(attached)는 저장하기 전엔 어디에도 없다. 그런 파일을 옮기라고
+    // 하면 못 받은 판에서 영영 못 푼다.
+    const attached = new Set(allFiles(scenario.fs).filter((f) => f.attached).map((f) => f.id))
+    for (const a of deeds) {
+      const o = scenario.objectives.find((x) => x.id === a.deed)
+      for (const id of [o.move?.file, o.rename?.file, o.upload?.file, o.mail?.requiredAttachment].filter(Boolean)) {
+        expect(attached.has(id), a.deed + ' ' + id).toBe(false)
+      }
+    }
   })
 })
