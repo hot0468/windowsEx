@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import {
-  canMove, deal, draw, isRed, isWon, move, rankLabel, sendToFoundation,
+  canMove, deal, draw, isRed, isWon, move, pileOf, rankLabel, sendToFoundation,
   SUIT_NAMES, SUIT_SYMBOLS, SUITS
 } from './solitaire.js'
 
@@ -8,8 +8,9 @@ import {
 // 넣지 않는다. 창을 닫으면 판이 끝난다(실제 윈도우 솔리테어와 같다).
 //
 // 옮기는 길이 둘이고 둘 다 남긴다:
-//   ① 끌어다 놓기 — 마우스는 HTML5 drag, 손가락은 포인터 이벤트(touchProps).
-//      모바일 브라우저는 dragstart/drop 을 아예 보내지 않으므로 길이 갈린다.
+//   ① 끌어다 놓기 — 포인터 이벤트 하나로 마우스와 손가락을 같이 받는다. HTML5
+//      drag 는 터치에서 아예 오지 않고, 오더라도 유령이 브라우저 것이라 손가락
+//      아래 카드가 따라오지 않는다. 유령은 여기서 직접 그린다.
 //   ② 카드를 누르고 → 놓을 자리를 누르기
 // ②도 남긴다 — 좁은 화면에서는 겨누는 것보다 두 번 누르는 편이 확실하다.
 // 세 길 모두 applyMove 하나를 지나므로 규칙이 갈릴 수 없다.
@@ -36,7 +37,7 @@ const cardName = (card) => (card.faceUp ? `${SUIT_NAMES[card.suit]} ${rankLabel(
 // 버튼의 DOM 노드를 통째로 갈아 끼운다. 창은 pointerdown에 focus로 z를 올리므로
 // 누르는 순간 리렌더가 나고, mousedown과 mouseup이 서로 다른 노드에 떨어져
 // 브라우저가 click을 아예 만들지 않는다.
-function Slot({ cards, label, held = false, highlight = false, onClick, onDoubleClick, handlers }) {
+function Slot({ cards, label, held = false, lifted = false, highlight = false, onClick, onDoubleClick, handlers }) {
   const top = cards[cards.length - 1]
   return (
     <button type="button"
@@ -45,7 +46,7 @@ function Slot({ cards, label, held = false, highlight = false, onClick, onDouble
       aria-pressed={top ? held : undefined}
       aria-label={top ? `${label}, ${cardName(top)}` : `${label}, 비어 있음`}>
       {top ? (top.faceUp
-        ? <span className={`sol-card${held ? ' sol-card-held' : ''}`}><CardFace card={top} /></span>
+        ? <span className={`sol-card${held ? ' sol-card-held' : ''}${lifted ? ' sol-lifted' : ''}`}><CardFace card={top} /></span>
         : <span className="sol-card sol-card-back" />) : null}
     </button>
   )
@@ -67,9 +68,12 @@ function stackOffset(pile, index) {
 export default function Solitaire() {
   const [state, setState] = useState(() => deal(newSeed()))
   const [held, setHeld] = useState(null)
-  // 지금 끌고 있는 카드. 눌러서 집는 것(held)과 달리 놓는 순간 사라진다.
+  // 지금 끌고 있는 카드와 유령의 자리. 눌러서 집는 것(held)과 달리 놓는 순간 사라진다.
+  // { pile, index, x, y, w, ox, oy } — x·y 는 포인터, ox·oy 는 카드 안에서 잡은 자리.
   const [drag, setDrag] = useState(null)
-  // 손가락으로 놓은 직후 따라오는 click 한 번을 흘려보내는 표시.
+  // 누르고 아직 안 움직인 것. 몇 픽셀 넘게 움직여야 끌기가 된다 — 안 그러면 탭이 끌기로 샌다.
+  const press = useRef(null)
+  // 끌어 놓은 직후 따라오는 click 한 번을 흘려보내는 표시.
   const dropped = useRef(false)
   const won = isWon(state)
   const targets = drag ? dropTargetsFor(state, drag) : null
@@ -93,56 +97,44 @@ export default function Solitaire() {
     setHeld(null)
   }
 
-  // 터치에는 HTML5 끌기(dragstart/dragover/drop)가 아예 오지 않는다 — 모바일
-  // 브라우저는 손가락 끌기를 스크롤로 쓴다. 손가락은 포인터 이벤트로 따로 받아,
-  // 뗀 자리 밑에 있는 더미(data-pile)로 옮긴다. 끄는 동안 보이는 표시는 눌러서
-  // 집었을 때와 같다 — 같은 뜻이기 때문이다.
-  const touchProps = (pile, index) => ({
+  // 끌기. 누르면 기억만 하고, 몇 픽셀 움직이면 그때 집는다 — 탭과 끌기가 같은
+  // 손가락에서 갈리는 자리다. 집은 뒤로는 포인터를 이 카드가 붙잡아(setPointerCapture)
+  // 손가락이 카드 밖으로 나가도 계속 받는다. 놓는 자리는 뗀 좌표 밑의 더미(data-pile)로
+  // 안다 — 유령은 pointer-events 가 없어서 그 밑이 보인다.
+  const DRAG_START = 6
+  const dragProps = (pile, index) => ({
     onPointerDown: (e) => {
-      if (e.pointerType !== 'touch') return
-      // 지난 끌기가 남긴 표시는 여기서 지운다 — 브라우저가 놓은 뒤 click 을
-      // 보내지 않는 경우가 있어, 그대로 두면 다음 탭 한 번이 삼켜진다.
+      if (e.button !== 0) return
+      const r = e.currentTarget.getBoundingClientRect()
+      press.current = { pile, index, x: e.clientX, y: e.clientY, w: r.width, ox: e.clientX - r.left, oy: e.clientY - r.top }
       dropped.current = false
-      setDrag({ pile, index })
-      setHeld(null)
-      // 손가락이 카드 밖으로 나가도 이 카드가 계속 이벤트를 받는다.
       e.currentTarget.setPointerCapture?.(e.pointerId)
     },
+    onPointerMove: (e) => {
+      const p = press.current
+      if (!p) return
+      if (!drag && Math.hypot(e.clientX - p.x, e.clientY - p.y) < DRAG_START) return
+      setDrag({ ...p, x: e.clientX, y: e.clientY })
+      if (held) setHeld(null)
+    },
     onPointerUp: (e) => {
-      if (e.pointerType !== 'touch' || !drag) return
+      press.current = null
+      if (!drag) return
       const to = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-pile]')?.dataset.pile
-      // 집은 자리에서 그대로 뗀 것은 끌기가 아니라 탭이다 — clickCard 가 받는다.
-      if (to && to !== drag.pile && applyMove(drag, to)) dropped.current = true
+      if (to && to !== drag.pile) applyMove(drag, to)
+      // 끈 뒤에 오는 click 은 이 카드를 다시 집으려 든다. 옮겼든 못 옮겼든 흘려보낸다.
+      dropped.current = true
       setDrag(null)
     },
-    onPointerCancel: () => setDrag(null)
+    onPointerCancel: () => { press.current = null; setDrag(null) }
   })
 
-  const dragProps = (pile, index) => ({
-    ...touchProps(pile, index),
-    draggable: true,
-    onDragStart: (e) => {
-      // 파이어폭스는 데이터가 없으면 끌기 자체를 시작하지 않는다.
-      e.dataTransfer.setData('text/plain', `${pile}:${index}`)
-      e.dataTransfer.effectAllowed = 'move'
-      setDrag({ pile, index })
-      setHeld(null)
-    },
-    onDragEnd: () => setDrag(null)
-  })
+  // 놓을 수 있는 자리. 유령 밑의 요소에서 이 표식을 찾아 어느 더미인지 안다.
+  const dropProps = (pile) => ({ 'data-pile': pile })
 
-  // 놓을 수 있는 자리에만 붙는다. 못 받는 자리는 preventDefault를 안 해 커서가 거절을 알린다.
-  // data-pile 은 손가락으로 끌 때 쓴다 — 뗀 좌표 밑의 요소에서 이 표식을 찾아
-  // 어느 더미에 놓았는지 안다(터치에는 onDrop 이 오지 않는다).
-  const dropProps = (pile) => ({
-    'data-pile': pile,
-    onDragOver: (e) => { if (targets?.has(pile)) e.preventDefault() },
-    onDrop: (e) => {
-      e.preventDefault()
-      if (drag) applyMove(drag, pile)
-      setDrag(null)
-    }
-  })
+  // 끌고 있는 카드들 — 유령이 그리고, 제자리 것은 숨긴다.
+  const lifted = drag ? pileOf(state, drag.pile).slice(drag.index) : []
+  const isLifted = (pile, index) => Boolean(drag && drag.pile === pile && index >= drag.index)
 
   // 카드를 눌렀다. 집은 게 없으면 집고, 있으면 그 자리로 옮겨 본다.
   const clickCard = (pile, index, card) => {
@@ -189,6 +181,7 @@ export default function Solitaire() {
         <Slot cards={state.stock} label="산" onClick={() => setState(draw(state))} />
         <Slot cards={state.waste} label="뽑은 카드"
           held={isHeld('waste', state.waste.length - 1)}
+          lifted={isLifted('waste', state.waste.length - 1)}
           onClick={() => {
             const top = state.waste.length - 1
             if (top >= 0) clickCard('waste', top, state.waste[top])
@@ -223,7 +216,7 @@ export default function Solitaire() {
                 onDoubleClick={() => card.faceUp && autoSend(`t${col}`)}
                 aria-pressed={card.faceUp ? isHeld(`t${col}`, i) : undefined}
                 aria-label={`작업 더미 ${col + 1}, ${cardName(card)}`}>
-                <span className={`sol-card${card.faceUp ? '' : ' sol-card-back'}${isHeld(`t${col}`, i) ? ' sol-card-held' : ''}`}>
+                <span className={`sol-card${card.faceUp ? '' : ' sol-card-back'}${isHeld(`t${col}`, i) ? ' sol-card-held' : ''}${isLifted(`t${col}`, i) ? ' sol-lifted' : ''}`}>
                   {card.faceUp ? <CardFace card={card} /> : null}
                 </span>
               </button>
@@ -231,6 +224,17 @@ export default function Solitaire() {
           </div>
         ))}
       </div>
+
+      {/* 손가락을 따라다니는 유령. 창 밖 좌표라 fixed 다. 마우스도 같은 유령을 쓴다. */}
+      {drag && lifted.length > 0 && (
+        <div className="sol-ghost" style={{ left: drag.x - drag.ox, top: drag.y - drag.oy, width: drag.w }} aria-hidden="true">
+          {lifted.map((card, i) => (
+            <span key={card.id} className="sol-card sol-card-held sol-ghost-card" style={{ top: i * 22 }}>
+              <CardFace card={card} />
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
