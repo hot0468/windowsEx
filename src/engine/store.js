@@ -12,7 +12,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited', 'traces']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -298,6 +298,8 @@ export const useGame = create((set, get) => ({
   visited: restored?.visited ?? [],
   // 이 자리의 전 사용자가 남긴 흔적 중 본 것. 메모 서버의 끓긴 문장이 이걸로 이어진다.
   traces: restored?.traces ?? {},
+  // 탐색기 보기. 'icons' | 'details'. 창을 닫았다 열어도 그대로다.
+  explorerView: restored?.explorerView ?? 'icons',
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -850,6 +852,7 @@ export const useGame = create((set, get) => ({
   noteVisit: (url, title) => set((s) => ({
     visited: [{ url, title, day: s.day }, ...s.visited.filter((v) => v.url !== url)].slice(0, VISITS)
   })),
+  setExplorerView: (view) => set({ explorerView: view }),
   sawTrace: (key) => set((s) => (s.traces[key] ? s : { traces: { ...s.traces, [key]: true } })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
@@ -2336,6 +2339,133 @@ export function noteOpens(scenario, { digging = {}, traces = {} } = {}) {
   if (!n?.traces) return false
   const seen = [digging.asked, digging.found, ...Object.keys(n.traces).map((k) => traces[k])]
   return seen.filter(Boolean).length >= (n.opens ?? 3)
+}
+
+// ── 파일 속성 ──────────────────────────────────────────────────────────
+// 탐색기의 '자세히' 보기와 속성 창이 읽는 것들. 시나리오 파일에는 날짜도
+// 크기도 없다 — 몇 개만 적혀 있고(사진 열세 장, 자동복구 문서), 나머지는
+// 이름과 폴더에서 짐작하거나 id 로 지어낸다. 지어낸 값은 같은 파일이면 늘
+// 같다. 열 때마다 달라지면 그게 더 가짜다.
+
+const GAME_YEAR = 2026
+
+const hashOf = (s) => {
+  let h = 2166136261
+  for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0
+  return h
+}
+const pad2 = (n) => String(n).padStart(2, '0')
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+// 'YYYY-MM-DD HH:MM[:SS]' 또는 'YYYY-MM-DD' 를 조각으로.
+export function parseStamp(text) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(String(text ?? '').trim())
+  if (!m) return null
+  return { y: +m[1], m: +m[2], d: +m[3], hh: m[4] === undefined ? 9 : +m[4], mm: m[5] === undefined ? 0 : +m[5], ss: m[6] === undefined ? 0 : +m[6] }
+}
+
+// 수정한 날짜. 적혀 있으면 그것, 아니면 이름의 날짜(20231108 · _0705), 아니면
+// 폴더나 이름의 연도, 아니면 이번 여름 어딘가. 시각은 근무 시간 안에서 지어낸다.
+export function fileStamp(file, path = []) {
+  const said = parseStamp(file?.date)
+  if (said) return said
+  const h = hashOf(file?.id ?? file?.name ?? '')
+  const hh = 9 + (h % 10)
+  const mm = (h >>> 4) % 60
+  const ss = (h >>> 10) % 60
+  const name = String(file?.name ?? '')
+  let m = /(20\d\d)(\d\d)(\d\d)/.exec(name)
+  if (m) return { y: +m[1], m: +m[2], d: +m[3], hh, mm, ss }
+  m = /_(\d\d)(\d\d)(?:\D|$)/.exec(name)
+  if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= MONTH_DAYS[+m[1] - 1]) {
+    return { y: GAME_YEAR, m: +m[1], d: +m[2], hh, mm, ss }
+  }
+  const year = [...path, name].map((p) => /(20\d\d)/.exec(p)?.[1]).filter(Boolean).map(Number).pop()
+  if (year && year !== GAME_YEAR) {
+    const mo = 1 + ((h >>> 16) % 12)
+    return { y: year, m: mo, d: 1 + ((h >>> 20) % MONTH_DAYS[mo - 1]), hh, mm, ss }
+  }
+  // 이번 여름. 복귀 주(8/23) 전에 끝난다 — 휴가 중에 고친 파일은 없다.
+  const day = (h >>> 8) % 80            // 6/1 ~ 8/19
+  const mo = day < 30 ? 6 : day < 61 ? 7 : 8
+  const d = day < 30 ? day + 1 : day < 61 ? day - 29 : day - 60 + 1
+  return { y: GAME_YEAR, m: mo, d, hh, mm, ss }
+}
+
+// 만든 날짜. 적혀 있으면 그것, 아니면 수정한 날짜와 같다 — 한 번 쓰고 만 파일이 대부분이다.
+export const fileCreated = (file, path = []) => parseStamp(file?.created) ?? fileStamp(file, path)
+
+// 게임 달력의 요일. 첫날(8월 23일 (월))을 기준으로 앞뒤로 센다 — 실제 2026년과
+// 다르므로 Date.getDay 를 그대로 쓰면 달력 앱과 어긋난다.
+const WEEK = ['일', '월', '화', '수', '목', '금', '토']
+export function gameWeekday(scenario, { y, m, d }) {
+  const a = /(\d+)월 (\d+)일 \((.)\)/.exec(scenario?.days?.[0]?.date ?? '')
+  if (!a) return WEEK[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]
+  const anchor = Date.UTC(GAME_YEAR, +a[1] - 1, +a[2])
+  const diff = Math.round((Date.UTC(y, m - 1, d) - anchor) / 86400000)
+  return WEEK[(((WEEK.indexOf(a[3]) + diff) % 7) + 7) % 7]
+}
+
+// '2026년 7월 22일 수요일, 오후 11:32:10' — 속성 창의 그 표기.
+export function fmtStampLong(scenario, st) {
+  const ap = st.hh < 12 ? '오전' : '오후'
+  const h12 = st.hh % 12 === 0 ? 12 : st.hh % 12
+  return `${st.y}년 ${st.m}월 ${st.d}일 ${gameWeekday(scenario, st)}요일, ${ap} ${h12}:${pad2(st.mm)}:${pad2(st.ss)}`
+}
+// '2026-07-22 오후 11:32' — 목록의 그 표기.
+export function fmtStampShort(st) {
+  const ap = st.hh < 12 ? '오전' : '오후'
+  const h12 = st.hh % 12 === 0 ? 12 : st.hh % 12
+  return `${st.y}-${pad2(st.m)}-${pad2(st.d)} ${ap} ${h12}:${pad2(st.mm)}`
+}
+
+const ext = (file) => (file?.image ? 'jpg' : (String(file?.name ?? '').match(/\.([a-z0-9]+)$/i)?.[1] ?? '').toLowerCase())
+
+// 종류. 윈도우가 붙이는 이름 그대로.
+export function fileKind(file) {
+  if (file?.children) return '파일 폴더'
+  return {
+    jpg: 'JPG 파일', hwp: '한글 문서', pdf: 'PDF 파일', txt: '텍스트 문서', xlsx: 'Microsoft Excel 워크시트',
+    pptx: 'Microsoft PowerPoint 프레젠테이션', exe: '응용 프로그램', dcx: 'DCX 파일'
+  }[ext(file)] ?? '파일'
+}
+
+// 크기(바이트). 설치 파일은 마법사가 말하는 크기, 글은 글자 수, 나머지는 종류에 맞게 지어낸다.
+export function fileSize(scenario, file) {
+  if (!file || file.children) return null
+  const h = hashOf(file.id ?? file.name)
+  const between = (lo, hi) => lo + (h % (hi - lo))
+  const program = scenario?.programs?.[file.program]
+  const said = /(\d+(?:\.\d+)?)\s*(KB|MB)/i.exec(program?.size ?? '')
+  if (said) return Math.round(+said[1] * (said[2].toUpperCase() === 'MB' ? 1048576 : 1024)) + (h % 700)
+  switch (ext(file)) {
+    case 'jpg': return between(900000, 4800000)
+    case 'exe': return between(2000000, 90000000)
+    case 'xlsx': return between(18000, 220000)
+    case 'pptx': return between(400000, 3800000)
+    case 'hwp': case 'pdf': case 'dcx': return between(38000, 900000)
+    default: return new TextEncoder().encode(file.content ?? '').length || between(200, 900)
+  }
+}
+
+// '190KB' — 윈도우처럼 KB 는 올림, MB 부터 소수 한 자리.
+export function fmtSize(bytes) {
+  if (bytes === null || bytes === undefined) return ''
+  if (bytes < 1024 * 1000) return `${Math.max(1, Math.ceil(bytes / 1024))}KB`
+  return `${(bytes / 1048576).toFixed(bytes >= 100 * 1048576 ? 0 : 1)}MB`
+}
+export const fmtBytes = (bytes) => `${bytes.toLocaleString('ko-KR')} 바이트`
+
+// 위치. 이 PC 의 자기 폴더가 C:\Users\<이름> 아래 있고, 폰은 이 PC 에 붙은 장치다.
+export function fileLocation(scenario, path = []) {
+  const me = scenario?.player?.name ?? '사용자'
+  const [root, ...rest] = path
+  const tail = rest.length ? '\\' + rest.join('\\') : ''
+  if (root === '로컬 디스크 (C:)') return 'C:' + (tail || '\\')
+  if (root === '휴지통') return 'C:\\$Recycle.Bin' + tail
+  if (root === '휴대폰') return '이 PC\\휴대폰\\내부 저장소' + tail
+  if (root === '바탕화면') return `C:\\Users\\${me}\\바탕 화면` + tail
+  return `C:\\Users\\${me}\\${root ?? ''}` + tail
 }
 
 export const MIN_SIZE = { w: 360, h: 220 }

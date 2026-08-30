@@ -2158,3 +2158,49 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 /* 마치기 버튼을 감싸는 칸. 버튼이 비활성일 때 툴팁을 대신 든다. */
 .pg-close-wrap { display: block; }
 .pg-close-wrap .pg-close { width: 100%; }
+
+/* ── 탐색기 자세히 보기 ── */
+.ex-list { display: block; padding: 0; }
+.ex-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ex-table th { position: sticky; top: 0; z-index: 1; padding: 6px 10px; border-bottom: 1px solid #e6e8ee;
+  background: #fff; color: #666; font-weight: 400; text-align: left; white-space: nowrap; }
+.ex-table th + th, .ex-table td + td { border-left: 1px solid #f0f1f5; }
+.ex-table td { padding: 5px 10px; white-space: nowrap; color: #333; }
+.ex-table td:first-child { display: flex; align-items: center; gap: 8px; min-width: 0; white-space: normal; word-break: break-all; }
+.ex-table .num { text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+.ex-table td:nth-child(2) { color: #666; font-variant-numeric: tabular-nums; }
+.ex-table tbody tr { cursor: default; }
+.ex-table tbody tr:hover { background: #e5f1fb; }
+.ex-table tr.cut { opacity: .5; }
+.ex-table tr.dim { opacity: .55; }
+.ex-table tr.ex-gone td { color: #b3261e; }
+.ex-table tr.ex-gone em { margin-left: 8px; color: #b3261e; font-style: normal; font-size: 11px; }
+.ex-table .ex-more { margin-left: auto; }
+
+/* ── 속성 창 ── 윈도우의 그 창. 탐색기 창 안에 뜬다. */
+.fp-catch { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(20,25,40,.18); }
+.fp { width: min(380px, 94%); max-height: 96%; overflow: auto; border-radius: 8px; background: #f3f3f3; color: #1a1c24;
+  box-shadow: 0 14px 40px rgba(0,0,0,.35); border: 1px solid rgba(0,0,0,.15); font-size: 12.5px; }
+.fp-title { display: flex; align-items: center; justify-content: space-between; padding: 9px 6px 9px 12px; background: #fff; }
+.fp-title button { display: grid; place-items: center; width: 28px; height: 24px; border-radius: 4px; color: #333; }
+.fp-title button:hover { background: #e81123; color: #fff; }
+.fp-tabs { display: flex; gap: 2px; padding: 8px 8px 0; background: #fff; border-bottom: 1px solid #d9d9d9; }
+.fp-tabs span { padding: 5px 9px; border: 1px solid transparent; border-bottom: none; color: #555; }
+.fp-tabs span.on { background: #f3f3f3; border-color: #d9d9d9; margin-bottom: -1px; color: #1a1c24; }
+.fp-body { padding: 16px 18px 6px; }
+.fp-body hr { border: none; border-top: 1px solid #d9d9d9; margin: 12px 0; }
+.fp-name { display: flex; align-items: center; gap: 12px; }
+.fp-name-box { flex: 1; padding: 6px 8px; border: 1px solid #c8c8c8; background: #fff; word-break: break-all; }
+.fp dl { margin: 0; display: grid; gap: 9px; }
+.fp dl > div { display: flex; align-items: center; gap: 10px; }
+.fp dt { width: 108px; flex-shrink: 0; color: #333; }
+.fp dd { margin: 0; display: flex; align-items: center; gap: 6px; min-width: 0; color: #333; user-select: text; }
+.fp-path { word-break: break-all; }
+.fp-change { margin-left: auto; padding: 4px 12px; border: 1px solid #c8c8c8; border-radius: 3px; background: #fdfdfd; color: #888; font-size: 12px; cursor: default; }
+.fp-attrs { display: flex; align-items: center; gap: 14px; }
+.fp-attrs label { display: flex; align-items: center; gap: 4px; color: #333; }
+.fp-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px 14px; }
+.fp-btn { min-width: 74px; padding: 5px 10px; border: 1px solid #c8c8c8; border-radius: 3px; background: #fdfdfd; color: #1a1c24; font-size: 12.5px; }
+.fp-btn:hover:not(:disabled) { background: #e5f1fb; border-color: #0067c0; }
+.fp-btn:disabled { color: #aaa; cursor: default; }
+.fp-ok { border-color: #0067c0; box-shadow: inset 0 0 0 1px #0067c0; }
