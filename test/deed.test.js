@@ -261,6 +261,14 @@ describe('행동 요청의 스펙', () => {
     }
   })
 
+  it('행동 요청의 대사는 다른 요청의 정답을 말하지 않는다', () => {
+    const accepts = everyAccept().filter((a) => a.length > 2)
+    for (const r of scenario.pool.requests.filter((r) => r.beat.ask.deed)) {
+      const said = r.beat.lines.join(' ')
+      for (const a of accepts) expect(said.includes(a), r.id + ' says ' + a).toBe(false)
+    }
+  })
+
   it('메일 목표의 수신자는 그날의 fetch 와도, 서로도 겹치지 않는다', () => {
     const tos = [...scenario.days.map((d) => d.fetch?.to), ...scenario.objectives.filter((o) => o.mail).map((o) => o.mail.to)]
       .filter(Boolean).map((t) => t.replace(/[,\s]/g, '').toLowerCase())
