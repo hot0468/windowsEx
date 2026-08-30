@@ -108,6 +108,8 @@ export default function Messenger({ source }) {
   const setTyping = useGame((s) => s.setTyping)
   const say = useGame((s) => s.say)
   const sayBack = useGame((s) => s.sayBack)
+  const restored = useGame((s) => s.restored)
+  const restoreFile = useGame((s) => s.restoreFile)
   const branch = useGame((s) => s.branches)
   const setBranch = useGame((s) => s.setBranch)
   const pendingAsks = useGame((s) => s.pendingAsks)
@@ -261,7 +263,7 @@ export default function Messenger({ source }) {
     }, 400)
   }
 
-  const speak = (lines) => sayBack(thread.id, thread.name, lines)
+  const speak = (lines, attach) => sayBack(thread.id, thread.name, lines, undefined, attach)
 
   const reactTo = (key) => {
     const hit = thread.reactions?.find(
@@ -272,7 +274,7 @@ export default function Messenger({ source }) {
     if (hit.next) setBranch(thread.id, hit.next)
     if (hit.ask) setAsk(thread.id, hit.ask)
     if (hit.grants) grant(hit.grants)
-    speak(hit.reply)
+    speak(hit.reply, hit.attach)
   }
 
   // Anything the player has to look up gets typed in, so picking from a list
@@ -489,7 +491,19 @@ export default function Messenger({ source }) {
                     {date}
                     <div className="msg-row">
                       <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
-                      <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
+                      {/* 받은 파일. 메일의 첨부처럼 저장을 누르면 다운로드 폴더에 생긴다. */}
+                      {msg.fileId ? (
+                        <div className="bubble them file">
+                          {opens && <b>{msg.from}</b>}
+                          <span className="bubble-file"><Paperclip size={13} strokeWidth={2} />{msg.file}<i>{msg.size}</i></span>
+                          <button className="bubble-save" disabled={!!restored[msg.fileId]}
+                                  onClick={() => restoreFile(msg.fileId)}>
+                            {restored[msg.fileId] ? '다운로드 폴더에 저장됨' : '저장'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
+                      )}
                     </div>
                   </Fragment>
                 )

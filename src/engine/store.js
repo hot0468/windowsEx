@@ -1081,12 +1081,16 @@ export const useGame = create((set, get) => ({
   // The other side writes for a beat, then answers a line at a time. The
   // timers live here rather than in the window, so a reply already started
   // finishes even if the player closes the messenger halfway through it.
-  sayBack: (threadId, from, lines, gap = SAY_GAP) => {
+  // 말 끝에 파일을 붙여 보낼 수 있다. 메일 첨부와 같은 모양({ name, size, fileId })이고,
+  // 받는 쪽이 저장을 누르기 전에는 디스크에 없다(fsView 의 attached 규칙).
+  sayBack: (threadId, from, lines, gap = SAY_GAP, attach = null) => {
     get().setTyping(threadId, true)
     lines.forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
       if (i === lines.length - 1) get().setTyping(threadId, false)
     }, SAY_FIRST + i * gap))
+    if (attach) setTimeout(() => get().pushMessage(threadId, { from, file: attach.name, size: attach.size, fileId: attach.fileId }),
+      SAY_FIRST + lines.length * gap)
   },
   // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
   // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
