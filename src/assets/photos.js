@@ -11,6 +11,9 @@ const NEWS = import.meta.glob('./news/*.webp', { eager: true, query: '?url', imp
 // Photographs with a mahjong tile somewhere in the frame. Missing until the
 // pictures are dropped in — everything around them works either way.
 const TILES = import.meta.glob('./tiles/*.webp', { eager: true, query: '?url', import: 'default' })
+// 폰 카메라의 렌즈에 보이는 것. 없으면 뷰파인더가 어두운 채로 남는다 —
+// 사진을 넣는 것은 언제든 나중에 할 수 있는 일이다.
+const CAMERA = import.meta.glob('./camera/*.webp', { eager: true, query: '?url', import: 'default' })
 
 export const photoOf = (id) => PHOTOS[`./avatars/${id}.webp`]
 export const faceOf = (id) => FACES[`./faces/${id}.svg`]
@@ -19,4 +22,5 @@ export const shotOf = (name) => SHOTS[`./shots/${name}.webp`] ?? TILES[`./tiles/
 export const tileShot = (name) => TILES[`./tiles/${name}.webp`]
 // a headline's thumbnail is named after the article id
 export const newsShot = (id) => NEWS[`./news/${id}.webp`]
+export const cameraShot = (name) => CAMERA[`./camera/${name}.webp`]
 export const wallpaper = WALLPAPER['./wallpaper.webp']

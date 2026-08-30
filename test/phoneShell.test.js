@@ -84,7 +84,8 @@ describe('폰 홈 앱 목록', () => {
 
   it('폰 저장소가 앱으로 올라온다', () => {
     const ids = phoneApps({}).map((a) => a.id)
-    expect(ids).toContain('photos')
+    // 사진은 탐색기가 아니라 갤러리가 연다 — 폰에서 사진은 격자로 본다.
+    expect(ids).toContain('gallery')
     expect(ids).toContain('files')
   })
 
@@ -156,11 +157,17 @@ describe('폰 홈 앱 목록', () => {
   // 사진·파일은 fs.휴대폰만 봐야 한다. roots가 없으면 FileExplorer가
   // fs의 6개 루트를 전부 보여줘, '사진'에서 한 번에 로컬 디스크 (C:)로
   // 건너뛸 수 있었다.
-  it('사진·파일은 휴대폰 루트만 본다', () => {
-    const photos = phoneApps({}).find((a) => a.id === 'photos')
+  it('파일은 휴대폰 루트만 본다', () => {
     const files = phoneApps({}).find((a) => a.id === 'files')
-    expect(photos.props.roots).toEqual(['휴대폰'])
     expect(files.props.roots).toEqual(['휴대폰'])
+  })
+
+  // 갤러리는 탐색기가 아니라 제 화면을 가진다 — 폴더를 건너다닐 길이 아예
+  // 없으므로 로컬 디스크로 새어 나갈 수도 없다.
+  it('갤러리는 탐색기를 열지 않는다', () => {
+    const gallery = phoneApps({}).find((a) => a.id === 'gallery')
+    expect(gallery.app).toBe('gallery')
+    expect(APPS.gallery.phoneOnly).toBe(true)
   })
 
   // 내 PC 드라이브는 PC의 저장소가 마운트된 것이지 폰 저장소가 아니다.

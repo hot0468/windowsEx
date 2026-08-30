@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gameClock, useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { APPS, knownWindows, phoneApps } from '../apps/registry.jsx'
 import PhoneApp from './PhoneApp.jsx'
@@ -98,7 +98,8 @@ function Home({ drawer, onDrawer }) {
     // 거기 있고, 데스크톱과 폰이 같은 저장 파일을 공유하기 때문이다.
     openWindow(a.app, a.props)
     pushScreen('app:' + a.id)
-    if (drawer) onDrawer(false)
+    // 서랍은 닫지 않는다 — 서랍에서 연 앱을 뒤로가기로 나오면 서랍이 그대로
+    // 있어야 다음 앱을 이어서 연다. 홈 버튼은 서랍까지 걷는다.
   }
 
   // 서랍은 밀어서 열고 밀어서 닫는다. 시작한 곳의 y 하나만 기억하면 된다.
@@ -164,8 +165,10 @@ function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade, 
       </button>
       {/* 알림창이 내려와 있으면 뒤로는 그것부터 걷는다 — 안드로이드와 같다. */}
       <button className="pn-key"
-              onClick={recents ? onRecents : shade ? onShade : drawer ? () => onDrawer(false) : back}
-              disabled={!recents && !shade && !drawer && !screens.length} aria-label="뒤로">
+              onClick={recents ? onRecents : shade ? onShade
+                : drawer && !screens.length ? () => onDrawer(false) : back}
+              disabled={!recents && !shade && !(drawer && !screens.length) && !screens.length}
+              aria-label="뒤로">
         <ChevronLeft size={20} strokeWidth={2.2} />
       </button>
     </nav>
@@ -221,6 +224,10 @@ export default function PhoneShell() {
   const [shade, setShade] = useState(false)
   // 앱 서랍. 홈에서 아래에서 위로 밀면 열린다.
   const [drawer, setDrawer] = useState(false)
+  // 뒤로가기 처리기는 한 번만 붙으므로 그때의 상태를 기억하지 못한다 —
+  // 지금 값을 읽을 수 있게 거울 하나를 둔다.
+  const drawerRef = useRef(false)
+  drawerRef.current = drawer
   // 닫힐 때는 올라가는 동안 한 겹 더 산다. 내려올 땐 CSS 애니메이션 하나면
   // 되지만, 사라지는 쪽은 지우기 전에 기다려 줘야 보인다.
   const [lifting, setLifting] = useState(false)
@@ -241,6 +248,13 @@ export default function PhoneShell() {
       // 통화 중에는 뒤로가기도 막는다 — 화면은 통화가 덮고 있는데 그 뒤에서
       // 스택만 벗겨지면, 끊고 나왔을 때 엉뚱한 자리에 서 있게 된다.
       if (s.call) { window.history.pushState(null, ''); return }
+      // 홈인데 서랍이 열려 있으면 서랍부터 걷는다 — 아직 나갈 자리가 아니다.
+      if (!s.screens.length && drawerRef.current) {
+        drawerRef.current = false
+        setDrawer(false)
+        window.history.pushState(null, '')
+        return
+      }
       if (!s.screens.length) return          // 홈이면 진짜로 나간다
       const top = s.screens[s.screens.length - 1]
       s.popScreen()

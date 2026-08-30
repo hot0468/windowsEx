@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import { gameClock, useGame } from '../engine/store.js'
+import { cameraShot } from '../assets/photos.js'
 import { Camera as CameraIcon, Image } from '../icons/line.jsx'
 
 // 폰 카메라. 실제 렌즈가 없으므로 '무엇을 찍었는지'를 남긴다 — PC 의 화면
 // 캡처와 같은 방식이다. 이 앱의 요점은 찍는 것이 아니라, 찍은 것을 톡으로
 // 보낼 수 있는 파일로 만드는 데 있다.
+// 무엇을 찍는가. id 는 뷰파인더에 깔 사진의 이름이기도 하다 —
+// src/assets/camera/<id>.webp 를 넣어 두면 그 사진이 렌즈에 보이고, 찍은
+// 사진에도 그대로 들어간다. 없으면 어두운 화면으로 남는다(둘 다 동작한다).
 const SUBJECTS = [
   ['desk', '책상 위'],
   ['screen', '모니터 화면'],
@@ -33,6 +37,7 @@ export default function Camera() {
   }, [shot])
 
   const label = SUBJECTS.find(([id]) => id === subject)?.[1]
+  const lens = cameraShot(subject)
 
   return (
     <div className="cam">
@@ -44,6 +49,9 @@ export default function Camera() {
           </div>
         ) : (
           <>
+            {/* 렌즈에 보이는 것. 사진을 넣어 두면 그것이 보이고, 없으면
+                어두운 화면 그대로다. */}
+            {lens && <img className="cam-lens" src={lens} alt="" draggable="false" />}
             <div className="cam-grid" aria-hidden="true"><i /><i /><i /><i /></div>
             <div className="cam-meta">
               <span>{day}일차 {clock.time}</span>
@@ -62,16 +70,12 @@ export default function Camera() {
 
       <div className="cam-bar">
         <button className="cam-roll" aria-label="갤러리 열기"
-                onClick={() => {
-                  const props = { startFolder: ['휴대폰', '갤러리'], roots: ['휴대폰'] }
-                  openWindow('explorer', props)
-                  pushScreen('app:photos')
-                }}>
+                onClick={() => { openWindow('gallery'); pushScreen('app:gallery') }}>
           <Image size={20} strokeWidth={1.8} />
           <em>{photos.length}</em>
         </button>
         <button className="cam-shutter" aria-label="사진 찍기"
-                onClick={() => setShot(takePhoto(label))}>
+                onClick={() => setShot(takePhoto(label, subject))}>
           <span />
         </button>
         <span className="cam-space" />

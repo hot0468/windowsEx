@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame, dreamGallery, findFile, fsView, galleryOf } from '../engine/store.js'
-import { fileImage } from '../assets/photos.js'
+import { cameraShot, fileImage } from '../assets/photos.js'
 import { APPS } from './registry.jsx'
 import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
 
@@ -32,7 +32,8 @@ export default function Viewer({ fileId }) {
   const gallery = galleryOf(fs, fileId, showHidden)
   const at = gallery.findIndex((f) => f.id === shown)
   const file = findFile(fs, shown)
-  const src = file && fileImage(file.image)
+  // 카메라로 찍은 것은 렌즈에 보이던 사진(있으면)을 그대로 쓴다.
+  const src = file && (fileImage(file.image) ?? cameraShot(file.shot?.lens))
 
   // Opening a picture opens the folder it is in, so the arrow keys work without
   // clicking the image first.
@@ -79,7 +80,7 @@ export default function Viewer({ fileId }) {
       <div className="vw-canvas">
         {/* 캡처에는 그림이 없다. 그때 맨 앞에 무엇이 있었고 몇 시였는지를
             창 모양으로 그린다 — 화면을 찍었다는 사실 자체가 내용이다. */}
-        {file.shot ? (
+        {file.shot && !src ? (
           <div className="vw-shot">
             <div className="vw-shot-bar">
               <span className="vw-shot-dots"><i /><i /><i /></span>

@@ -869,3 +869,27 @@
 .mp-sheet-go { width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 12px;
                background: var(--p-accent); color: #fff; font: inherit; font-size: 13.5px;
                font-weight: 600; cursor: pointer; }
+
+/* 갤러리. 찍은 것과 원래 있던 것이 한 격자에 쌓인다. */
+.gl { height: 100%; display: flex; flex-direction: column; background: var(--p-bg); }
+.gl-tabs { display: flex; gap: 8px; flex: none; padding: 10px 12px; }
+.gl-tab { padding: 7px 13px; border: 0; border-radius: 999px; background: var(--p-surface);
+          color: var(--p-mute); font: inherit; font-size: 12.5px; cursor: pointer;
+          box-shadow: 0 1px 3px rgba(16, 19, 26, .06); }
+.gl-tab.on { background: var(--p-accent); color: #fff; }
+.gl-tab em { font-style: normal; opacity: .7; margin-left: 4px; }
+.gl-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr);
+           gap: 3px; padding: 0 3px 8px; align-content: start; }
+.gl-cell { position: relative; aspect-ratio: 1; padding: 0; border: 0; overflow: hidden;
+           background: #e7e9ee; cursor: pointer; }
+.gl-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gl-shot { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 3px; padding: 6px; color: #55606f; background: #f1f3f7; }
+.gl-shot b { font-size: 11.5px; font-weight: 600; color: var(--p-ink); }
+.gl-shot i { font-style: normal; font-size: 10px; color: var(--p-mute); }
+.gl-gone { position: absolute; inset: 0; display: grid; place-items: center; padding: 8px;
+           color: #b0553f; font-size: 10.5px; line-height: 1.4; text-align: center; background: #f4eeec; }
+.gl-none { padding: 26px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
+
+/* 카메라 렌즈에 사진이 깔리면 그 위에 격자와 시각이 얹힌다. */
+.cam-lens { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

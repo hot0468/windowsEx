@@ -1010,7 +1010,7 @@ export const useGame = create((set, get) => ({
   // 폰 카메라. 자산이 있는 사진을 만들어 내지는 못하므로, PC 의 화면 캡처와
   // 같은 방식으로 '무엇을 언제 찍었는지'를 남긴다 — 톡으로 보낼 수 있는 파일이
   // 되는 것이 이 기능의 요점이다.
-  takePhoto: (subject = null) => {
+  takePhoto: (subject = null, lens = null) => {
     const s = get()
     const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
     const n = s.photos.length + 1
@@ -1018,7 +1018,10 @@ export const useGame = create((set, get) => ({
       id: 'cam_' + n,
       name: `IMG_9${String(n).padStart(3, '0')}.jpg`,
       date: `${s.scenario.days[s.day - 1]?.date ?? ''} ${clock.time}`,
-      shot: { title: subject, at: clock.time, day: s.day, camera: true }
+      // lens 는 찍을 때 렌즈에 보이던 것의 이름이다. 그 자산이 있으면 화면이
+      // 실제 사진을 그리고, 없으면 '무엇을 언제 찍었는지'만 남는다 —
+      // 어느 쪽이든 열리고, 어느 쪽이든 톡으로 보낼 수 있다.
+      shot: { title: subject, at: clock.time, day: s.day, camera: true, lens }
     }
     set({ photos: [...s.photos, photo] })
     play('click')
