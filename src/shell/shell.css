@@ -2154,3 +2154,7 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 /* 예약 확인 중. 확정 화면과 같은 높이를 잡아, 넘어갈 때 페이지가 뛰지 않는다. */
 .pl-wait { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 180px; color: #666; font-size: 13px; }
 .pl-wait .spinner { border-color: #dfe3ea; border-top-color: #2f6fd0; }
+
+/* 마치기 버튼을 감싸는 칸. 버튼이 비활성일 때 툴팁을 대신 든다. */
+.pg-close-wrap { display: block; }
+.pg-close-wrap .pg-close { width: 100%; }
