@@ -198,24 +198,11 @@
   align-items: center;
   gap: 4px;
   height: 52px;
-  padding: 0 8px 0 4px;
+  padding: 0 16px;
   background: var(--p-surface);
   border-bottom: 1px solid var(--p-line);
   flex: none;
 }
-.pa-back {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 12px;
-  background: none;
-  color: var(--p-ink);
-  cursor: pointer;
-  transition: transform 90ms ease-out, background 90ms ease-out;
-}
-.pa-back:active { transform: scale(.9); background: rgba(16, 19, 26, .05); }
 .pa-title {
   display: flex;
   align-items: center;

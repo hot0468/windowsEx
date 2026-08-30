@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useGame } from '../engine/store.js'
 import Icon from '../icons/Icon.jsx'
-import { ChevronLeft } from '../icons/line.jsx'
 
 // 엣지 스와이프로 인식할 시작 영역. 이보다 안쪽에서 시작한 드래그는 앱
 // 내용의 스크롤이지 뒤로가기가 아니다.
@@ -43,10 +42,10 @@ export default function PhoneApp({ title, icon, onBack, children }) {
          onPointerMove={onPointerMove}
          onPointerUp={onPointerUp}
          onPointerCancel={onPointerUp}>
+      {/* 뒤로가기 단추는 아래 내비바에 있다 — 같은 일을 하는 단추를 화면에
+          둘 둘 이유가 없다. 여기서는 제목만 서고, 뒤로는 내비바와 엣지
+          스와이프가 맡는다. */}
       <header className="pa-head">
-        <button className="pa-back" onClick={back} aria-label="뒤로">
-          <ChevronLeft size={22} strokeWidth={1.8} />
-        </button>
         <span className="pa-title">
           {icon && <Icon name={icon} size={17} />}{title}
         </span>

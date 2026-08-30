@@ -1302,7 +1302,7 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
   .clear-overlay.ot > *, .clear-overlay.quit > *, .clear-overlay.quit .quit-score b { animation: none; }
   /* 폰 셸의 모션도 전부 여기서 멈춘다. */
   .phone-app { animation: none; }
-  .ph-icon, .pa-back, .pa-bar, .ph-day-end, .ph-menu-btn { transition: none; }
+  .ph-icon, .pa-bar, .ph-day-end, .ph-menu-btn { transition: none; }
 }
 .ot-count { color: #e0a25e; font-size: 13px; }
 /* the two choices are two sentences, and they get a line each */
