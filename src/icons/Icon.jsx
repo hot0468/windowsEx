@@ -1,4 +1,5 @@
 // Iconify fluent-color (MIT) — trash.svg is fluent-emoji, which has no fluent-color counterpart.
+import camera from './camera.svg'
 import chat from './chat.svg'
 import cmd from './cmd.svg'
 import doc from './doc.svg'
@@ -22,7 +23,7 @@ import xls from './xls.svg'
 import { fileImage } from '../assets/photos.js'
 import { fileOpener } from '../engine/store.js'
 
-const SRC = { chat, cmd, doc, folder, globe, hwp, image, mail, notepad, pdf, phone, ppt, settings, shield, trash, trophy, vpn, workchat, xls }
+const SRC = { camera, chat, cmd, doc, folder, globe, hwp, image, mail, notepad, pdf, phone, ppt, settings, shield, trash, trophy, vpn, workchat, xls }
 
 export default function Icon({ name, size = 16 }) {
   return <img className="icon" src={SRC[name]} width={size} height={size} alt="" draggable="false" />

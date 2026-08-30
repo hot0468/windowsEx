@@ -27,6 +27,11 @@ const read = () => pickShell({
   force: forced()
 })
 
+// 여는 손짓은 셸을 따른다. 데스크톱은 더블클릭이라는 관례가 있지만 폰에는
+// 더블탭이 없다 — 한 번 탭이 여는 동작이고, 두 번 탭은 확대로 읽힌다.
+export const openTap = (shell, open) =>
+  shell === 'phone' ? { onClick: open } : { onDoubleClick: open }
+
 export function useViewport() {
   const [shell, setShell] = useState(read)
   useEffect(() => {
@@ -39,4 +44,4 @@ export function useViewport() {
     }
   }, [])
   return shell
-}
+}

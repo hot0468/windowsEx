@@ -4,6 +4,7 @@ import {
 } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
+import { openTap, useViewport } from '../shell/useViewport.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Monitor, Search } from '../icons/line.jsx'
 
@@ -22,6 +23,8 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const [q, setQ] = useState('')
   const [menu, setMenu] = useState(null)
   const [viewOpen, setViewOpen] = useState(false)
+  // 폰에서는 한 번 탭이 연다 — 더블탭을 기다리면 아무것도 안 열리는 앱이 된다.
+  const shell = useViewport()
 
   const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
   const roots = only ?? Object.keys(fs)
@@ -116,7 +119,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
             {hits.map(({ file, trail }) => (
               <button key={file.id} className="ex-hit" {...(inTrash ? {} : fileDragProps(file))}
                       onContextMenu={onContext(file)}
-                      onDoubleClick={() => openWindow(fileOpener(file).app, { fileId: file.id })}>
+                      {...openTap(shell, () => openWindow(fileOpener(file).app, { fileId: file.id }))}>
                 <FileGlyph file={file} size={26} />
                 <span className="ex-hit-mid">
                   <span>{file.name}</span>
@@ -130,7 +133,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
             {entries.length === 0 && <div className="ex-empty">이 폴더는 비어 있습니다</div>}
             {folders.map((f) => (
               <button key={f.name} className={'ex-file' + (f.hidden ? ' dim' : '')}
-                      onDoubleClick={() => goTo([...nav.path, f.name])}>
+                      {...openTap(shell, () => goTo([...nav.path, f.name]))}>
                 <div className="glyph"><Icon name="folder" size={36} /></div>{f.name}
               </button>
             ))}
@@ -144,7 +147,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
               : (
                 <button key={f.id} className="ex-file" {...(inTrash ? {} : fileDragProps(f))}
                         onContextMenu={onContext(f)}
-                        onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                        {...openTap(shell, () => openWindow(fileOpener(f).app, { fileId: f.id }))}>
                   <div className="glyph"><FileGlyph file={f} size={36} photo={52} /></div>{f.name}
                 </button>
               )))}
