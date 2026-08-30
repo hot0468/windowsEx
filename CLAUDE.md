@@ -23,6 +23,7 @@
 - objective는 `id === grant`, 전역 유일. 파일 ask는 `files:[실존 id]` (accept와 배타).
 - 확장자는 hwp/txt/pptx/xlsx/exe/pdf만 (예외: `hosts`). xlsx `rows`는 열 수와 일치.
 - 숨김 폴더/파일 안에만 있는 답은 마지막 `no` 힌트에 **'숨긴 항목'**이라는 말이 있어야 한다 (보기 팝오버 토글 안내). 없으면 소프트락으로 간주해 테스트 실패.
+- **행동으로 푸는 ask**: `deed: <objective id>` (+ 마지막 단계면 `grants` 같은 값). accept 검사 면제 대신 그 objective에 `cell|mail|move|rename|upload` 스펙이 있어야 하고, 가리키는 파일·폴더·페이지·주소가 실존해야 한다 (`test/deed.test.js`). `attached` 파일은 쓰지 마라.
 
 ## 구조 요점
 
