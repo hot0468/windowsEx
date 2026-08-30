@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useViewport } from '../shell/useViewport.js'
 import { sortMails, useGame } from '../engine/store.js'
 import Compose from './Compose.jsx'
-import { ChevronDown, ChevronUp, Paperclip, PenLine, Search, Send, Star } from '../icons/line.jsx'
+import { ChevronDown, ChevronLeft, ChevronUp, Paperclip, PenLine, Search, Send, Star } from '../icons/line.jsx'
 
 export default function Mail() {
   const scenario = useGame((s) => s.scenario)
@@ -22,6 +23,8 @@ export default function Mail() {
   // 받은메일함 / 보낸메일함. 보낸 것을 다시 볼 길이 없으면, 거래처가
   // ‘그때 보내주신 것’을 말해도 맞추어 볼 수가 없다.
   const [box, setBox] = useState('in')
+  // 폰에서는 목록과 본문이 한 화면에 같이 설 자리가 없다 — 하나씩 본다.
+  const phone = useViewport() === 'phone'
   const sentMails = useGame((s) => s.sentMails)
 
   // 안 읽은 것이 위로. 읽고 나면 제 날짜 자리로 내려간다.
@@ -61,7 +64,8 @@ export default function Mail() {
   }
 
   return (
-    <div className="mail-layout">
+    <div className={'mail-layout' + (phone ? ' mail-phone' : '')}>
+      {(!phone || !mail) && (
       <div className="mail-list">
         <div className="ml-head">
           <button className="ml-write" onClick={() => { setSelected(null); setComposing(true); setSent(false) }}>
@@ -92,7 +96,9 @@ export default function Mail() {
           </div>
         ))}
       </div>
+      )}
 
+      {(!phone || mail) && (
       <div className="mail-detail">
         {!mail && (
           <div className="mail-empty">
@@ -104,6 +110,12 @@ export default function Mail() {
         {mail && (
           <>
             <div className="md-bar">
+              {/* 폰에서는 목록이 이 화면에 가려져 있다 — 돌아갈 길을 준다. */}
+              {phone && (
+                <button className="md-act md-back" onClick={() => setSelected(null)}>
+                  <ChevronLeft size={15} strokeWidth={2.1} />목록
+                </button>
+              )}
               {mail.canReply && !mail.sent && (
                 <button className="md-act" onClick={() => { setComposing(true); setSent(false) }}>답장</button>
               )}
@@ -168,6 +180,7 @@ export default function Mail() {
           </>
         )}
       </div>
+      )}
     </div>
   )
 }
