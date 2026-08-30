@@ -6,7 +6,7 @@ import { Check, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/l
 // 상단에서 내리는 알림창. 안드로이드의 그것처럼 오늘 할 일과 스위치가 같이
 // 산다 — 폰에는 데스크톱의 Progress도 트레이도 없으므로, 앱을 보고 있는
 // 동안 오늘 뭐가 남았는지 · VPN이 켜져 있는지 볼 곳이 여기밖에 없다.
-export default function PhoneShade({ onClose }) {
+export default function PhoneShade({ onClose, lifting = false }) {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
   const grants = useGame((s) => s.grants)
@@ -42,10 +42,10 @@ export default function PhoneShade({ onClose }) {
   }
 
   return (
-    <div className="ph-shade-wrap" onPointerDown={onClose}>
+    <div className={'ph-shade-wrap' + (lifting ? ' lifting' : '')} onPointerDown={onClose}>
       {/* 내린 것과 같은 손짓으로 올려 닫는다. 할 일 목록 안에서 시작한
           손짓은 목록 스크롤이므로 건드리지 않는다. */}
-      <div className="ph-shade"
+      <div className={'ph-shade' + (lifting ? ' lifting' : '')}
            onPointerDown={(e) => {
              e.stopPropagation()
              setGrab(e.target.closest?.('.ph-todo') ? null : e.clientY)

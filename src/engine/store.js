@@ -479,8 +479,10 @@ export const useGame = create((set, get) => ({
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
   currentApp: () => {
-    const [first] = get().screens
-    return first?.startsWith('app:') ? first.slice(4) : null
+    // 맨 위의 앱 화면. 첫 화면만 보면, 알림을 눌러 다른 앱 위에 앱을 열었을 때
+    // 밑에 깔린 앱이 계속 그려진다.
+    const key = [...get().screens].reverse().find((k) => k.startsWith('app:'))
+    return key ? key.slice(4) : null
   },
 
   openWindow: (app, props = {}, anew = false, forced = false) => {

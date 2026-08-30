@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending, scriptLeft
 } from './engine/store.js'
-import { APPS, knownWindows } from './apps/registry.jsx'
+import { APPS, knownWindows, phoneApps } from './apps/registry.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
@@ -40,6 +40,8 @@ function Toast() {
   const clearToast = useGame((s) => s.clearToast)
   const openWindow = useGame((s) => s.openWindow)
   const setOpenThread = useGame((s) => s.setOpenThread)
+  const pushScreen = useGame((s) => s.pushScreen)
+  const grants = useGame((s) => s.grants)
   const [leaving, setLeaving] = useState(false)
   // 토스트는 폰 셸(.phone) 바깥에 그려지므로 CSS 만으로는 폰인지 알 수 없다.
   // 폰에서는 안드로이드처럼 화면 위에서 내려오는 카드가 된다.
@@ -64,6 +66,15 @@ function Toast() {
            // 토스트가 가리키는 자리까지 열어 준다 — 다운로드 완료를 눌렀는데
            // 파일 탐색기가 첫 화면에서 멈추면 알림이 절반만 일한 셈이다.
            if (app) openWindow(toast.app, toast.props)
+           // 폰은 창을 그리지 않는다. 홈에 있는 앱(메신저·메일 …)이 여는 창은
+           // PhoneShell 의 창 감시가 일부러 건너뛰므로 — 홈에서 연 것과 두 겹으로
+           // 쌓이기 때문 — 알림으로 연 것은 여기서 그 앱 화면을 직접 올려야 한다.
+           // 이게 없으면 창만 열리고 화면은 그대로다.
+           if (phone && app) {
+             // 홈에 없는 앱(탐색기 같은)은 창 감시가 'win:' 으로 올려 준다.
+             const entry = phoneApps(grants).find((a) => a.app === toast.app)
+             if (entry) pushScreen('app:' + entry.id)
+           }
            clearToast()
          }}>
       <b>

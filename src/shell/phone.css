@@ -358,6 +358,12 @@
   animation: ph-shade-in .22s var(--p-ease);
 }
 @keyframes ph-shade-in { from { transform: translateY(-100%); } }
+/* 닫힐 때. 내려온 길을 그대로 되짚어 올라가고, 뒤에 깔린 그늘은 같이 걷힌다.
+   지우기 전에 이 시간(200ms)만큼 PhoneShell 이 기다려 준다. */
+.ph-shade.lifting { animation: ph-shade-out .2s var(--p-ease) forwards; }
+.ph-shade-wrap.lifting { animation: ph-shade-fade .2s linear forwards; }
+@keyframes ph-shade-out { to { transform: translateY(-100%); } }
+@keyframes ph-shade-fade { to { background: rgba(16, 19, 26, 0); } }
 .ph-tiles { display: flex; gap: 8px; flex: none; }
 .ph-tile {
   flex: 1;

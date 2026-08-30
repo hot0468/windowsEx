@@ -179,7 +179,14 @@ export default function PhoneShell() {
   // 상단에서 끌어내리는 알림창. 누르는 곳(pointerdown)의 y와 비교해 아래로
   // 끌면 열고, 그냥 톡 누르면(마우스로 보는 경우) 그것도 연다.
   const [shade, setShade] = useState(false)
+  // 닫힐 때는 올라가는 동안 한 겹 더 산다. 내려올 땐 CSS 애니메이션 하나면
+  // 되지만, 사라지는 쪽은 지우기 전에 기다려 줘야 보인다.
+  const [lifting, setLifting] = useState(false)
   const [grab, setGrab] = useState(null)
+  const closeShade = () => {
+    setLifting(true)
+    setTimeout(() => { setShade(false); setLifting(false) }, 200)
+  }
   const windows = useGame((s) => s.windows)
 
   // 안드로이드의 뒤로가기 제스처는 그대로 두면 게임을 나가버린다. 한 겹
@@ -271,7 +278,7 @@ export default function PhoneShell() {
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />
         </PhoneApp>
       )}
-      {shade && !sealed && <PhoneShade onClose={() => setShade(false)} />}
+      {shade && !sealed && <PhoneShade lifting={lifting} onClose={closeShade} />}
       {recents && (
         <Recents screens={screens} windows={windows} grants={grants}
                  onPick={(k) => { goScreen(k); setRecents(false) }}
@@ -282,7 +289,7 @@ export default function PhoneShell() {
       {!sealed && (
         <NavBar screens={screens} windows={windows} grants={grants}
                 recents={recents} onRecents={() => setRecents((v) => !v)}
-                shade={shade} onShade={() => setShade(false)} />
+                shade={shade} onShade={closeShade} />
       )}
     </div>
   )
