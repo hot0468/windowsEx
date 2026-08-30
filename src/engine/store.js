@@ -843,6 +843,16 @@ export const useGame = create((set, get) => ({
         (o.rename && placed[o.rename.file]?.name === o.rename.name)))
       .forEach((o) => grant(o.grant))
   },
+  uploadTo: (page, fileId) => {
+    set((s) => ({ uploaded: { ...s.uploaded, [page]: [...new Set([...(s.uploaded[page] ?? []), fileId])] } }))
+    get().checkUploaded()
+  },
+  checkUploaded: () => {
+    const { scenario, uploaded, grants, grant } = get()
+    scenario.objectives
+      .filter((o) => o.upload && !grants[o.grant] && (uploaded[o.upload.page] ?? []).includes(o.upload.file))
+      .forEach((o) => grant(o.grant))
+  },
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
   editCell: (fileId, sheet, r, c, value) => {

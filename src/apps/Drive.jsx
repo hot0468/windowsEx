@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, FolderOpen, LayoutGrid, List, Search } from '../icons/line.jsx'
-import { useGame } from '../engine/store.js'
+import { findFile, gameClock, useGame } from '../engine/store.js'
+import FileDialog from './FileDialog.jsx'
 import WikiDoc from './wikiDoc.jsx'
 
 // 사내 드라이브는 사내위키와 같은 문서를 담지만 위키가 아니다 — 팀이 파일을
@@ -34,6 +35,13 @@ export default function Drive({ site, path = '' }) {
   const section = w.nav.find((sec) => sec.section === folder)
   const enter = (sec) => { setFolder(sec); setOpen(null) }
   const rows = section?.pages ?? []
+
+  const uploaded = useGame((s) => s.uploaded)
+  const uploadTo = useGame((s) => s.uploadTo)
+  const scenario = useGame((s) => s.scenario)
+  const clock = useGame((s) => gameClock(s.scenario, s))
+  const [picking, setPicking] = useState(false)
+  const mine = (uploaded[open] ?? []).map((id) => findFile(scenario.fs, id)).filter(Boolean)
 
   return (
     <div className="dr">
@@ -69,6 +77,11 @@ export default function Drive({ site, path = '' }) {
             <h2>{folder ?? '내 드라이브'}</h2>
           )}
           <span className="dr-crumb-gap" />
+          {open && (
+            <button className="dr-upload" onClick={() => setPicking(true)}>
+              <FolderOpen size={14} strokeWidth={2} />업로드
+            </button>
+          )}
           <span className="dr-view"><List size={15} strokeWidth={2} /></span>
           <span className="dr-view off"><LayoutGrid size={15} strokeWidth={2} /></span>
         </div>
@@ -76,6 +89,20 @@ export default function Drive({ site, path = '' }) {
         {open ? (
           <article className="dr-doc">
             <WikiDoc site={site} id={open} />
+            {mine.length > 0 && (
+              <table className="dr-table dr-uploaded">
+                <thead><tr><th>올린 파일</th><th className="dr-col-who">올린 사람</th><th className="dr-col-when">올린 시각</th></tr></thead>
+                <tbody>
+                  {mine.map((f) => (
+                    <tr key={f.id}>
+                      <td><List size={16} strokeWidth={1.8} />{f.name}</td>
+                      <td className="dr-col-who">{scenario.player.name}</td>
+                      <td className="dr-col-when">{clock.date} {clock.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </article>
         ) : (
           <table className="dr-table">
@@ -114,6 +141,10 @@ export default function Drive({ site, path = '' }) {
           </table>
         )}
       </main>
+      {picking && (
+        <FileDialog start="문서" onClose={() => setPicking(false)}
+                    onPick={(file) => { uploadTo(open, file.id); setPicking(false) }} />
+      )}
     </div>
   )
 }

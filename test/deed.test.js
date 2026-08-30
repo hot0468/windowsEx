@@ -160,3 +160,31 @@ describe('파일을 옮기고 이름을 바꾼다', () => {
     expect(PROGRESS).toContain('placed')
   })
 })
+
+// 드라이브 페이지에 올린 파일은 그 페이지 아래에 남는다. 올린 것이 눈에
+// 보여야 한 일이 된다.
+describe('드라이브에 올린다', () => {
+  const SPEC = { id: 'deed_t_up', title: 't', grant: 'deed_t_up', upload: { file: 'file_qc', page: 'q3' } }
+  beforeEach(() => useGame.setState({
+    scenario: { ...scenario, objectives: [...scenario.objectives, SPEC] },
+    grants: {}, uploaded: {}, pendingAsks: {}, extraMessages: {}
+  }))
+
+  it('올리면 페이지 목록에 붙고, 같은 파일은 한 번만', () => {
+    useGame.getState().uploadTo('q3', 'file_qb')
+    useGame.getState().uploadTo('q3', 'file_qb')
+    expect(useGame.getState().uploaded.q3).toEqual(['file_qb'])
+  })
+
+  it('맞는 페이지에 맞는 파일이면 grant, 다른 페이지면 침묵', () => {
+    useGame.getState().uploadTo('owner', 'file_qc')
+    expect(useGame.getState().grants.deed_t_up).toBeUndefined()
+    useGame.getState().uploadTo('q3', 'file_qc')
+    expect(useGame.getState().grants.deed_t_up).toBe(true)
+  })
+
+  it('uploaded는 세이브에 실린다', async () => {
+    const { PROGRESS } = await import('../src/engine/store.js')
+    expect(PROGRESS).toContain('uploaded')
+  })
+})

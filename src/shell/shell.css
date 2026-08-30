@@ -1835,3 +1835,9 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 /* 탐색기: 잘라낸 파일과 이름 바꾸기 입력 */
 .ex-file.cut { opacity: .5; }
 .ex-rename { width: 100%; font: inherit; font-size: 12px; text-align: center; padding: 1px 3px; border: 1px solid #0078d4; border-radius: 2px; outline: none; }
+
+/* 드라이브: 업로드 버튼과 올린 파일 표 */
+.dr-upload { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid #c9ccd3; border-radius: 6px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+.dr-upload:hover { background: #f3f4f6; }
+.dr-uploaded { margin-top: 22px; }
+.dr-uploaded td:first-child { display: flex; align-items: center; gap: 6px; }
