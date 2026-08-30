@@ -898,6 +898,7 @@ export const useGame = create((set, get) => ({
         : s.ripples
     }))
     get().chat(key)
+    get().finishDeeds(key)
     // finishing one request is what opens the next conversation
     const now = heldThreads(get().scenario, get().day, get())
     if (was && now) for (const id of was) if (!now.has(id)) get().nudge(id)
@@ -908,6 +909,20 @@ export const useGame = create((set, get) => ({
       set((s) => ({ extraMails: [...s.extraMails, mw.mail] }))
       get().showToast({ from: mw.mail.from, text: mw.notice, app: 'mail' })
     }, mw.delay)
+  },
+  // 행동을 기다리던 질문. 그 행동의 grant가 켜지면 여기서 답이 온다 —
+  // 대화는 게임의 것이라 메신저 창이 닫혀 있어도 진행된다. 마지막 단계가
+  // 든 grants는 보통 deed와 같은 키라 이미 켜져 있고, 다르면 여기서 켠다.
+  finishDeeds: (key) => {
+    const s = get()
+    for (const [threadId, ask] of Object.entries(s.pendingAsks)) {
+      if (!ask || ask.deed !== key) continue
+      const t = allThreads(s.scenario).find((x) => x.id === threadId)
+      get().setAsk(threadId, ask.then ?? null)
+      if (ask.next) get().setBranch(threadId, ask.next)
+      if (ask.grants && !get().grants[ask.grants]) get().grant(ask.grants)
+      get().saying(threadId, t?.name ?? '', ask.ok ?? [])
+    }
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),

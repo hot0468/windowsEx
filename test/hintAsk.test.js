@@ -10,7 +10,7 @@ const asks = []
 const walk = (n) => {
   if (Array.isArray(n)) return n.forEach(walk)
   if (n && typeof n === 'object') {
-    if (n.no?.length && (n.accept || n.files || n.free)) asks.push(n)
+    if (n.no?.length && (n.accept || n.files || n.free || n.deed)) asks.push(n)
     Object.values(n).forEach(walk)
   }
 }

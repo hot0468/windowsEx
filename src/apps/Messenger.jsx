@@ -520,6 +520,9 @@ export default function Messenger({ source }) {
                 ask.choices.map((text) => (
                   <button key={text} disabled={busy} onClick={() => pick(text)}>{text}</button>
                 ))
+              ) : ask?.deed ? (
+                // 행동으로 푸는 질문. 칠 것이 없다 — 무엇을 하면 되는지만 남긴다.
+                <span className="quick-done quick-deed">{ask.placeholder}</span>
               ) : ask ? (
                 <>
                   {/* 상대가 아직 치고 있는 동안에는 다음 질문을 미리 보여주지

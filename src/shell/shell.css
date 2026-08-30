@@ -1828,3 +1828,6 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .window.frozen, .window.frozen * { overflow: hidden !important; }
 .window.frozen::after { content: ''; position: absolute; inset: 0; }
 .desktop.sealed { filter: saturate(.55); }
+
+/* 행동으로 푸는 질문: 입력칸 자리에 안내문만 */
+.quick-deed { color: #6b7280; font-style: italic; }
