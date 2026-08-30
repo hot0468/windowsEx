@@ -12,6 +12,7 @@ import Slides from './Slides.jsx'
 import Sheet from './Sheet.jsx'
 import Installer from './Installer.jsx'
 import Settings from './Settings.jsx'
+import Dial from './Dial.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
@@ -39,6 +40,8 @@ export const APPS = {
   // 폰에는 시작 메뉴가 없어 게임을 다루는 버튼이 갈 자리가 없다. 설정 앱이
   // 그 자리다 — 데스크톱에는 시작 메뉴가 이미 있으므로 올리지 않는다.
   settings: { title: '설정', icon: 'settings', comp: Settings, w: 420, h: 520, phoneOnly: true },
+  // 전화도 폰의 물건이다. PC 에는 걸 곳도 받을 곳도 없다.
+  dial: { title: '전화', icon: 'phone', comp: Dial, w: 380, h: 560, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },

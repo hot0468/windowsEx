@@ -13,7 +13,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -363,6 +363,13 @@ export const useGame = create((set, get) => ({
   vpnDialing: false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
+  // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
+  // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
+  // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
+  // 벨이 다시 울리면 그건 같은 전화가 아니다).
+  call: null,
+  callLog: restored?.callLog ?? [],
+  calledIn: restored?.calledIn ?? {},
   // Whether this PC is registered with the copier. Set on the copier's own web
   // page and read by the print dialog, so it lives here rather than in either.
   mfpFixed: restored?.mfpFixed ?? false,
@@ -1006,6 +1013,9 @@ export const useGame = create((set, get) => ({
     }))
     get().chat(key)
     get().finishDeeds(key)
+    // 이 일이 끝나기를 기다리던 전화. 폰에만 오는 것이라 아무것도 막지 않는다.
+    const ring = (get().scenario.calls?.incoming ?? []).find((c) => c.after === key && !get().calledIn[c.id])
+    if (ring && onPhoneNow()) setTimeout(() => get().ringIn(ring.id), ring.delay ?? 6000)
     get().caughtSlacking()
     // finishing one request is what opens the next conversation
     const now = heldThreads(get().scenario, get().day, get())
@@ -1299,6 +1309,86 @@ export const useGame = create((set, get) => ({
 
   // A mail the player starts. Only the day's brief knows which address is real;
   // everything else bounces. `{to}` and `{subject}` in the reply are filled in.
+  // ── 전화 ────────────────────────────────────────────────
+  // 폰에만 있다. 두 가지를 한다: 걸려오는 전화를 받고, 메일로 묻던 것을
+  // 전화로도 묻는다. 판정은 메일과 같은 자리(checkOutbound)를 지나므로
+  // 어느 쪽으로 하든 같은 목표가, 같은 조건에서 열린다.
+  ringIn: (id) => {
+    const s = get()
+    const spec = (s.scenario.calls?.incoming ?? []).find((c) => c.id === id)
+    if (!spec || s.call || s.calledIn[id]) return
+    set({ call: { kind: 'in', id, name: spec.from, number: spec.number, stage: 'ringing', said: [] } })
+    play('notify')
+  },
+  answerCall: () => set((s) => (s.call?.kind !== 'in' ? s : {
+    call: {
+      ...s.call,
+      stage: 'talking',
+      said: (s.scenario.calls.incoming.find((c) => c.id === s.call.id)?.lines ?? []).map((text) => ({ them: true, text }))
+    },
+    calledIn: { ...s.calledIn, [s.call.id]: true }
+  })),
+  // 받지 않은 전화도 기록에는 남는다 — 다시 걸 수 있어야 놓친 것이 되지 않는다.
+  declineCall: () => set((s) => (!s.call ? s : {
+    call: null,
+    calledIn: { ...s.calledIn, [s.call.id]: true },
+    callLog: [{ dir: 'missed', name: s.call.name, number: s.call.number, id: s.call.id, day: s.day }, ...s.callLog].slice(0, 30)
+  })),
+  hangUp: () => set((s) => (!s.call ? s : {
+    call: null,
+    callLog: s.call.stage === 'talking'
+      ? [{ dir: s.call.kind, name: s.call.name, number: s.call.number, id: s.call.id, day: s.day }, ...s.callLog].slice(0, 30)
+      : s.callLog
+  })),
+  // 내가 건다. 아는 번호면 그 사람이 받고, 아니면 아무도 받지 않는다.
+  dial: (number) => {
+    const s = get()
+    if (s.call) return
+    const dialed = String(number).replace(/[^0-9]/g, '')
+    const who = (s.scenario.calls?.contacts ?? []).find(
+      (c) => c.number.replace(/[^0-9]/g, '') === dialed)
+    if (!who) {
+      set({ call: { kind: 'out', id: null, name: '없는 번호', number, stage: 'talking', said: [{ them: true, text: s.scenario.calls?.noAnswer ?? '지금 거신 번호는 없는 번호입니다.' }] } })
+      return
+    }
+    const done = Boolean(s.grants[who.id])
+    const lines = [
+      ...who.greet ?? [],
+      // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
+      ...(who.needsMail ?? (done ? who.done ?? [] : who.asking ?? []))
+    ]
+    set({
+      call: {
+        kind: 'out', id: who.id, name: who.name, number: who.number, stage: 'talking',
+        // 말할 수 있는 상태인지: 아직 안 끝난 일이고, 첨부를 요구하지 않는 상대.
+        asking: !done && !who.needsMail,
+        said: lines.map((text) => ({ them: true, text }))
+      }
+    })
+  },
+  // 통화 중에 값을 말한다. 메일 본문에 적었어야 할 그 값이다.
+  sayOnCall: (text) => {
+    const s = get()
+    const call = s.call
+    if (!call?.asking || !text.trim()) return false
+    const who = s.scenario.calls.contacts.find((c) => c.id === call.id)
+    const objective = s.scenario.objectives.find((o) => o.grant === call.id && o.mail)
+    if (!who || !objective) return false
+    // 예절은 메일의 규칙이다. 말로 하는 자리에서 제목 형식을 따질 수는 없다.
+    const spec = { ...objective.mail, rudeReplies: undefined }
+    const verdict = checkOutbound(spec, { to: spec.to, subject: '', body: text }, s.scenario.etiquette, s.scenario.player)
+    const reply = (verdict.ok ? who.done : who.unclear) ?? []
+    set((st) => ({
+      call: {
+        ...st.call,
+        asking: !verdict.ok,
+        said: [...st.call.said, { them: false, text }, ...reply.map((t) => ({ them: true, text: t }))]
+      }
+    }))
+    if (verdict.ok) setTimeout(() => get().grant(call.id), 900)
+    else play('error')
+    return verdict.ok
+  },
   sendMail: ({ to, subject, body, attachmentId = null }) => {
     const s = get()
     // 그날의 fetch 하나만 보던 것을 아직 안 켜진 메일 목표 전부로 넓힌다.

@@ -16,7 +16,7 @@ import './shell/phone.css'
 import Icon from './icons/Icon.jsx'
 import { wallpaper } from './assets/photos.js'
 
-import { Info, LayoutGrid } from './icons/line.jsx'
+import { Info, LayoutGrid, Phone, PhoneOff } from './icons/line.jsx'
 
 // How long the sender shows as "작성중…" before each scripted message lands.
 const TYPING_LEAD = 900
@@ -119,6 +119,36 @@ function FailOverlay() {
 
 // Once you know who wrote the rumour, you have to decide what to do with it.
 // This is not a day boundary — it interrupts the moment you find the name.
+// 걸려오는 전화. 어느 앱을 보고 있든 화면을 덮는다 — 전화는 그런 물건이다.
+// 받으면 전화 앱이 열리고, 거절해도 기록에는 부재중으로 남는다.
+function Ringing() {
+  const call = useGame((s) => s.call)
+  const answerCall = useGame((s) => s.answerCall)
+  const declineCall = useGame((s) => s.declineCall)
+  const openWindow = useGame((s) => s.openWindow)
+  const pushScreen = useGame((s) => s.pushScreen)
+  if (!call || call.stage !== 'ringing') return null
+  return (
+    <div className="ring">
+      <div className="ring-who">
+        <div className="ring-name">{call.name}</div>
+        <div className="ring-num">{call.number}</div>
+        <div className="ring-sub">수신 전화</div>
+      </div>
+      <div className="ring-keys">
+        <button className="ring-no" onClick={declineCall} aria-label="거절">
+          <PhoneOff size={24} strokeWidth={1.9} />
+        </button>
+        <button className="ring-yes"
+                onClick={() => { answerCall(); openWindow('dial'); pushScreen('app:dial') }}
+                aria-label="받기">
+          <Phone size={24} strokeWidth={1.9} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function RumorOverlay() {
   const c = useGame((s) => s.scenario.rumor.choice)
   const actOnRumor = useGame((s) => s.actOnRumor)
@@ -321,6 +351,7 @@ export default function App() {
   const overlays = (
     <>
       <Toast />
+      <Ringing />
       {locked && <Lock />}
       {rumorPending(rumor) && !failed && <RumorOverlay />}
       {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}

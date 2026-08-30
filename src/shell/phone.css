@@ -656,3 +656,100 @@
 .lock-phone .lock-card input { width: 100%; max-width: 300px; padding: 12px 14px; border-radius: 12px; font-size: 15px; text-align: center; }
 .lock-phone .lock-face { width: 66px; height: 66px; }
 .lock-phone .lock-err { padding: 0 10px; line-height: 1.6; }
+
+/* ── 전화 ────────────────────────────────────────────────
+   폰에만 있는 앱. 목록·키패드·통화 화면이 한 앱 안에 산다. */
+.cl { height: 100%; display: flex; flex-direction: column; background: var(--p-bg); }
+.cl-tabs { display: flex; flex: none; border-bottom: 1px solid var(--p-line); background: var(--p-surface); }
+.cl-tab { flex: 1; padding: 12px 4px; border: 0; background: none; color: var(--p-mute);
+          font: inherit; font-size: 13px; cursor: pointer; }
+.cl-tab.on { color: var(--p-ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--p-accent); }
+.cl-list { flex: 1; overflow-y: auto; }
+.cl-none { padding: 30px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
+.cl-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+          width: 100%; padding: 13px 16px; border: 0; border-bottom: 1px solid var(--p-line);
+          background: var(--p-surface); text-align: left; font: inherit; cursor: pointer; }
+.cl-row:active { background: #eef0f4; }
+.cl-row-mid { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cl-row-mid b { font-size: 14.5px; font-weight: 600; color: var(--p-ink); }
+.cl-row-mid em { font-style: normal; font-size: 12px; color: var(--p-mute); }
+.cl-missed { color: #b0553f; }
+.cl-row-day { flex: none; color: var(--p-mute); font-size: 11.5px; }
+
+/* 키패드 */
+.cl-pad { flex: 1; display: flex; flex-direction: column; padding: 10px 16px 16px; }
+.cl-typed { padding: 14px 0 10px; text-align: center; font-size: 26px; letter-spacing: 1px;
+            color: var(--p-ink); font-variant-numeric: tabular-nums; min-height: 56px; }
+.cl-typed i { font-style: normal; font-size: 14px; color: var(--p-mute); letter-spacing: 0; }
+.cl-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cl-keys button { padding: 14px 0; border: 0; border-radius: 999px; background: var(--p-surface);
+                  color: var(--p-ink); font: inherit; font-size: 20px; cursor: pointer;
+                  box-shadow: 0 1px 3px rgba(16, 19, 26, .08); }
+.cl-keys button:active { background: #e9ecf2; }
+.cl-pad-row { display: flex; gap: 10px; margin-top: 14px; }
+.cl-back, .cl-go { flex: 1; padding: 13px; border: 0; border-radius: 12px; font: inherit;
+                   font-size: 14px; font-weight: 600; cursor: pointer; }
+.cl-back { background: var(--p-surface); color: var(--p-mute); }
+.cl-go { background: #2f9e5c; color: #fff; }
+.cl-back:disabled, .cl-go:disabled { opacity: .45; cursor: default; }
+
+/* 통화 중 */
+.cl-talk { height: 100%; display: flex; flex-direction: column; padding: 16px 14px 14px;
+           background: linear-gradient(180deg, #10151f 0%, #1a2130 100%); color: #fff; }
+.cl-who { flex: none; text-align: center; padding: 8px 0 14px; }
+.cl-who-name { font-size: 21px; font-weight: 600; }
+.cl-who-num { margin-top: 4px; color: rgba(255, 255, 255, .6); font-size: 12.5px; }
+.cl-said { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+.cl-said p { max-width: 86%; margin: 0; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.6; }
+.cl-them { align-self: flex-start; background: rgba(255, 255, 255, .12); }
+.cl-me { align-self: flex-end; background: #2f6fd0; }
+.cl-say { display: flex; gap: 8px; padding: 10px 0 8px; flex: none; }
+.cl-say input { flex: 1; min-width: 0; padding: 11px 14px; border: 1px solid rgba(255, 255, 255, .2);
+                border-radius: 999px; background: rgba(255, 255, 255, .1); color: #fff;
+                font: inherit; font-size: 14px; outline: none; }
+.cl-say input::placeholder { color: rgba(255, 255, 255, .45); }
+.cl-say .btn-primary { flex: none; display: grid; place-items: center; width: 42px; padding: 0; border-radius: 999px; }
+.cl-end { display: flex; align-items: center; justify-content: center; gap: 8px; flex: none;
+          padding: 14px; border: 0; border-radius: 14px; background: #c0392b; color: #fff;
+          font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+
+/* 걸려오는 전화 — 무엇을 보고 있든 덮는다 */
+.ring { position: fixed; inset: 0; z-index: 9990; display: flex; flex-direction: column;
+        align-items: center; justify-content: space-between; padding: 16vh 24px 10vh;
+        background: linear-gradient(180deg, #0d1120 0%, #172033 100%); color: #fff; }
+.ring-who { text-align: center; }
+.ring-name { font-size: 26px; font-weight: 600; }
+.ring-num { margin-top: 6px; color: rgba(255, 255, 255, .7); font-size: 14px; }
+.ring-sub { margin-top: 12px; color: rgba(255, 255, 255, .5); font-size: 12.5px; animation: ring-pulse 1.8s ease-in-out infinite; }
+@keyframes ring-pulse { 50% { opacity: .35; } }
+.ring-keys { display: flex; gap: 56px; }
+.ring-no, .ring-yes { display: grid; place-items: center; width: 66px; height: 66px; border: 0;
+                      border-radius: 50%; color: #fff; cursor: pointer; }
+.ring-no { background: #c0392b; }
+.ring-yes { background: #2f9e5c; animation: ring-shake 1.4s ease-in-out infinite; }
+@keyframes ring-shake { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ring-sub, .ring-yes { animation: none; }
+}
+
+/* 홈 — 바탕에는 독 셋만. 나머지는 아래에서 밀어 올리는 서랍 안에 있다. */
+.ph-home { position: relative; touch-action: none; display: flex; flex-direction: column; }
+.ph-dock { margin-top: auto; display: flex; justify-content: center; gap: 22px; padding: 0 12px 6px; }
+.ph-drawer-grip { display: block; width: 100%; padding: 10px 0 12px; border: 0; background: none;
+                  cursor: pointer; flex: none; }
+.ph-drawer-grip i { display: block; width: 96px; height: 4px; margin: 0 auto; border-radius: 2px;
+                    background: rgba(16, 19, 26, .22); }
+.ph-drawer-grip.on i { background: rgba(16, 19, 26, .3); }
+.ph-drawer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px;
+  background: rgba(247, 248, 250, .92);
+  backdrop-filter: blur(16px);
+  animation: ph-drawer-up .24s var(--p-ease);
+}
+@keyframes ph-drawer-up { from { transform: translateY(100%); opacity: .6; } }
+.ph-drawer .ph-grid { flex: 1; align-content: start; overflow-y: auto; padding-top: 4px; }

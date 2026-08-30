@@ -71,36 +71,75 @@ function DayBar() {
   )
 }
 
-function Home() {
+// 바탕에 남는 셋. 하루에 몇 번이고 여는 것들이라 서랍에 넣지 않는다.
+const DOCK = ['dial', 'messenger', 'browser']
+
+function AppIcon({ app, onOpen }) {
+  return (
+    <button className="ph-icon" onClick={() => onOpen(app)}>
+      <span className="ph-glyph"><Icon name={app.icon} size={30} /></span>
+      <span className="ph-label">{app.title}</span>
+    </button>
+  )
+}
+
+// 홈. 바탕에는 독 셋만 서고 나머지는 서랍에 있다 — 아래에서 위로 밀면 열린다.
+function Home({ drawer, onDrawer }) {
   const grants = useGame((s) => s.grants)
   const pushScreen = useGame((s) => s.pushScreen)
   const openWindow = useGame((s) => s.openWindow)
+  const [grab, setGrab] = useState(null)
   const apps = phoneApps(grants)
+  const dock = DOCK.map((id) => apps.find((a) => a.id === id)).filter(Boolean)
+  const rest = apps.filter((a) => !DOCK.includes(a.id))
 
   const open = (a) => {
     // 창 목록은 그대로 쓴다 — 앱이 어떤 파일을 열고 있는지 같은 상태가
     // 거기 있고, 데스크톱과 폰이 같은 저장 파일을 공유하기 때문이다.
     openWindow(a.app, a.props)
     pushScreen('app:' + a.id)
+    if (drawer) onDrawer(false)
   }
 
+  // 서랍은 밀어서 열고 밀어서 닫는다. 시작한 곳의 y 하나만 기억하면 된다.
+  const swipe = (open_) => ({
+    onPointerDown: (e) => setGrab(e.clientY),
+    onPointerMove: (e) => {
+      if (grab == null) return
+      const dy = e.clientY - grab
+      if (open_ && dy < -50) { setGrab(null); onDrawer(true) }
+      if (!open_ && dy > 60) { setGrab(null); onDrawer(false) }
+    },
+    onPointerUp: () => setGrab(null),
+    onPointerCancel: () => setGrab(null)
+  })
+
   return (
-    <div className="ph-home">
-      <div className="ph-grid">
-        {apps.map((a) => (
-          <button key={a.id} className="ph-icon" onClick={() => open(a)}>
-            <span className="ph-glyph"><Icon name={a.icon} size={30} /></span>
-            <span className="ph-label">{a.title}</span>
-          </button>
-        ))}
+    <div className="ph-home" {...swipe(true)}>
+      <div className="ph-dock">
+        {dock.map((a) => <AppIcon key={a.id} app={a} onOpen={open} />)}
       </div>
+      <button className="ph-drawer-grip" onClick={() => onDrawer(true)} aria-label="앱 서랍 열기">
+        <i />
+      </button>
+
+      {drawer && (
+        <div className="ph-drawer" {...swipe(false)}>
+          <button className="ph-drawer-grip on" onClick={() => onDrawer(false)} aria-label="앱 서랍 닫기">
+            <i />
+          </button>
+          <div className="ph-grid">
+            {rest.map((a) => <AppIcon key={a.id} app={a} onOpen={open} />)}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // 안드로이드의 세 버튼. 켠 창 · 홈 · 뒤로. 어느 화면에서든 바닥에 있으므로
 // 앱 안에서도 홈으로 나가는 길이 끊기지 않는다. 홈 인디케이터를 대신한다.
-function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade }) {
+function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade, drawer, onDrawer }) {
   const goPhoneHome = useGame((s) => s.goPhoneHome)
   const popScreen = useGame((s) => s.popScreen)
   const closeWindow = useGame((s) => s.closeWindow)
@@ -119,13 +158,14 @@ function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade }
               aria-label="켠 창">
         <span className="pn-recent" />
       </button>
-      <button className="pn-key" onClick={() => { if (recents) onRecents(); if (shade) onShade(); goPhoneHome() }}
+      <button className="pn-key" onClick={() => { if (recents) onRecents(); if (shade) onShade(); onDrawer(false); goPhoneHome() }}
               aria-label="홈">
         <span className="pn-circle" />
       </button>
       {/* 알림창이 내려와 있으면 뒤로는 그것부터 걷는다 — 안드로이드와 같다. */}
-      <button className="pn-key" onClick={recents ? onRecents : shade ? onShade : back}
-              disabled={!recents && !shade && !screens.length} aria-label="뒤로">
+      <button className="pn-key"
+              onClick={recents ? onRecents : shade ? onShade : drawer ? () => onDrawer(false) : back}
+              disabled={!recents && !shade && !drawer && !screens.length} aria-label="뒤로">
         <ChevronLeft size={20} strokeWidth={2.2} />
       </button>
     </nav>
@@ -179,6 +219,8 @@ export default function PhoneShell() {
   // 상단에서 끌어내리는 알림창. 누르는 곳(pointerdown)의 y와 비교해 아래로
   // 끌면 열고, 그냥 톡 누르면(마우스로 보는 경우) 그것도 연다.
   const [shade, setShade] = useState(false)
+  // 앱 서랍. 홈에서 아래에서 위로 밀면 열린다.
+  const [drawer, setDrawer] = useState(false)
   // 닫힐 때는 올라가는 동안 한 겹 더 산다. 내려올 땐 CSS 애니메이션 하나면
   // 되지만, 사라지는 쪽은 지우기 전에 기다려 줘야 보인다.
   const [lifting, setLifting] = useState(false)
@@ -264,7 +306,7 @@ export default function PhoneShell() {
       {!entry && !winCfg && (
         <>
           <DayBar />
-          <Home />
+          <Home drawer={drawer} onDrawer={setDrawer} />
         </>
       )}
       {winCfg && (
@@ -289,7 +331,8 @@ export default function PhoneShell() {
       {!sealed && (
         <NavBar screens={screens} windows={windows} grants={grants}
                 recents={recents} onRecents={() => setRecents((v) => !v)}
-                shade={shade} onShade={closeShade} />
+                shade={shade} onShade={closeShade}
+                drawer={drawer} onDrawer={setDrawer} />
       )}
     </div>
   )
