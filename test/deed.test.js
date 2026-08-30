@@ -57,3 +57,55 @@ describe('행동을 기다리는 질문', () => {
     expect(useGame.getState().extraMessages.boss.map((m) => m.text)).toEqual(DEED.ok)
   })
 })
+
+// 새 메일 쓰기는 그날의 fetch 하나만 알았다. 이제 아직 안 켜진 메일 목표
+// 전부가 후보다 — 수신자가 맞는 것을 고르고, 첨부·키워드·예절을 본다.
+describe('메일로 푸는 요청', () => {
+  const SPEC = {
+    id: 'deed_t_mail', title: 't', grant: 'deed_t_mail',
+    mail: {
+      to: 'ym.kim@ctech.co.kr', requiredAttachment: 'file_qc', requiredKeywords: ['견적서'],
+      reply: { from: '김영민 <ym.kim@ctech.co.kr>', subject: 'RE: {subject}', body: '받았습니다.' },
+      wrongAttachmentReply: { from: '김영민 <ym.kim@ctech.co.kr>', subject: 'RE: {subject}', body: '첨부가 다릅니다.' },
+      unclearReply: { from: '김영민 <ym.kim@ctech.co.kr>', subject: 'RE: {subject}', body: '무엇을 보내신 건지요.' }
+    }
+  }
+  const polite = '안녕하세요, AR주식회사 김한별 대리입니다.\n요청하신 견적서 첨부합니다.\n감사합니다.\n김한별 드림'
+  const withSpec = () => useGame.setState({
+    scenario: { ...scenario, objectives: [...scenario.objectives, SPEC] },
+    grants: {}, extraMails: [], pendingAsks: { boss: { deed: 'deed_t_mail', placeholder: 'p', ok: ['보냈군요.'], no: [['a'], ['b'], ['c']], next: [] } },
+    extraMessages: {}, windows: [], openThread: {}, day: 2
+  })
+  beforeEach(() => { vi.useFakeTimers(); withSpec() })
+
+  it('수신자·첨부·키워드가 맞으면 답장이 오고 요청이 닫힌다', () => {
+    const ok = useGame.getState().sendMail({ to: 'ym.kim@ctech.co.kr', subject: '[AR주식회사] 견적서 송부', body: polite, attachmentId: 'file_qc' })
+    expect(ok).toBe(true)
+    vi.runAllTimers()
+    expect(useGame.getState().extraMails.at(-1).body).toBe('받았습니다.')
+    expect(useGame.getState().grants.deed_t_mail).toBe(true)
+    expect(useGame.getState().pendingAsks.boss).toBe(null)
+  })
+
+  it('첨부가 틀리면 그 답장이 오고 요청은 그대로다', () => {
+    const ok = useGame.getState().sendMail({ to: 'ym.kim@ctech.co.kr', subject: '[AR주식회사] 견적서', body: polite, attachmentId: 'file_qb' })
+    expect(ok).toBe(false)
+    vi.runAllTimers()
+    expect(useGame.getState().extraMails.at(-1).body).toBe('첨부가 다릅니다.')
+    expect(useGame.getState().grants.deed_t_mail).toBeUndefined()
+    expect(useGame.getState().pendingAsks.boss).not.toBe(null)
+  })
+
+  it('아무 후보도 아닌 주소는 되돌아온다', () => {
+    useGame.getState().sendMail({ to: 'nobody@nowhere.kr', subject: 'x', body: polite, attachmentId: null })
+    vi.runAllTimers()
+    expect(useGame.getState().extraMails.at(-1).from).toContain('mailer-daemon')
+  })
+
+  it('그날의 fetch는 예전처럼 그대로 된다', () => {
+    useGame.setState({ day: 3 })
+    const f = scenario.days[2].fetch
+    const body = `안녕하세요, AR주식회사 김한별 대리입니다.\n${f.requiredKeywords[0]} 자료 부탁드립니다.\n감사합니다.\n김한별 드림`
+    expect(useGame.getState().sendMail({ to: f.to, subject: '[AR주식회사] 자료 요청', body, attachmentId: null })).toBe(true)
+  })
+})

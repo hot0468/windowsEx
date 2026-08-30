@@ -1154,17 +1154,26 @@ export const useGame = create((set, get) => ({
 
   // A mail the player starts. Only the day's brief knows which address is real;
   // everything else bounces. `{to}` and `{subject}` in the reply are filled in.
-  sendMail: ({ to, subject, body }) => {
+  sendMail: ({ to, subject, body, attachmentId = null }) => {
     const s = get()
-    const fetch = s.scenario.days[s.day - 1]?.fetch
-    const verdict = checkOutbound(fetch, { to, subject, body }, s.scenario.etiquette, s.scenario.player)
+    // 그날의 fetch 하나만 보던 것을 아직 안 켜진 메일 목표 전부로 넓힌다.
+    // 수신자가 맞는 첫 후보가 이 메일의 상대다. 없으면 되돌아온다.
+    const specs = [
+      s.scenario.days[s.day - 1]?.fetch,
+      ...s.scenario.objectives.filter((o) => o.mail && !s.grants[o.grant]).map((o) => ({ ...o.mail, grants: o.grant }))
+    ].filter(Boolean)
+    const same = (a, b) => String(a).replace(/\s/g, '').toLowerCase() === String(b).replace(/\s/g, '').toLowerCase()
+    const spec = specs.find((f) => same(f.to, to)) ?? null
+    const verdict = checkOutbound(spec, { to, subject, body, attachmentId }, s.scenario.etiquette, s.scenario.player)
+    // 요청 단위의 메일은 예절로 막지 않는다. 일은 되고, 잠시 뒤 팀장이 한마디 한다.
+    if (verdict.ok && !spec.rudeReplies) get().scold({ subject, body, outbound: true })
     const fill = (t = '') => t.replace('{to}', to).replace('{subject}', subject)
     const reply = verdict.reply ?? s.scenario.goal.bounce
     setTimeout(() => {
       const mail = { ...reply, id: 'in_' + Date.now(), date: '방금', at: justNow(s.scenario, s.day), subject: fill(reply.subject), body: fill(reply.body) }
       set((st) => ({ extraMails: [...st.extraMails, mail] }))
       get().showToast({ from: mail.from, text: `새 메일이 도착했습니다: ${mail.subject}`, app: 'mail' })
-      if (verdict.ok) setTimeout(() => get().grant(fetch.grants), 2200)
+      if (verdict.ok) setTimeout(() => get().grant(spec.grants), 2200)
       const nags = s.scenario.etiquette.nags[verdict.reason]
       if (nags) get().nag(nags)
     }, 1800)
