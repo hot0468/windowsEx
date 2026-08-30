@@ -2206,3 +2206,21 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .fp-btn:hover:not(:disabled) { background: #e5f1fb; border-color: #0067c0; }
 .fp-btn:disabled { color: #aaa; cursor: default; }
 .fp-ok { border-color: #0067c0; box-shadow: inset 0 0 0 1px #0067c0; }
+
+/* 설정 › 내 PC 연결 정보. 명령 프롬프트가 찍던 줄을 폰이 읽는 방식으로 —
+   값은 길고(MAC·어댑터 이름) 화면은 좁으므로 이름 아래에 값을 놓는다.
+   값은 답으로 옮겨 적는 자리라 드래그로 고를 수 있어야 한다. */
+.st-net-rows { margin: 0; padding: 4px 0; }
+.st-net-rows > div { padding: 9px 16px; }
+.st-net-rows > div + div { border-top: 1px solid #f0f1f5; }
+.st-net-rows dt { color: #8a9099; font-size: 11.5px; }
+.st-net-rows dd { margin: 2px 0 0; color: #1f2430; font-size: 14px; user-select: text;
+                  word-break: break-all; font-variant-numeric: tabular-nums; }
+.st-ping { display: flex; gap: 8px; padding: 4px 16px 14px; }
+.st-ping input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid #dfe2e8;
+                 border-radius: 9px; background: #fbfcfd; font: inherit; font-size: 13px; outline: none; }
+.st-ping input:focus { border-color: #9aa4b4; }
+.st-ping .btn-primary { flex: none; padding: 9px 14px; border-radius: 9px; font-size: 13px; }
+.st-echo { margin: 0 16px 14px; padding: 12px 13px; border-radius: 9px; background: #f4f6fa;
+           color: #3a4150; font-size: 12px; line-height: 1.65; user-select: text;
+           font-family: Consolas, 'D2Coding', monospace; white-space: pre-wrap; word-break: break-all; }

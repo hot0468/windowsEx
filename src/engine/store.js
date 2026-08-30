@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
 import { checkEtiquette, checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'
+import { PHONE_MAX } from '../shell/useViewport.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
 const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues where you were
@@ -1122,9 +1123,9 @@ export const useGame = create((set, get) => ({
   // 받는 쪽이 저장을 누르기 전에는 디스크에 없다(fsView 의 attached 규칙).
   sayBack: (threadId, from, lines, gap = SAY_GAP, attach = null) => {
     get().setTyping(threadId, true)
-    lines.forEach((text, i) => setTimeout(() => {
+    shellLines(lines).forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
-      if (i === lines.length - 1) get().setTyping(threadId, false)
+      if (i === shellLines(lines).length - 1) get().setTyping(threadId, false)
     }, SAY_FIRST + i * gap))
     if (attach) setTimeout(() => get().pushMessage(threadId, { from, file: attach.name, size: attach.size, fileId: attach.fileId }),
       SAY_FIRST + lines.length * gap)
@@ -1136,7 +1137,7 @@ export const useGame = create((set, get) => ({
     const s = get()
     const source = sourceOf(s.scenario, threadId)
     if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines, gap)
-    else lines.forEach((text) => get().pushMessage(threadId, { from, text }))
+    else shellLines(lines).forEach((text) => get().pushMessage(threadId, { from, text }))
   },
   // Which set of choices a conversation has reached.
   setBranch: (threadId, next) =>
@@ -1666,6 +1667,17 @@ export const smsFor = (verify) => verify.sms.replace('{code}', verify.code)
 
 // Six digits typed off a phone screen: spacing is forgiven, nothing else is.
 export const codeFits = (verify, text) => loose(text) === loose(verify.code) && text.trim() !== ''
+
+// 폰에는 명령 프롬프트가 없다(registry 의 NOT_ON_PHONE). 그 앱을 가리키는
+// 힌트가 그대로 오면 폰에서는 없는 것을 찾게 되므로, 같은 값을 어디서 보는지
+// 한 줄 덧붙인다. 시나리오 텍스트는 건드리지 않는다 — PC 에서는 저 말이 맞다.
+const WIN_ONLY = /명령 프롬프트|ipconfig|hostname|whoami|ping/i
+const PHONE_POINTER = '(폰으로 보고 계시면 설정 앱의 「내 PC 연결 정보」와 「응답 확인」에서 같은 값을 볼 수 있어요.)'
+export const shellLines = (lines) => (
+  typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX
+    && lines?.some((l) => typeof l === 'string' && WIN_ONLY.test(l))
+    ? [...lines, PHONE_POINTER] : lines
+)
 
 // A question may want a file instead of typed text; any of the ones it names will do.
 export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))

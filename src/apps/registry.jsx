@@ -78,12 +78,13 @@ const PHONE_EXTRA = [
 // 폰에 없는 물건. 작업 관리자와 백신은 PC를 관리하는 도구고, 탐색기는
 // 사진·파일·드라이브로 갈라져 홈에 이미 세 번 올라와 있다.
 //
-// cmd와 notepad는 뺄 자리지만 남긴다. 설정 앱(기기 정보 · 사설 DNS)이
-// 아직 없어서, 지금 빼면 hostname·ipconfig·hosts를 묻는 요청 14건이
-// 폰에서 답을 찾을 수 없게 된다. 설정 앱이 생기는 라운드에 함께 뺀다.
+// cmd는 뺀다 — 실제 폰에 명령 프롬프트는 없다. ipconfig·hostname·whoami가
+// 말해 주던 값과 ping은 설정 앱의 '내 PC 연결 정보'가 대신 보여 준다(같은
+// scenario.network 를 읽으므로 답이 갈리지 않는다). notepad는 남긴다 —
+// hosts 를 고치는 길이 아직 거기뿐이다.
 // viewer도 뺀다. 제목이 '사진'이라 폰 네이티브 photos와 홈에서 이름이
 // 겹치고, 사진 뷰어는 파일을 열면 뜨는 것이지 홈에서 실행하는 앱이 아니다.
-const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus', 'viewer'])
+const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus', 'viewer', 'cmd'])
 
 export const phoneApps = (grants = {}) => [
   ...PHONE_EXTRA,

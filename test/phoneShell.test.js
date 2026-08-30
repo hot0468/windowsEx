@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { useGame } from '../src/engine/store.js'
 import { phoneApps, startMenuApps, APPS } from '../src/apps/registry.jsx'
+import { NET_ROWS } from '../src/apps/Settings.jsx'
+import { ping } from '../src/apps/Cmd.jsx'
+import scenario from '../src/scenarios/workday.json'
 
 beforeEach(() => useGame.setState({ screens: [] }))
 
@@ -109,10 +112,26 @@ describe('폰 홈 앱 목록', () => {
     expect(phoneApps({ vpnInstalled: true }).map((a) => a.id)).toContain('vpn')
   })
 
-  // 설정 앱이 아직 없다. cmd까지 빼면 hostname·ipconfig를 묻는 요청
-  // 10건이 폰에서 답을 찾을 수 없게 된다.
-  it('설정 앱이 생기기 전까지 명령 프롬프트를 남긴다', () => {
-    expect(phoneApps({}).map((a) => a.id)).toContain('cmd')
+  // 실제 폰에 명령 프롬프트는 없다. 대신 설정 앱이 그 값을 들고 있어야 한다 —
+  // 둘 다 없으면 hostname·ipconfig를 묻는 요청이 폰에서 답을 찾을 수 없다.
+  it('명령 프롬프트는 홈에 없다', () => {
+    expect(phoneApps({}).map((a) => a.id)).not.toContain('cmd')
+  })
+
+  it('명령 프롬프트가 말해 주던 값을 설정 앱이 모두 보여 준다', () => {
+    const shown = NET_ROWS(scenario.network).map(([, v]) => v)
+    // pingMs 는 값이 아니라 '응답 확인'이 만들어 내는 결과다(ping()이 쓴다).
+    for (const [key, value] of Object.entries(scenario.network)) {
+      if (key === 'pingMs') continue
+      expect(shown, key + ' 가 폰에서 사라졌다').toContain(value)
+    }
+  })
+
+  // 요청 하나는 ping 의 평균 응답 시간을 묻는다. 폰의 '응답 확인'도 같은
+  // 함수를 쓰므로 그 문장이 그대로 나와야 한다.
+  it('응답 확인이 ping 과 같은 결과를 낸다', () => {
+    expect(ping(scenario.network, 'vpn.ar.local').join(' '))
+      .toContain('평균 = ' + scenario.network.pingMs + 'ms')
   })
 
   // 홈에 같은 이름이 둘 있으면 어느 쪽이 무엇인지 알 수 없다. viewer의
