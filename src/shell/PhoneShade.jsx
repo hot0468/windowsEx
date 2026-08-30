@@ -50,8 +50,12 @@ export default function PhoneShade({ onClose }) {
              e.stopPropagation()
              setGrab(e.target.closest?.('.ph-todo') ? null : e.clientY)
            }}
-           onPointerMove={(e) => { if (grab != null && e.clientY - grab < -30) onClose() }}
-           onPointerUp={() => setGrab(null)}
+           onPointerMove={(e) => { if (grab != null && e.clientY - grab < -24) onClose() }}
+           onPointerUp={(e) => {
+             // 짧고 빠른 손짓은 pointermove 가 한두 번밖에 안 온다 — 뗀 자리로도 본다.
+             if (grab != null && e.clientY - grab < -24) onClose()
+             setGrab(null)
+           }}
            onPointerCancel={() => setGrab(null)}>
         <div className="ph-tiles">
           {Boolean(grants.vpnInstalled) && (

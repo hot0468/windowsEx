@@ -345,6 +345,9 @@
   background: rgba(16, 19, 26, .45);
 }
 .ph-shade {
+  /* 여기서 시작한 손짓은 올려 닫기다. 막지 않으면 브라우저가 스크롤로 채가고
+     pointermove 가 끊겨(pointercancel) 닫히지 않는다 — 목록만 예외로 둔다. */
+  touch-action: none;
   padding: 12px 14px 6px;
   border-radius: 0 0 18px 18px;
   background: var(--p-surface);
@@ -389,7 +392,7 @@
   flex: none;
 }
 .ph-shade-head b { color: var(--p-ink); font-size: 13px; }
-.ph-todo { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.ph-todo { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; touch-action: pan-y; }
 .ph-todo li {
   display: flex;
   align-items: flex-start;
