@@ -1796,6 +1796,8 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .st-day { font-size: 20px; font-weight: 700; color: #1f2430; }
 .st-when { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: #8a9099; font-size: 12px; }
 .st-group { border-radius: 12px; background: #fff; overflow: hidden; }
+/* 섹션이 붙어 있으면 한 덩어리로 읽힌다 — 무리마다 사이를 띄운다. */
+.st-group + .st-group { margin-top: 14px; }
 .st-group-name { padding: 12px 16px 6px; color: #8a9099; font-size: 11.5px; }
 .st-item { display: flex; align-items: center; gap: 13px; width: 100%; padding: 13px 16px; border: 0; background: none; text-align: left; cursor: pointer; }
 .st-item + .st-item { border-top: 1px solid #f0f1f5; }

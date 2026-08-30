@@ -1451,7 +1451,15 @@ export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold
   ...(thread.messages ?? []),
   ...(thread.live ? scenario.messenger.slice(0, msgCount).map((m) => ({ ...m, day: 1 })) : []),
   ...(extras[thread.id] ?? [])
-].filter((m) => !hold || m.day !== hold)
+].filter((m) => !hold || m.day !== hold).map(withPhonePath)
+
+// 이미 적혀 있는 안내가 명령 프롬프트를 가리킬 때(차민혁의 'IPv4 주소 확인
+// 방법'처럼) 폰에서는 없는 앱을 찾게 된다. 말풍선을 새로 만들면 안 읽은 수가
+// 하나 늘어나므로 같은 말풍선 끝에 한 문장을 붙인다.
+const withPhonePath = (m) => (
+  onPhoneNow() && typeof m.text === 'string' && WIN_ONLY.test(m.text)
+    ? { ...m, text: m.text + ' ' + PHONE_POINTER } : m
+)
 
 // A conversation someone came back to was read long ago, so only what the week
 // itself brought can still be unread — and never what the player typed.
@@ -1673,9 +1681,9 @@ export const codeFits = (verify, text) => loose(text) === loose(verify.code) && 
 // 한 줄 덧붙인다. 시나리오 텍스트는 건드리지 않는다 — PC 에서는 저 말이 맞다.
 const WIN_ONLY = /명령 프롬프트|ipconfig|hostname|whoami|ping/i
 const PHONE_POINTER = '(폰으로 보고 계시면 설정 앱의 「내 PC 연결 정보」와 「응답 확인」에서 같은 값을 볼 수 있어요.)'
+const onPhoneNow = () => typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX
 export const shellLines = (lines) => (
-  typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX
-    && lines?.some((l) => typeof l === 'string' && WIN_ONLY.test(l))
+  onPhoneNow() && lines?.some((l) => typeof l === 'string' && WIN_ONLY.test(l))
     ? [...lines, PHONE_POINTER] : lines
 )
 
