@@ -241,7 +241,8 @@ describe('scenario integrity', () => {
     expect(asks.some((a) => a.files)).toBe(true)
     for (const a of asks) {
       // 행동으로 푸는 질문은 칠 것도 낼 파일도 없다 — 기다리는 grant 만 있다
-      if (a.deed) { expect(a.accept ?? a.files).toBeUndefined(); continue }
+      // 화면 캡처로 푸는 질문(shot)도 그렇다 — 파일은 찍는 순간에 생긴다
+      if (a.deed || a.shot) { expect(a.accept ?? a.files).toBeUndefined(); continue }
       expect(Boolean(a.accept?.length) !== Boolean(a.files?.length)).toBe(true)
       for (const id of a.files ?? []) expect(known.has(id)).toBe(true)
     }

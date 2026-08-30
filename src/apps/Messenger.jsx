@@ -92,6 +92,7 @@ const hintAskOf = (thread, ask) =>
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
   const fs = useGame((s) => s.scenario.fs)
+  const shots = useGame((s) => s.shots)
   const scenario = useGame((s) => s.scenario)
   const msgCount = useGame((s) => s.msgCount)
   const extraMessages = useGame((s) => s.extraMessages)
@@ -349,10 +350,10 @@ export default function Messenger({ source }) {
 
   const sendFile = (file) => {
     say(thread.id, { file: file.name, image: file.image })
-    if (!ask?.files) {
+    if (!ask?.files && !ask?.shot) {
       return thread.reactions?.some((r) => r.files?.includes(file.id)) ? reactTo(file.id) : shrug()
     }
-    if (fileFits(ask, file.id)) solved()
+    if (fileFits(ask, file)) solved()
     else missed()
   }
 
@@ -362,7 +363,7 @@ export default function Messenger({ source }) {
 
   // A drop is easy to do by accident and sending can't be undone, so it asks first.
   const drop = useFileDrop((id) => {
-    const file = findFile(fs, id)
+    const file = findFile(fs, id) ?? shots.find((x) => x.id === id)
     if (file && thread && !busy) setConfirming(file)
   })
 

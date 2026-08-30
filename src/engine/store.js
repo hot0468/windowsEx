@@ -6,6 +6,15 @@ import { PHONE_MAX } from '../shell/useViewport.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
 const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues where you were
+// 본 엔딩들. 세이브와 달리 새 게임을 해도 남는다 — 두 번째 출근이 첫 번째와
+// 조금 다르려면 게임이 그걸 알아야 한다.
+const ENDINGS_KEY = 'windowsEx.endings'
+export const seenEndings = () => {
+  try { return JSON.parse(localStorage.getItem(ENDINGS_KEY)) ?? [] } catch { return [] }
+}
+const rememberEnding = (kind) => {
+  try { localStorage.setItem(ENDINGS_KEY, JSON.stringify([...new Set([...seenEndings(), String(kind)])])) } catch { /* 못 남기면 그만 */ }
+}
 const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
@@ -747,7 +756,7 @@ export const useGame = create((set, get) => ({
   // opening, so nothing else has to happen here.
   editFile: (fileId, text) => set((s) => ({ edits: { ...s.edits, [fileId]: text } })),
   // The layoff comes as a message, and the answer to it is the ending.
-  layOff: (choice) => set({ ended: 'layoff:' + choice, toast: null, locked: false }),
+  layOff: (choice) => { rememberEnding('layoff:' + choice); set({ ended: 'layoff:' + choice, toast: null, locked: false }) },
 
   // Clocking off restarts the machine and brings tomorrow's work with it.
   startDay: (n) => {
@@ -774,7 +783,9 @@ export const useGame = create((set, get) => ({
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
     // The caller waits until the day's work has been asked for: it speaks last,
     // and only on its own night.
-    get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
+    // 엔딩을 본 적이 있으면 첫날 첫마디가 한 줄 다르다. 그뿐이다.
+    const again = n === 1 && seenEndings().length ? s.scenario.again : null
+    get().queueBeats([again, day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
       ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
   },
   finishDay: () => {
@@ -787,7 +798,7 @@ export const useGame = create((set, get) => ({
   },
   // The last clock-off brings either a weekend or the truth, depending on
   // what the player has read along the way.
-  endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
+  endGame: (kind) => { rememberEnding(kind); set({ ended: kind, toast: null, locked: false }) },
   // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
   // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다.
   //
@@ -1947,7 +1958,13 @@ export const shellLines = (lines) => (
 )
 
 // A question may want a file instead of typed text; any of the ones it names will do.
-export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
+// 파일로 답하는 질문. 정해진 파일(files)이거나, 정해진 창을 찍은 화면 캡처(shot)다 —
+// 캡처는 그때그때 생기는 파일이라 id 가 아니라 무엇을 찍었는지로 본다.
+export const fileFits = (ask, file) => {
+  const id = typeof file === 'string' ? file : file?.id
+  if (ask?.files?.includes(id)) return true
+  return Boolean(ask?.shot && file?.shot && file.shot.title === ask.shot.app)
+}
 
 // Hangs a question off the end of one still waiting, so a thread asked twice in
 // a day keeps both — answering the first hands straight over to the second.

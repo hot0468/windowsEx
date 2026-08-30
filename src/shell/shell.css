@@ -1238,6 +1238,7 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .end-sub { margin-top: 10px; color: #6c6f7c; font-size: 13px; letter-spacing: 2px; animation: end-in 3s ease; }
 .end-btn { margin-top: 48px; padding: 10px 26px; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; background: none; color: #d8d9df; font-size: 13px; animation: end-in 4s ease; }
 .end-btn:hover { background: rgba(255,255,255,.08); }
+.end-no { margin-top: 22px; color: #45485a; font-size: 11px; letter-spacing: 3px; animation: end-in 3.6s ease; }
 
 /* search portal front page headlines */
 .portal-news { width: 100%; max-width: 760px; padding: 0 16px 24px; text-align: left; }

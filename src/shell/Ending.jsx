@@ -35,6 +35,9 @@ export default function Ending() {
       : s.scenario.ending[name] ?? s.scenario.ending.plain
   })
   const newGame = useGame((s) => s.newGame)
+  // 열 갈래 중 몇 번째인지. 목록 밖의 것(구련보등)은 번외다.
+  const order = useGame((s) => s.scenario.ending.order ?? [])
+  const no = order.indexOf(String(kind)) + 1
   const [i, setI] = useState(0)
   const [shown, setShown] = useState(0)
   const scene = ending.scenes[i]
@@ -65,6 +68,7 @@ export default function Ending() {
       <div className="end end-final">
         <h1>{ending.end.title}</h1>
         <p className="end-sub">{ending.end.sub}</p>
+        <p className="end-no">{no ? `${no} / ${order.length}` : '번외'}</p>
         <button className="end-btn" onClick={newGame}>{ending.end.button}</button>
       </div>
     )
