@@ -77,7 +77,7 @@ const DOCK = ['dial', 'messenger', 'browser']
 function AppIcon({ app, onOpen }) {
   return (
     <button className="ph-icon" onClick={() => onOpen(app)}>
-      <span className="ph-glyph"><Icon name={app.icon} size={30} /></span>
+      <span className="ph-glyph"><Icon name={app.icon} size={46} /></span>
       <span className="ph-label">{app.title}</span>
     </button>
   )

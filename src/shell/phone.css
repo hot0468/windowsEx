@@ -159,17 +159,15 @@
   transition: transform 90ms ease-out;
 }
 .ph-icon:active { transform: scale(.92); }
+/* 아이콘은 그림 자체로 선다. 흰 판을 깔면 실제 폰 홈이 아니라 타일이 된다 —
+   대신 옅은 그림자로 바탕에서 떠 있게만 한다. */
 .ph-glyph {
   display: grid;
   place-items: center;
   width: 62px;
   height: 62px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .82);
-  backdrop-filter: blur(8px);
   color: var(--p-accent);
-  box-shadow: 0 1px 2px rgba(16, 19, 26, .1), 0 8px 18px rgba(16, 19, 26, .08),
-              inset 0 0 0 1px rgba(255, 255, 255, .6);
+  filter: drop-shadow(0 2px 5px rgba(16, 19, 26, .18));
 }
 .ph-label {
   max-width: 74px;
