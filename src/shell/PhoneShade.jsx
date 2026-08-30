@@ -24,6 +24,7 @@ export default function PhoneShade({ onClose }) {
   const dropVpn = useGame((s) => s.dropVpn)
   const [quiet, setQuiet] = useState(isMuted())
   const [err, setErr] = useState('')
+  const [grab, setGrab] = useState(null)
 
   const state = { grants, unlocked }
   const list = requestsOf(scenario, day, overtime, drawn, ripples)
@@ -42,7 +43,16 @@ export default function PhoneShade({ onClose }) {
 
   return (
     <div className="ph-shade-wrap" onPointerDown={onClose}>
-      <div className="ph-shade" onPointerDown={(e) => e.stopPropagation()}>
+      {/* 내린 것과 같은 손짓으로 올려 닫는다. 할 일 목록 안에서 시작한
+          손짓은 목록 스크롤이므로 건드리지 않는다. */}
+      <div className="ph-shade"
+           onPointerDown={(e) => {
+             e.stopPropagation()
+             setGrab(e.target.closest?.('.ph-todo') ? null : e.clientY)
+           }}
+           onPointerMove={(e) => { if (grab != null && e.clientY - grab < -30) onClose() }}
+           onPointerUp={() => setGrab(null)}
+           onPointerCancel={() => setGrab(null)}>
         <div className="ph-tiles">
           {Boolean(grants.vpnInstalled) && (
             <button className={'ph-tile' + (vpn ? ' on' : '')} disabled={vpnDialing}

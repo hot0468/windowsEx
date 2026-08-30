@@ -462,3 +462,129 @@
 .phone .nw-lead { flex-direction: column; gap: 12px; }
 .phone .nw-lead-shot { width: 100%; max-width: none; }
 .phone .nw-crumb { flex-wrap: wrap; }
+
+/* 토스트. 폰에서는 아래 구석의 작은 알림이 아니라, 상태바 밑에서 내려와
+   화면 폭을 채우는 카드다 — 손이 닿는 자리가 위에 있다.
+   .phone 바깥(App.jsx 오버레이)에 그려지므로 클래스를 직접 받는다. */
+.toast.ph {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  top: 46px;
+  bottom: auto;
+  width: auto;
+  padding: 14px 16px 15px;
+  border-radius: 20px;
+  background: rgba(252, 253, 255, .97);
+  backdrop-filter: blur(12px);
+  color: #10131a;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 8px 28px rgba(16, 19, 26, .22), inset 0 0 0 1px rgba(16, 19, 26, .05);
+  animation: toast-drop .28s cubic-bezier(.32, .72, 0, 1);
+}
+.toast.ph b { margin-bottom: 5px; color: #6b7686; font-size: 12px; }
+.toast.ph.leaving { animation: toast-lift .26s cubic-bezier(.4, 0, .7, .2) forwards; }
+@keyframes toast-drop { from { opacity: 0; transform: translateY(-120%); } }
+@keyframes toast-lift { to { opacity: 0; transform: translateY(-110%); } }
+
+/* ── 폰에서 보는 웹 페이지 (조사 결과 반영) ───────────────── */
+/* 다온뉴스 */
+.phone .nw-top { grid-template-columns: 1fr; gap: 8px; }
+.phone .nw-search { grid-column: 1; grid-row: auto; justify-self: stretch; width: 100%; }
+.phone .nw-hot { flex-wrap: wrap; white-space: normal; overflow: visible; gap: 6px 12px; }
+.phone .nw-lead-title { font-size: 19px; }
+
+/* 사내포털 상단 메뉴는 잘리는 대신 옆으로 넘긴다. */
+.phone .pt-top { gap: 12px; padding: 10px 12px; }
+.phone .pt-top nav { gap: 12px; overflow-x: auto; scrollbar-width: none; }
+.phone .pt-top nav::-webkit-scrollbar { display: none; }
+
+/* 전자문서(dcx)는 고정 540px 종이였다. */
+.phone .dcx-page { width: auto; margin: 12px 10px; padding: 24px 18px; }
+
+/* 사내위키 — 왼쪽 문서 목록이 본문을 짜부라뜨렸다. 위로 올려 옆으로 넘긴다. */
+.phone .wk { flex-direction: column; }
+.phone .wk-side { width: auto; min-width: 0; flex-direction: row; gap: 10px; overflow-x: auto;
+                  padding: 10px; border-right: 0; border-bottom: 1px solid #e6e8ee; }
+.phone .wk-sec { margin-bottom: 0; display: flex; align-items: center; gap: 4px; }
+.phone .wk-sec-name { white-space: nowrap; }
+.phone .wk-link { width: auto; white-space: nowrap; }
+.phone .wk-space { padding: 0 6px 0 0; white-space: nowrap; }
+.phone .wk-page { padding: 18px 14px 32px; }
+.phone .wk-table th, .phone .wk-table td { padding: 7px 8px; }
+
+/* 공유기 관리 페이지. '비고'가 어느 기기인지 말해 주므로(7층 복합기 …)
+   열을 지우면 답이 사라진다 — 대신 좁혀서 줄바꿈을 허락한다. */
+.phone .rt-table th, .phone .rt-table td { padding: 5px 6px; font-size: 11px; word-break: break-all; }
+.phone .rt-table { table-layout: fixed; width: 100%; }
+.phone .rt-set > span { width: 110px; }
+
+/* 회사 소개 */
+.phone .cp-gnb, .phone .cp-hero, .phone .cp-notice, .phone .cp-foot { padding-left: 18px; padding-right: 18px; }
+.phone .cp-hero h1 { font-size: 24px; }
+.phone .cp-hero-art { display: none; }
+
+/* 캘린더 — 칸이 61px 뿐이라 일정 글씨를 줄이고 한 줄로 자른다. */
+.phone .cal-cell { min-height: 62px; padding: 3px 3px; }
+.phone .cal-ev { font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 폰에서 여는 앱들 ─────────────────────────────────────── */
+/* 브라우저 크롬 */
+.phone .addr-bar input { min-width: 0; }
+.phone .bm-bar { overflow-x: auto; scrollbar-width: none; }
+.phone .bm-bar::-webkit-scrollbar { display: none; }
+.phone .bm { flex: none; }
+.phone .bw-hints { left: 8px; right: 8px; }
+
+/* 메일 — 목록과 본문이 나란히 서면 둘 다 못 읽는다. 목록을 위로. */
+.phone .mail-layout { flex-direction: column; }
+.phone .mail-list { width: auto; min-width: 0; max-height: 38%; border-right: 0; border-bottom: 1px solid #eee; }
+
+/* 탐색기 — 왼쪽 트리를 위로 눕히고, 표에서는 '유형'만 접는다.
+   유형은 확장자로 알 수 있지만 크기·날짜는 답이 될 수 있어 남긴다. */
+.phone .explorer { flex-direction: column; }
+.phone .ex-side { width: auto; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto;
+                  padding: 8px; border-right: 0; border-bottom: 1px solid #eee; }
+.phone .ex-side > * { flex: none; white-space: nowrap; }
+.phone .ex-search { width: auto; flex: 1; min-width: 0; }
+.phone .ex-table th:nth-child(3), .phone .ex-table td:nth-child(3) { display: none; }
+.phone .ex-table th, .phone .ex-table td { padding: 5px 7px; font-size: 11.5px; }
+.phone .ex-table td:nth-child(2) { white-space: normal; }
+
+/* 드라이브 — 사이드만 접는다. 올린 사람·올린 시각은 답이 될 수 있다. */
+.phone .dr { flex-direction: column; }
+.phone .dr-side { width: auto; padding: 12px 10px; }
+.phone .dr table { font-size: 11.5px; }
+.phone .dr th, .phone .dr td { padding: 6px 7px; white-space: normal; }
+
+/* 파일 선택 창 */
+.phone .fd { width: 96vw; height: 86vh; }
+/* 뿌리 폴더 목록은 지우지 않는다 — 여기서만 갈 수 있는 자리가 있다.
+   옆에 세우는 대신 위에 눕혀 옆으로 넘긴다. */
+.phone .fd-body { flex-direction: column; }
+.phone .fd-side { width: auto; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto;
+                  padding: 8px; border-right: 0; border-bottom: 1px solid #f0f0f4; }
+.phone .fd-root { width: auto; flex: none; white-space: nowrap; }
+.phone .fd-foot { flex-wrap: wrap; }
+.phone .fd-search { width: auto; flex: 1; min-width: 0; }
+
+/* 문서 — 종이 여백이 화면의 4분의 1을 먹었다. 표는 줄바꿈을 허락한다. */
+.phone .hwp-page { padding: 24px 18px 28px; }
+.phone .doc-table th, .phone .doc-table td,
+.phone .pdf-grid th, .phone .pdf-grid td { white-space: normal; padding: 6px 7px; }
+
+/* 슬라이드 — 왼쪽 미리보기 줄은 접고 아래 페이지 이동만 남긴다. */
+.phone .sl-strip { display: none; }
+.phone .sl-slide { padding: 24px 22px; }
+
+/* 인쇄 대화상자 */
+.phone .pr { width: min(340px, 92vw); }
+
+/* 작업 관리자(토스트를 누르면 폰에서도 열린다) — 열을 지우지 않고 좁힌다.
+   무엇이 CPU를 먹는지 읽는 화면이라 숫자 하나도 없애면 안 된다. */
+.phone .tm-head, .phone .tm-row { grid-template-columns: 1fr 50px 56px 52px; gap: 4px;
+                                  padding-left: 10px; padding-right: 10px; font-size: 11px; }
+
+/* 메신저 — 받은 파일 말풍선이 화면보다 넓었다. */
+.phone .bubble.them.file { min-width: min(240px, 100%); }

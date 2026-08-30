@@ -41,6 +41,9 @@ function Toast() {
   const openWindow = useGame((s) => s.openWindow)
   const setOpenThread = useGame((s) => s.setOpenThread)
   const [leaving, setLeaving] = useState(false)
+  // 토스트는 폰 셸(.phone) 바깥에 그려지므로 CSS 만으로는 폰인지 알 수 없다.
+  // 폰에서는 안드로이드처럼 화면 위에서 내려오는 카드가 된다.
+  const phone = useViewport() === 'phone'
   useEffect(() => {
     if (!toast) return
     setLeaving(false)
@@ -54,7 +57,8 @@ function Toast() {
   if (!toast) return null
   const app = APPS[toast.app]
   return (
-    <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
+    <div key={toast.id}
+         className={'toast' + (phone ? ' ph' : '') + (leaving ? ' leaving' : '')}
          onClick={() => {
            if (toast.source) setOpenThread(toast.source, toast.thread)
            // 토스트가 가리키는 자리까지 열어 준다 — 다운로드 완료를 눌렀는데
