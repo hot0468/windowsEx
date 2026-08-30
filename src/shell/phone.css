@@ -193,24 +193,6 @@
   to { opacity: 1; transform: none; }
 }
 .phone.sealed .phone-app { bottom: 0; }   /* 굳은 뒤에는 내비바가 없다 */
-.pa-head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 52px;
-  padding: 0 16px;
-  background: var(--p-surface);
-  border-bottom: 1px solid var(--p-line);
-  flex: none;
-}
-.pa-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
 /* 앱 내용. 데스크톱의 .win-body가 하던 자리를 그대로 잇는다. */
 .phone-body {
   flex: 1;

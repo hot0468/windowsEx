@@ -327,13 +327,12 @@ export default function PhoneShell() {
         </>
       )}
       {winCfg && (
-        <PhoneApp title={winCfg.title} icon={winCfg.icon} onBack={backFromWindow}>
+        <PhoneApp onBack={backFromWindow}>
           <winCfg.comp {...(openWin.props ?? {})} winId={openWin.id} />
         </PhoneApp>
       )}
       {!winCfg && entry && cfg && (
-        <PhoneApp title={entry.title} icon={entry.icon}
-                  onBack={screens.length > 1 ? popScreen : goPhoneHome}>
+        <PhoneApp onBack={screens.length > 1 ? popScreen : goPhoneHome}>
           <cfg.comp {...(entry.props ?? {})} winId={win?.id} />
         </PhoneApp>
       )}
