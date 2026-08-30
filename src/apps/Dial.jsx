@@ -116,7 +116,14 @@ export default function Dial() {
   // 통화 중이면 오버레이가 화면을 덮고 있다 — 목록은 그 뒤에 그대로 둔다.
 
   const contacts = scenario.calls?.contacts ?? []
-  const nameOf = (number) => contacts.find((c) => c.number === number)?.name
+  const people = scenario.calls?.people ?? []
+  // 일로 아는 사람과 그냥 아는 사람. 실제 폰의 연락처처럼 한 목록에 있되
+  // 무리는 나눠 둔다.
+  const groups = [
+    ['업무', [...people.filter((p) => p.group === '업무'), ...contacts]],
+    ['개인', people.filter((p) => p.group !== '업무')]
+  ]
+  const nameOf = (number) => [...contacts, ...people].find((c) => c.number === number)?.name
 
   return (
     <div className="cl">
@@ -142,10 +149,15 @@ export default function Dial() {
 
       {tab === 'contacts' && (
         <div className="cl-list">
-          {contacts.map((c) => (
-            <Row key={c.id} open={open === c.id} onOpen={() => setOpen(open === c.id ? null : c.id)}
-                 onCall={() => dial(c.number)}
-                 title={c.name} sub={`${c.org} · ${c.number}`} />
+          {groups.map(([label, rows]) => rows.length > 0 && (
+            <div key={label}>
+              <div className="cl-group">{label}</div>
+              {rows.map((c) => (
+                <Row key={c.id} open={open === c.id} onOpen={() => setOpen(open === c.id ? null : c.id)}
+                     onCall={() => dial(c.number)}
+                     title={c.name} sub={c.org ? `${c.org} · ${c.number}` : c.number} />
+              ))}
+            </div>
           ))}
         </div>
       )}

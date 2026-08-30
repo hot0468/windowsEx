@@ -52,6 +52,50 @@ describe('전화 연락처', () => {
   })
 })
 
+// 매일 톡을 주고받는 사람들이 연락처에 없으면 그 폰은 남의 폰이다.
+describe('아는 사람들', () => {
+  const threads = [scenario.workMessenger, scenario.privateMessenger]
+    .flatMap((m) => m.sections.flatMap((s) => s.threads))
+
+  it('톡을 주고받는 사람은 연락처에 있다', () => {
+    // 단톡방과 이름 없는 계정은 전화를 걸 상대가 아니다
+    const people = threads.filter((t) => !t.id.startsWith('room_') && t.id !== 'caller')
+    const listed = new Set(scenario.calls.people.map((p) => p.id))
+    const missing = people.filter((t) => !listed.has(t.id)).map((t) => t.name)
+    // 기관·스팸까지 전부 넣지는 않는다. 사람은 빠짐없이 있어야 한다.
+    const persons = ['boss', 'junho', 'minseo', 'soyoung', 'security', 'payroll', 'jihyun', 'mom', 'guesthouse']
+    for (const id of persons) expect(listed.has(id), id + ' 의 번호가 없다').toBe(true)
+    expect(missing.length).toBeLessThan(threads.length)
+  })
+
+  // 4일차 밤의 부름은 이름도 번호도 없는 자리다. 걸 수 있으면 그 장치가 깨진다.
+  it('이름 없는 계정과 단톡방에는 전화를 걸 수 없다', () => {
+    for (const p of scenario.calls.people) {
+      expect(p.id).not.toBe('caller')
+      expect(p.id.startsWith('room_')).toBe(false)
+    }
+  })
+
+  it('번호가 서로, 그리고 업무 연락처와 겹치지 않는다', () => {
+    const digits = (n) => n.replace(/[^0-9]/g, '')
+    const all = [...scenario.calls.people, ...scenario.calls.contacts].map((c) => digits(c.number))
+    expect(new Set(all).size).toBe(all.length)
+  })
+
+  it('아는 사람에게 걸면 받고, 일 이야기는 나오지 않는다', () => {
+    vi.useFakeTimers()
+    useGame.setState({ call: null, callSeq: 0, callLog: [], grants: {} })
+    const mom = scenario.calls.people.find((p) => p.id === 'mom')
+    useGame.getState().dial(mom.number)
+    vi.advanceTimersByTime(2300)
+    const call = useGame.getState().call
+    expect(call.stage).toBe('talking')
+    expect(call.name).toBe(mom.name)
+    expect(call.asking).toBe(false)
+    vi.useRealTimers()
+  })
+})
+
 describe('걸려오는 전화', () => {
   it('실존하는 일이 끝난 뒤에 걸려온다', () => {
     const ids = new Set(scenario.objectives.map((o) => o.grant))
