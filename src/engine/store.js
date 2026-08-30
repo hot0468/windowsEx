@@ -1198,7 +1198,7 @@ export const useGame = create((set, get) => ({
       s.scenario.days[s.day - 1]?.fetch,
       ...s.scenario.objectives.filter((o) => o.mail && !s.grants[o.grant]).map((o) => ({ ...o.mail, grants: o.grant }))
     ].filter(Boolean)
-    const same = (a, b) => String(a).replace(/\s/g, '').toLowerCase() === String(b).replace(/\s/g, '').toLowerCase()
+    const same = (a, b) => String(a).replace(/[,\s]/g, '').toLowerCase() === String(b).replace(/[,\s]/g, '').toLowerCase()
     const spec = specs.find((f) => same(f.to, to)) ?? null
     const verdict = checkOutbound(spec, { to, subject, body, attachmentId }, s.scenario.etiquette, s.scenario.player)
     // 요청 단위의 메일은 예절로 막지 않는다. 일은 되고, 잠시 뒤 팀장이 한마디 한다.

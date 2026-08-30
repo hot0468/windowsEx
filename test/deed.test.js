@@ -215,7 +215,9 @@ describe('행동 요청의 스펙', () => {
   const walk = (es, trail) => es.forEach((e) => { if (e.children) { folders.add(trail + '/' + e.name); walk(e.children, trail + '/' + e.name) } })
   Object.entries(scenario.fs).forEach(([r, es]) => { folders.add(r); walk(es, r) })
   const drive = scenario.sites.find((s) => s.layout === 'drive').wiki.pages
-  const world = JSON.stringify(scenario)
+  // pool 대사나 objective 자체가 아니라, 플레이어가 실제로 읽을 수 있는
+  // 자리(파일·사이트·메일·메신저)에 주소가 있어야 한다.
+  const world = JSON.stringify({ files: allFiles(scenario.fs), sites: scenario.sites, mails: scenario.mails, work: scenario.workMessenger, priv: scenario.privateMessenger })
   // 게임 전체의 ask 뿌리를 훑어 accept 문자열을 다 모은다 — scripts/query.mjs
   // 의 roots()와 같은 자리들.
   const threads = [scenario.workMessenger, scenario.privateMessenger].flatMap((m) => m.sections.flatMap((x) => x.threads))
@@ -257,6 +259,12 @@ describe('행동 요청의 스펙', () => {
       if (o.rename) { expect(files.has(o.rename.file), a.deed).toBe(true); expect(o.rename.name, a.deed).toMatch(/\.[a-z]+$/) }
       if (o.upload) { expect(files.has(o.upload.file), a.deed).toBe(true); expect(drive[o.upload.page], a.deed).toBeTruthy() }
     }
+  })
+
+  it('메일 목표의 수신자는 그날의 fetch 와도, 서로도 겹치지 않는다', () => {
+    const tos = [...scenario.days.map((d) => d.fetch?.to), ...scenario.objectives.filter((o) => o.mail).map((o) => o.mail.to)]
+      .filter(Boolean).map((t) => t.replace(/[,\s]/g, '').toLowerCase())
+    expect(new Set(tos).size).toBe(tos.length)
   })
 
   it('셀 목표는 다른 요청의 정답을 덮어쓰지 않는다', () => {
