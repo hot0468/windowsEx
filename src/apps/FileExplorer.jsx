@@ -12,6 +12,7 @@ import { useViewport } from '../shell/useViewport.js'
 export default function FileExplorer({ startFolder, roots: only }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
+  const shots = useGame((s) => s.shots)
   const restored = useGame((s) => s.restored)
   const openWindow = useGame((s) => s.openWindow)
   const pinFile = useGame((s) => s.pinFile)
@@ -43,7 +44,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
   // 폰에는 우클릭이 없다 — 같은 메뉴를 여는 손잡이를 대신 그린다.
   const phone = useViewport() === 'phone'
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, shots, scenario })
   const roots = only ?? Object.keys(fs)
   const nav = useFolderNav(startFolder ?? roots[0])
 

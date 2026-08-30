@@ -13,7 +13,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -367,6 +367,9 @@ export const useGame = create((set, get) => ({
   peeked: [],
   // 바탕화면에 걸어 둔 사진(갤러리의 file id). 기본 배경이면 null.
   wall: restored?.wall ?? null,
+  // 찍어 둔 화면 캡처. 바탕화면의 '스크린샷' 폴더는 이것이 하나라도 있을 때
+  // 비로소 생긴다(작업 폴더와 같은 방식이다).
+  shots: restored?.shots ?? [],
   // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
   // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
   // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
@@ -982,6 +985,26 @@ export const useGame = create((set, get) => ({
   // 배경 바꾸기. 사진이 사라지면(관측하면 사라진다) 기본 배경으로 돌아간다 —
   // 없는 사진을 붙들고 있으면 바탕화면이 검은 채로 남는다.
   setWall: (fileId) => { play('click'); set({ wall: fileId }) },
+  // 화면 캡처(Print Screen). 지금 맨 앞에 있는 창이 무엇인지와 시각을 남긴다 —
+  // 그림을 실제로 뜨는 것이 아니라, 그때 무엇을 보고 있었는지를 적어 둔다.
+  capture: () => {
+    const s = get()
+    if (s.locked || s.crashed) return null
+    // 맨 앞에 있는 창. 무엇을 보고 있었는지가 캡처의 내용이다.
+    const front = s.windows.filter((w) => !w.minimized).sort((a, b) => b.z - a.z)[0]
+    const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+    const n = s.shots.length + 1
+    const shot = {
+      id: 'shot_' + n,
+      name: `화면캡처_${String(n).padStart(3, '0')}.png`,
+      date: `${s.scenario.days[s.day - 1]?.date ?? ''} ${clock.time}`,
+      shot: { title: front ? front.app : null, at: clock.time, day: s.day }
+    }
+    set({ shots: [...s.shots, shot] })
+    play('click')
+    get().showToast({ from: '화면 캡처', text: `${shot.name} 을(를) 바탕화면 > 스크린샷 에 저장했습니다.`, app: 'explorer', props: { startFolder: ['바탕화면', '스크린샷'] } })
+    return shot
+  },
   setVpn: (on) => set({ vpn: on }),
   // VPN 연결. 클라이언트 창과 트레이 팝오버가 같은 길을 쓴다 — 이름이 hosts 에 없으면
   // 어느 쪽에서도 못 붙는다. 끊기가 창에 있으면 팝오버는 그 사이를 몰랐다.
@@ -1562,7 +1585,14 @@ export const tileShots = (scenario, kind, key) =>
 
 // The bin is a view: a file flagged `deleted` in the scenario sits in 휴지통
 // until restored, then reappears where the data always kept it.
-export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, scenario } = {}) {
+// 찍은 화면들이 사는 폴더. 하나도 없으면 폴더 자체가 없다 — 실제로도 첫
+// 캡처가 폴더를 만든다.
+export function fsWithShots(fs, shots = []) {
+  if (!shots.length) return fs
+  return { ...fs, 바탕화면: [...fs['바탕화면'], { name: '스크린샷', children: shots }] }
+}
+
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, shots = [], scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
@@ -1575,7 +1605,7 @@ export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))
   out['휴지통'] = [...(out['휴지통'] ?? []), ...binned]
-  return fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles)
+  return fsWithShots(fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles), shots)
 }
 
 // 옮기거나 이름을 바꾼 파일. 원래 자리에서 빼서 목적 폴더 끝에 넣는다 —
@@ -2172,7 +2202,8 @@ export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
 
 // Which app opens a file, decided by its name the way an OS does it.
 export const fileOpener = (file) =>
-  file.image ? { app: 'viewer', icon: 'image' }
+  // 캡처는 그림 파일이 아니지만 사진 뷰어가 연다 — 화면을 찍은 것이니까.
+  file.image || file.shot ? { app: 'viewer', icon: 'image' }
     : file.name.endsWith('.exe') ? { app: 'installer', icon: 'exe' }
       : file.name.endsWith('.xlsx') ? { app: 'sheet', icon: 'xls' }
       : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }

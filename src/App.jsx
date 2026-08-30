@@ -319,6 +319,11 @@ export default function App() {
         e.preventDefault()
         useGame.getState().lock()
       }
+      // 화면 캡처. 실제 키보드의 그 자리다.
+      if (e.key === 'PrintScreen') {
+        e.preventDefault()
+        useGame.getState().capture()
+      }
       // 바탕화면 보기. 실제 윈도우와 같은 자리에 둔다(Win 또는 Meta+D).
       if (e.metaKey && e.key.toLowerCase() === 'd') {
         e.preventDefault()
