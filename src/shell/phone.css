@@ -786,7 +786,10 @@
 
 /* 카메라. 렌즈가 없으므로 뷰파인더는 어둡고, 무엇을 찍는지는 아래에서 고른다. */
 .cam { height: 100%; display: flex; flex-direction: column; background: #0d0f14; color: #fff; }
-.cam-view { position: relative; flex: 1; min-height: 0; display: grid; place-items: center;
+/* 사진은 뷰파인더보다 크다 — 넘치는 부분은 잘라 낸다. 이게 없으면 사진이
+   앱 밖으로 삐져나온다. */
+.cam-view { position: relative; flex: 1; min-height: 0; overflow: hidden;
+            display: grid; place-items: center;
             background: radial-gradient(120% 90% at 50% 30%, #1b2130, #0b0d12 70%); }
 .cam-grid { position: absolute; inset: 8%; display: grid; grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr; pointer-events: none; }
@@ -897,6 +900,8 @@
 .cam-lens { position: absolute; left: 50%; top: 50%; object-fit: cover;
             transform-origin: center; translate: -50% -50%; will-change: transform;
             transition: transform 120ms ease-out; }
+.cam-note { position: absolute; left: 16px; right: 16px; bottom: 40px; margin: 0;
+            text-align: center; color: rgba(255, 255, 255, .62); font-size: 11.5px; line-height: 1.5; }
 .cam-tilt { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
             padding: 8px 14px; border: 0; border-radius: 999px;
             background: rgba(255, 255, 255, .92); color: #10131a;

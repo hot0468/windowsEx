@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { framePct, panFrom, REST, RANGE, shiftPct } from '../src/shell/tilt.js'
+import { framePct, panFrom, REST, RANGE, shiftPct, tiltNote } from '../src/shell/tilt.js'
 
 // 뷰파인더보다 큰 사진을 기울여 둘러보는 계산. 화면 없이 검사할 수 있게
 // 순수 함수로 떼어 두었다 — 여기서 어긋나면 사진 가장자리가 빈다.
@@ -55,5 +55,26 @@ describe('찍은 구도', () => {
     expect(framePct({ x: 0, y: 0 })).toEqual({ x: 50, y: 50 })
     expect(framePct({ x: 1, y: 1 })).toEqual({ x: 80, y: 80 })
     expect(framePct({ x: -1, y: -1 })).toEqual({ x: 20, y: 20 })
+  })
+})
+
+// 기울기가 안 될 때 왜 안 되는지 말해 줘야 한다 — 사람이 고칠 수 있는 것은
+// https 로 여는 일뿐인데, 아무 말이 없으면 게임이 고장 난 줄 안다.
+describe('기울기가 안 될 때', () => {
+  it('이유마다 다른 말을 한다', () => {
+    const notes = ['insecure', 'denied', 'unsupported', 'idle'].map(tiltNote)
+    for (const n of notes) expect(n).toBeTruthy()
+    expect(new Set(notes).size).toBe(notes.length)
+    // 어느 경우에도 대신 할 수 있는 일을 알려 준다
+    for (const n of notes) expect(n).toContain('끌어서')
+  })
+
+  it('https 문제일 때는 그것을 짚는다', () => {
+    expect(tiltNote('insecure')).toContain('https')
+  })
+
+  it('되고 있을 때는 아무 말도 하지 않는다', () => {
+    expect(tiltNote('on')).toBe(null)
+    expect(tiltNote('off')).toBe(null)
   })
 })

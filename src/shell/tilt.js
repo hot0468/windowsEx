@@ -34,21 +34,34 @@ export const framePct = ({ x = 0, y = 0 }) => ({
   y: Math.round(50 + y * 30)
 })
 
-// 센서를 쓰는 훅. 권한이 필요한 기기(iOS)에서는 ask() 를 눌러야 켜진다.
+// 센서를 쓰는 훅. 기울기가 안 오는 이유가 여러 가지라(권한·http·센서 없음)
+// 무엇 때문인지를 state 로 돌려준다 — 화면은 그것을 그대로 말해 준다.
+//   on         기울기가 오고 있다
+//   idle       듣고 있는데 아직 아무것도 안 왔다(대개 센서가 없는 기기)
+//   insecure   https 가 아니라 브라우저가 센서를 막았다
+//   denied     권한을 주지 않았다
+//   unsupported 이 브라우저에 센서 이벤트 자체가 없다
+//   off        아직 켜지 않았다(권한을 물어야 하는 기기)
 export function useTilt() {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [state, setState] = useState('off')
   const on = useRef(null)
+  const idle = useRef(null)
 
   const start = () => {
     if (on.current) return
     const handler = (e) => {
       if (e.beta == null && e.gamma == null) return
+      clearTimeout(idle.current)
       setState('on')
       setPan(panFrom(e))
     }
+    // 기기에 따라 둘 중 하나만 온다. 둘 다 듣고 먼저 오는 것을 쓴다.
     window.addEventListener('deviceorientation', handler)
+    window.addEventListener('deviceorientationabsolute', handler)
     on.current = handler
+    // 켰는데 조용하면 센서가 없는 것이다 — 손으로 끌라고 말해 줘야 한다.
+    idle.current = setTimeout(() => setState((v) => (v === 'on' ? v : 'idle')), 1500)
   }
 
   useEffect(() => {
@@ -56,10 +69,16 @@ export function useTilt() {
       setState('unsupported')
       return undefined
     }
-    // 권한을 묻는 기기가 아니면 그냥 듣는다.
-    if (typeof window.DeviceOrientationEvent.requestPermission !== 'function') start()
+    // http 로 열면 브라우저가 센서를 아예 주지 않는다(안드로이드 크롬).
+    // 이것은 게임의 문제가 아니라 주소의 문제라, 그렇게 말해 줘야 한다.
+    if (window.isSecureContext === false) setState('insecure')
+    else if (typeof window.DeviceOrientationEvent.requestPermission !== 'function') start()
     return () => {
-      if (on.current) window.removeEventListener('deviceorientation', on.current)
+      clearTimeout(idle.current)
+      if (on.current) {
+        window.removeEventListener('deviceorientation', on.current)
+        window.removeEventListener('deviceorientationabsolute', on.current)
+      }
       on.current = null
     }
   }, [])
@@ -79,7 +98,15 @@ export function useTilt() {
 
   const needsAsk = typeof window !== 'undefined'
     && typeof window.DeviceOrientationEvent?.requestPermission === 'function'
-    && state === 'off'
+    && state !== 'on'
 
   return { pan, setPan, state, ask, needsAsk }
 }
+
+// 기울기가 안 될 때 화면이 할 말. 손으로 끄는 길은 어느 경우에도 열려 있다.
+export const tiltNote = (state) => ({
+  insecure: 'https 로 열어야 기울기 센서가 켜집니다. 지금은 끌어서 둘러보세요.',
+  denied: '기울기 권한이 없습니다. 끌어서 둘러보세요.',
+  unsupported: '이 기기에는 기울기 센서가 없습니다. 끌어서 둘러보세요.',
+  idle: '기울기가 잡히지 않습니다. 끌어서 둘러보세요.'
+}[state] ?? null)

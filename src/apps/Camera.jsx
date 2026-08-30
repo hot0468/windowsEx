@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gameClock, useGame } from '../engine/store.js'
 import { cameraShot } from '../assets/photos.js'
-import { framePct, shiftPct, useTilt } from '../shell/tilt.js'
+import { framePct, shiftPct, tiltNote, useTilt } from '../shell/tilt.js'
 import { Camera as CameraIcon, Image } from '../icons/line.jsx'
 
 // 폰 카메라. 실제 렌즈가 없으므로 '무엇을 찍었는지'를 남긴다 — PC 의 화면
@@ -33,7 +33,7 @@ export default function Camera() {
   const [shot, setShot] = useState(null)
   // 사진은 뷰파인더보다 크다. 기기를 기울이면 그 안을 둘러본다 — 센서가 없거나
   // 권한을 안 준 자리에서는 손으로 끌어서 같은 일을 한다.
-  const { pan, setPan, ask, needsAsk } = useTilt()
+  const { pan, setPan, state: tilt, ask, needsAsk } = useTilt()
   const grab = useRef(null)
   const clock = gameClock(scenario, { day, overtime, dayAt })
 
@@ -90,9 +90,14 @@ export default function Camera() {
               <span>{day}일차 {clock.time}</span>
               <span>{label}</span>
             </div>
-            {/* iOS 는 손짓 안에서만 센서를 허락한다. 그 기기에서만 뜬다. */}
+            {/* 기울기가 안 되는 이유는 여러 가지다(권한·http·센서 없음).
+                권한을 물어야 하는 기기에는 버튼을, 그 밖에는 왜 안 되는지와
+                대신 할 수 있는 것을 말해 준다. */}
             {lens && needsAsk && (
               <button className="cam-tilt" onClick={ask}>기울여서 둘러보기</button>
+            )}
+            {lens && !needsAsk && tiltNote(tilt) && (
+              <p className="cam-note">{tiltNote(tilt)}</p>
             )}
           </>
         )}
