@@ -39,7 +39,10 @@ export default function Drive({ site, path = '' }) {
   const uploaded = useGame((s) => s.uploaded)
   const uploadTo = useGame((s) => s.uploadTo)
   const scenario = useGame((s) => s.scenario)
-  const clock = useGame((s) => gameClock(s.scenario, s))
+  const day = useGame((s) => s.day)
+  const overtime = useGame((s) => s.overtime)
+  const dayAt = useGame((s) => s.dayAt)
+  const clock = gameClock(scenario, { day, overtime, dayAt })
   const [picking, setPicking] = useState(false)
   const mine = (uploaded[open] ?? []).map((id) => findFile(scenario.fs, id)).filter(Boolean)
 
