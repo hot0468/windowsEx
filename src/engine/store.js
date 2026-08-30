@@ -973,6 +973,9 @@ export const useGame = create((set, get) => ({
   },
   setAsk: (threadId, ask) => {
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } }))
+    // 행동이 앞 단계보다 먼저 일어났을 수 있다. 새로 머리에 온 질문이 이미
+    // 켜진 grant 를 기다리는 것이면 지금 바로 답한다 — 안 그러면 영영 기다린다.
+    if (ask?.deed && get().grants[ask.deed]) return get().finishDeeds(ask.deed)
     // answering the question the day is waiting on is what lets it carry on
     if (threadId === get().beatAsk && !asking(get())) setTimeout(() => get().nextBeat(), BEAT_GAP)
   },

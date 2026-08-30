@@ -44,4 +44,16 @@ describe('행동을 기다리는 질문', () => {
     // 두 번 켜지지 않는다 — ok 대사가 두 번 오면 그게 증거다
     expect(useGame.getState().extraMessages.boss.map((m) => m.text)).toEqual(DEED.ok)
   })
+
+  it('행동이 먼저 일어나 있으면 그 단계에 이르는 순간 답한다', () => {
+    const first = { placeholder: '먼저', accept: ['x'], ok: ['응'], no: [['a'], ['b'], ['c']], next: [], then: DEED }
+    useGame.setState({ pendingAsks: { boss: first } })
+    useGame.getState().grant('orders')           // 아직 첫 단계 — 아무 일 없다
+    vi.runAllTimers()
+    expect(useGame.getState().pendingAsks.boss).toBe(first)
+    useGame.getState().setAsk('boss', first.then) // 첫 단계를 넘긴다
+    vi.runAllTimers()
+    expect(useGame.getState().pendingAsks.boss).toBe(null)
+    expect(useGame.getState().extraMessages.boss.map((m) => m.text)).toEqual(DEED.ok)
+  })
 })
