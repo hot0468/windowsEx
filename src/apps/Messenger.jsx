@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useGame, WORK_FOLDER, answerFits, fileFits, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
+import { useGame, WORK_FOLDER, answerFits, fileFits, fileOpener, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
 import { useFileDrop } from './dragFile.js'
 import { useViewport } from '../shell/useViewport.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
+import Icon from '../icons/Icon.jsx'
 import {
   BellOff, ChevronDown, ChevronLeft, HelpCircle, MessageSquare,
   Paperclip, Search, Settings, Sliders, UserPlus, Users
@@ -91,6 +92,7 @@ const hintAskOf = (thread, ask) =>
 export default function Messenger({ source }) {
   const m = useGame((s) => s.scenario[source])
   const fs = useGame((s) => s.scenario.fs)
+  const shots = useGame((s) => s.shots)
   const scenario = useGame((s) => s.scenario)
   const msgCount = useGame((s) => s.msgCount)
   const extraMessages = useGame((s) => s.extraMessages)
@@ -108,6 +110,8 @@ export default function Messenger({ source }) {
   const setTyping = useGame((s) => s.setTyping)
   const say = useGame((s) => s.say)
   const sayBack = useGame((s) => s.sayBack)
+  const restored = useGame((s) => s.restored)
+  const restoreFile = useGame((s) => s.restoreFile)
   const branch = useGame((s) => s.branches)
   const setBranch = useGame((s) => s.setBranch)
   const pendingAsks = useGame((s) => s.pendingAsks)
@@ -261,7 +265,7 @@ export default function Messenger({ source }) {
     }, 400)
   }
 
-  const speak = (lines) => sayBack(thread.id, thread.name, lines)
+  const speak = (lines, attach) => sayBack(thread.id, thread.name, lines, undefined, attach)
 
   const reactTo = (key) => {
     const hit = thread.reactions?.find(
@@ -272,7 +276,7 @@ export default function Messenger({ source }) {
     if (hit.next) setBranch(thread.id, hit.next)
     if (hit.ask) setAsk(thread.id, hit.ask)
     if (hit.grants) grant(hit.grants)
-    speak(hit.reply)
+    speak(hit.reply, hit.attach)
   }
 
   // Anything the player has to look up gets typed in, so picking from a list
@@ -346,10 +350,10 @@ export default function Messenger({ source }) {
 
   const sendFile = (file) => {
     say(thread.id, { file: file.name, image: file.image })
-    if (!ask?.files) {
+    if (!ask?.files && !ask?.shot) {
       return thread.reactions?.some((r) => r.files?.includes(file.id)) ? reactTo(file.id) : shrug()
     }
-    if (fileFits(ask, file.id)) solved()
+    if (fileFits(ask, file)) solved()
     else missed()
   }
 
@@ -359,7 +363,7 @@ export default function Messenger({ source }) {
 
   // A drop is easy to do by accident and sending can't be undone, so it asks first.
   const drop = useFileDrop((id) => {
-    const file = findFile(fs, id)
+    const file = findFile(fs, id) ?? shots.find((x) => x.id === id)
     if (file && thread && !busy) setConfirming(file)
   })
 
@@ -390,13 +394,14 @@ export default function Messenger({ source }) {
         </div>
 
         <div className="mg-list">
+          {/* 내 상태메시지는 내가 고친 적이 없다 — 날짜가 그것을 바꾼다 (subOn) */}
           <div className="mg-me">
-            <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.sub,
+            <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.subOn?.[day] ?? m.me.sub,
                              color: m.me.color, phone: m.me.phone, online: true }}
                     size={42} onOpen={setProfile} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>
-              <span className="mg-row-sub">{m.me.sub}</span>
+              <span className="mg-row-sub">{m.me.subOn?.[day] ?? m.me.sub}</span>
             </span>
             <span className="mg-pc">PC</span>
           </div>
@@ -489,7 +494,32 @@ export default function Messenger({ source }) {
                     {date}
                     <div className="msg-row">
                       <span className="msg-av">{opens && <Avatar t={who} size={32} onOpen={setProfile} />}</span>
-                      <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
+                      {/* 받은 파일. 메일의 첨부처럼 저장을 누르면 다운로드 폴더에 생긴다. */}
+                      {msg.fileId ? (
+                        <div className="bubble-stack">
+                          {/* 파일 카드: 종류 아이콘 · 이름 · 용량. 동작은 말풍선 밖에 줄로 선다 —
+                              카카오톡이 그렇다. 세 동작 중 실제로 하는 것은 저장뿐이다. */}
+                          <div className="bubble them file">
+                            {opens && <b>{msg.from}</b>}
+                            <span className="bubble-file">
+                              <Icon name={fileOpener({ name: msg.file }).icon} size={34} />
+                              <span className="bubble-file-mid">
+                                <span className="bubble-file-name">{msg.file}</span>
+                                <span className="bubble-file-size">용량: {msg.size}</span>
+                              </span>
+                            </span>
+                          </div>
+                          <div className="bubble-acts">
+                            <button disabled={!!restored[msg.fileId]} onClick={() => restoreFile(msg.fileId)}>
+                              {restored[msg.fileId] ? '저장됨' : '저장'}
+                            </button>
+                            <button disabled={!!restored[msg.fileId]} onClick={() => restoreFile(msg.fileId)}>다른 이름으로 저장</button>
+                            <button disabled>전달</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bubble them">{opens && <b>{msg.from}</b>}{msg.text}{attached(msg)}</div>
+                      )}
                     </div>
                   </Fragment>
                 )
@@ -520,6 +550,9 @@ export default function Messenger({ source }) {
                 ask.choices.map((text) => (
                   <button key={text} disabled={busy} onClick={() => pick(text)}>{text}</button>
                 ))
+              ) : ask?.deed ? (
+                // 행동으로 푸는 질문. 칠 것이 없다 — 무엇을 하면 되는지만 남긴다.
+                <span className="quick-done quick-deed">{ask.placeholder}</span>
               ) : ask ? (
                 <>
                   {/* 상대가 아직 치고 있는 동안에는 다음 질문을 미리 보여주지
@@ -559,8 +592,11 @@ export default function Messenger({ source }) {
                 </div>
               </div>
             )}
+            {/* 폰에서 무언가를 보낼 때 뒤지는 곳은 갤러리다 — 사진을 찍어
+                보내는 것이 그 기기에서 가장 자연스러운 일이다. */}
             {picking && (
-              <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
+              <FileDialog start={phone ? ['휴대폰', '갤러리']
+                : pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
                           onPick={(f) => { sendFile(f); setPicking(false) }}
                           onClose={() => setPicking(false)} />
             )}

@@ -17,6 +17,9 @@ export default defineConfig({
   // 캡처 이미지를 assets 에 떨어뜨리는 동안 파일이 아직 잠겨 있으면 감시자가
   // EBUSY 로 죽고 서버가 통째로 내려간다. 게임이 읽는 것은 webp 뿐이고 png 는
   // 변환되기 전에 잠깐 머무는 것이라, 감시에서 뺀다.
+  // 번들이 1MB 를 넘는다고 빌드마다 다섯 줄을 찍는다. 한 화면짜리 게임이라 쪼갤
+  // 것이 없고, 그 경고가 문법 오류를 덮어 가린다.
+  build: { chunkSizeWarningLimit: 2000 },
   server: {
     host: true,
     port: 5173,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame, dreamGallery, findFile, fsView, galleryOf } from '../engine/store.js'
-import { fileImage } from '../assets/photos.js'
+import { cameraShot, fileImage } from '../assets/photos.js'
+import { APPS } from './registry.jsx'
 import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
 
 // 맞춤 first, the way a picture viewer opens: whatever the picture's shape, it
@@ -11,6 +12,8 @@ const label = (z) => (z === 1 ? '맞춤' : `${z * 100}%`)
 export default function Viewer({ fileId }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
+  const shots = useGame((s) => s.shots)
+  const photos = useGame((s) => s.photos)
   const restored = useGame((s) => s.restored)
   const showHidden = useGame((s) => s.showHidden)
   const dreamt = useGame((s) => s.dreamt)
@@ -21,13 +24,16 @@ export default function Viewer({ fileId }) {
   const gates = useGame((s) => s.scenario.nineGates)
   const tiles = useGame((s) => s.tiles)
   const takeTile = useGame((s) => s.takeTile)
+  const placed = useGame((s) => s.placed)
+  const touched = useGame((s) => s.touched)
   const [menu, setMenu] = useState(null)
 
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, shots, photos, scenario })
   const gallery = galleryOf(fs, fileId, showHidden)
   const at = gallery.findIndex((f) => f.id === shown)
   const file = findFile(fs, shown)
-  const src = file && fileImage(file.image)
+  // 카메라로 찍은 것은 렌즈에 보이던 사진(있으면)을 그대로 쓴다.
+  const src = file && (fileImage(file.image) ?? cameraShot(file.shot?.lens))
 
   // Opening a picture opens the folder it is in, so the arrow keys work without
   // clicking the image first.
@@ -72,9 +78,26 @@ export default function Viewer({ fileId }) {
         </button>
       </div>
       <div className="vw-canvas">
+        {/* 캡처에는 그림이 없다. 그때 맨 앞에 무엇이 있었고 몇 시였는지를
+            창 모양으로 그린다 — 화면을 찍었다는 사실 자체가 내용이다. */}
+        {file.shot && !src ? (
+          <div className="vw-shot">
+            <div className="vw-shot-bar">
+              <span className="vw-shot-dots"><i /><i /><i /></span>
+              {file.shot.title ? APPS[file.shot.title]?.title ?? file.shot.title : '바탕화면'}
+            </div>
+            <div className="vw-shot-body">
+              <b>{file.shot.day}일차 {file.shot.at}</b>
+              <span>{file.shot.title ? '이 창이 맨 앞에 있었습니다.' : '열려 있는 창이 없었습니다.'}</span>
+            </div>
+          </div>
+        ) : (
         <div className="vw-stage" style={{ width: `${ZOOMS[zoom] * 100}%`, height: `${ZOOMS[zoom] * 100}%` }}>
           {/* Blown up on screen is where the tile in the corner is noticed. */}
           <img src={src} alt={file.alt ?? file.name}
+               style={file.shot?.frame
+                 ? { objectFit: 'cover', objectPosition: `${file.shot.frame.x}% ${file.shot.frame.y}%` }
+                 : undefined}
                title={file.tile && !tiles.includes(file.id) ? gates?.hint : undefined}
                onContextMenu={(e) => {
                  if (!file.tile || tiles.includes(file.id)) return
@@ -82,6 +105,7 @@ export default function Viewer({ fileId }) {
                  setMenu({ x: e.clientX, y: e.clientY })
                }} />
         </div>
+        )}
       </div>
       {menu && (
         <>

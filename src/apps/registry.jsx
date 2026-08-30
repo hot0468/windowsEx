@@ -12,9 +12,15 @@ import Slides from './Slides.jsx'
 import Sheet from './Sheet.jsx'
 import Installer from './Installer.jsx'
 import Settings from './Settings.jsx'
+import Dial from './Dial.jsx'
+import Camera from './Camera.jsx'
+import Maps from './Maps.jsx'
+import Gallery from './Gallery.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
+import Minesweeper from './Minesweeper.jsx'
+import Solitaire from './Solitaire.jsx'
 
 const WorkMessenger = () => <Messenger source="workMessenger" />
 const PrivateMessenger = () => <Messenger source="privateMessenger" />
@@ -37,10 +43,23 @@ export const APPS = {
   // 폰에는 시작 메뉴가 없어 게임을 다루는 버튼이 갈 자리가 없다. 설정 앱이
   // 그 자리다 — 데스크톱에는 시작 메뉴가 이미 있으므로 올리지 않는다.
   settings: { title: '설정', icon: 'settings', comp: Settings, w: 420, h: 520, phoneOnly: true },
+  // 전화도 폰의 물건이다. PC 에는 걸 곳도 받을 곳도 없다.
+  dial: { title: '전화', icon: 'phone', comp: Dial, w: 380, h: 560, phoneOnly: true },
+  // 카메라도 폰의 물건이다. PC 의 Print Screen 과 짝을 이룬다.
+  camera: { title: '카메라', icon: 'image', comp: Camera, w: 380, h: 560, phoneOnly: true },
+  // 지도. 브라우저의 장소 검색과 같은 자료를 자리로 본다 — 걸어 다니는 사람의 물건이다.
+  maps: { title: '지도', icon: 'globe', comp: Maps, w: 400, h: 600, phoneOnly: true },
+  // 갤러리. 탐색기로도 같은 폴더를 보지만, 폰에서 사진은 격자로 본다.
+  gallery: { title: '갤러리', icon: 'image', comp: Gallery, w: 400, h: 600, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
-  vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8', grant: 'vpnInstalled' }
+  vpn: { title: 'AR VPN', icon: 'vpn', comp: Vpn, w: 400, h: 330, theme: '#1f5aa8', grant: 'vpnInstalled' },
+  // 회사 PC에 딸려 오는 딴짓거리. 업무 상태를 한 톨도 건드리지 않는다 —
+  // 판은 창 안에서만 살고 창을 닫으면 사라진다. 다만 켜 둔 채로 일을 끝내면
+  // 팀장이 그걸 본다(store.js의 slacking).
+  mine: { title: '지뢰찾기', icon: 'mine', comp: Minesweeper, w: 400, h: 500 },
+  solitaire: { title: '솔리테어', icon: 'cards', comp: Solitaire, w: 760, h: 600, theme: '#166534' }
 }
 
 // The start menu lists programs, not the windows other things open: the dev
@@ -63,7 +82,6 @@ export const knownWindows = (windows) => windows.filter((w) => APPS[w.app])
 // 이름을 '사내 드라이브'로 하면 안 된다 — drive.ar.local이 이미 그 이름을
 // 쓰고 있고, 그쪽은 VPN과 hosts로 잠긴 별개의 퍼즐이다.
 const PHONE_EXTRA = [
-  { id: 'photos', title: '사진', icon: 'image', app: 'explorer', props: { startFolder: ['휴대폰', '갤러리'], roots: ['휴대폰'] } },
   { id: 'files', title: '파일', icon: 'folder', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'], roots: ['휴대폰'] } },
   { id: 'drive', title: '내 PC 드라이브', icon: 'folder', app: 'explorer', props: { startFolder: '문서', roots: ['문서', '다운로드', '휴지통', '로컬 디스크 (C:)'] } }
 ]
@@ -71,12 +89,13 @@ const PHONE_EXTRA = [
 // 폰에 없는 물건. 작업 관리자와 백신은 PC를 관리하는 도구고, 탐색기는
 // 사진·파일·드라이브로 갈라져 홈에 이미 세 번 올라와 있다.
 //
-// cmd와 notepad는 뺄 자리지만 남긴다. 설정 앱(기기 정보 · 사설 DNS)이
-// 아직 없어서, 지금 빼면 hostname·ipconfig·hosts를 묻는 요청 14건이
-// 폰에서 답을 찾을 수 없게 된다. 설정 앱이 생기는 라운드에 함께 뺀다.
+// cmd는 뺀다 — 실제 폰에 명령 프롬프트는 없다. ipconfig·hostname·whoami가
+// 말해 주던 값과 ping은 설정 앱의 '내 PC 연결 정보'가 대신 보여 준다(같은
+// scenario.network 를 읽으므로 답이 갈리지 않는다). notepad는 남긴다 —
+// hosts 를 고치는 길이 아직 거기뿐이다.
 // viewer도 뺀다. 제목이 '사진'이라 폰 네이티브 photos와 홈에서 이름이
 // 겹치고, 사진 뷰어는 파일을 열면 뜨는 것이지 홈에서 실행하는 앱이 아니다.
-const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus', 'viewer'])
+const NOT_ON_PHONE = new Set(['explorer', 'taskmgr', 'antivirus', 'viewer', 'cmd'])
 
 export const phoneApps = (grants = {}) => [
   ...PHONE_EXTRA,

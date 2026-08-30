@@ -9,10 +9,19 @@ const security = threads.find((t) => t.id === 'security')
 const files = allFiles(scenario.fs)
 
 describe('hangul install gate', () => {
-  it('keeps the installer where IT says it left it', () => {
+  it('does not leave the installer lying in Downloads — IT hands it over in the chat', () => {
     const setup = scenario.fs['다운로드'].find((f) => f.name === scenario.programs.hangul.setup)
     expect(setup).toBeTruthy()
+    expect(setup.attached).toBe(true)
     expect(fileOpener(setup).app).toBe('installer')
+    const approve = security.reactions.find((r) => r.grants === 'hangulOk')
+    expect(approve.attach.fileId).toBe(setup.id)
+    expect(approve.attach.name).toBe(setup.name)
+  })
+
+  it('cannot be the answer to anything — nobody can be asked for a file that is not there yet', () => {
+    const blob = JSON.stringify({ days: scenario.days, pool: scenario.pool, overtime: scenario.overtime })
+    expect(blob).not.toContain('file_hangul_setup')
   })
 
   it('gives the wizard every screen it has to draw', () => {

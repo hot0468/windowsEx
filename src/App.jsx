@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  useGame, dayDone, laidOff, objectiveDone, overtimeOffer, requestsOf, rumorPending, scriptLeft
+  useGame, dayDone, dreamGallery, findFile, laidOff, objectiveDone, overtimeOffer,
+  requestsOf, rumorPending, scriptLeft
 } from './engine/store.js'
-import { APPS, knownWindows } from './apps/registry.jsx'
+import { APPS, knownWindows, phoneApps } from './apps/registry.jsx'
+import { CallScreen } from './apps/Dial.jsx'
 import Window from './shell/Window.jsx'
 import Desktop from './shell/Desktop.jsx'
 import Taskbar from './shell/Taskbar.jsx'
@@ -14,9 +16,9 @@ import PhoneShell from './shell/PhoneShell.jsx'
 import { useViewport } from './shell/useViewport.js'
 import './shell/phone.css'
 import Icon from './icons/Icon.jsx'
-import { wallpaper } from './assets/photos.js'
+import { fileImage, wallpaper } from './assets/photos.js'
 
-import { Info, LayoutGrid } from './icons/line.jsx'
+import { Info, LayoutGrid, Phone, PhoneOff } from './icons/line.jsx'
 
 // How long the sender shows as "작성중…" before each scripted message lands.
 const TYPING_LEAD = 900
@@ -40,10 +42,18 @@ function Toast() {
   const clearToast = useGame((s) => s.clearToast)
   const openWindow = useGame((s) => s.openWindow)
   const setOpenThread = useGame((s) => s.setOpenThread)
+  const pushScreen = useGame((s) => s.pushScreen)
+  const grants = useGame((s) => s.grants)
   const [leaving, setLeaving] = useState(false)
+  // 토스트는 폰 셸(.phone) 바깥에 그려지므로 CSS 만으로는 폰인지 알 수 없다.
+  // 폰에서는 안드로이드처럼 화면 위에서 내려오는 카드가 된다.
+  const phone = useViewport() === 'phone'
   useEffect(() => {
     if (!toast) return
     setLeaving(false)
+    // 머무는 알림은 스스로 가지 않는다. 하루를 막고 서 있는 말이라
+    // 4초 뒤 사라지면 무언가 온 것만 보고 내용을 못 읽는다.
+    if (toast.sticky) return
     const out = setTimeout(() => setLeaving(true), 4200)
     const gone = setTimeout(clearToast, 4500)
     return () => { clearTimeout(out); clearTimeout(gone) }
@@ -51,12 +61,22 @@ function Toast() {
   if (!toast) return null
   const app = APPS[toast.app]
   return (
-    <div key={toast.id} className={'toast' + (leaving ? ' leaving' : '')}
+    <div key={toast.id}
+         className={'toast' + (phone ? ' ph' : '') + (leaving ? ' leaving' : '')}
          onClick={() => {
            if (toast.source) setOpenThread(toast.source, toast.thread)
            // 토스트가 가리키는 자리까지 열어 준다 — 다운로드 완료를 눌렀는데
            // 파일 탐색기가 첫 화면에서 멈추면 알림이 절반만 일한 셈이다.
            if (app) openWindow(toast.app, toast.props)
+           // 폰은 창을 그리지 않는다. 홈에 있는 앱(메신저·메일 …)이 여는 창은
+           // PhoneShell 의 창 감시가 일부러 건너뛰므로 — 홈에서 연 것과 두 겹으로
+           // 쌓이기 때문 — 알림으로 연 것은 여기서 그 앱 화면을 직접 올려야 한다.
+           // 이게 없으면 창만 열리고 화면은 그대로다.
+           if (phone && app) {
+             // 홈에 없는 앱(탐색기 같은)은 창 감시가 'win:' 으로 올려 준다.
+             const entry = phoneApps(grants).find((a) => a.app === toast.app)
+             if (entry) pushScreen('app:' + entry.id)
+           }
            clearToast()
          }}>
       <b>
@@ -101,6 +121,36 @@ function FailOverlay() {
 
 // Once you know who wrote the rumour, you have to decide what to do with it.
 // This is not a day boundary — it interrupts the moment you find the name.
+// 걸려오는 전화. 어느 앱을 보고 있든 화면을 덮는다 — 전화는 그런 물건이다.
+// 받으면 전화 앱이 열리고, 거절해도 기록에는 부재중으로 남는다.
+function Ringing() {
+  const call = useGame((s) => s.call)
+  const answerCall = useGame((s) => s.answerCall)
+  const declineCall = useGame((s) => s.declineCall)
+  const openWindow = useGame((s) => s.openWindow)
+  const pushScreen = useGame((s) => s.pushScreen)
+  if (!call || call.stage !== 'ringing') return null
+  return (
+    <div className="ring">
+      <div className="ring-who">
+        <div className="ring-name">{call.name}</div>
+        <div className="ring-num">{call.number}</div>
+        <div className="ring-sub">수신 전화</div>
+      </div>
+      <div className="ring-keys">
+        <button className="ring-no" onClick={declineCall} aria-label="거절">
+          <PhoneOff size={24} strokeWidth={1.9} />
+        </button>
+        <button className="ring-yes"
+                onClick={() => { answerCall(); openWindow('dial'); pushScreen('app:dial') }}
+                aria-label="받기">
+          <Phone size={24} strokeWidth={1.9} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function RumorOverlay() {
   const c = useGame((s) => s.scenario.rumor.choice)
   const actOnRumor = useGame((s) => s.actOnRumor)
@@ -216,6 +266,14 @@ export default function App() {
   const locked = useGame((s) => s.locked)
   const ended = useGame((s) => s.ended)
   const sealed = useGame((s) => s.sealed)
+  // 바탕에 걸어 둔 사진. 그 사진이 사라진 날에는(관측하면 사라진다) 아무 말
+  // 없이 기본 배경으로 돌아간다 — 없는 사진을 붙들면 바탕이 검게 남는다.
+  const wall = useGame((s) => s.wall)
+  const dreamt = useGame((s) => s.dreamt)
+  const shot = wall && !(dreamt && scenario.dream?.photos?.includes(wall))
+    ? findFile(dreamGallery(scenario, scenario.fs, dreamt), wall)?.image
+    : null
+  const paper = (shot && fileImage(shot)) || wallpaper
   const shell = useViewport()
 
   // 개발 중에만 여는 문.
@@ -261,6 +319,16 @@ export default function App() {
         e.preventDefault()
         useGame.getState().lock()
       }
+      // 화면 캡처. 실제 키보드의 그 자리다.
+      if (e.key === 'PrintScreen') {
+        e.preventDefault()
+        useGame.getState().capture()
+      }
+      // 바탕화면 보기. 실제 윈도우와 같은 자리에 둔다(Win 또는 Meta+D).
+      if (e.metaKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        useGame.getState().showDesktop()
+      }
       arm()
     }
     window.addEventListener('keydown', onKey)
@@ -303,6 +371,8 @@ export default function App() {
   const overlays = (
     <>
       <Toast />
+      <Ringing />
+      <CallScreen />
       {locked && <Lock />}
       {rumorPending(rumor) && !failed && <RumorOverlay />}
       {cut && !failed && !rumorPending(rumor) && <LayoffOverlay />}
@@ -321,7 +391,7 @@ export default function App() {
   // 새로 세워서, 굳어야 할 화면이 맨 위로 되감긴다.
   return (
     <div className={'desktop' + (sealed ? ' sealed' : '')}
-         style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : undefined}>
+         style={paper ? { backgroundImage: `url(${paper})` } : undefined}>
       {!sealed && <Desktop />}
       {!sealed && <Progress />}
       <WindowLayer />

@@ -2,9 +2,19 @@ import { create } from 'zustand'
 import scenario from '../scenarios/workday.json'
 import { checkEtiquette, checkGoal, checkOutbound } from './goal.js'
 import { play } from '../shell/sound.js'
+import { PHONE_MAX } from '../shell/useViewport.js'
 
 const SAVE_KEY = 'windowsEx.save'        // the player's explicit checkpoint
 const SESSION_KEY = 'windowsEx.session'  // autosaved, so a refresh continues where you were
+// 본 엔딩들. 세이브와 달리 새 게임을 해도 남는다 — 두 번째 출근이 첫 번째와
+// 조금 다르려면 게임이 그걸 알아야 한다.
+const ENDINGS_KEY = 'windowsEx.endings'
+export const seenEndings = () => {
+  try { return JSON.parse(localStorage.getItem(ENDINGS_KEY)) ?? [] } catch { return [] }
+}
+const rememberEnding = (kind) => {
+  try { localStorage.setItem(ENDINGS_KEY, JSON.stringify([...new Set([...seenEndings(), String(kind)])])) } catch { /* 못 남기면 그만 */ }
+}
 const PENDING_KEY = 'windowsEx.pendingLoad'
 
 // The fields worth carrying across sessions: progress, not view state.
@@ -12,7 +22,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots', 'photos']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -145,6 +155,14 @@ export function gameClock(scenario, { day = 1, overtime = {}, dayAt = 0 } = {}, 
   }
 }
 
+// 지금 이 순간을 파일 날짜 꼴('YYYY-MM-DD HH:MM')로. 저장하거나 올린 것이
+// 언제였는지는 그 뒤로 시계가 가도 그대로 남아야 한다.
+export const nowStamp = (s) => {
+  const c = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+  const m = /(\d+)월\s*(\d+)일/.exec(c.date)
+  return m ? `${GAME_YEAR}-${pad2(+m[1])}-${pad2(+m[2])} ${c.time}` : ''
+}
+
 // 오늘 밤 부름이 보낼 것. 거절했으면 아무 밤도 오지 않고, 이미 보낸 밤은
 // 다시 오지 않는다.
 export function callerNight(s) {
@@ -186,6 +204,8 @@ let toastId = 0
 // How long the day waits between two things being said.
 const BEAT_GAP = 3600
 // 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
+// 마치기를 누르고 이름 없는 계정이 말을 걸기까지.
+export const CALLER_DELAY = 2200
 const SAY_FIRST = 1200
 const SAY_GAP = 1500
 const sayTime = (count, gap = SAY_GAP) => SAY_FIRST + Math.max(0, count - 1) * gap
@@ -262,6 +282,15 @@ export const useGame = create((set, get) => ({
   sealed: restored?.sealed ?? false,
   // 그 자리에 굳은 창. 이것만 스크롤이 서고, 뒤이어 뜨는 창들은 읽을 수 있다.
   frozen: restored?.frozen ?? null,
+  // 옮기거나 이름을 바꾼 파일. 뷰(fsView)가 적용한다 — 원본 트리는 그대로다.
+  placed: restored?.placed ?? {},
+  // 드라이브 페이지에 올린 파일 id들. Task 4 가 쓴다.
+  uploaded: restored?.uploaded ?? {},
+  touched: restored?.touched ?? {},
+  // 게임 창을 켜 둔 채로 일을 끝내다 팀장에게 걸렸는가. 한 번뿐이다.
+  slacked: restored?.slacked ?? false,
+  // 잘라낸 파일. 세이브에는 안 실린다.
+  clipboard: null,
   dreamt: restored?.dreamt ?? false,
   // Whether 엄마's conversation has been unfolded all the way back. She answers
   // that once, and only for the player who went looking.
@@ -279,6 +308,17 @@ export const useGame = create((set, get) => ({
   // Whether the player has pressed "finish today" — view state, so a reload
   // simply asks for the click again.
   closing: false,
+  // 하루가 기다리는 대화. 그 창을 닫을 때까지 저녁이 오지 않는다.
+  awaitingCaller: null,
+  // 내가 보낸 메일. 되돌려받은 것도 남긴다 — 잘못 보냈다는 것을
+  // 보려면 무엇을 보냈는지가 남아 있어야 한다.
+  sentMails: restored?.sentMails ?? [],
+  // 이번 주에 실제로 열린 곳들. 최근이 앞이다.
+  visited: restored?.visited ?? [],
+  // 이 자리의 전 사용자가 남긴 흔적 중 본 것. 메모 서버의 끓긴 문장이 이걸로 이어진다.
+  traces: restored?.traces ?? {},
+  // 탐색기 보기. 'icons' | 'details'. 창을 닫았다 열어도 그대로다.
+  explorerView: restored?.explorerView ?? 'icons',
   // Every wrong answer of the week, typed or mailed. Unlike misses this is
   // never reset: accuracy is judged over the whole week.
   slips: restored?.slips ?? 0,
@@ -328,8 +368,29 @@ export const useGame = create((set, get) => ({
   hinted: restored?.hinted ?? {},
   // The VPN tunnel. Kept across a save, dropped by a restart the way a real one is.
   vpn: restored?.vpn ?? false,
+  // 연결 중. 저장하지 않는다 — 다시 켜면 타이머는 없다.
+  vpnDialing: false,
   // The floor's router with its DHCP server stopped: nothing past it loads until it is started again.
   routerDown: restored?.routerDown ?? false,
+  // Win+D 로 한꺼번에 내린 창들. 다시 누르면 이것만 올라온다.
+  peeked: [],
+  // 바탕화면에 걸어 둔 사진(갤러리의 file id). 기본 배경이면 null.
+  wall: restored?.wall ?? null,
+  // 찍어 둔 화면 캡처. 바탕화면의 '스크린샷' 폴더는 이것이 하나라도 있을 때
+  // 비로소 생긴다(작업 폴더와 같은 방식이다).
+  shots: restored?.shots ?? [],
+  // 폰 카메라로 찍은 것. 갤러리에 그대로 쌓인다.
+  photos: restored?.photos ?? [],
+  // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
+  // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
+  // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
+  // 벨이 다시 울리면 그건 같은 전화가 아니다).
+  call: null,
+  callSeq: 0,
+  callLog: restored?.callLog ?? [],
+  // 스팸이 마지막으로 온 날. 하루에 한 번을 넘지 않는다.
+  spammedOn: restored?.spammedOn ?? 0,
+  calledIn: restored?.calledIn ?? {},
   // Whether this PC is registered with the copier. Set on the copier's own web
   // page and read by the print dialog, so it lives here rather than in either.
   mfpFixed: restored?.mfpFixed ?? false,
@@ -359,6 +420,10 @@ export const useGame = create((set, get) => ({
     // A message that lands in the conversation already on screen needs no
     // notification: the player is watching it arrive.
     if (watchingThread(s, toast)) return
+    // 머무는 알림은 하루를 봐줘 달라는 말이다. 그 위로 잡담을 덮지 않는다 —
+    // 덮으면 이름 없는 계정이 부른 줄을 모른 채 하루가 멈춰 있게 된다.
+    // 말 자체는 대화창에 그대로 쌓인다. 알림만 건너뛴다.
+    if (s.toast?.sticky && !toast.sticky) return
     play('notify')
     set({ toast: { ...toast, id: ++toastId } })
   },
@@ -443,8 +508,10 @@ export const useGame = create((set, get) => ({
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
   currentApp: () => {
-    const [first] = get().screens
-    return first?.startsWith('app:') ? first.slice(4) : null
+    // 맨 위의 앱 화면. 첫 화면만 보면, 알림을 눌러 다른 앱 위에 앱을 열었을 때
+    // 밑에 깔린 앱이 계속 그려진다.
+    const key = [...get().screens].reverse().find((k) => k.startsWith('app:'))
+    return key ? key.slice(4) : null
   },
 
   openWindow: (app, props = {}, anew = false, forced = false) => {
@@ -483,7 +550,18 @@ export const useGame = create((set, get) => ({
       }
     })
   },
-  closeWindow: (id) => set((s) => (s.sealed ? s : { windows: s.windows.filter((w) => w.id !== id) })),
+  closeWindow: (id) => set((s) => {
+    if (s.sealed) return s
+    // 하루가 이 대화를 기다리고 있었다면, 그 창을 닫는 순간이 퇴근이다.
+    // 폰도 화면을 내릴 때 여기를 지나므로 꼬리는 자리는 하나다.
+    const gone = s.windows.find((w) => w.id === id)
+    const wanted = s.awaitingCaller && appOf(sourceOf(s.scenario, s.awaitingCaller))
+    const evening = wanted && gone?.app === wanted
+    return {
+      windows: s.windows.filter((w) => w.id !== id),
+      ...(evening ? { closing: true, awaitingCaller: null, toast: null } : {})
+    }
+  }),
   focusWindow: (id) =>
     set((s) => ({
       windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.nextZ, minimized: false } : w)),
@@ -491,6 +569,19 @@ export const useGame = create((set, get) => ({
     })),
   minimizeWindow: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, minimized: true } : w)) })),
+  // 바탕화면 보기(Win+D). 한 번 누르면 모두 내려가고, 한 번 더 누르면 방금
+  // 내린 것들만 돌아온다 — 원래 내려가 있던 창은 그대로 둔다.
+  showDesktop: () => set((s) => {
+    const open = s.windows.filter((w) => !w.minimized).map((w) => w.id)
+    if (open.length) {
+      return { windows: s.windows.map((w) => ({ ...w, minimized: true })), peeked: open }
+    }
+    const back = new Set(s.peeked ?? [])
+    return {
+      windows: s.windows.map((w) => (back.has(w.id) ? { ...w, minimized: false } : w)),
+      peeked: []
+    }
+  }),
   toggleMaximize: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, maximized: !w.maximized } : w)) })),
   moveWindow: (id, x, y) => {
@@ -544,11 +635,18 @@ export const useGame = create((set, get) => ({
   // 날 하게 되어 있다 — 마감 화면이 대화를 덮으므로 그 자리에서는 못 쓴다.
   closeDay: () => {
     const s = get()
+    // 부름을 기다리는 중이면 버튼은 이미 죽어 있다. 다시 눌러도 하루는 그
+    // 대화를 읽고 닫아야만 끝난다 — 지나칠 수 있는 말이면 밤에 올 이유가 없다.
+    if (s.awaitingCaller) return
     const night = callerNight(s)
     if (!night) return set({ closing: true })
     s.grant('called:' + s.day)
-    s.queueBeats([night], 300)
-    setTimeout(() => set({ closing: true }), 2600)
+    // 알림은 사라지지 않고, 마감 화면도 아직 오지 않는다. 받은 사람이
+    // 읽고 대화를 닫는 것이 오늘을 끝낸다 — 이름 없는 계정이 말을 건는데
+    // 2.6초 뒤 퇴근 화면이 덮어버리면 무슨 말을 했는지 보지도 못한다.
+    // 말은 버튼이 죽고 살짝 뒤에 온다. 곧바로 오면 버튼이 부른 것처럼 읽힌다.
+    set({ awaitingCaller: night.thread })
+    s.queueBeats([{ ...night, sticky: true }], CALLER_DELAY)
   },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
@@ -658,7 +756,7 @@ export const useGame = create((set, get) => ({
   // opening, so nothing else has to happen here.
   editFile: (fileId, text) => set((s) => ({ edits: { ...s.edits, [fileId]: text } })),
   // The layoff comes as a message, and the answer to it is the ending.
-  layOff: (choice) => set({ ended: 'layoff:' + choice, toast: null, locked: false }),
+  layOff: (choice) => { rememberEnding('layoff:' + choice); set({ ended: 'layoff:' + choice, toast: null, locked: false }) },
 
   // Clocking off restarts the machine and brings tomorrow's work with it.
   startDay: (n) => {
@@ -685,7 +783,9 @@ export const useGame = create((set, get) => ({
     if (day.mails) set((st) => ({ extraMails: [...st.extraMails, ...day.mails] }))
     // The caller waits until the day's work has been asked for: it speaks last,
     // and only on its own night.
-    get().queueBeats([day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
+    // 엔딩을 본 적이 있으면 첫날 첫마디가 한 줄 다르다. 그뿐이다.
+    const again = n === 1 && seenEndings().length ? s.scenario.again : null
+    get().queueBeats([again, day.opening, ...landing.map((r) => r.beat), ...(day.asks ?? []),
       ...beatsFor(s.scenario, drawn)].filter(Boolean), 3600)
   },
   finishDay: () => {
@@ -698,7 +798,7 @@ export const useGame = create((set, get) => ({
   },
   // The last clock-off brings either a weekend or the truth, depending on
   // what the player has read along the way.
-  endGame: (kind) => set({ ended: kind, toast: null, locked: false }),
+  endGame: (kind) => { rememberEnding(kind); set({ ended: kind, toast: null, locked: false }) },
   // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
   // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다.
   //
@@ -802,6 +902,13 @@ export const useGame = create((set, get) => ({
   })),
   pinFile: (id) => set((s) => (s.pinned.includes(id) ? s : { pinned: [...s.pinned, id] })),
   unpinFile: (id) => set((s) => ({ pinned: s.pinned.filter((x) => x !== id) })),
+  // 열린 곳만 기록에 남는다. 주소만 치고 못 들어간 곳까지 쌓으면, 기록이
+  // 가 본 적 없는 데를 가리키게 된다(북마크와 같은 규칙).
+  noteVisit: (url, title) => set((s) => ({
+    visited: [{ url, title, day: s.day }, ...s.visited.filter((v) => v.url !== url)].slice(0, VISITS)
+  })),
+  setExplorerView: (view) => set({ explorerView: view }),
+  sawTrace: (key) => set((s) => (s.traces[key] ? s : { traces: { ...s.traces, [key]: true } })),
   restoreFile: (id) => set((s) => ({ restored: { ...s.restored, [id]: true } })),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
   // A maintenance command sent to the copier. Out of order, the paper jams
@@ -818,6 +925,37 @@ export const useGame = create((set, get) => ({
     play('ok')
     set({ mfpFixed: true })
     return 'done'
+  },
+  cutFile: (fileId) => set({ clipboard: fileId }),
+  placeFile: (fileId, into) => {
+    set((s) => ({ placed: { ...s.placed, [fileId]: { ...s.placed[fileId], into } }, clipboard: null }))
+    get().checkPlaced()
+  },
+  renameFile: (fileId, name) => {
+    set((s) => ({ placed: { ...s.placed, [fileId]: { ...s.placed[fileId], name } } }))
+    get().checkPlaced()
+  },
+  // 옮기기·이름 목표. 셀 목표와 같은 식이다 — 자리가 맞는 순간 켜진다.
+  checkPlaced: () => {
+    const { scenario, placed, grants, grant } = get()
+    scenario.objectives
+      .filter((o) => !grants[o.grant] && (
+        (o.move && placed[o.move.file]?.into === o.move.into) ||
+        (o.rename && placed[o.rename.file]?.name === o.rename.name)))
+      .forEach((o) => grant(o.grant))
+  },
+  uploadTo: (page, fileId) => {
+    set((s) => ({
+      uploaded: { ...s.uploaded, [page]: [...new Set([...(s.uploaded[page] ?? []), fileId])] },
+      touched: { ...s.touched, [page + '/' + fileId]: nowStamp(s) }
+    }))
+    get().checkUploaded()
+  },
+  checkUploaded: () => {
+    const { scenario, uploaded, grants, grant } = get()
+    scenario.objectives
+      .filter((o) => o.upload && !grants[o.grant] && (uploaded[o.upload.page] ?? []).includes(o.upload.file))
+      .forEach((o) => grant(o.grant))
   },
   // Typing into a cell is the whole interaction; an objective that names that
   // cell is met the moment the value fits.
@@ -847,7 +985,8 @@ export const useGame = create((set, get) => ({
       sheetEdits[k] = sheetDrafts[k]
       delete sheetDrafts[k]
     }
-    set({ sheetEdits, sheetDrafts })
+    // 저장한 파일은 오늘 고친 파일이다 — 탐색기의 수정한 날짜가 그렇게 보인다.
+    set({ sheetEdits, sheetDrafts, touched: { ...s.touched, [fileId]: nowStamp(s) } })
     get().checkCells()
   },
   // 저장하지 않고 닫을 때. 들고 있던 것을 버린다.
@@ -856,7 +995,63 @@ export const useGame = create((set, get) => ({
       sheetDrafts: Object.fromEntries(
         Object.entries(s.sheetDrafts).filter(([k]) => !k.startsWith(fileId + ':')))
     })),
+  // 배경 바꾸기. 사진이 사라지면(관측하면 사라진다) 기본 배경으로 돌아간다 —
+  // 없는 사진을 붙들고 있으면 바탕화면이 검은 채로 남는다.
+  setWall: (fileId) => { play('click'); set({ wall: fileId }) },
+  // 화면 캡처(Print Screen). 지금 맨 앞에 있는 창이 무엇인지와 시각을 남긴다 —
+  // 그림을 실제로 뜨는 것이 아니라, 그때 무엇을 보고 있었는지를 적어 둔다.
+  capture: () => {
+    const s = get()
+    if (s.locked || s.crashed) return null
+    // 맨 앞에 있는 창. 무엇을 보고 있었는지가 캡처의 내용이다.
+    const front = s.windows.filter((w) => !w.minimized).sort((a, b) => b.z - a.z)[0]
+    const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+    const n = s.shots.length + 1
+    const shot = {
+      id: 'shot_' + n,
+      name: `화면캡처_${String(n).padStart(3, '0')}.png`,
+      date: `${s.scenario.days[s.day - 1]?.date ?? ''} ${clock.time}`,
+      shot: { title: front ? front.app : null, at: clock.time, day: s.day }
+    }
+    set({ shots: [...s.shots, shot] })
+    play('click')
+    get().showToast({ from: '화면 캡처', text: `${shot.name} 을(를) 바탕화면 > 스크린샷 에 저장했습니다.`, app: 'explorer', props: { startFolder: ['바탕화면', '스크린샷'] } })
+    return shot
+  },
+  // 폰 카메라. 자산이 있는 사진을 만들어 내지는 못하므로, PC 의 화면 캡처와
+  // 같은 방식으로 '무엇을 언제 찍었는지'를 남긴다 — 톡으로 보낼 수 있는 파일이
+  // 되는 것이 이 기능의 요점이다.
+  takePhoto: (subject = null, lens = null, frame = null) => {
+    const s = get()
+    const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+    const n = s.photos.length + 1
+    const photo = {
+      id: 'cam_' + n,
+      name: `IMG_9${String(n).padStart(3, '0')}.jpg`,
+      date: `${s.scenario.days[s.day - 1]?.date ?? ''} ${clock.time}`,
+      // lens 는 찍을 때 렌즈에 보이던 것의 이름이다. 그 자산이 있으면 화면이
+      // 실제 사진을 그리고, 없으면 '무엇을 언제 찍었는지'만 남는다 —
+      // 어느 쪽이든 열리고, 어느 쪽이든 톡으로 보낼 수 있다.
+      // frame 은 찍는 순간 뷰파인더가 보고 있던 자리다(%). 기울여 잡은 구도가
+      // 사진에 그대로 남는다 — 같은 사진이라도 어디를 담았는지가 다르다.
+      shot: { title: subject, at: clock.time, day: s.day, camera: true, lens, frame }
+    }
+    set({ photos: [...s.photos, photo] })
+    play('click')
+    return photo
+  },
   setVpn: (on) => set({ vpn: on }),
+  // VPN 연결. 클라이언트 창과 트레이 팝오버가 같은 길을 쓴다 — 이름이 hosts 에 없으면
+  // 어느 쪽에서도 못 붙는다. 끊기가 창에 있으면 팝오버는 그 사이를 몰랐다.
+  dialVpn: () => {
+    const s = get()
+    if (s.vpn || s.vpnDialing) return true
+    if (!hostResolves(s.scenario, s.edits, s.scenario.vpn.server)) return false
+    set({ vpnDialing: true })
+    setTimeout(() => { set({ vpnDialing: false, vpn: true }); play('ok') }, 1800)
+    return true
+  },
+  dropVpn: () => { set({ vpn: false, vpnDialing: false }); play('click') },
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
   // The router's admin page. Stopping DHCP takes the floor down until it is
   // started again; changing the default password is the one thing worth doing.
@@ -898,6 +1093,14 @@ export const useGame = create((set, get) => ({
         : s.ripples
     }))
     get().chat(key)
+    get().finishDeeds(key)
+    // 이 일이 끝나기를 기다리던 전화. 폰에만 오는 것이라 아무것도 막지 않는다.
+    const ring = (get().scenario.calls?.incoming ?? []).find((c) => c.after === key && !get().calledIn[c.id])
+    if (ring && onPhoneNow()) setTimeout(() => get().ringIn(ring.id), ring.delay ?? 6000)
+    // 대본에 없는 전화도 온다. 하루 한 번, 그것도 가끔 — 일하는 중에 울리는
+    // 것이 스팸의 본질이라 여기(일 하나가 끝나는 자리)에 붙인다.
+    else if (onPhoneNow()) get().maybeSpam()
+    get().caughtSlacking()
     // finishing one request is what opens the next conversation
     const now = heldThreads(get().scenario, get().day, get())
     if (was && now) for (const id of was) if (!now.has(id)) get().nudge(id)
@@ -908,6 +1111,36 @@ export const useGame = create((set, get) => ({
       set((s) => ({ extraMails: [...s.extraMails, mw.mail] }))
       get().showToast({ from: mw.mail.from, text: mw.notice, app: 'mail' })
     }, mw.delay)
+  },
+  // 행동을 기다리던 질문. 그 행동의 grant가 켜지면 여기서 답이 온다 —
+  // 대화는 게임의 것이라 메신저 창이 닫혀 있어도 진행된다. 마지막 단계가
+  // 든 grants는 보통 deed와 같은 키라 이미 켜져 있고, 다르면 여기서 켠다.
+  finishDeeds: (key) => {
+    const s = get()
+    for (const [threadId, ask] of Object.entries(s.pendingAsks)) {
+      if (!ask || ask.deed !== key) continue
+      const t = allThreads(s.scenario).find((x) => x.id === threadId)
+      get().setAsk(threadId, ask.then ?? null)
+      if (ask.next) get().setBranch(threadId, ask.next)
+      if (ask.grants && !get().grants[ask.grants]) get().grant(ask.grants)
+      get().saying(threadId, t?.name ?? '', ask.ok ?? [])
+    }
+  },
+  // 지뢰찾기나 솔리테어를 켜 둔 채로 일을 하나 끝내면 팀장이 그걸 본다.
+  // 게임 자체는 아무것도 기록하지 않는다 — 창이 열려 있다는 사실이 전부고,
+  // 그래서 잔소리도 딱 한 번이다(두 번째부터는 잔소리가 아니라 소음이다).
+  caughtSlacking: () => {
+    const s = get()
+    const nag = s.scenario.slacking
+    if (!nag || s.slacked || !s.windows.some((w) => nag.apps.includes(w.app))) return
+    set({ slacked: true })
+    setTimeout(() => {
+      get().saying(nag.thread, nag.from, nag.lines)
+      get().showToast({
+        from: nag.from, text: nag.lines[0],
+        app: appOf(nag.source), source: nag.source, thread: nag.thread
+      })
+    }, nag.delay)
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),
@@ -949,7 +1182,7 @@ export const useGame = create((set, get) => ({
     // a question with buttons: the thread's own reactions answer it
     if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
     get().showToast({
-      from: beat.from, text: beat.lines[0],
+      from: beat.from, text: beat.lines[0], sticky: beat.sticky,
       app: appOf(beat.source), source: beat.source, thread: beat.thread
     })
     if (rest.length) {
@@ -958,16 +1191,21 @@ export const useGame = create((set, get) => ({
   },
   setAsk: (threadId, ask) => {
     set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: ask } }))
+    // 행동이 앞 단계보다 먼저 일어났을 수 있다. 새로 머리에 온 질문이 이미
+    // 켜진 grant 를 기다리는 것이면 지금 바로 답한다 — 안 그러면 영영 기다린다.
+    if (ask?.deed && get().grants[ask.deed]) return get().finishDeeds(ask.deed)
     // answering the question the day is waiting on is what lets it carry on
     if (threadId === get().beatAsk && !asking(get())) setTimeout(() => get().nextBeat(), BEAT_GAP)
   },
   // A day can raise two questions in the same conversation. The second waits
   // behind the first instead of replacing it, so neither goes unanswered.
-  queueAsk: (threadId, ask) =>
-    set((s) => {
-      const waiting = s.pendingAsks[threadId]
-      return { pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }
-    }),
+  queueAsk: (threadId, ask) => {
+    const waiting = get().pendingAsks[threadId]
+    set((s) => ({ pendingAsks: { ...s.pendingAsks, [threadId]: waiting ? appendAsk(waiting, ask) : ask } }))
+    // 부탁받기 전에 이미 해 둔 일. 머리에 온 질문이 켜진 grant 를 기다리는
+    // 것이면 지금 답한다 — 안 그러면 그날의 나머지가 영영 오지 않는다.
+    if (!waiting && ask?.deed && get().grants[ask.deed]) get().finishDeeds(ask.deed)
+  },
   // A conversation belongs to the game, not to the window drawing it. Both
   // halves of it go where every other pushed line goes, so closing the
   // messenger cannot take the exchange with it.
@@ -975,12 +1213,16 @@ export const useGame = create((set, get) => ({
   // The other side writes for a beat, then answers a line at a time. The
   // timers live here rather than in the window, so a reply already started
   // finishes even if the player closes the messenger halfway through it.
-  sayBack: (threadId, from, lines, gap = SAY_GAP) => {
+  // 말 끝에 파일을 붙여 보낼 수 있다. 메일 첨부와 같은 모양({ name, size, fileId })이고,
+  // 받는 쪽이 저장을 누르기 전에는 디스크에 없다(fsView 의 attached 규칙).
+  sayBack: (threadId, from, lines, gap = SAY_GAP, attach = null) => {
     get().setTyping(threadId, true)
-    lines.forEach((text, i) => setTimeout(() => {
+    shellLines(lines).forEach((text, i) => setTimeout(() => {
       get().pushMessage(threadId, { from, text })
-      if (i === lines.length - 1) get().setTyping(threadId, false)
+      if (i === shellLines(lines).length - 1) get().setTyping(threadId, false)
     }, SAY_FIRST + i * gap))
+    if (attach) setTimeout(() => get().pushMessage(threadId, { from, file: attach.name, size: attach.size, fileId: attach.fileId }),
+      SAY_FIRST + lines.length * gap)
   },
   // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
   // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
@@ -989,7 +1231,7 @@ export const useGame = create((set, get) => ({
     const s = get()
     const source = sourceOf(s.scenario, threadId)
     if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines, gap)
-    else lines.forEach((text) => get().pushMessage(threadId, { from, text }))
+    else shellLines(lines).forEach((text) => get().pushMessage(threadId, { from, text }))
   },
   // Which set of choices a conversation has reached.
   setBranch: (threadId, next) =>
@@ -1066,10 +1308,25 @@ export const useGame = create((set, get) => ({
   openHistory: (id, n) =>
     set((s) => (s.openedHistory[id] === n ? s : { openedHistory: { ...s.openedHistory, [id]: n } })),
 
+  // 보낸 것을 보낸메일함에 남긴다. 두 길(회신·새 메일)이 여기를 지나므로
+  // 한쪽만 남고 한쪽은 사라지는 일이 없다.
+  keepSent: ({ to, subject, body, attachmentId = null }) => {
+    const s = get()
+    const file = attachmentId ? findFile(s.scenario.fs, attachmentId) : null
+    set((st) => ({
+      sentMails: [...st.sentMails, {
+        id: 'sent_' + Date.now() + '_' + st.sentMails.length,
+        to, subject, body, sent: true,
+        attach: file ? { name: s.placed[file.id]?.name ?? file.name, fileId: file.id } : null,
+        date: '방금', at: justNow(s.scenario, s.day), day: s.day
+      }]
+    }))
+  },
   sendReply: ({ attachmentId, subject, body }) => {
     const s = get()
     const goal = goalFor(s.scenario, s.day)
     const original = [...s.scenario.mails, ...s.extraMails].find((m) => m.id === goal.replyToMail)
+    get().keepSent({ to: original.from, subject, body, attachmentId })
     const verdict = checkGoal(goal, { attachmentId, body })
     // 예절은 일과 별개다. 메일은 그대로 나가고 목표도 정상 처리되며, 실수
     // 횟수에도 들어가지 않는다. 잠시 뒤 박 팀장이 거래처 말을 옮길 뿐이다.
@@ -1136,17 +1393,183 @@ export const useGame = create((set, get) => ({
 
   // A mail the player starts. Only the day's brief knows which address is real;
   // everything else bounces. `{to}` and `{subject}` in the reply are filled in.
-  sendMail: ({ to, subject, body }) => {
+  // ── 전화 ────────────────────────────────────────────────
+  // 폰에만 있다. 두 가지를 한다: 걸려오는 전화를 받고, 메일로 묻던 것을
+  // 전화로도 묻는다. 판정은 메일과 같은 자리(checkOutbound)를 지나므로
+  // 어느 쪽으로 하든 같은 목표가, 같은 조건에서 열린다.
+  ringIn: (id) => {
     const s = get()
-    const fetch = s.scenario.days[s.day - 1]?.fetch
-    const verdict = checkOutbound(fetch, { to, subject, body }, s.scenario.etiquette, s.scenario.player)
+    const spec = [...s.scenario.calls?.incoming ?? [], ...s.scenario.calls?.spam ?? []]
+      .find((c) => c.id === id)
+    if (!spec || s.call || s.calledIn[id]) return
+    set({ call: { kind: 'in', id, name: spec.from, number: spec.number, stage: 'ringing', said: [] } })
+    play('notify')
+    // 벨이 영원히 울리지는 않는다. 안 받으면 끊기고 부재중으로 남는다.
+    setTimeout(() => {
+      const now = get().call
+      if (now?.id === id && now.stage === 'ringing') get().declineCall()
+    }, 14000)
+  },
+  answerCall: () => {
+    const s0 = get()
+    const spec = [...s0.scenario.calls?.incoming ?? [], ...s0.scenario.calls?.spam ?? []]
+      .find((c) => c.id === s0.call?.id)
+    // 건 사람이 제 할 말을 마치면 스스로 끊는다 — 끊는 말이 있는 전화만.
+    if (spec?.bye) {
+      const id = spec.id
+      setTimeout(() => {
+        const now = get().call
+        if (now?.id !== id || now.stage !== 'talking') return
+        // 끊는 말은 한 줄일 때도, 여러 줄일 때도 있다.
+        const bye = [].concat(spec.bye).map((text) => ({ them: true, text }))
+        set({ call: { ...now, said: [...now.said, ...bye] } })
+        setTimeout(() => { if (get().call?.id === id) get().hangUp() }, 2600)
+      }, 1200 + (spec.lines?.length ?? 1) * 1600)
+    }
+    set((s) => (s.call?.kind !== 'in' ? s : {
+      call: {
+        ...s.call,
+        stage: 'talking',
+        said: (spec?.lines ?? []).map((text) => ({ them: true, text }))
+      },
+      calledIn: { ...s.calledIn, [s.call.id]: true }
+    }))
+  },
+  // 스팸 전화. 하루에 한 번을 넘지 않고, 같은 곳이 두 번 걸지 않는다.
+  // 확률로 거는 것이라 일부러 부를 수도 있게 한 조각으로 떼어 둔다.
+  maybeSpam: (chance = 0.3) => {
+    const s = get()
+    if (s.call || s.spammedOn === s.day) return false
+    const left = (s.scenario.calls?.spam ?? []).filter((c) => !s.calledIn[c.id])
+    if (!left.length || Math.random() > chance) return false
+    const pick = left[Math.floor(Math.random() * left.length)]
+    set({ spammedOn: s.day })
+    setTimeout(() => get().ringIn(pick.id), 4000 + Math.random() * 6000)
+    return true
+  },
+  // 받지 않은 전화도 기록에는 남는다 — 다시 걸 수 있어야 놓친 것이 되지 않는다.
+  declineCall: () => set((s) => (!s.call ? s : {
+    call: null,
+    calledIn: { ...s.calledIn, [s.call.id]: true },
+    callLog: [{ dir: 'missed', name: s.call.name, number: s.call.number, id: s.call.id, day: s.day }, ...s.callLog].slice(0, 30)
+  })),
+  hangUp: () => set((s) => (!s.call ? s : {
+    call: null,
+    // 신호만 가다 끊긴 것도 건 기록이다 — 다시 걸 수 있어야 한다.
+    callLog: [{
+      dir: s.call.stage === 'talking' ? s.call.kind : 'missed',
+      name: s.call.name, number: s.call.number, id: s.call.id, day: s.day
+    }, ...s.callLog].slice(0, 30)
+  })),
+  // 내가 건다. 아는 번호면 그 사람이 받고, 아니면 아무도 받지 않는다.
+  // 내가 건다. 신호가 먼저 가고, 받는 사람이 있으면 그때 통화가 된다.
+  // 아무도 없는 번호는 신호만 가다 끊긴다 — 실제 전화가 그렇다.
+  dial: (number) => {
+    const s = get()
+    if (s.call) return
+    const dialed = String(number).replace(/[^0-9]/g, '')
+    const digits = (n) => String(n).replace(/[^0-9]/g, '')
+    const who = (s.scenario.calls?.contacts ?? []).find((c) => digits(c.number) === dialed)
+    // 일 때문이 아니라 그냥 아는 사람들 — 팀 사람, 엄마, 지현. 여기에는
+    // 아무 목표도 걸려 있지 않다. 받고, 몇 마디 하고, 끊는다.
+    const known = who ? null : (s.scenario.calls?.people ?? []).find((c) => digits(c.number) === dialed)
+    // 신호 가는 동안 끊고 다시 걸 수 있다. 그 사이 늦게 도착한 타이머가
+    // 지워진 통화를 되살리지 않도록 통화마다 번호를 붙인다.
+    const seq = (s.callSeq ?? 0) + 1
+    set({
+      callSeq: seq,
+      call: {
+        kind: 'out', seq, id: who?.id ?? known?.id ?? null,
+        name: who?.name ?? known?.name ?? number, number, stage: 'dialing', said: []
+      }
+    })
+    setTimeout(() => {
+      const now = get().call
+      if (now?.seq !== seq) return           // 그 사이 끊었다
+      if (!who) {
+        if (!known) return get().noAnswer()
+        return set({
+          call: { ...now, id: known.id, name: known.name, stage: 'talking', asking: false, said: known.lines.map((text) => ({ them: true, text })) }
+        })
+      }
+      const st = get()
+      const done = Boolean(st.grants[who.id])
+      // 오늘 그 일을 부탁받았는가. 아무도 시키지 않은 일을 상대가 먼저 꺼내면
+      // 없는 요청이 하나 생긴 것처럼 들린다 — 그럴 때는 바빠서 못 받는다.
+      const live = !done && requestsOf(st.scenario, st.day, st.overtime, st.drawn, st.ripples)
+        .some((o) => o.id === who.id)
+      const lines = [
+        ...who.greet ?? [],
+        ...(done ? who.done ?? []
+          : live
+            // 첨부가 있어야 하는 일은 전화로 되지 않는다 — 그 사람이 그렇게 말한다.
+            ? who.needsMail ?? who.asking ?? []
+            : st.scenario.calls?.busy ?? [])
+      ]
+      set({
+        call: {
+          ...now,
+          stage: 'talking',
+          // 말할 수 있는 상태인지: 오늘 부탁받은 일이고, 첨부를 요구하지 않는 상대.
+          asking: live && !who.needsMail,
+          said: lines.map((text) => ({ them: true, text }))
+        }
+      })
+    }, 2200)
+  },
+  // 받지 않았다. 끊겼다는 말을 잠깐 보여 주고 걸던 화면으로 돌아간다.
+  noAnswer: () => {
+    const seq = get().call?.seq
+    set((st) => (st.call ? { call: { ...st.call, stage: 'ended' } } : st))
+    setTimeout(() => {
+      if (get().call?.seq !== seq) return
+      get().hangUp()
+    }, 1600)
+  },
+  // 통화 중에 값을 말한다. 메일 본문에 적었어야 할 그 값이다.
+  sayOnCall: (text) => {
+    const s = get()
+    const call = s.call
+    if (!call?.asking || !text.trim()) return false
+    const who = s.scenario.calls.contacts.find((c) => c.id === call.id)
+    const objective = s.scenario.objectives.find((o) => o.grant === call.id && o.mail)
+    if (!who || !objective) return false
+    // 예절은 메일의 규칙이다. 말로 하는 자리에서 제목 형식을 따질 수는 없다.
+    const spec = { ...objective.mail, rudeReplies: undefined }
+    const verdict = checkOutbound(spec, { to: spec.to, subject: '', body: text }, s.scenario.etiquette, s.scenario.player)
+    const reply = (verdict.ok ? who.done : who.unclear) ?? []
+    set((st) => ({
+      call: {
+        ...st.call,
+        asking: !verdict.ok,
+        said: [...st.call.said, { them: false, text }, ...reply.map((t) => ({ them: true, text: t }))]
+      }
+    }))
+    if (verdict.ok) setTimeout(() => get().grant(call.id), 900)
+    else play('error')
+    return verdict.ok
+  },
+  sendMail: ({ to, subject, body, attachmentId = null }) => {
+    const s = get()
+    // 그날의 fetch 하나만 보던 것을 아직 안 켜진 메일 목표 전부로 넓힌다.
+    // 수신자가 맞는 첫 후보가 이 메일의 상대다. 없으면 되돌아온다.
+    const specs = [
+      s.scenario.days[s.day - 1]?.fetch,
+      ...s.scenario.objectives.filter((o) => o.mail && !s.grants[o.grant]).map((o) => ({ ...o.mail, grants: o.grant }))
+    ].filter(Boolean)
+    const same = (a, b) => String(a).replace(/[,\s]/g, '').toLowerCase() === String(b).replace(/[,\s]/g, '').toLowerCase()
+    const spec = specs.find((f) => same(f.to, to)) ?? null
+    get().keepSent({ to, subject, body, attachmentId })
+    const verdict = checkOutbound(spec, { to, subject, body, attachmentId }, s.scenario.etiquette, s.scenario.player)
+    // 요청 단위의 메일은 예절로 막지 않는다. 일은 되고, 잠시 뒤 팀장이 한마디 한다.
+    if (verdict.ok && !spec.rudeReplies) get().scold({ subject, body, outbound: true })
     const fill = (t = '') => t.replace('{to}', to).replace('{subject}', subject)
     const reply = verdict.reply ?? s.scenario.goal.bounce
     setTimeout(() => {
       const mail = { ...reply, id: 'in_' + Date.now(), date: '방금', at: justNow(s.scenario, s.day), subject: fill(reply.subject), body: fill(reply.body) }
       set((st) => ({ extraMails: [...st.extraMails, mail] }))
       get().showToast({ from: mail.from, text: `새 메일이 도착했습니다: ${mail.subject}`, app: 'mail' })
-      if (verdict.ok) setTimeout(() => get().grant(fetch.grants), 2200)
+      if (verdict.ok) setTimeout(() => get().grant(spec.grants), 2200)
       const nags = s.scenario.etiquette.nags[verdict.reason]
       if (nags) get().nag(nags)
     }, 1800)
@@ -1197,10 +1620,29 @@ export const tileShots = (scenario, kind, key) =>
 
 // The bin is a view: a file flagged `deleted` in the scenario sits in 휴지통
 // until restored, then reappears where the data always kept it.
-export function fsView(fs, { pinned = [], restored = {}, tiles = [], scenario } = {}) {
+// 찍은 화면들이 사는 폴더. 하나도 없으면 폴더 자체가 없다 — 실제로도 첫
+// 캡처가 폴더를 만든다.
+// 찍은 사진은 갤러리에 쌓인다 — 폴더 자체는 원래 있으므로 아이 노릇만 한다.
+export function fsWithPhotos(fs, photos = []) {
+  if (!photos.length) return fs
+  return {
+    ...fs,
+    휴대폰: (fs['휴대폰'] ?? []).map((e) => (
+      e.name === '갤러리' ? { ...e, children: [...e.children, ...photos] } : e))
+  }
+}
+
+export function fsWithShots(fs, shots = []) {
+  if (!shots.length) return fs
+  return { ...fs, 바탕화면: [...fs['바탕화면'], { name: '스크린샷', children: shots }] }
+}
+
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, shots = [], photos = [], scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
+    // 이번 주에 저장한 파일은 그때가 수정한 날짜다
+    if (touched[e.id]) e = { ...e, date: touched[e.id] }
     if (e.deleted && !restored[e.id]) { binned.push(e); return [] }
     // a mail attachment is nowhere until it is saved from the mail
     if (e.attached && !restored[e.id]) return []
@@ -1208,7 +1650,30 @@ export function fsView(fs, { pinned = [], restored = {}, tiles = [], scenario } 
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))
   out['휴지통'] = [...(out['휴지통'] ?? []), ...binned]
-  return fsWithTiles(scenario, fsWithPinned(out, pinned), tiles)
+  return fsWithPhotos(fsWithShots(fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles), shots), photos)
+}
+
+// 옮기거나 이름을 바꾼 파일. 원래 자리에서 빼서 목적 폴더 끝에 넣는다 —
+// 목적 폴더가 없으면 그 자리에 둔다. id는 그대로라 첨부·목표·힌트는 아무것도
+// 눈치채지 못한다. 트리는 새로 만들어 돌려주므로 원본은 손대지 않는다.
+export function place(fs, placed = {}) {
+  if (!Object.keys(placed).length) return fs
+  const folderAt = (tree, path) => path.slice(1).reduce(
+    (es, name) => es?.find((e) => e.children && e.name === name)?.children ?? null,
+    tree[path[0]] ?? null)
+  const moving = []
+  const pull = (entries) => entries.flatMap((e) => {
+    if (e.children) return [{ ...e, children: pull(e.children) }]
+    const p = placed[e.id]
+    if (!p) return [e]
+    const named = p.name ? { ...e, name: p.name } : e
+    if (!p.into || !folderAt(fs, p.into.split('/'))) return [named]
+    moving.push([p.into, named])
+    return []
+  })
+  const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, pull(entries)]))
+  for (const [into, file] of moving) folderAt(out, into.split('/')).push(file)
+  return out
 }
 
 // Once the blog has been read, the photos it was lending are gone. The rows
@@ -1253,7 +1718,20 @@ export const threadMessages = (thread, scenario, msgCount = 0, extras = {}, hold
   ...(thread.messages ?? []),
   ...(thread.live ? scenario.messenger.slice(0, msgCount).map((m) => ({ ...m, day: 1 })) : []),
   ...(extras[thread.id] ?? [])
-].filter((m) => !hold || m.day !== hold)
+].filter((m) => !hold || m.day !== hold).map(withPhonePath)
+
+// 이미 적혀 있는 안내가 명령 프롬프트를 가리킬 때(차민혁의 'IPv4 주소 확인
+// 방법'처럼) 폰에서는 없는 앱을 찾게 된다. 말풍선을 새로 만들면 안 읽은 수가
+// 하나 늘어나므로 같은 말풍선 끝에 한 문장을 붙인다.
+const withPhonePath = (m) => {
+  if (!onPhoneNow()) return m
+  // 폰에서 할 말을 따로 적어 둔 줄은 그것으로 갈아 끼운다 — 괄호를 덧붙이는
+  // 것보다 사람이 한 말처럼 읽힌다.
+  if (m.phoneText) return { ...m, text: m.phoneText }
+  // 적어 두지 않은 나머지는 한 문장을 붙여 갈 곳만은 알려 준다.
+  return typeof m.text === 'string' && WIN_ONLY.test(m.text)
+    ? { ...m, text: m.text + ' ' + PHONE_POINTER } : m
+}
 
 // A conversation someone came back to was read long ago, so only what the week
 // itself brought can still be unread — and never what the player typed.
@@ -1470,17 +1948,39 @@ export const smsFor = (verify) => verify.sms.replace('{code}', verify.code)
 // Six digits typed off a phone screen: spacing is forgiven, nothing else is.
 export const codeFits = (verify, text) => loose(text) === loose(verify.code) && text.trim() !== ''
 
+// 폰에는 명령 프롬프트가 없다(registry 의 NOT_ON_PHONE). 그 앱을 가리키는
+// 힌트가 그대로 오면 폰에서는 없는 것을 찾게 되므로, 같은 값을 어디서 보는지
+// 한 줄 덧붙인다. 시나리오 텍스트는 건드리지 않는다 — PC 에서는 저 말이 맞다.
+const WIN_ONLY = /명령 프롬프트|ipconfig|hostname|whoami|ping/i
+const PHONE_POINTER = '(폰으로 보고 계시면 설정 앱의 「내 PC 연결 정보」와 「응답 확인」에서 같은 값을 볼 수 있어요.)'
+const onPhoneNow = () => typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX
+export const shellLines = (lines) => (
+  onPhoneNow() && lines?.some((l) => typeof l === 'string' && WIN_ONLY.test(l))
+    ? [...lines, PHONE_POINTER] : lines
+)
+
 // A question may want a file instead of typed text; any of the ones it names will do.
-export const fileFits = (ask, fileId) => Boolean(ask?.files?.includes(fileId))
+// 파일로 답하는 질문. 정해진 파일(files)이거나, 정해진 창을 찍은 화면 캡처(shot)다 —
+// 캡처는 그때그때 생기는 파일이라 id 가 아니라 무엇을 찍었는지로 본다.
+export const fileFits = (ask, file) => {
+  const id = typeof file === 'string' ? file : file?.id
+  if (ask?.files?.includes(id)) return true
+  return Boolean(ask?.shot && file?.shot && file.shot.title === ask.shot.app)
+}
 
 // Hangs a question off the end of one still waiting, so a thread asked twice in
 // a day keeps both — answering the first hands straight over to the second.
 export const appendAsk = (ask, next) =>
   ask.then ? { ...ask, then: appendAsk(ask.then, next) } : { ...ask, then: next }
 
+// 힌트도 화면에 따라 갈린다. 폰에서 '명령 프롬프트를 여세요'는 없는 앱을
+// 가리키는 말이라, 그 요청은 noPhone 에 폰에서 갈 곳을 따로 적어 둔다.
+export const hintSets = (ask) =>
+  lineSets(onPhoneNow() && ask?.noPhone ? ask.noPhone : ask?.no)
+
 // Wrong answers get a firmer nudge each time, stopping at the clearest one.
 export const hintAfter = (ask, wrongs, mercy = false) => {
-  const sets = lineSets(ask.no)
+  const sets = hintSets(ask)
   // the morning after a late night, nobody makes you work for the hint
   return sets[Math.min(mercy ? wrongs + 1 : wrongs, sets.length - 1)]
 }
@@ -1492,7 +1992,7 @@ export const hintAfter = (ask, wrongs, mercy = false) => {
 // 듣는 것보다는 한 단계 더 주는 편이 낫다. step 은 그다음 오답이 이어받을
 // 자리다.
 export function hintReply(ask, from = 0) {
-  const sets = lineSets(ask.no)
+  const sets = hintSets(ask)
   for (let i = Math.min(from, sets.length - 1); i < sets.length; i++) {
     const rest = sets[i].slice(1)
     if (rest.length) return { lines: rest, step: i + 1 }
@@ -1753,17 +2253,26 @@ export const rootIcon = (name) => ROOT_ICONS[name] ?? 'folder'
 
 // Which app opens a file, decided by its name the way an OS does it.
 export const fileOpener = (file) =>
-  file.image ? { app: 'viewer', icon: 'image' }
-    : file.name.endsWith('.exe') ? { app: 'installer', icon: 'cmd' }
+  // 캡처는 그림 파일이 아니지만 사진 뷰어가 연다 — 화면을 찍은 것이니까.
+  file.image || file.shot ? { app: 'viewer', icon: 'image' }
+    : file.name.endsWith('.exe') ? { app: 'installer', icon: 'exe' }
       : file.name.endsWith('.xlsx') ? { app: 'sheet', icon: 'xls' }
       : file.name.endsWith('.pptx') ? { app: 'slides', icon: 'ppt' }
         : file.name.endsWith('.hwp') ? { app: 'hwp', icon: 'hwp' }
           : file.name.endsWith('.pdf') ? { app: 'pdf', icon: 'pdf' }
             : file.name.endsWith('.dcx') ? { app: 'dcx', icon: 'doc' }
-              : { app: 'notepad', icon: 'doc' }
+              : { app: 'notepad', icon: 'notepad' }
 
 export function findFile(fs, fileId) {
   return allFiles(fs).find((f) => f.id === fileId) ?? null
+}
+
+// 파일 하나, 이름을 바꿨으면 바뀐 이름으로. 문서 창·올린 목록·보낸 메일이
+// 탐색기와 다른 이름을 부르면 이름을 바꾼 일이 없던 일이 된다.
+export const fileById = (s, id) => {
+  const f = findFile(s.scenario.fs, id)
+  const name = s.placed?.[id]?.name
+  return f && name ? { ...f, name } : f
 }
 
 // What the boss says after a bad reply, and whether that was the last straw.
@@ -2072,11 +2581,247 @@ export function entriesAt(fs, path) {
 }
 
 // Smallest a window may be dragged down to, in px.
+// 시트의 =SUM(). 이 게임의 표는 숫자를 단위와 함께 쓴다 — '1,410,000원',
+// '40대'. 쉼표와 단위를 떼고 남는 것이 숫자다. 숫자가 없으면 0으로 친다
+// (진짜 스프레드시트도 글자는 더하기에서 빠뜼린다).
+export function cellNumber(v) {
+  const n = Number(String(v ?? '').replace(/[^0-9.-]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+// A1 표기. 머리글이 1행이라 화면의 줄 번호와 그대로 맞는다.
+export function cellRef(name) {
+  const m = /^([A-Z]+)([0-9]+)$/.exec(String(name).trim().toUpperCase())
+  if (!m) return null
+  let c = 0
+  for (const ch of m[1]) c = c * 26 + (ch.charCodeAt(0) - 64)
+  return { c: c - 1, r: Number(m[2]) - 1 }
+}
+
+export const SHEET_ERR = '#REF!'
+
+// 한 칸의 보이는 값. '=' 로 시작하면 식이고, 아니면 적힌 그대로다.
+// 식이 자기를 도로 가리키면 여기서 멈춘다 — 안 그러면 칸 하나가 창을 멈추게 한다.
+export function sheetCell(rows, r, c, seen = new Set()) {
+  const raw = rows[r]?.[c]
+  if (raw === undefined) return ''
+  const text = String(raw)
+  if (!text.startsWith('=')) return text
+  const key = r + ':' + c
+  if (seen.has(key)) return SHEET_ERR
+  return evalFormula(text, rows, new Set([...seen, key]))
+}
+
+// 아는 식은 SUM 하나다. 범위(A2:A9)와 나열(A2,B4) 둘 다 받는다.
+// 더 받기 시작하면 파서가 되고, 반쪽짜리 파서는 도구가 아니라 함정이다.
+export function evalFormula(text, rows, seen = new Set()) {
+  const m = /^=\s*SUM\s*\(([^)]*)\)\s*$/i.exec(text)
+  if (!m) return SHEET_ERR
+  let total = 0
+  let counted = 0
+  for (const part of m[1].split(',')) {
+    const span = part.split(':')
+    if (span.length > 2) return SHEET_ERR
+    const a = cellRef(span[0])
+    const b = cellRef(span[span.length - 1])
+    if (!a || !b) return SHEET_ERR
+    for (let r = Math.min(a.r, b.r); r <= Math.max(a.r, b.r); r++) {
+      for (let c = Math.min(a.c, b.c); c <= Math.max(a.c, b.c); c++) {
+        const v = sheetCell(rows, r, c, seen)
+        if (v === SHEET_ERR) return SHEET_ERR
+        total += cellNumber(v)
+        counted++
+      }
+    }
+  }
+  return counted ? total.toLocaleString('ko-KR') : SHEET_ERR
+}
+
+// 기록에 남기는 수. 메뉴 하나에 들어갈 만큼만 남긴다.
+export const VISITS = 12
+
+// 주소창이 거드는 곳들.
+//
+// ⚠ 시나리오의 사이트 목록에서 거들면 안 된다. 공유기 주소도, 8층도,
+// 피싱 도메인도 거기 있다 — 찾아내는 것이 퍼즘인 주소를 주소창이 먼저
+// 말해 버린다. 이미 아는 곳 — 북마크, 가 본 곳, 한별이가 휴가 전에 본 곳 — 만 내민다.
+export function addressHints(q, { visited = [], bookmarks = [], history = [] } = {}, limit = 6) {
+  const term = String(q ?? '').trim().toLowerCase()
+  if (!term) return []
+  const out = []
+  const seen = new Set()
+  for (const h of [...visited, ...bookmarks, ...history]) {
+    if (!h?.url || seen.has(h.url)) continue
+    const title = h.title ?? h.url
+    if (!`${h.url} ${title}`.toLowerCase().includes(term)) continue
+    seen.add(h.url)
+    out.push({ url: h.url, title, blog: h.blog })
+    if (out.length === limit) break
+  }
+  return out
+}
+
+// 끓긴 문장이 이어지는가. 네 가지 흔적 — 8층 방을 캐물은 것, 이름을 찾은 것(근태·복합기),
+// 자동복구 문서, 소통방 글 — 중 셔이면 된다. 8층 로그는 세지 않는다: 여는 순간 주가 끝난다.
+export function noteOpens(scenario, { digging = {}, traces = {} } = {}) {
+  const n = scenario.sites.find((x) => x.layout === 'notes')?.notes
+  if (!n?.traces) return false
+  const seen = [digging.asked, digging.found, ...Object.keys(n.traces).map((k) => traces[k])]
+  return seen.filter(Boolean).length >= (n.opens ?? 3)
+}
+
+// ── 파일 속성 ──────────────────────────────────────────────────────────
+// 탐색기의 '자세히' 보기와 속성 창이 읽는 것들. 시나리오 파일에는 날짜도
+// 크기도 없다 — 몇 개만 적혀 있고(사진 열세 장, 자동복구 문서), 나머지는
+// 이름과 폴더에서 짐작하거나 id 로 지어낸다. 지어낸 값은 같은 파일이면 늘
+// 같다. 열 때마다 달라지면 그게 더 가짜다.
+
+const GAME_YEAR = 2026
+
+const hashOf = (s) => {
+  let h = 2166136261
+  for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0
+  return h
+}
+const pad2 = (n) => String(n).padStart(2, '0')
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+// 'YYYY-MM-DD HH:MM[:SS]' 또는 'YYYY-MM-DD' 를 조각으로.
+export function parseStamp(text) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(String(text ?? '').trim())
+  if (!m) return null
+  return { y: +m[1], m: +m[2], d: +m[3], hh: m[4] === undefined ? 9 : +m[4], mm: m[5] === undefined ? 0 : +m[5], ss: m[6] === undefined ? 0 : +m[6] }
+}
+
+// 수정한 날짜. 적혀 있으면 그것, 아니면 이름의 날짜(20231108 · _0705), 아니면
+// 폴더나 이름의 연도, 아니면 이번 여름 어딘가. 시각은 근무 시간 안에서 지어낸다.
+export function fileStamp(file, path = []) {
+  const said = parseStamp(file?.date)
+  if (said) return said
+  const h = hashOf(file?.id ?? file?.name ?? '')
+  const hh = 9 + (h % 10)
+  const mm = (h >>> 4) % 60
+  const ss = (h >>> 10) % 60
+  const name = String(file?.name ?? '')
+  let m = /(20\d\d)(\d\d)(\d\d)/.exec(name)
+  if (m) return { y: +m[1], m: +m[2], d: +m[3], hh, mm, ss }
+  m = /_(\d\d)(\d\d)(?:\D|$)/.exec(name)
+  if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= MONTH_DAYS[+m[1] - 1]) {
+    return { y: GAME_YEAR, m: +m[1], d: +m[2], hh, mm, ss }
+  }
+  const year = [...path, name].map((p) => /(20\d\d)/.exec(p)?.[1]).filter(Boolean).map(Number).pop()
+  if (year && year !== GAME_YEAR) {
+    const mo = 1 + ((h >>> 16) % 12)
+    return { y: year, m: mo, d: 1 + ((h >>> 20) % MONTH_DAYS[mo - 1]), hh, mm, ss }
+  }
+  // 이번 여름. 복귀 주(8/23) 전에 끝난다 — 휴가 중에 고친 파일은 없다.
+  const day = (h >>> 8) % 80            // 6/1 ~ 8/19
+  const mo = day < 30 ? 6 : day < 61 ? 7 : 8
+  const d = day < 30 ? day + 1 : day < 61 ? day - 29 : day - 60 + 1
+  return { y: GAME_YEAR, m: mo, d, hh, mm, ss }
+}
+
+// 만든 날짜. 적혀 있으면 그것, 아니면 수정한 날짜와 같다 — 한 번 쓰고 만 파일이 대부분이다.
+export const fileCreated = (file, path = []) => parseStamp(file?.created) ?? fileStamp(file, path)
+
+// 게임 달력의 요일. 첫날(8월 23일 (월))을 기준으로 앞뒤로 센다 — 실제 2026년과
+// 다르므로 Date.getDay 를 그대로 쓰면 달력 앱과 어긋난다.
+const WEEK = ['일', '월', '화', '수', '목', '금', '토']
+export function gameWeekday(scenario, { y, m, d }) {
+  const a = /(\d+)월 (\d+)일 \((.)\)/.exec(scenario?.days?.[0]?.date ?? '')
+  if (!a) return WEEK[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]
+  const anchor = Date.UTC(GAME_YEAR, +a[1] - 1, +a[2])
+  const diff = Math.round((Date.UTC(y, m - 1, d) - anchor) / 86400000)
+  return WEEK[(((WEEK.indexOf(a[3]) + diff) % 7) + 7) % 7]
+}
+
+// '2026년 7월 22일 수요일, 오후 11:32:10' — 속성 창의 그 표기.
+export function fmtStampLong(scenario, st) {
+  const ap = st.hh < 12 ? '오전' : '오후'
+  const h12 = st.hh % 12 === 0 ? 12 : st.hh % 12
+  return `${st.y}년 ${st.m}월 ${st.d}일 ${gameWeekday(scenario, st)}요일, ${ap} ${h12}:${pad2(st.mm)}:${pad2(st.ss)}`
+}
+// '2026-07-22 오후 11:32' — 목록의 그 표기.
+export function fmtStampShort(st) {
+  const ap = st.hh < 12 ? '오전' : '오후'
+  const h12 = st.hh % 12 === 0 ? 12 : st.hh % 12
+  return `${st.y}-${pad2(st.m)}-${pad2(st.d)} ${ap} ${h12}:${pad2(st.mm)}`
+}
+
+const ext = (file) => (file?.image ? 'jpg' : (String(file?.name ?? '').match(/\.([a-z0-9]+)$/i)?.[1] ?? '').toLowerCase())
+
+// 종류. 윈도우가 붙이는 이름 그대로.
+export function fileKind(file) {
+  if (file?.children) return '파일 폴더'
+  return {
+    jpg: 'JPG 파일', hwp: '한글 문서', pdf: 'PDF 파일', txt: '텍스트 문서', xlsx: 'Microsoft Excel 워크시트',
+    pptx: 'Microsoft PowerPoint 프레젠테이션', exe: '응용 프로그램', dcx: 'DCX 파일'
+  }[ext(file)] ?? '파일'
+}
+
+// 크기(바이트). 설치 파일은 마법사가 말하는 크기, 글은 글자 수, 나머지는 종류에 맞게 지어낸다.
+export function fileSize(scenario, file) {
+  if (!file || file.children) return null
+  const h = hashOf(file.id ?? file.name)
+  const between = (lo, hi) => lo + (h % (hi - lo))
+  const program = scenario?.programs?.[file.program]
+  const said = /(\d+(?:\.\d+)?)\s*(KB|MB)/i.exec(program?.size ?? '')
+  if (said) return Math.round(+said[1] * (said[2].toUpperCase() === 'MB' ? 1048576 : 1024)) + (h % 700)
+  switch (ext(file)) {
+    case 'jpg': return between(900000, 4800000)
+    case 'exe': return between(2000000, 90000000)
+    case 'xlsx': return between(18000, 220000)
+    case 'pptx': return between(400000, 3800000)
+    case 'hwp': case 'pdf': case 'dcx': return between(38000, 900000)
+    default: return new TextEncoder().encode(file.content ?? '').length || between(200, 900)
+  }
+}
+
+// '190KB' — 윈도우처럼 KB 는 올림, MB 부터 소수 한 자리.
+export function fmtSize(bytes) {
+  if (bytes === null || bytes === undefined) return ''
+  if (bytes < 1024 * 1000) return `${Math.max(1, Math.ceil(bytes / 1024))}KB`
+  return `${(bytes / 1048576).toFixed(bytes >= 100 * 1048576 ? 0 : 1)}MB`
+}
+export const fmtBytes = (bytes) => `${bytes.toLocaleString('ko-KR')} 바이트`
+
+// 위치. 이 PC 의 자기 폴더가 C:\Users\<이름> 아래 있고, 폰은 이 PC 에 붙은 장치다.
+export function fileLocation(scenario, path = []) {
+  const me = scenario?.player?.name ?? '사용자'
+  const [root, ...rest] = path
+  const tail = rest.length ? '\\' + rest.join('\\') : ''
+  if (root === '로컬 디스크 (C:)') return 'C:' + (tail || '\\')
+  if (root === '휴지통') return 'C:\\$Recycle.Bin' + tail
+  if (root === '휴대폰') return '이 PC\\휴대폰\\내부 저장소' + tail
+  if (root === '바탕화면') return `C:\\Users\\${me}\\바탕 화면` + tail
+  return `C:\\Users\\${me}\\${root ?? ''}` + tail
+}
+
 export const MIN_SIZE = { w: 360, h: 220 }
 
 // New rect for a resize drag. `dir` names the edges being pulled ('se', 'n', …).
 // Dragging a left or top edge moves the window's corner, but only by as much as
 // the window actually shrank — so it stops dead once it hits the minimum.
+// 창을 화면 가장자리로 밀었을 때 어디에 놀지. 포인터 위치로만 따진다 —
+// 창의 모서리로 따지면 큰 창은 가운데서 놓아도 물고 작은 창은 끝까지 밀어도 안 물린다.
+export const SNAP_EDGE = 14
+export function snapZone(px, py, vw, vh, edge = SNAP_EDGE) {
+  if (py <= edge) return 'max'
+  if (px <= edge) return 'left'
+  if (px >= vw - edge) return 'right'
+  return null
+}
+
+// 반쪽짜리 자리. 작업 표시줄 위까지만 차지하고, 홈수가 남지 않게 오른쪽이
+// 나머지를 전부 가져간다. 'max' 는 자리가 아니라 상태라 여기서 다루지 않는다.
+export function snapRect(zone, vw, vh, taskbar = 48, min = MIN_SIZE) {
+  if (zone !== 'left' && zone !== 'right') return null
+  const h = Math.max(min.h, vh - taskbar)
+  const half = Math.max(min.w, Math.round(vw / 2))
+  return zone === 'left'
+    ? { x: 0, y: 0, w: half, h }
+    : { x: vw - half, y: 0, w: vw - half, h }
+}
 export function resizeRect(start, dir, dx, dy, min = MIN_SIZE) {
   const rect = { x: start.x, y: start.y, w: start.w, h: start.h }
   if (dir.includes('e')) rect.w = Math.max(min.w, start.w + dx)

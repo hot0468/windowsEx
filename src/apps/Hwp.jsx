@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, fileById } from '../engine/store.js'
 import { isForm, parseDoc, signOff } from './docLayout.js'
 
 const ZOOMS = [100, 125, 150]
@@ -77,7 +77,6 @@ function Doc({ content }) {
 }
 
 export default function Hwp({ fileId }) {
-  const fs = useGame((s) => s.scenario.fs)
   const spec = useGame((s) => s.scenario.programs.hangul)
   const installed = useGame((s) => Boolean(s.grants.hangul))
   const p = useGame((s) => s.scenario.printer)
@@ -86,10 +85,14 @@ export default function Hwp({ fileId }) {
   // the jam is cleared from the copier's own web page, not from here
   const mfpFixed = useGame((s) => s.mfpFixed)
   const sawMissing = useGame((s) => s.sawMissing)
-  const file = findFile(fs, fileId)
+  const file = useGame((s) => fileById(s, fileId))
   // Watching the document refuse to open is what gives the player something to
   // report to 정보보안팀.
   useEffect(() => { if (file && !installed) sawMissing('hangul') }, [file, installed])
+  // 전 사용자의 자동복구 문서를 실제로 읽었다. 열리지 않는 창은 본 것이 아니다.
+  const traces = useGame((s) => s.scenario.sites.find((x) => x.layout === 'notes')?.notes.traces)
+  const sawTrace = useGame((s) => s.sawTrace)
+  useEffect(() => { if (file && installed && file.id === traces?.recover) sawTrace('recover') }, [file, installed])
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
   // Windows can name the file it cannot open, and nothing else about it.

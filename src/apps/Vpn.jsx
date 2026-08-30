@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useGame, hostResolves } from '../engine/store.js'
+import { useState } from 'react'
+import { useGame } from '../engine/store.js'
 import { play } from '../shell/sound.js'
 
 // The client only knows how to dial a name. Whether that name means anything
@@ -7,34 +7,20 @@ import { play } from '../shell/sound.js'
 // a wrong password.
 export default function Vpn() {
   const scenario = useGame((s) => s.scenario)
-  const edits = useGame((s) => s.edits)
   const connected = useGame((s) => s.vpn)
-  const setVpn = useGame((s) => s.setVpn)
+  const dialing = useGame((s) => s.vpnDialing)
+  const dialVpn = useGame((s) => s.dialVpn)
+  const drop = useGame((s) => s.dropVpn)
   const v = scenario.vpn
-  const [dialing, setDialing] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (!dialing) return
-    const t = setTimeout(() => {
-      setDialing(false)
-      setVpn(true)
-      play('ok')
-    }, 1800)
-    return () => clearTimeout(t)
-  }, [dialing])
-
+  // 연결 자체는 store 가 한다 — 트레이 팝오버도 같은 길을 쓴다. 이 창은 왜 안 되는지만 말한다.
   const connect = () => {
-    if (!hostResolves(scenario, edits, v.server)) {
+    if (!dialVpn()) {
       play('error')
       return setError(v.notFound)
     }
     setError('')
-    setDialing(true)
-  }
-  const drop = () => {
-    setVpn(false)
-    play('click')
   }
 
   const state = connected ? '연결됨' : dialing ? '연결 중' : '연결 안 됨'

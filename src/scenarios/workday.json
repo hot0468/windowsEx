@@ -29,8 +29,11 @@
   "workMessenger": {
     "me": {
       "name": "김한별",
-      "sub": "영업1팀 · 오늘 복귀했습니다",
-      "color": "#3f6fb5"
+      "sub": "휴가 중 🌴",
+      "color": "#3f6fb5",
+      "subOn": {
+        "5": ""
+      }
     },
     "sections": [
       {
@@ -919,7 +922,8 @@
               {
                 "from": "차민혁",
                 "text": "확인 방법 : 시작 메뉴 > 명령 프롬프트 실행 후 ipconfig 입력",
-                "day": 1
+                "day": 1,
+                "phoneText": "확인 방법 : 설정 앱 > 내 PC 연결 정보 > IPv4 주소"
               }
             ],
             "quick": [
@@ -953,6 +957,20 @@
               ],
               "next": [
                 "감사합니다!"
+              ],
+              "noPhone": [
+                [
+                  "입력하신 주소는 사내 대역이 아닙니다.",
+                  "다시 확인 부탁드립니다."
+                ],
+                [
+                  "여전히 승인 대역이 아닙니다.",
+                  "설정 앱을 열고 「내 PC 연결 정보」를 봐 주세요."
+                ],
+                [
+                  "「내 PC 연결 정보」의 「IPv4 주소」 항목에 표시되는 값을",
+                  "그대로 보내주시면 됩니다."
+                ]
               ]
             },
             "reactions": [
@@ -971,14 +989,19 @@
                 "reply": [
                   "확인해 보니 대리님 PC에 한글이 설치되어 있지 않네요.",
                   "휴가 중에 전사 PC 재설치 작업이 있었는데, 그때 사무용 프로그램이 누락된 것 같습니다.",
-                  "설치 파일은 다운로드 폴더에 배포해 두었습니다. 한글2024_설치.exe 입니다.",
+                  "설치 파일은 지금 톡으로 보내드릴게요. 한글2024_설치.exe 저장해서 실행하시면 됩니다.",
                   "방금 설치 권한을 승인해 드렸으니 실행하시면 됩니다.",
                   "실행 파일은 이렇게 저희에게 먼저 확인하고 실행하시는 게 맞습니다. 출처가 불분명한 exe는 절대 실행하지 마세요."
                 ],
                 "grants": "hangulOk",
                 "next": [
                   "확인했습니다, 감사합니다"
-                ]
+                ],
+                "attach": {
+                  "name": "한글2024_설치.exe",
+                  "size": "312MB",
+                  "fileId": "file_hangul_setup"
+                }
               },
               {
                 "choice": "확인했습니다, 감사합니다",
@@ -2403,7 +2426,8 @@
             "id": "file_recover_1877",
             "name": "제목없음_복구본.hwp",
             "hidden": true,
-            "content": "[자동 복구 파일]\n\n프로그램 : 한글\n마지막 저장 : 2023-11-09  23:41\n작성자 : AR-1877\n복구 대상 : 제목 없음.hwp\n\n────────────────────────────\n\n제목 없음\n\n8층은 원래 서버실이었다고 한다.\n\n지금은 엘리베이터에 그 층 버튼이 없다. 7 다음이 9다.\n총무팀에 물어봤더니 그런 층은 없다고 했다. 그런데\n작년 안전점검 보고서에는 8층 항목이 있었다. 분명히 봤다.\n\n오늘 계단으로 올라가 봤다. 7층에서 한 층 더 올라가면\n문이 하나 있고 잠겨 있지 않았다. 안쪽은 불이 꺼져 있었는데\n서버 돌아가는 소리가 났다. 아직 뭔가 돌고 있다는 뜻이다.\n\n내일 다시 가서 확인해 보려고 한다. 누가 관리하는지만\n알면 되는 건데 아무도 모른다고 하는 게 이상하다.\n\n혹시 몰라서 적어둔다. 나 말고도 이걸 궁금해한 사람이 있\n\n────────────────────────────\n(문서가 저장되지 않은 채 프로그램이 종료되었습니다.)"
+            "content": "[자동 복구 파일]\n\n프로그램 : 한글\n마지막 저장 : 2023-11-09  23:41\n작성자 : AR-1877\n복구 대상 : 제목 없음.hwp\n\n────────────────────────────\n\n제목 없음\n\n8층은 원래 서버실이었다고 한다.\n\n지금은 엘리베이터에 그 층 버튼이 없다. 7 다음이 9다.\n총무팀에 물어봤더니 그런 층은 없다고 했다. 그런데\n작년 안전점검 보고서에는 8층 항목이 있었다. 분명히 봤다.\n\n오늘 계단으로 올라가 봤다. 7층에서 한 층 더 올라가면\n문이 하나 있고 잠겨 있지 않았다. 안쪽은 불이 꺼져 있었는데\n서버 돌아가는 소리가 났다. 아직 뭔가 돌고 있다는 뜻이다.\n\n내일 다시 가서 확인해 보려고 한다. 누가 관리하는지만\n알면 되는 건데 아무도 모른다고 하는 게 이상하다.\n\n혹시 몰라서 적어둔다. 나 말고도 이걸 궁금해한 사람이 있\n\n────────────────────────────\n(문서가 저장되지 않은 채 프로그램이 종료되었습니다.)",
+            "date": "2023-11-09 23:41:07"
           },
           {
             "id": "file_h_appr_recover",
@@ -2954,7 +2978,7 @@
                   {
                     "id": "file_quote_final",
                     "name": "견적서_최종_진짜최종.hwp",
-                    "content": "[견적서 - 최종본]\n\n수신: A상사 구매팀\n품목 | 수량 | 단가 | 금액\n무선 바코드 스캐너 BS-200 | 100대 |  | \n합계 (VAT 별도) |  |  | \n납기: 발주 후 3주\n유효기간: 발행일로부터 30일\n\n담당: 영업1팀 김한별\n\n※ 단가는 사내위키 '확정 단가표' 참조 후 표에 기재."
+                    "content": "[견적서 - 최종본]\n\n수신: A상사 구매팀\n품목 | 수량 | 단가 | 금액\n무선 바코드 스캐너 BS-200 | 100대 | 확정 단가표 참조 | 미정\n합계 (VAT 별도) |  |  | 미정\n납기: 발주 후 3주\n유효기간: 발행일로부터 30일\n\n담당: 영업1팀 김한별\n\n※ 단가는 사내위키 '확정 단가표' 참조 후 표에 기재."
                   },
                   {
                     "id": "file_minutes",
@@ -2976,7 +3000,8 @@
                     "id": "file_lock_quote",
                     "name": "~$견적서_최종_진짜최종.hwp",
                     "hidden": true,
-                    "content": "김한별\n2026-07-23 18:44\n\n(한글이 문서를 열어둔 동안 만드는 임시 파일입니다. 지우면 안 됩니다.)"
+                    "content": "김한별\n2026-07-23 18:44\n\n(한글이 문서를 열어둔 동안 만드는 임시 파일입니다. 지우면 안 됩니다.)",
+                    "date": "2026-07-23 18:44:12"
                   }
                 ]
               },
@@ -3975,7 +4000,7 @@
                         "100",
                         "QT-2607-009",
                         "위키 확정 단가표",
-                        ""
+                        "-"
                       ],
                       [
                         "2026-07-22",
@@ -3984,7 +4009,7 @@
                         "20",
                         "QT-2607-013",
                         "위키 확정 단가표",
-                        ""
+                        "-"
                       ],
                       [
                         "2026-08-05",
@@ -3993,7 +4018,7 @@
                         "40",
                         "QT-2608-003",
                         "위키 확정 단가표",
-                        ""
+                        "-"
                       ],
                       [
                         "2026-08-18",
@@ -4715,13 +4740,13 @@
                     "1월",
                     "급여",
                     "월세, 식비",
-                    ""
+                    "-"
                   ],
                   [
                     "2월",
                     "급여",
                     "설 선물",
-                    ""
+                    "-"
                   ],
                   [
                     "3월",
@@ -4733,7 +4758,7 @@
                     "4월",
                     "급여",
                     "월세, 식비",
-                    ""
+                    "-"
                   ]
                 ]
               }
@@ -4813,7 +4838,8 @@
         "id": "file_hangul_setup",
         "name": "한글2024_설치.exe",
         "program": "hangul",
-        "content": "한컴오피스 한글 2024 설치 파일 (사내 배포본)\n\n설치에는 관리자 승인이 필요합니다."
+        "content": "한컴오피스 한글 2024 설치 파일 (사내 배포본)\n\n설치에는 관리자 승인이 필요합니다.",
+        "attached": true
       },
       {
         "id": "file_anysign",
@@ -5475,89 +5501,115 @@
             "id": "file_cat1",
             "name": "IMG_2087.jpg",
             "image": "cat1",
-            "alt": "몸을 동그랗게 말고 자는 고양이 사진. 촬영일 정보가 비어 있다."
+            "alt": "몸을 동그랗게 말고 자는 고양이 사진. 촬영일 정보가 비어 있다.",
+            "date": "2026-07-22 23:19:00",
+            "created": "2026-07-22 23:19:00"
           },
           {
             "id": "file_cat2",
             "name": "IMG_2091.jpg",
             "image": "cat2",
-            "alt": "주황색 고양이를 가까이서 찍은 사진. 촬영일 정보가 비어 있다."
+            "alt": "주황색 고양이를 가까이서 찍은 사진. 촬영일 정보가 비어 있다.",
+            "date": "2026-07-22 23:20:17",
+            "created": "2026-07-22 23:20:17"
           },
           {
             "id": "file_jeju1",
             "name": "IMG_2092.jpg",
             "image": "jeju1",
             "alt": "해질 무렵 바닷가에 선 사람. 뒤로 작은 섬이 흐리게 보인다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:22:34",
+            "created": "2026-07-22 23:22:34"
           },
           {
             "id": "file_jeju2",
             "name": "IMG_2093.jpg",
             "image": "jeju2",
             "alt": "밀짚모자를 붙잡고 뒤돌아본 사람. 풀밭 너머로 성산일출봉이 서 있다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:23:51",
+            "created": "2026-07-22 23:23:51"
           },
           {
             "id": "file_jeju3",
             "name": "IMG_2094.jpg",
             "image": "jeju3",
             "alt": "돌담 카페 창가에서 아이스커피를 들고 바다 쪽을 내다보는 사람.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:25:08",
+            "created": "2026-07-22 23:25:08"
           },
           {
             "id": "file_jeju4",
             "name": "IMG_2095.jpg",
             "image": "jeju4",
             "alt": "카페 창가에 턱을 괸 얼굴. 창밖이 전부 바다다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:26:25",
+            "created": "2026-07-22 23:26:25"
           },
           {
             "id": "file_jeju5",
             "name": "IMG_2096.jpg",
             "image": "jeju5",
             "alt": "현무암 돌담길에 선 얼굴. 담장 위로 나뭇가지가 드리워 있다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:28:42",
+            "created": "2026-07-22 23:28:42"
           },
           {
             "id": "file_jeju6",
             "name": "IMG_2097.jpg",
             "image": "jeju6",
             "alt": "밤 골목에 선 얼굴. 뒤로 식당 간판과 전구가 줄지어 켜져 있다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:29:59",
+            "created": "2026-07-22 23:29:59"
           },
           {
             "id": "file_jeju7",
             "name": "IMG_2098.jpg",
             "image": "jeju7",
             "alt": "해바라기밭에서 꽃 한 송이를 든 사람. 해가 낮게 걸렸다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:31:16",
+            "created": "2026-07-22 23:31:16"
           },
           {
             "id": "file_jeju8",
             "name": "IMG_2099.jpg",
             "image": "jeju8",
             "alt": "성산일출봉을 등진 얼굴. 밀짚모자 위로 하늘이 파랗다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:32:33",
+            "created": "2026-07-22 23:32:33"
           },
           {
             "id": "file_jeju9",
             "name": "IMG_2100.jpg",
             "image": "jeju9",
             "alt": "오름 능선 길을 혼자 걷는 사람. 멀리 오름들이 겹겹이 이어진다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:34:50",
+            "created": "2026-07-22 23:34:50"
           },
           {
             "id": "file_jeju10",
             "name": "IMG_2101.jpg",
             "image": "jeju10",
             "alt": "샌들을 손에 들고 맨발로 물가를 걷는 사람. 해가 지고 있다.",
-            "trail": "휴대폰/갤러리"
+            "trail": "휴대폰/갤러리",
+            "date": "2026-07-22 23:35:07",
+            "created": "2026-07-22 23:35:07"
           },
           {
             "id": "file_gyul",
             "name": "IMG_2103.jpg",
             "image": "gyul",
-            "alt": "귤이 열린 밭 사진."
+            "alt": "귤이 열린 밭 사진.",
+            "date": "2026-07-22 23:37:24",
+            "created": "2026-07-22 23:37:24"
           }
         ]
       },
@@ -5568,13 +5620,15 @@
             "id": "file_ticket",
             "name": "항공예약_캡처.jpg",
             "image": "ticket",
-            "alt": "다온항공권 예약 확인 화면. 김포(GMP) → 제주(CJU), 2026-07-24 08:20 출발, 좌석 21A, KE1205."
+            "alt": "다온항공권 예약 확인 화면. 김포(GMP) → 제주(CJU), 2026-07-24 08:20 출발, 좌석 21A, KE1205.",
+            "date": "2026-07-20 19:02:33"
           },
           {
             "id": "file_receipt",
             "name": "영수증_0723.jpg",
             "image": "receipt",
-            "alt": "역전할머니맥주 강남점 영수증. 2026-07-23 21:48, 생맥주·노가리·골뱅이무침, 합계 38,000원."
+            "alt": "역전할머니맥주 강남점 영수증. 2026-07-23 21:48, 생맥주·노가리·골뱅이무침, 합계 38,000원.",
+            "date": "2026-07-23 21:49:05"
           },
           {
             "id": "file_lotto_app",
@@ -5851,7 +5905,7 @@
             },
             "notes": [
               "PC를 재설치하거나 교체하면 복합기 등록이 사라집니다. 다시 등록해야 인쇄됩니다.",
-              "등록할 IP는 해당 PC에서 명령 프롬프트를 열고 ipconfig 를 입력하면 나옵니다.",
+              "등록할 IP는 해당 PC에서 명령 프롬프트를 열고 ipconfig 를 입력하면 나옵니다. 휴대폰에서는 설정 앱의 「내 PC 연결 정보」에 같은 값이 있습니다.",
               "등록이 끝나면 접수번호가 표시됩니다. 사무기기 관리대장에 기록해 주세요.",
               "웹 관리 페이지는 사내망에서만 열립니다. 주소창에 IP를 직접 입력하세요."
             ]
@@ -7771,7 +7825,7 @@
         "compose": {
           "button": "글쓰기",
           "title": "익명으로 글쓰기",
-          "hint": "무엇에 대해 쓸까요? 등록하면 수정할 수 없습니다.",
+          "hint": "무엇에 대해 쓸까요?",
           "submit": "등록",
           "cancel": "취소",
           "author": "익명(나)",
@@ -7916,7 +7970,8 @@
               "vanishes": 2,
               "gone": "삭제되었거나 존재하지 않는 게시물입니다."
             }
-          ]
+          ],
+          "warn": "등록하면 수정할 수 없습니다."
         }
       }
     },
@@ -9607,7 +9662,15 @@
             "sub": "참관객 사전 등록 GO!",
             "color": "#c8461f"
           }
-        ]
+        ],
+        "sections": {
+          "보안뉴스": "IT",
+          "산업경제신문": "경제",
+          "일과사람": "사회",
+          "날씨뉴스": "날씨",
+          "교통일보": "사회",
+          "여행생활": "생활"
+        }
       }
     },
     {
@@ -9678,11 +9741,22 @@
               "내일 8층 올라가 본다.",
               "혹시 몰라서 적어둔다. 이 컴퓨터 쓰게 될 사람이 있으면,"
             ],
-            "cut": true
+            "cut": true,
+            "more": [
+              "자리 정리는 안 해도 된다. 서랍 두 번째 칸에 사탕 있다.",
+              "8층에서 뭘 봤는지 여기 적어두려고 했는데, 적으면 남으니까 안 적는다.",
+              "올라가지 말라고도, 올라가 보라고도 안 하겠다. 나도 누가 말렸으면 안 갔을지 모르겠고.",
+              "아홉 시 이 분에 복도 센서등이 켜지면 그건 나다. 인사는 안 해도 된다."
+            ]
           }
         ],
         "footer": "마지막 저장: 2023-07-05 19:41  ·  이후 수정 없음",
-        "uptime": "이 서버는 1,143일째 실행 중입니다."
+        "uptime": "이 서버는 1,143일째 실행 중입니다.",
+        "traces": {
+          "recover": "file_recover_1877",
+          "sotong": "sd5"
+        },
+        "opens": 3
       }
     },
     {
@@ -10315,23 +10389,61 @@
     },
     {
       "id": "stock",
-      "title": "최민서에게 BS-200 재고 알려주기",
-      "grant": "stock"
+      "title": "A상사 구매팀에 BS-200 재고 회신하기",
+      "grant": "stock",
+      "mail": {
+        "to": "purchase@asangsa.co.kr",
+        "requiredKeywords": [
+          "180"
+        ],
+        "reply": {
+          "from": "A상사 구매팀 <purchase@asangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 재고 확인 감사합니다.\n수량 확인했고 발주 시 다시 연락드리겠습니다.\n\nA상사 구매팀 드림"
+        },
+        "unclearReply": {
+          "from": "A상사 구매팀 <purchase@asangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n다만 현재 재고가 몇 대인지 본문에 숫자로 적어 주셔야 품의를 올릴 수 있습니다.\n\nA상사 구매팀 드림"
+        }
+      }
     },
     {
       "id": "ctech",
-      "title": "이준호에게 C테크 견적 총액 알려주기",
-      "grant": "ctech"
+      "title": "다운로드의 견적서 v2를 거래처 폴더로 옮기기",
+      "grant": "ctech",
+      "move": {
+        "file": "file_quote_v2",
+        "into": "문서/업무자료/2026/A상사"
+      }
     },
     {
       "id": "trip",
-      "title": "박 팀장에게 7월 출장비 금액 알려주기",
-      "grant": "trip"
+      "title": "출장 정산 대장에 우리 팀 정산 파일 올리기",
+      "grant": "trip",
+      "upload": {
+        "file": "file_expense",
+        "page": "triplog"
+      }
     },
     {
       "id": "contact",
-      "title": "최민서에게 A상사 담당자 메일 주소 알려주기",
-      "grant": "contact"
+      "title": "A상사 이수진 과장에게 제품 소개자료 메일 보내기",
+      "grant": "contact",
+      "mail": {
+        "to": "sj.lee@asangsa.co.kr",
+        "requiredAttachment": "file_ppt_product",
+        "reply": {
+          "from": "이수진 <sj.lee@asangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 소개자료 잘 받았습니다.\n내부 검토 후 다시 연락드리겠습니다.\n\nA상사 구매팀 이수진 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "이수진 <sj.lee@asangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 제품 소개자료가 아닌 것 같습니다.\n소개자료로 다시 한번 부탁드립니다.\n\nA상사 구매팀 이수진 드림"
+        }
+      }
     },
     {
       "id": "lunch",
@@ -10407,13 +10519,24 @@
     },
     {
       "id": "edu",
-      "title": "정보보안팀에 보안교육 이수일 알려주기",
-      "grant": "edu"
+      "title": "보안교육 이수확인서 파일명을 이수 연월로 바꾸기",
+      "grant": "edu",
+      "rename": {
+        "file": "file_dummy_031",
+        "name": "교육이수확인서_202506.hwp"
+      }
     },
     {
       "id": "pricelog",
-      "title": "최민서에게 BW-50 단가 개정일 알려주기",
-      "grant": "pricelog"
+      "title": "견적 발송대장 비고에 유선 모델 단가 개정일 적기",
+      "grant": "pricelog",
+      "cell": {
+        "file": "file_h_quotelog",
+        "sheet": "발송",
+        "row": 2,
+        "col": 6,
+        "value": "2025-02-10"
+      }
     },
     {
       "id": "insurance",
@@ -10437,8 +10560,15 @@
     },
     {
       "id": "dbizno",
-      "title": "박 팀장에게 D유통 사업자등록번호 알려주기",
-      "grant": "dbizno"
+      "title": "발주현황의 D유통 상태 고치기",
+      "grant": "dbizno",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 3,
+        "col": 3,
+        "value": "거래 재개 검토"
+      }
     },
     {
       "id": "june",
@@ -10467,8 +10597,15 @@
     },
     {
       "id": "dphone",
-      "title": "이준호에게 D유통 담당자 직통 번호 알려주기",
-      "grant": "dphone"
+      "title": "D유통 AS 건 보증 판정해서 대장 채우기",
+      "grant": "dphone",
+      "cell": {
+        "file": "file_h_as2026",
+        "sheet": "접수",
+        "row": 3,
+        "col": 5,
+        "value": "유상 처리"
+      }
     },
     {
       "id": "productdeck",
@@ -10497,8 +10634,12 @@
     },
     {
       "id": "split",
-      "title": "지현이에게 맥주집 영수증 합계 알려주기",
-      "grant": "split"
+      "title": "역전할머니 영수증 사진 갤러리로 옮기기",
+      "grant": "split",
+      "move": {
+        "file": "file_receipt",
+        "into": "휴대폰/갤러리"
+      }
     },
     {
       "id": "teampic",
@@ -10512,8 +10653,12 @@
     },
     {
       "id": "ext",
-      "title": "한소영에게 총무팀 내선 번호 알려주기",
-      "grant": "ext"
+      "title": "경비 처리 지침 문서에 법인카드 사용내역 올리기",
+      "grant": "ext",
+      "upload": {
+        "file": "file_xls_cardlog2608",
+        "page": "rule"
+      }
     },
     {
       "id": "e_quote",
@@ -10527,13 +10672,36 @@
     },
     {
       "id": "e_lineup",
-      "title": "박 팀장에게 제품 라인업 문서 갱신일 알려주기",
-      "grant": "e_lineup"
+      "title": "발주현황의 E마트 상태 고치기",
+      "grant": "e_lineup",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 4,
+        "col": 3,
+        "value": "재거래 견적 발송"
+      }
     },
     {
       "id": "e_eol_date",
-      "title": "박 팀장에게 BS-100 생산 종료 개정일 알려주기",
-      "grant": "e_eol_date"
+      "title": "E마트 윤 과장에게 생산 종료 개정일 메일 보내기",
+      "grant": "e_eol_date",
+      "mail": {
+        "to": "jh.yoon@emart-corp.co.kr",
+        "requiredKeywords": [
+          "2025-06-01"
+        ],
+        "unclearReply": {
+          "from": "윤지혜 <jh.yoon@emart-corp.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n\n그런데 본문에서 생산 종료 개정일을 찾지 못했습니다.\n품의서에 날짜를 그대로 옮겨 적어야 해서요, 날짜만 다시 한번 부탁드립니다.\n\n윤지혜 드림"
+        },
+        "reply": {
+          "from": "윤지혜 <jh.yoon@emart-corp.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 날짜 확인했습니다.\n\n품의서에 그대로 기재하겠습니다. 빠른 회신 감사합니다.\n\n윤지혜 드림"
+        }
+      }
     },
     {
       "id": "e_beachpic",
@@ -10547,8 +10715,24 @@
     },
     {
       "id": "e_bmove",
-      "title": "이준호에게 B물산 자재팀 이전 날짜 알려주기",
-      "grant": "e_bmove"
+      "title": "B물산 오 부장에게 재방문 일정 메일 보내기",
+      "grant": "e_bmove",
+      "mail": {
+        "to": "ts.oh@bmulsan.co.kr",
+        "requiredKeywords": [
+          "05/28"
+        ],
+        "reply": {
+          "from": "오태식 <ts.oh@bmulsan.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n이전 후 첫 방문 날짜 확인했습니다. 그 주기로 다음 방문 잡아 두겠습니다.\n\nB물산 자재팀 오태식 드림"
+        },
+        "unclearReply": {
+          "from": "오태식 <ts.oh@bmulsan.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 저희 자재팀 이전 후 처음 오셨던 날짜가 본문에 보이지 않습니다.\n그 날짜를 기준으로 방문 주기를 잡으려 하니 한 줄만 적어 주시면 감사하겠습니다.\n\nB물산 자재팀 오태식 드림"
+        }
+      }
     },
     {
       "id": "e_dinnerpic",
@@ -10582,8 +10766,12 @@
     },
     {
       "id": "e_econtact",
-      "title": "최민서에게 E마트 담당자 메일 주소 알려주기",
-      "grant": "e_econtact"
+      "title": "E마트 담당자 문서를 드라이브 접수 페이지에 올리기",
+      "grant": "e_econtact",
+      "upload": {
+        "file": "file_e_review",
+        "page": "contact"
+      }
     },
     {
       "id": "e_song",
@@ -10607,8 +10795,30 @@
     },
     {
       "id": "e_leaveend",
-      "title": "회계팀에 휴가 종료일 확인해 주기",
-      "grant": "e_leaveend"
+      "title": "인사총무팀에 휴가신청서 사본 메일로 보내기",
+      "grant": "e_leaveend",
+      "mail": {
+        "to": "ga@ar.co.kr",
+        "requiredAttachment": "file_vacation",
+        "requiredKeywords": [
+          "휴가"
+        ],
+        "reply": {
+          "from": "인사총무팀 <ga@ar.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 휴가신청서 사본 잘 받았습니다.\n결재 원본 기준으로 근태 기록의 종료일을 하나로 맞추고 회계팀에도 회신했습니다.\n\n인사총무팀 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "인사총무팀 <ga@ar.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부해 주신 파일이 휴가신청서가 아닌 것 같습니다.\n결재가 끝난 신청서 사본으로 다시 보내주시겠어요?\n\n인사총무팀 드림"
+        },
+        "unclearReply": {
+          "from": "인사총무팀 <ga@ar.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n어떤 건으로 보내신 건지 본문에 한 줄만 적어 주시면 접수해 드리겠습니다.\n\n인사총무팀 드림"
+        }
+      }
     },
     {
       "id": "e_leaveleft",
@@ -10627,8 +10837,15 @@
     },
     {
       "id": "e_bank",
-      "title": "엄마에게 회사 근처 우리은행 지점 이름 알려주기",
-      "grant": "e_bank"
+      "title": "가계부 적금 줄에 은행 지점 이름 적어두기",
+      "grant": "e_bank",
+      "cell": {
+        "file": "file_dummy_076",
+        "sheet": "상반기",
+        "row": 2,
+        "col": 3,
+        "value": "우리은행 테헤란로지점"
+      }
     },
     {
       "id": "e_dentist",
@@ -10722,8 +10939,15 @@
     },
     {
       "id": "p2_shipno",
-      "title": "박 팀장에게 B물산 8월 18일 출고 송장번호 알려주기",
-      "grant": "p2_shipno"
+      "title": "납품 일정표의 B물산 상태 고치기",
+      "grant": "p2_shipno",
+      "cell": {
+        "file": "file_dummy_049",
+        "sheet": "3분기",
+        "row": 1,
+        "col": 3,
+        "value": "출고 완료"
+      }
     },
     {
       "id": "p2_penalty",
@@ -10752,8 +10976,15 @@
     },
     {
       "id": "p2_claimno",
-      "title": "이준호에게 B물산 배터리 AS 접수번호 알려주기",
-      "grant": "p2_claimno"
+      "title": "출고내역 반품 사유를 AS 대장 표기로 맞추기",
+      "grant": "p2_claimno",
+      "cell": {
+        "file": "file_p2_ship",
+        "sheet": "반품",
+        "row": 1,
+        "col": 4,
+        "value": "케이블 단선"
+      }
     },
     {
       "id": "p2_minutes818",
@@ -10762,8 +10993,12 @@
     },
     {
       "id": "p2_printticket",
-      "title": "이준호에게 복합기 점검 접수번호 알려주기",
-      "grant": "p2_printticket"
+      "title": "복합기 점검 근거 회의록 드라이브에 올리기",
+      "grant": "p2_printticket",
+      "upload": {
+        "file": "file_p2_asmeet",
+        "page": "printlog"
+      }
     },
     {
       "id": "p2_mfp",
@@ -10772,13 +11007,21 @@
     },
     {
       "id": "p2_dcontact",
-      "title": "이준호에게 D유통 담당자 메일 주소 알려주기",
-      "grant": "p2_dcontact"
+      "title": "시연기 드라이버 최신본 드라이브에 올리기",
+      "grant": "p2_dcontact",
+      "upload": {
+        "file": "file_driver",
+        "page": "demo"
+      }
     },
     {
       "id": "p2_bw30price",
-      "title": "이준호에게 BW-30 2023년 단가 알려주기",
-      "grant": "p2_bw30price"
+      "title": "옛날 단가표 참고용 파일 폐기예정으로 치우기",
+      "grant": "p2_bw30price",
+      "move": {
+        "file": "file_dummy_063",
+        "into": "문서/업무자료/2023/폐기예정"
+      }
     },
     {
       "id": "p2_cship",
@@ -10792,8 +11035,12 @@
     },
     {
       "id": "p2_court",
-      "title": "최민서에게 계약 분쟁 관할 법원 알려주기",
-      "grant": "p2_court"
+      "title": "종료 거래처 경위서를 드라이브에 올리기",
+      "grant": "p2_court",
+      "upload": {
+        "file": "file_h_guro_report",
+        "page": "closed"
+      }
     },
     {
       "id": "p2_roomwho",
@@ -10802,8 +11049,15 @@
     },
     {
       "id": "p2_bstate",
-      "title": "최민서에게 발주현황 B물산 진행 상태 알려주기",
-      "grant": "p2_bstate"
+      "title": "발주현황 시트의 B물산 상태 고치기",
+      "grant": "p2_bstate",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 1,
+        "col": 3,
+        "value": "출고 완료"
+      }
     },
     {
       "id": "p2_ribbon",
@@ -10827,13 +11081,24 @@
     },
     {
       "id": "p2_wsdeadline",
-      "title": "한소영에게 워크숍 참가 표명 마감일 알려주기",
-      "grant": "p2_wsdeadline"
+      "title": "워크숍 참가 현황 영업2팀 비고에 표명 마감일 적기",
+      "grant": "p2_wsdeadline",
+      "cell": {
+        "file": "file_c_wsapply",
+        "sheet": "부서별집계",
+        "row": 1,
+        "col": 4,
+        "value": "8월 29일"
+      }
     },
     {
       "id": "p2_wsplace",
-      "title": "한소영에게 워크숍 장소 알려주기",
-      "grant": "p2_wsplace"
+      "title": "워크숍 사진 정리목록을 개인 워크샵 폴더로 옮기기",
+      "grant": "p2_wsplace",
+      "move": {
+        "file": "file_dummy_033",
+        "into": "문서/개인/워크샵"
+      }
     },
     {
       "id": "p2_jejupic",
@@ -10857,13 +11122,33 @@
     },
     {
       "id": "p2_hostsdate",
-      "title": "정보보안팀에 hosts 배포본 배포일 알려주기",
-      "grant": "p2_hostsdate"
+      "title": "정보전략팀에 hosts 배포본 배포일 메일로 보내기",
+      "grant": "p2_hostsdate",
+      "mail": {
+        "to": "it@ar.co.kr",
+        "requiredKeywords": [
+          "2026-05-02"
+        ],
+        "reply": {
+          "from": "정보전략팀 <it@ar.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 대조 요청 확인했습니다.\n보내주신 날짜는 저희가 마지막으로 내려보낸 배포본과 같습니다. 별도 조치는 필요하지 않습니다.\n\n정보전략팀 드림"
+        },
+        "unclearReply": {
+          "from": "정보전략팀 <it@ar.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n대조를 하려면 PC에 적용된 배포본 날짜가 본문에 있어야 합니다. 날짜를 적어 다시 보내주시겠어요?\n\n정보전략팀 드림"
+        }
+      }
     },
     {
       "id": "p2_educourse",
-      "title": "정보보안팀에 이수한 교육 과정명 알려주기",
-      "grant": "p2_educourse"
+      "title": "사내보안 교육 파일명을 이수확인서 규칙으로 바꾸기",
+      "grant": "p2_educourse",
+      "rename": {
+        "file": "file_dummy_016",
+        "name": "교육이수확인서_202405.hwp"
+      }
     },
     {
       "id": "p2_errcode",
@@ -10872,18 +11157,39 @@
     },
     {
       "id": "p2_mealcap",
-      "title": "회계팀에 야근 식대 한도 알려주기",
-      "grant": "p2_mealcap"
+      "title": "경비 정산 시트 회의비 줄 대사 완료 표시하기",
+      "grant": "p2_mealcap",
+      "cell": {
+        "file": "file_xls_expense2608",
+        "sheet": "202608",
+        "row": 0,
+        "col": 3,
+        "value": "승인 2건 대사 완료"
+      }
     },
     {
       "id": "p2_staycap",
-      "title": "회계팀에 출장 숙박 한도 알려주기",
-      "grant": "p2_staycap"
+      "title": "경비 정산 시트 사무용품 줄 대사 완료 표시하기",
+      "grant": "p2_staycap",
+      "cell": {
+        "file": "file_xls_expense2608",
+        "sheet": "202608",
+        "row": 1,
+        "col": 3,
+        "value": "승인 1건 대사 완료"
+      }
     },
     {
       "id": "p2_claimdays",
-      "title": "회계팀에 경비 청구 기한 알려주기",
-      "grant": "p2_claimdays"
+      "title": "경비 정산 시트 교통·운송 줄 대사 완료 표시하기",
+      "grant": "p2_claimdays",
+      "cell": {
+        "file": "file_xls_expense2608",
+        "sheet": "202608",
+        "row": 2,
+        "col": 3,
+        "value": "승인 3건 대사 완료"
+      }
     },
     {
       "id": "p2_pension",
@@ -10907,13 +11213,21 @@
     },
     {
       "id": "p2_lottodate",
-      "title": "지현이에게 로또 구매 날짜 알려주기",
-      "grant": "p2_lottodate"
+      "title": "로또 구매내역 캡처 컴퓨터로 옮겨두기",
+      "grant": "p2_lottodate",
+      "move": {
+        "file": "file_lotto_app",
+        "into": "문서/개인"
+      }
     },
     {
       "id": "p2_vacreason",
-      "title": "지현이에게 휴가 신청 사유 알려주기",
-      "grant": "p2_vacreason"
+      "title": "휴가신청서 사본 이름에 사유 넣기",
+      "grant": "p2_vacreason",
+      "rename": {
+        "file": "file_vacation",
+        "name": "휴가신청서_연차소진.hwp"
+      }
     },
     {
       "id": "p2_pharmacy",
@@ -10927,8 +11241,15 @@
     },
     {
       "id": "p2_gym",
-      "title": "엄마에게 회사 근처 헬스장 이름 알려주기",
-      "grant": "p2_gym"
+      "title": "가계부에 등록할 헬스장 이름 적어두기",
+      "grant": "p2_gym",
+      "cell": {
+        "file": "file_dummy_076",
+        "sheet": "상반기",
+        "row": 3,
+        "col": 3,
+        "value": "테헤란로 헬스클럽"
+      }
     },
     {
       "id": "p2_idpic",
@@ -10947,8 +11268,12 @@
     },
     {
       "id": "p2_office",
-      "title": "강 사장님에게 회사 주소 층수까지 알려주기",
-      "grant": "p2_office"
+      "title": "숙소 예약 확인 캡처 갤러리로 옮겨두기",
+      "grant": "p2_office",
+      "move": {
+        "file": "file_h_staycapture",
+        "into": "휴대폰/갤러리"
+      }
     },
     {
       "id": "cleanpc",
@@ -11011,8 +11336,12 @@
     },
     {
       "id": "q2024a",
-      "title": "박 팀장에게 2024 상반기 A상사 견적 총액 알려주기",
-      "grant": "q2024a"
+      "title": "구형 모델 견적 초안을 폐기예정 폴더로 치우기",
+      "grant": "q2024a",
+      "move": {
+        "file": "file_quote_v1",
+        "into": "문서/업무자료/2023/폐기예정"
+      }
     },
     {
       "id": "q2024b",
@@ -11021,28 +11350,54 @@
     },
     {
       "id": "trip_may",
-      "title": "회계팀에 5월 대전 출장비 알려주기",
-      "grant": "trip_may"
+      "title": "경비 정산 파일명에 결재 문서번호 붙이기",
+      "grant": "trip_may",
+      "rename": {
+        "file": "file_xls_expense2608",
+        "name": "경비_정산_202608_AR-2608-0417.xlsx"
+      }
     },
     {
       "id": "contract_a",
-      "title": "박 팀장에게 A상사 계약 종료일 알려주기",
-      "grant": "contract_a"
+      "title": "B물산 계약체결 보고서를 거래처 폴더로 옮기기",
+      "grant": "contract_a",
+      "move": {
+        "file": "file_h_bcontract",
+        "into": "문서/업무자료/2026/B물산"
+      }
     },
     {
       "id": "contract_b",
-      "title": "최민서에게 B물산 계약 종료일 알려주기",
-      "grant": "contract_b"
+      "title": "견적 발송대장 B물산 줄에 계약 만료 표시하기",
+      "grant": "contract_b",
+      "cell": {
+        "file": "file_h_quotelog",
+        "sheet": "발송",
+        "row": 3,
+        "col": 6,
+        "value": "계약 만료 전 최종 발송"
+      }
     },
     {
       "id": "warranty",
-      "title": "한소영에게 하자보증 기간 알려주기",
-      "grant": "warranty"
+      "title": "재고현황 BS-200 비고에 하자보증 기간 덧붙이기",
+      "grant": "warranty",
+      "cell": {
+        "file": "file_xls_stock",
+        "sheet": "재고",
+        "row": 0,
+        "col": 4,
+        "value": "정상 · 하자보증 18개월"
+      }
     },
     {
       "id": "meetroom",
-      "title": "최민서에게 지난주 회의 장소 알려주기",
-      "grant": "meetroom"
+      "title": "주간회의 자료 파일 이름 규칙대로 바꾸기",
+      "grant": "meetroom",
+      "rename": {
+        "file": "file_ppt_meeting",
+        "name": "회의자료_0819.pptx"
+      }
     },
     {
       "id": "guard_night",
@@ -11076,7 +11431,7 @@
     },
     {
       "id": "console",
-      "title": "정보보안팀에 보안교육 사이트 오류 메시지 전달하기",
+      "title": "정보보안팀에 보안교육 사이트 오류 문구와 캡처 화면 보내기",
       "grant": "console"
     },
     {
@@ -11213,6 +11568,234 @@
       "id": "overtime_pay",
       "title": "회계팀에 6월 연장근로 시간 알려주기",
       "grant": "overtime_pay"
+    },
+    {
+      "id": "deed_cell_orders_c",
+      "title": "발주현황 시트에서 C테크 상태 고치기",
+      "grant": "deed_cell_orders_c",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 2,
+        "col": 3,
+        "value": "납품 완료"
+      }
+    },
+    {
+      "id": "deed_cell_stock_bw50",
+      "title": "재고현황 시트에서 BW-50 입고예정 고치기",
+      "grant": "deed_cell_stock_bw50",
+      "cell": {
+        "file": "file_xls_stock",
+        "sheet": "재고",
+        "row": 1,
+        "col": 3,
+        "value": "70"
+      }
+    },
+    {
+      "id": "deed_cell_orders_b",
+      "title": "발주현황 시트의 A상사 상태를 일정표에 맞추기",
+      "grant": "deed_cell_orders_b",
+      "cell": {
+        "file": "file_xls_orders",
+        "sheet": "2026",
+        "row": 0,
+        "col": 3,
+        "value": "준비중"
+      }
+    },
+    {
+      "id": "deed_cell_ws_sec",
+      "title": "워크숍 참가 현황에서 정보보안팀 전원 참가로 고치기",
+      "grant": "deed_cell_ws_sec",
+      "cell": {
+        "file": "file_c_wsapply",
+        "sheet": "부서별집계",
+        "row": 6,
+        "col": 2,
+        "value": "9명"
+      }
+    },
+    {
+      "id": "deed_mail_qc",
+      "title": "C테크 구매팀에 견적서 메일 보내기",
+      "grant": "deed_mail_qc",
+      "mail": {
+        "to": "purchase@ctech.co.kr",
+        "requiredAttachment": "file_qc",
+        "requiredKeywords": [
+          "견적서"
+        ],
+        "reply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 견적서 잘 받았습니다.\n검토 후 연락드리겠습니다.\n\nC테크 구매팀 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 저희 견적서가 아닌 것 같습니다.\nC테크 앞으로 된 파일로 다시 부탁드립니다.\n\nC테크 구매팀 드림"
+        },
+        "unclearReply": {
+          "from": "C테크 구매팀 <purchase@ctech.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 메일 감사합니다.\n어떤 자료를 보내신 건지 본문에 한 줄 적어 주시면 정리에 도움이 되겠습니다.\n\nC테크 구매팀 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_form",
+      "title": "F상사에 견적서 양식 보내기",
+      "grant": "deed_mail_form",
+      "mail": {
+        "to": "jh.park@fsangsa.co.kr",
+        "requiredAttachment": "file_form_quote",
+        "requiredKeywords": [
+          "양식"
+        ],
+        "reply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 양식 잘 받았습니다. 감사합니다.\n\n박정훈 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 양식 파일이 아닌 것 같습니다.\n다시 한번 부탁드립니다.\n\n박정훈 드림"
+        },
+        "unclearReply": {
+          "from": "박정훈 <jh.park@fsangsa.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 무엇을 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n박정훈 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_qd",
+      "title": "D유통 담당자에게 견적서 메일 보내기",
+      "grant": "deed_mail_qd",
+      "mail": {
+        "to": "sa.yoon@dyutong.co.kr",
+        "requiredAttachment": "file_qd",
+        "requiredKeywords": [
+          "견적서"
+        ],
+        "reply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 견적서 잘 받았습니다.\n내부 검토 후 회신드리겠습니다.\n\n윤성아 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부하신 파일이 초안이거나 저희 것이 아닌 것 같습니다.\n최종 견적서로 다시 부탁드립니다.\n\n윤성아 드림"
+        },
+        "unclearReply": {
+          "from": "윤성아 <sa.yoon@dyutong.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 어떤 문서를 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n윤성아 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_mail_gsan",
+      "title": "G산업 담당자에게 회의록 메일 보내기",
+      "grant": "deed_mail_gsan",
+      "mail": {
+        "to": "jh.han@gsanup.co.kr",
+        "requiredAttachment": "file_h_gminutes",
+        "requiredKeywords": [
+          "회의록"
+        ],
+        "reply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 회의록 잘 받았습니다. 감사합니다.\n\n한지호 드림"
+        },
+        "wrongAttachmentReply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 첨부가 지난 회의록이 아닌 것 같습니다.\n다시 부탁드립니다.\n\n한지호 드림"
+        },
+        "unclearReply": {
+          "from": "한지호 <jh.han@gsanup.co.kr>",
+          "subject": "RE: {subject}",
+          "body": "김한별 대리님, 무엇을 보내신 건지 본문에 적어 주시면 감사하겠습니다.\n\n한지호 드림"
+        }
+      }
+    },
+    {
+      "id": "deed_move_ppt",
+      "title": "회의자료_최종.pptx를 발표자료 폴더로 옮기기",
+      "grant": "deed_move_ppt",
+      "move": {
+        "file": "file_ppt_meeting",
+        "into": "문서/발표자료"
+      }
+    },
+    {
+      "id": "deed_rename_ppt",
+      "title": "회의자료_최종_final.pptx 이름 바꾸기",
+      "grant": "deed_rename_ppt",
+      "rename": {
+        "file": "file_dummy_082",
+        "name": "회의자료_0825.pptx"
+      }
+    },
+    {
+      "id": "deed_move_gminutes",
+      "title": "G산업 회의록을 G산업 폴더로 옮기기",
+      "grant": "deed_move_gminutes",
+      "move": {
+        "file": "file_h_gminutes",
+        "into": "문서/업무자료/2026/G산업"
+      }
+    },
+    {
+      "id": "deed_move_wsplan",
+      "title": "워크숍 진행표를 워크샵 폴더로 옮기기",
+      "grant": "deed_move_wsplan",
+      "move": {
+        "file": "file_p2_wsplan",
+        "into": "문서/개인/워크샵"
+      }
+    },
+    {
+      "id": "deed_up_equote",
+      "title": "E마트 재거래 견적서 드라이브에 올리기",
+      "grant": "deed_up_equote",
+      "upload": {
+        "file": "file_e_quote",
+        "page": "q3"
+      }
+    },
+    {
+      "id": "deed_up_bminutes",
+      "title": "B물산 회의록 드라이브에 올리기",
+      "grant": "deed_up_bminutes",
+      "upload": {
+        "file": "file_bminutes",
+        "page": "delivery"
+      }
+    },
+    {
+      "id": "deed_up_sendbook",
+      "title": "계약서 발송대장 드라이브에 올리기",
+      "grant": "deed_up_sendbook",
+      "upload": {
+        "file": "file_d_sendbook",
+        "page": "contracts"
+      }
+    },
+    {
+      "id": "deed_up_creview",
+      "title": "C테크 신규거래 검토서 드라이브에 올리기",
+      "grant": "deed_up_creview",
+      "upload": {
+        "file": "file_ctech_review",
+        "page": "owner"
+      }
     }
   ],
   "places": [
@@ -13430,7 +14013,7 @@
         "윈도우",
         "ipconfig"
       ],
-      "a": "시작 메뉴에서 명령 프롬프트를 실행하고 ipconfig 를 입력하면 됩니다. 여러 항목이 나오는데 'IPv4 주소'라고 적힌 줄의 값이 지금 쓰는 주소입니다. 사내망이면 보통 192로 시작하는 사설 주소가 나옵니다."
+      "a": "시작 메뉴에서 명령 프롬프트를 실행하고 ipconfig 를 입력하면 됩니다. 여러 항목이 나오는데 'IPv4 주소'라고 적힌 줄의 값이 지금 쓰는 주소입니다. 휴대폰으로 보고 계시면 설정 앱의 「내 PC 연결 정보」에 같은 줄이 있습니다. 사내망이면 보통 192로 시작하는 사설 주소가 나옵니다."
     },
     {
       "id": "q_wrongprice",
@@ -14139,7 +14722,7 @@
       "bad": "해당 주소의 기기를 찾을 수 없습니다. 사내망 IP를 정확히 입력하세요.",
       "taken": "이미 등록된 기기입니다.",
       "done": "등록되었습니다. 대기열의 문서를 출력했습니다.",
-      "hint": "이 PC의 IP는 명령 프롬프트에서 ipconfig 로 확인할 수 있습니다.",
+      "hint": "이 PC의 IP는 명령 프롬프트에서 ipconfig 로, 휴대폰이라면 설정 앱의 「내 PC 연결 정보」에서 확인할 수 있습니다.",
       "receiptLabel": "접수번호",
       "columns": [
         "등록 기기",
@@ -14201,7 +14784,7 @@
           "style": "dark",
           "lines": [
             "김한별 대리는 오늘도 출근합니다.",
-            "처리할 요청이 스물다섯 건 있습니다.",
+            "처리할 요청이 쌓여 있습니다.",
             "제주도는 아직 가 보지 못했습니다.",
             "월요일에 봐요."
           ]
@@ -14485,7 +15068,7 @@
               "lines": [
                 "9월. 고용센터. 대기번호 87번.",
                 "매달 통장에 조금씩 들어옵니다.",
-                "이력서를 다시 씁니다. 경력 5년, 영업1팀, 복귀 첫 주에 스물다섯 건."
+                "이력서를 다시 씁니다. 경력 5년, 영업1팀. 복귀 첫 주 얘기는 적지 않았습니다."
               ]
             }
           ],
@@ -14540,7 +15123,7 @@
         {
           "style": "dark",
           "lines": [
-            "8층에는 스물다섯 건의 요청이 있습니다.",
+            "8층에도 요청이 와 있습니다.",
             "오늘도 처리해야 합니다."
           ]
         }
@@ -14596,7 +15179,7 @@
           "lines": [
             "월요일 아침, 자리에 앉았습니다.",
             "아무도 인사를 하지 않았습니다.",
-            "모니터에는 스물다섯 건의 요청이 있습니다."
+            "모니터에는 요청만 와 있습니다."
           ]
         }
       ],
@@ -14712,7 +15295,7 @@
           "style": "dark",
           "lines": [
             "김한별은 오늘 출근하지 않았습니다.",
-            "처리할 요청이 스물다섯 건 있습니다. 누군가 대신 하겠지요.",
+            "처리할 요청은 그대로 있습니다. 누군가 대신 하겠지요",
             "복숭아는 병실에서 먹었습니다. 달았습니다."
           ]
         }
@@ -14788,7 +15371,19 @@
         "이제 그만 쉬어도 됩니다.",
         "고생하셨습니다, 김한별 씨."
       ]
-    }
+    },
+    "order": [
+      "true",
+      "lotto",
+      "wake",
+      "missing",
+      "rumor_told",
+      "rumor_buried",
+      "overwork",
+      "plain",
+      "layoff:quit",
+      "layoff:fired"
+    ]
   },
   "overtime": {
     "title": "아직 할 일이 남았습니다",
@@ -15506,7 +16101,7 @@
       "c_workshop": 4,
       "c_forgery_seen": 4,
       "c_forgery": 4,
-      "console": 2,
+      "console": 4,
       "c_expense": 4,
       "h_dclaim": 4,
       "h_gsan": 4,
@@ -15531,7 +16126,15 @@
       "h_ot_meal_list": 4,
       "h_reunion": 4,
       "h_jh_shoes": 4,
-      "h_mom_checkup": 4
+      "h_mom_checkup": 4,
+      "deed_cell_orders_b": 4,
+      "deed_cell_ws_sec": 4,
+      "deed_mail_qd": 4,
+      "deed_mail_gsan": 4,
+      "deed_move_gminutes": 4,
+      "deed_move_wsplan": 4,
+      "deed_up_sendbook": 4,
+      "deed_up_creview": 4
     },
     "before": {
       "stock": 3,
@@ -15564,8 +16167,15 @@
       "q2023": 3,
       "cfax": 3,
       "rsvp": 3,
-      "console": 3,
-      "overtime_pay": 3
+      "overtime_pay": 3,
+      "deed_cell_orders_c": 3,
+      "deed_cell_stock_bw50": 3,
+      "deed_mail_qc": 3,
+      "deed_mail_form": 3,
+      "deed_move_ppt": 3,
+      "deed_rename_ppt": 3,
+      "deed_up_equote": 3,
+      "deed_up_bminutes": 3
     },
     "requests": [
       {
@@ -15578,34 +16188,32 @@
             "선배님 좋은 아침입니다!",
             "먼저 죄송한 말씀부터요 ㅠㅠ 휴가 중에 폴더 정리하다가 B물산 견적서를 실수로 지운 것 같아요.",
             "휴지통 비우기는 안 했으니까 거기서 복원하시면 될 거예요!",
-            "그리고 거래처에서 BS-200 재고 문의가 들어왔는데요,",
-            "재고현황 파일에 지금 몇 대로 잡혀 있나요?"
+            "그리고 A상사 구매팀에서 BS-200 재고가 지금 몇 대나 있냐고 물어왔는데요,",
+            "제가 재고 파일을 못 열어서 ㅠㅠ 대수 적어서 구매팀 문의 주소로 회신해 주실 수 있으세요? 과장님 개인 주소 말고 팀 문의 주소로요!"
           ],
           "ask": {
-            "placeholder": "BS-200 현재고 수량을 입력해 주세요",
-            "accept": [
-              "180"
-            ],
+            "deed": "stock",
             "grants": "stock",
+            "next": [],
+            "placeholder": "A상사 구매팀 문의 주소로 현재고 대수를 적어 보내면 확인돼요",
             "ok": [
-              "오 감사합니다!",
-              "바로 회신드릴게요 :) 선배님 오늘 얼굴이 너무 창백하세요 ㅠㅠ 쉬엄쉬엄 하세요!"
+              "구매팀에서 확인했다고 답 왔대요!",
+              "감사합니다 선배님. 오늘 얼굴이 너무 창백하세요 ㅠㅠ 쉬엄쉬엄 하세요!"
             ],
             "no": [
               [
-                "음… 그 숫자가 맞나요?",
-                "재고현황 파일 한번 확인해 주시겠어요?"
+                "구매팀에서 아직 못 받았대요 ㅠㅠ",
+                "주소랑 본문 한 번만 다시 봐주시겠어요?"
               ],
               [
-                "아직 안 맞는 것 같아요",
-                "문서 > 업무자료 > 2026 폴더에 재고현황 파일 있어요"
+                "A상사 홈페이지에 팀 문의 주소가 적혀 있대요!",
+                "대수는 2026 폴더의 재고 파일에 있고요."
               ],
               [
-                "재고현황.xlsx 열어서 BS-200 행의 '현재고' 칸이요!",
-                "거기 숫자 그대로 알려주시면 됩니다"
+                "브라우저로 A상사 홈페이지를 열면 아래쪽 안내에 구매팀 문의 주소가 있어요!",
+                "재고현황.xlsx 의 BS-200 행 현재고 숫자를 메일 본문에 적어서 그 주소로 보내주시면 돼요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -15616,35 +16224,33 @@
           "thread": "junho",
           "from": "이준호",
           "lines": [
-            "한별아 나 아직 외근이라 파일을 못 열어",
-            "C테크 견적서 총액이 얼마였지? 지금 통화 중인데 급해",
-            "숫자만 알려줘"
+            "한별아 팀장님이 나한테 견적서 정리 좀 하라는데 나는 아직 밖이다",
+            "다운로드에 견적서_v2 굴러다니는 거 봤어. 그거 어느 거래처 건인지 열어보고 그 거래처 폴더에 넣어놔라",
+            "다운로드에 그대로 두면 나중에 아무도 못 찾는다"
           ],
           "ask": {
-            "placeholder": "C테크 견적 총액을 입력해 주세요",
-            "accept": [
-              "256,000"
-            ],
+            "deed": "ctech",
             "grants": "ctech",
+            "next": [],
+            "placeholder": "견적서_v2.hwp를 거래처 폴더로 옮기면 확인됩니다",
             "ok": [
               "오케이 고맙다!",
-              "역시 빠르네. 너 근데 밥은 먹냐? 무리하지 마라"
+              "이제 팀장님한테 정리했다고 말할 수 있겠네"
             ],
             "no": [
               [
-                "어? 그 금액 아닌 것 같은데",
-                "다시 봐줄래?"
+                "아직 다운로드에 그대로 있던데",
+                "옮겼어?"
               ],
               [
-                "C테크 건이야. B물산 말고",
-                "2026 폴더에 C테크 폴더 따로 있을걸"
+                "파일 열어보면 품목이랑 수량이 적혀 있어",
+                "올해 발주현황에서 그 품목 그 수량으로 걸려 있는 거래처를 찾으면 돼"
               ],
               [
-                "문서 > 업무자료 > 2026 > C테크 > 견적서_C테크",
-                "거기 단가(총액) 칸 그대로 불러줘"
+                "다운로드 > 견적서_v2.hwp 를",
+                "문서 > 업무자료 > 2026 > A상사 폴더로 옮겨줘"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -15655,35 +16261,33 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, 하나만 더 확인해 줄래요?",
-            "7월 인천 출장비 영수증 분실 건, 재발급 신청을 올려야 하는데",
-            "그때 정산 금액이 얼마였죠? 숫자만 알려주면 됩니다."
+            "김대리, 7월 인천 출장 영수증 분실 건 말인데요.",
+            "재발급 신청을 올리려면 회계팀이 우리 팀 정산 파일부터 대장에서 봐야 한다네요.",
+            "사내 드라이브에 회계팀이 관리하는 정산 대장 있죠? 거기에 우리 팀 정산 파일 좀 올려줘요."
           ],
           "ask": {
-            "placeholder": "7월 인천 출장비 금액을 입력해 주세요",
-            "accept": [
-              "64,200"
-            ],
+            "deed": "trip",
             "grants": "trip",
+            "next": [],
+            "placeholder": "출장 정산 대장 문서에 우리 팀 정산 파일을 올리면 확인됩니다",
             "ok": [
-              "네, 그 금액 맞네요.",
-              "바로 재발급 신청 올릴게요. 고마워요."
+              "올라왔네요. 재발급 신청 바로 올리겠습니다.",
+              "고마워요."
             ],
             "no": [
               [
-                "음, 그 금액이 아닌 것 같은데요.",
-                "정산 자료 한번 확인해 주시겠어요?"
+                "회계팀이 아직 안 보인다는데요.",
+                "대장 문서에 파일이 올라가 있어야 합니다."
               ],
               [
-                "아직 안 맞습니다.",
-                "출장비 정산 파일이 업무자료 2026 폴더에 있을 거예요."
+                "사내 드라이브 전사 문서 중에 회계팀이 관리하는 정산 대장이 있어요.",
+                "올해 건은 각 팀 정산 파일 기준이라고 적혀 있을 거예요. 우리 팀 정산 파일은 업무자료 2026 폴더에 있고요."
               ],
               [
-                "출장비_정산_2026 파일 열어서",
-                "7월 인천 출장 줄의 금액 그대로 알려주세요."
+                "드라이브 > 전사 > '출장 정산 대장' 문서를 열고,",
+                "문서 > 업무자료 > 2026 의 출장비_정산_2026.hwp 를 그 문서에 올리면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -15695,34 +16299,32 @@
           "from": "최민서",
           "lines": [
             "선배님 하나만 더요 ㅠㅠ",
-            "A상사 이수진 과장님께 자료 보내드려야 하는데 메일 주소를 모르겠어요.",
-            "거래처 연락처 어디 있는지 아세요?"
+            "A상사 이수진 과장님이 무선 스캐너 제품 소개자료를 메일로 받아보고 싶다고 하셨는데요,",
+            "제가 과장님 메일 주소를 몰라서요… 소개자료 첨부해서 과장님께 직접 보내주실 수 있으세요?"
           ],
           "ask": {
-            "placeholder": "이수진 과장 메일 주소를 입력해 주세요",
-            "accept": [
-              "sj.lee@asangsa.co.kr"
-            ],
+            "deed": "contact",
             "grants": "contact",
+            "next": [],
+            "placeholder": "이수진 과장님께 소개자료를 첨부해 메일을 보내면 확인돼요",
             "ok": [
-              "앗 감사합니다!",
-              "바로 보내드릴게요 :)"
+              "과장님이 잘 받으셨대요!",
+              "감사합니다 선배님 :)"
             ],
             "no": [
               [
-                "어라, 그 주소로는 반송되는데요?",
-                "다시 한번 확인해 주시겠어요?"
+                "과장님이 아직 못 받으셨대요 ㅠㅠ",
+                "혹시 주소를 잘못 적으신 건 아닐까요?"
               ],
               [
-                "아직 안 되네요…",
-                "거래처 연락처 파일이 어딘가 있을 텐데요."
+                "거래처 담당자 주소를 정리해 둔 파일이 예전 폴더에 있을 거예요!",
+                "소개자료는 발표자료 폴더에 있고요."
               ],
               [
-                "업무자료 > 2024 폴더에 거래처_연락처 파일 있어요!",
-                "거기 A상사 줄에 적힌 주소 그대로요."
+                "업무자료 > 2024 폴더의 거래처_연락처 파일에 A상사 이수진 과장님 주소가 있어요!",
+                "문서 > 발표자료 > BS-200_제품소개.pptx 를 첨부해서 그 주소로 보내주시면 돼요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -15890,35 +16492,33 @@
           "thread": "security",
           "from": "차민혁",
           "lines": [
-            "점검하는 김에 하나만 더 확인 부탁드립니다.",
-            "정보보안 기본교육은 매년 재이수 대상인데, 대리님 이수 기록이 저희 쪽에 남아 있지 않습니다.",
-            "마지막으로 이수하신 날짜를 알려주시겠어요? 이수확인서에 적혀 있을 겁니다."
+            "김한별 대리님, 정보보안팀 차민혁입니다.",
+            "전사 교육 기록을 대조 중인데, 대리님 PC에 있는 이수확인서 파일 이름이 저희 규칙과 다릅니다.",
+            "이수확인서는 파일명 뒤에 이수한 연월을 여섯 자리로 붙이도록 되어 있습니다. 작년에 받으신 확인서부터 맞춰 주시겠어요?"
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2024-11-27"
-            ],
+            "deed": "edu",
             "grants": "edu",
+            "next": [],
+            "placeholder": "이수확인서 파일 이름을 규칙대로 바꾸면 확인됩니다",
             "ok": [
-              "확인했습니다. 기록을 복구해 두겠습니다.",
-              "다만 재이수 시기가 지났습니다. 이번 분기 안에 다시 들어주세요."
+              "확인했습니다. 이제 저희 기록과 대조가 됩니다.",
+              "협조 감사합니다. 나머지 확인서도 차차 부탁드리겠습니다."
             ],
             "no": [
               [
-                "그 날짜에는 교육 기록이 없습니다.",
-                "이수확인서에 적힌 날짜 그대로 부탁드립니다."
+                "아직 예전 이름 그대로입니다.",
+                "이름을 바꾸시면 이쪽에서 바로 조회됩니다."
               ],
               [
-                "아직 확인되지 않습니다.",
-                "이수확인서가 PC에 남아 있을 겁니다. 예전 연도 폴더도 살펴보세요."
+                "연도만으로는 대조가 되지 않습니다. 이수한 달까지 여섯 자리로 붙여 주세요.",
+                "몇 월에 이수하셨는지는 확인서 안 이수일 항목에 적혀 있습니다."
               ],
               [
-                "업무자료 > 2024 폴더의 교육이수확인서 문서를 열어 보세요.",
-                "'이수일' 항목의 날짜를 그대로 보내주시면 됩니다."
+                "문서 > 업무자료 > 2025 폴더의 이수확인서 파일입니다.",
+                "이름을 '교육이수확인서_202506' 으로 바꿔 주시면 됩니다. 확장자는 그대로 붙습니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -15968,36 +16568,33 @@
           "thread": "minseo",
           "from": "최민서",
           "lines": [
-            "선배님! C테크 김영민 대리님이 방금 전화 주셨는데요,",
-            "BW-50 단가가 마지막으로 개정된 게 언제냐고 물으세요. 결재 올릴 때 적어야 한대요.",
-            "단가 개정이력이 정리된 파일이 있다고 들었는데 제가 열 권한이 없더라고요 ㅠㅠ",
-            "개정일만 알려주시면 제가 회신드릴게요!"
+            "선배님! 감사 준비한다고 견적 발송대장을 채우고 있는데요,",
+            "7월에 C테크로 나간 유선 스캐너 견적 줄만 비고가 비어 있어요 ㅠㅠ",
+            "그 모델 단가가 마지막으로 개정된 날짜를 비고에 적어야 한다는데, 제가 개정이력 파일 열 권한이 없어요. 대신 적어 주실 수 있으세요?"
           ],
           "ask": {
-            "placeholder": "BW-50 단가 개정일을 입력해 주세요",
-            "accept": [
-              "2025-02-10"
-            ],
+            "deed": "pricelog",
             "grants": "pricelog",
+            "next": [],
+            "placeholder": "견적_발송대장_2026.xlsx의 그 줄 비고 칸에 개정일을 적고 저장하면 돼요",
             "ok": [
-              "앗 감사합니다!",
-              "바로 회신드릴게요 :)"
+              "앗 적혔네요! 감사합니다 선배님",
+              "이제 감사팀에 그대로 낼 수 있어요 :)"
             ],
             "no": [
               [
-                "음… 그 날짜가 맞나요?",
-                "BW-50 줄로 봐주세요. BS-200 말고요!"
+                "비고가 아직 비어 있어요 ㅠㅠ",
+                "적으시고 저장까지 하셨어요?"
               ],
               [
-                "아직 안 맞는 것 같아요 ㅠㅠ",
-                "업무자료 2025 폴더에 단가 개정이력 파일이 있어요."
+                "7월 22일 C테크 줄이요!",
+                "유선 모델 단가가 언제 개정됐는지는 2025 폴더의 개정이력 파일에 있어요."
               ],
               [
-                "단가_개정이력.xlsx 열어서 BW-50 행의 '개정일' 칸이요!",
-                "거기 날짜 그대로 알려주시면 됩니다."
+                "단가_개정이력.xlsx 의 개정이력 시트에서 판매 중인 유선 모델 줄의 개정일을 보시고 (단종된 유선 모델 줄 말고요),",
+                "견적_발송대장_2026.xlsx 의 \"발송\" 시트, 7월 22일 C테크 줄 비고 칸에 \"2025-02-10\" 이라고 적고 저장해 주세요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16225,34 +16822,32 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, D유통 거래처 등록 품의 올려야 하는데 사업자등록번호를 몰라요.",
-            "이준호 대리가 재개 검토 문서에 적어뒀다고 하던데, 거기서 찾아서 알려줄래요?"
+            "김대리, D유통 거래 재개 품의를 올리려는데요.",
+            "발주현황에는 아직 예전 상태 그대로 잡혀 있네요. 이준호 대리가 정리해 둔 문서 보고 지금 단계에 맞게 고쳐줄래요?"
           ],
           "ask": {
-            "placeholder": "예: 000-00-00000",
-            "accept": [
-              "214-81-05537"
-            ],
+            "deed": "dbizno",
             "grants": "dbizno",
+            "next": [],
+            "placeholder": "거래처_발주현황.xlsx 의 D유통 상태를 고쳐 저장하면 확인됩니다",
             "ok": [
-              "네, 그 번호 맞네요.",
-              "품의 바로 올릴게요. 고마워요."
+              "됐네요. 품의 바로 올리겠습니다.",
+              "고마워요."
             ],
             "no": [
               [
-                "음, 그 번호가 아닌 것 같은데요.",
-                "사업자등록번호는 하이픈 포함해서 열 자리예요."
+                "아직 예전 상태 그대로인데요.",
+                "고치고 저장했나요?"
               ],
               [
-                "아직 아니에요.",
-                "업무자료 2026 폴더에 D유통 폴더가 새로 생겼을 거예요. 거기 검토 문서요."
+                "업무자료 2026 폴더에 D유통 폴더가 새로 생겼을 거예요.",
+                "거기 이준호 대리가 쓴 문서를 보면 지금 어디까지 왔는지 나옵니다."
               ],
               [
-                "문서 > 업무자료 > 2026 > D유통 > 거래재개_검토.hwp 열어 보세요.",
-                "'사업자등록번호' 줄 그대로 알려주면 됩니다."
+                "거래처_발주현황.xlsx 의 '2026' 시트, D유통 줄의 '상태' 칸을",
+                "'거래 재개 검토' 로 고치고 저장하면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16456,34 +17051,33 @@
           "thread": "junho",
           "from": "이준호",
           "lines": [
-            "한별아 나 D유통 물류센터 와 있는데 윤서아 과장님 직통 번호를 안 적어왔다",
-            "내가 검토 문서에 써놨거든. 거기서 직통 번호만 찾아서 보내줘"
+            "한별아 나 D유통 물류센터 와 있는데",
+            "여기 케이블 손상돼서 접수한 거 그거 보증 되냐고 지금 붙잡고 물어본다",
+            "AS 대장엔 아직 확인 중으로 떠 있더라. 납품일이랑 계약 조항 보고 판정해서 처리 칸 좀 고쳐줘"
           ],
           "ask": {
-            "placeholder": "직통 번호를 입력해 주세요",
-            "accept": [
-              "02-0000-4470"
-            ],
+            "deed": "dphone",
             "grants": "dphone",
+            "next": [],
+            "placeholder": "AS접수대장_2026.xlsx의 처리 칸을 고쳐 저장하면 확인됩니다",
             "ok": [
-              "오케이 땡큐",
-              "땡큐. 야 근데 너 요즘 자리에 앉아 있는 걸 못 본 것 같다. 쉬엄쉬엄 해"
+              "오케이 확인했다. 고객한테 그렇게 얘기할게",
+              "역시 빠르네. 너 근데 밥은 먹냐? 무리하지 마라"
             ],
             "no": [
               [
-                "어? 그 번호 아닌데",
-                "대표번호 말고 직통 번호"
+                "어? 대장은 아직 그대로인데",
+                "고치고 저장한 거 맞아?"
               ],
               [
-                "2026 폴더에 D유통 폴더 있어",
-                "거기 거래재개 검토 파일"
+                "보증은 납품일 기준이야. 기간 조항은 연간계약 문서에 있고",
+                "납품일은 사내 드라이브 납품 이력 표에 남아 있어"
               ],
               [
-                "문서 > 업무자료 > 2026 > D유통 > 거래재개_검토.hwp",
-                "'담당' 줄에 직통 번호 있어. 그거 그대로"
+                "문서 > 업무자료 > 2026 > AS접수대장_2026.xlsx 의 \"접수\" 시트, D유통 줄 처리 칸이야",
+                "납품일로부터 보증 기간이 이미 지났으니까 \"유상 처리\"로 고치고 저장해줘"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16688,34 +17282,32 @@
           "from": "지현",
           "lines": [
             "아 맞다 너 휴가 전날 역전할머니에서 내가 계산했잖아",
-            "반띵하자. 그때 영수증 얼마 나왔었지? 너 사진 찍어갔잖아",
-            "합계 금액 알려줘"
+            "반띵하게 그 영수증 사진 좀 챙겨놔봐. 너 폰 다운로드 폴더에 처박아뒀지?",
+            "갤러리로 옮겨놔. 거기 두면 정리하다 날린다"
           ],
           "ask": {
-            "placeholder": "영수증 합계 금액을 입력해 주세요",
-            "accept": [
-              "38,000"
-            ],
+            "deed": "split",
             "grants": "split",
+            "next": [],
+            "placeholder": "영수증 사진을 갤러리로 옮기면 확인됩니다",
             "ok": [
-              "오케이 그럼 만구천원",
-              "계좌 보내라"
+              "오 이제 보인다",
+              "계산해서 내 몫 보낼게. 계좌 보내라"
             ],
             "no": [
               [
-                "그거 아닌데",
-                "합계 금액 말이야"
+                "아직 다운로드에 그대로인데",
+                "옮겼어?"
               ],
               [
-                "너 폰에 영수증 사진 있잖아",
-                "휴대폰 다운로드 폴더"
+                "네 폰 다운로드 폴더에 캡처 잔뜩 있잖아",
+                "그날 술값 찍힌 사진 한 장 있을걸"
               ],
               [
-                "휴대폰 > 다운로드 > 영수증_0723.jpg",
-                "거기 '합계' 금액 그대로 알려줘"
+                "휴대폰에 저장된 영수증_0723.jpg 를 잘라내서",
+                "휴대폰 > 갤러리 폴더에 붙여넣으면 돼"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16805,34 +17397,32 @@
           "thread": "soyoung",
           "from": "한소영",
           "lines": [
-            "아 그리고 한별아, 정우진 대리 결혼식에 팀 명의로 화환 보내려는데 총무팀 통해서 해야 한대",
-            "총무팀 내선 몇 번이야? 내선표를 어디 뒀는지 모르겠어 ㅠ"
+            "아 그리고 한별아, 정우진 대리 결혼식에 팀 명의로 화환 보내는 거 있잖아 💐",
+            "그거 경비로 올리려는데 회계팀이 8월 카드 증빙이 드라이브에 안 올라와 있대",
+            "지침 페이지에 무슨 증빙을 올리라고 적혀 있는지 보고, 그 파일 좀 올려줘 ㅠ"
           ],
           "ask": {
-            "placeholder": "총무팀 내선 번호를 입력해 주세요",
-            "accept": [
-              "1180"
-            ],
+            "deed": "ext",
             "grants": "ext",
+            "next": [],
+            "placeholder": "사내 드라이브 지침 페이지에 증빙 파일을 올리면 확인됩니다",
             "ok": [
-              "오 고마워~",
-              "바로 전화해볼게"
+              "올라왔다 고마워~",
+              "화환은 내가 총무팀에 넘길게"
             ],
             "no": [
               [
-                "응? 그 번호 아닌 것 같은데",
-                "총무팀 내선이야, 다른 팀 말고"
+                "아직 아무것도 안 올라와 있는데?"
               ],
               [
-                "사내위키나 포털 공지에 총무팀 문의 번호 적혀 있지 않아?",
-                "복합기 안내 같은 데"
+                "사내 드라이브 전사 쪽에 경비 처리 지침 페이지 있어.",
+                "거기 표에 항목마다 무슨 증빙이 필요한지 적혀 있어. 우리가 낸 건 카드로 긁은 거고"
               ],
               [
-                "사내위키 > 공용 > 사무기기 안내 맨 위에 총무팀 내선 있어",
-                "그 네 자리 숫자 그대로 알려줘"
+                "드라이브 > 전사 > 경비 처리 지침 페이지를 열고 위쪽 업로드를 눌러서",
+                "문서 > 업무자료 > 2026 > 법인카드_사용내역_202608.xlsx 를 올려줘"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16882,34 +17472,32 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, 정보전략팀에서 사내위키 문서 정리를 한대요. 반년 넘게 안 고친 문서는 담당자한테 확인을 받는다고요.",
-            "우리 팀 제품 라인업 문서가 마지막으로 갱신된 게 언제였죠? 문서 위쪽에 갱신일 적혀 있을 거예요."
+            "김대리, E마트 줄이 발주현황에 아직 옛날 상태로 남아 있어요.",
+            "지난주 협의 뒤에 그쪽으로 견적이 한 번 나갔죠? 그 결과에 맞게 상태 칸 좀 고쳐줘요."
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2026-05-30"
-            ],
+            "deed": "e_lineup",
             "grants": "e_lineup",
+            "next": [],
+            "placeholder": "거래처_발주현황.xlsx 의 E마트 상태를 고쳐 저장하면 확인됩니다",
             "ok": [
-              "네, 5월 말이었군요. 딱 반년은 안 됐네요.",
-              "정보전략팀에 그렇게 회신할게요. 고마워요."
+              "네, 그렇게 잡아두죠.",
+              "고마워요."
             ],
             "no": [
               [
-                "음, 그 날짜가 아닌 것 같은데요.",
-                "확정 단가표 말고 제품 라인업 문서요."
+                "아직 안 고쳐졌는데요.",
+                "고치고 저장까지 해주세요."
               ],
               [
-                "아직 안 맞습니다.",
-                "사내위키 영업1팀 섹션에 제품 라인업 페이지가 있어요."
+                "업무자료 2026 폴더에 E마트 폴더가 있어요.",
+                "거기 파일을 보면 어디까지 진행됐는지 나옵니다. 초안이나 구버전 말고 최신본으로 보세요."
               ],
               [
-                "사내위키 > 영업1팀 > 제품 라인업 페이지를 열어 보세요.",
-                "제목 아래 갱신 옆 날짜를 그대로 알려주면 됩니다."
+                "거래처_발주현황.xlsx 의 '2026' 시트, E마트 줄의 '상태' 칸을",
+                "'재거래 견적 발송' 으로 고치고 저장하면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -16920,34 +17508,33 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, E마트 윤 과장이 BS-100 단종 시점을 품의서에 적어야 한다네요.",
-            "단가 개정이력에 BS-100 생산 종료로 개정된 날짜가 있을 거예요. 그 날짜 알려줘요."
+            "김대리, E마트 윤 과장이 품의서에 적을 게 있다고 연락이 왔어요.",
+            "우리 단가 개정이력에 그 구형 스캐너가 생산 종료로 개정된 날짜가 있을 겁니다.",
+            "나 거치지 말고 윤 과장한테 바로 메일로 그 날짜 보내줘요. 주소는 재거래 검토 문서에 적혀 있어요."
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2025-06-01"
-            ],
+            "deed": "e_eol_date",
             "grants": "e_eol_date",
+            "next": [],
+            "placeholder": "윤 과장에게 개정일을 적은 메일을 보내면 확인됩니다",
             "ok": [
-              "네, 그 날짜 맞네요.",
-              "윤 과장한테 넘길게요. 고마워요."
+              "윤 과장한테 잘 갔다네요.",
+              "고마워요."
             ],
             "no": [
               [
-                "음, 그 날짜가 아닌 것 같은데요.",
-                "BS-100 줄로 봐주세요. BW-30이나 BS-200 말고요."
+                "아직 못 받았다는데요.",
+                "메일이 나갔는지 보낸 편지함을 확인해 보세요."
               ],
               [
-                "아직 안 맞습니다.",
-                "업무자료 2025 폴더에 단가 개정이력 파일이 있어요."
+                "업무자료 2025 폴더에 단가 개정이력 파일이 있어요. 구형 스캐너 줄로 보세요. 다른 모델 말고요.",
+                "윤 과장 주소는 E마트 폴더의 재거래 검토 문서에 적혀 있습니다."
               ],
               [
-                "단가_개정이력.xlsx 열어서 BS-100 행의 '개정일' 칸이요.",
-                "거기 날짜 그대로 알려주면 됩니다."
+                "단가_개정이력.xlsx 의 BS-100 행 '개정일' 칸에 있는 날짜를 메일 본문에 그대로 적고,",
+                "E마트 재거래 검토 문서에 적힌 윤지혜 과장 메일 주소로 보내면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -17036,34 +17623,32 @@
           "from": "이준호",
           "lines": [
             "한별아 나 드디어 외근 끝나고 복귀했다",
-            "B물산 오 부장님이 자재팀 옮긴 게 재작년 언제였지? 방문일지에 적어놨을 텐데",
-            "재방문 일정표에 '이전 후 첫 방문' 이렇게 적어야 돼서. 날짜만"
+            "B물산 오 부장님한테 재방문 일정 메일 좀 보내줘. 나는 지금 팀장님이랑 바로 들어가야 돼",
+            "자재팀 이전하고 나서 우리가 처음 갔던 날짜를 본문에 같이 적어달래. 그거 기준으로 방문 주기 잡는대. 그때 방문일지에 적어놨을 거야"
           ],
           "ask": {
-            "placeholder": "예: 00/00",
-            "accept": [
-              "05/28"
-            ],
+            "deed": "e_bmove",
             "grants": "e_bmove",
+            "next": [],
+            "placeholder": "B물산 오 부장님께 메일을 보내면 확인됩니다",
             "ok": [
-              "오케이 땡큐",
+              "오케이 갔구나. 땡큐",
               "역시 일지는 써놓는 게 맞다"
             ],
             "no": [
               [
-                "어? 그 날짜 아닌데",
-                "B물산 줄 봐봐. A상사 말고"
+                "아직 못 받았다는데?",
+                "메일 보냈어?"
               ],
               [
-                "2024년 방문일지야",
-                "업무자료 2024 폴더에 있을걸"
+                "주소는 거래처 연락처 정리해둔 문서에 있어. 2024년에 만든 거",
+                "본문에 그 날짜를 꼭 적어야 돼. 안 적으면 또 물어봐"
               ],
               [
-                "문서 > 업무자료 > 2024 > 거래처_방문일지_2024",
-                "거기 'B물산 — 자재팀 이전' 줄 앞에 있는 날짜 그대로"
+                "문서 > 업무자료 > 2024 > 거래처_연락처.hwp 의 B물산 자재팀 줄에 주소 있어. 거기로 보내",
+                "본문엔 문서 > 업무자료 > 2024 > 거래처_방문일지_2024.hwp 의 'B물산 — 자재팀 이전' 줄 맨 앞 날짜를 00/00 그대로 적어줘"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -17310,34 +17895,33 @@
           "from": "최민서",
           "lines": [
             "선배님 죄송한데 정말 마지막이에요 ㅠㅠ",
-            "E마트 재거래 검토 문서에 윤지혜 과장님 메일 주소가 있다고 들었는데 제가 그 폴더 권한이 없어요.",
-            "주소만 알려주시면 단종 공문 제가 바로 보낼게요!"
+            "E마트 담당자분이 새로 바뀌어서 담당자 변경 접수를 해야 하는데요,",
+            "그분 이름이랑 메일이 적힌 문서가 있다고 들었는데 제가 그 폴더 권한이 없어요.",
+            "사내 드라이브 접수 페이지에 그 문서 좀 올려주시면 제가 표에 옮겨 적을게요!"
           ],
           "ask": {
-            "placeholder": "윤지혜 과장 메일 주소를 입력해 주세요",
-            "accept": [
-              "jh.yoon@emart-corp.co.kr"
-            ],
+            "deed": "e_econtact",
             "grants": "e_econtact",
+            "next": [],
+            "placeholder": "담당자 정보가 있는 문서를 드라이브 접수 페이지에 올리면 확인돼요",
             "ok": [
-              "앗 감사합니다!",
+              "앗 올라왔네요! 표에 옮겨 적을게요",
               "이번 주 내내 도와주셔서 감사해요. 좋은 주말 보내세요 :)"
             ],
             "no": [
               [
-                "어라, 그 주소로는 안 가네요?",
-                "E마트 담당자 주소요. 2024년 연락처 파일엔 없을 거예요."
+                "접수 페이지에 아직 아무것도 없어요 ㅠㅠ",
+                "드라이브에서 올리기 눌러 파일을 고르시면 돼요!"
               ],
               [
-                "아직 안 되네요 ㅠㅠ",
-                "2026 폴더 안에 E마트 폴더가 새로 생겼다고 들었어요."
+                "2026 폴더 안에 E마트 폴더가 새로 생겼다고 들었어요.",
+                "거기 재거래 검토해 둔 문서에 담당자분 정보가 같이 있을 거예요."
               ],
               [
-                "문서 > 업무자료 > 2026 > E마트 > 재거래_검토.hwp",
-                "거기 담당자 줄의 메일 주소 그대로요!"
+                "문서 > 업무자료 > 2026 > E마트 > 재거래_검토.hwp 요!",
+                "사내 드라이브의 '거래처 담당자 변경 접수' 페이지에 그 파일을 올려주시면 돼요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -17504,35 +18088,34 @@
           "thread": "payroll",
           "from": "송지원",
           "lines": [
-            "확인차 한 가지 더 여쭙겠습니다.",
-            "지난번 휴가 시작일은 정리되었는데, 근태 시스템에 종료일이 8월 21일과 22일 두 가지로 남아 있습니다.",
-            "휴가신청서에 적힌 종료 날짜를 알려주시면 하나로 맞추겠습니다."
+            "김한별 대리님, 회계팀 송지원입니다.",
+            "근태 시스템에 대리님 휴가 종료일이 두 가지로 남아 있어서, 급여 일수 산정이 그대로 걸려 있습니다.",
+            "결재가 끝난 휴가신청서 사본이 대리님 PC에 남아 있을 겁니다. 그 파일을 인사총무팀 앞으로 메일에 첨부해 보내 주시겠어요?",
+            "저희는 인사총무팀이 원본으로 정리한 값을 받아 쓰는 쪽이라, 대리님이 보내주시면 그걸로 마무리됩니다."
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2026-08-22"
-            ],
+            "deed": "e_leaveend",
             "grants": "e_leaveend",
+            "next": [],
+            "placeholder": "휴가신청서 사본을 첨부해 인사총무팀으로 메일을 보내면 확인됩니다",
             "ok": [
-              "확인했습니다. 22일로 정리하겠습니다.",
-              "번거롭게 해드려 죄송합니다."
+              "인사총무팀에서 회신 받았습니다. 신청서 원본 기준으로 종료일이 하나로 정리됐습니다.",
+              "번거롭게 해드려 죄송합니다. 급여 일수는 그대로 반영하겠습니다."
             ],
             "no": [
               [
-                "그 날짜로는 신청 기록이 없습니다.",
-                "시작일이 아니라 종료일입니다."
+                "아직 인사총무팀 쪽에서 아무 회신이 없습니다.",
+                "메일이 나갔는지 확인해 주시겠어요?"
               ],
               [
-                "아직 대조가 되지 않습니다.",
-                "결재가 끝난 휴가신청서 사본이 PC에 남아 있을 겁니다."
+                "첨부가 빠졌거나 다른 파일이 간 것 같습니다.",
+                "결재가 끝난 휴가신청서 사본은 문서 폴더 안 개인 자료 쪽에 있을 겁니다. 본문에 무슨 건인지 한 줄만 적어 주시면 좋겠습니다."
               ],
               [
-                "문서 > 개인 폴더의 휴가신청서 사본을 열어 보세요.",
-                "'기간' 항목에서 뒤쪽 날짜를 그대로 보내주시면 됩니다."
+                "문서 > 개인 폴더의 휴가신청서 사본 를 첨부해서 인사총무팀 ga@ar.co.kr 앞으로 보내 주세요.",
+                "본문에 휴가 종료일 확인 건이라고 한 줄 적어 주시면 그쪽에서 바로 처리해 줍니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -17661,34 +18244,32 @@
           "from": "엄마",
           "lines": [
             "한별아 엄마야",
-            "다음 달 서울 가면 네 회사 근처 우리은행에 들를 일이 있는데, 지점 이름이 뭐래?",
-            "엄마가 지점 이름 대고 예약 넣으려고. 인터넷에 찾아보고 알려줘"
+            "다음 달 서울 가면 네 통장 정리도 좀 해주려는데, 봄에 적금 든 데가 네 회사 근처 우리은행이랬지?",
+            "엄마가 물어볼 때마다 너도 헷갈리더라. 지점 이름 알아내서 가계부 적금 적어둔 줄 메모 칸에 적어놔라"
           ],
           "ask": {
-            "placeholder": "지점 이름을 입력해 주세요",
-            "accept": [
-              "우리은행 테헤란로지점"
-            ],
+            "deed": "e_bank",
             "grants": "e_bank",
+            "next": [],
+            "placeholder": "가계부의 적금 줄 메모 칸을 고쳐 저장하면 확인됩니다",
             "ok": [
-              "고맙다 ㅎㅎ 적어놨어",
+              "그래 이제 안 헷갈리겠다",
               "그날 점심도 같이 먹자. 밥 잘 챙겨 먹어!"
             ],
             "no": [
               [
-                "응? 거기 맞아?",
-                "네 회사 근처 우리은행 말이야"
+                "아직 그대로인 것 같은데",
+                "적고 저장했니?"
               ],
               [
                 "엄마가 헤맬까봐 그래",
-                "인터넷에 '은행' 이라고 검색해봐"
+                "지점 이름은 인터넷에 '은행' 이라고 검색하면 나올 거다"
               ],
               [
-                "다온에서 '은행' 검색하면 회사 근처 우리은행이 나와",
-                "지점 이름 그대로 보내줘"
+                "다온에서 '은행' 검색하면 네 회사 근처 우리은행이 나와.",
+                "문서 > 개인 > 가계부_2026.xlsx 를 열어서 '상반기' 시트 3월 줄 '메모' 칸을 그 지점 이름으로 고치고 저장하면 된다"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -17779,34 +18360,32 @@
           "from": "박 팀장",
           "lines": [
             "김대리, 잠깐 시간 괜찮아요?",
-            "B물산 자재팀에서 지난주 받은 물건 송장 조회를 해달라고 연락이 왔어요.",
-            "8월 18일에 스물다섯 대 나간 건이 있을 텐데, 그 건 송장번호가 어떻게 되죠?"
+            "B물산 자재팀에서 지난주 받은 물건 얘기로 연락이 왔는데, 우리 납품 일정표에는 아직 안 나간 걸로 잡혀 있네요.",
+            "8월에 그쪽으로 실제 나간 게 있는지 보고 상태 칸 좀 맞게 고쳐줄래요?"
           ],
           "ask": {
-            "placeholder": "송장번호를 입력해 주세요",
-            "accept": [
-              "3920-4512-38"
-            ],
+            "deed": "p2_shipno",
+            "grants": "p2_shipno",
+            "next": [],
+            "placeholder": "납품_일정_2026.xlsx 의 B물산 상태를 고쳐 저장하면 확인됩니다",
             "ok": [
-              "네, 그 번호로 조회해 보라고 하겠습니다.",
+              "고쳐졌네요. 그쪽에 그대로 회신하겠습니다.",
               "고마워요. 오늘도 쉬엄쉬엄 해요."
             ],
             "no": [
               [
-                "음, 그 번호로는 조회가 안 된다는데요.",
-                "출고 기록을 다시 한번 봐 주시겠어요?"
+                "아직 그대로인데요.",
+                "고치고 저장까지 했나요?"
               ],
               [
-                "아직 안 맞습니다.",
-                "8월 출고내역을 정리해 둔 파일이 업무자료 2026 폴더에 있을 겁니다."
+                "8월에 나간 물건을 정리해 둔 파일이 업무자료 2026 폴더에 있을 겁니다.",
+                "B물산으로 나간 줄이 있는지부터 보세요."
               ],
               [
-                "출고내역_8월.xlsx 를 열어 보세요.",
-                "8월 18일 B물산 스물다섯 대 줄의 송장번호 칸 그대로 알려주면 됩니다."
+                "납품_일정_2026.xlsx 의 '3분기' 시트, B물산 줄의 '상태' 칸을",
+                "'출고 완료' 로 고치고 저장하면 됩니다."
               ]
-            ],
-            "next": [],
-            "grants": "p2_shipno"
+            ]
           }
         }
       },
@@ -18012,34 +18591,32 @@
           "from": "이준호",
           "lines": [
             "한별아 나 외근 중인데 급해서 물어본다",
-            "B물산에서 예전에 배터리 부풀어서 본체 교환해준 건 있잖아. 그거 접수번호 뭐였지?",
-            "AS 대장에 있을 거야. 번호만 알려줘"
+            "품질팀이 8월 출고내역 반품 줄 보고 사유가 무슨 말이냐고 되묻는다. C테크 반품 건 말이야",
+            "예전에 같은 거래처 같은 모델로 AS 접수됐던 거랑 같은 증상이야. 대장에 적힌 표기 그대로 사유 칸 고쳐줘"
           ],
           "ask": {
-            "placeholder": "접수번호를 입력해 주세요",
-            "accept": [
-              "AS-2511-08"
-            ],
+            "deed": "p2_claimno",
+            "grants": "p2_claimno",
+            "next": [],
+            "placeholder": "출고내역_8월.xlsx의 반품 사유 칸을 고쳐 저장하면 확인됩니다",
             "ok": [
-              "오케이 이거다",
-              "땡큐. 바로 조회할게"
+              "오케이 이제 말이 되네",
+              "땡큐. 품질팀엔 내가 얘기할게"
             ],
             "no": [
               [
-                "어 그거 아닌데",
-                "배터리 건이야. 케이블 말고"
+                "아직 그대로인데?",
+                "고치고 저장했어?"
               ],
               [
-                "AS 접수대장 파일 있잖아",
-                "업무자료 2025 폴더 봐봐"
+                "AS 접수대장이 연도별로 있어. 올해 것 말고 그 전 거 봐봐",
+                "거기 C테크 유선 건 증상 칸 표기랑 맞추면 돼"
               ],
               [
-                "문서 > 업무자료 > 2025 > AS접수대장_2025.xlsx",
-                "B물산 배터리 팽창 줄의 접수번호 그대로"
+                "문서 > 업무자료 > 2026 > 출고내역_8월.xlsx 의 \"반품\" 시트, C테크 줄 사유 칸이야",
+                "\"케이블 단선\"으로 고치고 저장해줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_claimno"
+            ]
           }
         }
       },
@@ -18090,34 +18667,32 @@
           "from": "이준호",
           "lines": [
             "한별아 총무팀에서 복합기 점검 언제 오냐고 나한테 묻는데",
-            "내가 접수번호를 몰라서 조회를 못 하겠다",
-            "휴가 중에 한 주간회의에서 번호 받았다던데 그거 뭐였지?"
+            "점검 요청이 어느 회의에서 나온 건지 근거 문서를 7층 출력 기록에 올려달란다",
+            "내가 휴가 중에 한 주간회의에서 접수받은 거야. 그 회의록 찾아서 드라이브에 올려줘"
           ],
           "ask": {
-            "placeholder": "접수번호를 입력해 주세요",
-            "accept": [
-              "T-2609"
-            ],
+            "deed": "p2_printticket",
+            "grants": "p2_printticket",
+            "next": [],
+            "placeholder": "사내 드라이브 7층 출력 기록 페이지에 회의록을 올리면 확인됩니다",
             "ok": [
-              "오 이거네",
-              "바로 총무팀에 물어볼게 땡큐"
+              "오 올라왔네",
+              "바로 총무팀에 얘기할게 땡큐"
             ],
             "no": [
               [
-                "음 그건 아닌 것 같은데",
-                "총무팀 점검 접수번호 말이야"
+                "총무팀은 아직 안 보인다는데",
+                "올린 거 맞아?"
               ],
               [
-                "그날 회의록에 적혀 있을걸",
-                "업무자료 2026 폴더에 8월 회의록 있어"
+                "8월 주간회의록이야. 복합기 용지 걸린다는 얘기 나온 그거",
+                "업무자료 2026 폴더에 회의록 여러 개 있을걸"
               ],
               [
-                "문서 > 업무자료 > 2026 > 회의록_20260818.hwp",
-                "복합기 얘기 나온 줄에 접수번호가 적혀 있어. 그대로 보내줘"
+                "문서 > 업무자료 > 2026 > 회의록_20260818.hwp 그거야",
+                "사내 드라이브 \"7층 출력 기록\" 페이지에 그 파일을 올려줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_printticket"
+            ]
           }
         }
       },
@@ -18167,35 +18742,33 @@
           "thread": "junho",
           "from": "이준호",
           "lines": [
-            "한별아 D유통 건 자료를 내가 담당자한테 바로 쏘려는데",
-            "윤 과장님 메일 주소가 뭐였지? 내 폰에 안 남아 있다 ㅠㅠ",
-            "검토 문서에 적혀 있을 거야"
+            "한별아 나 시연기 들고 거래처 나와 있는데",
+            "여기 PC에 드라이버가 없어서 시연을 못 돌린다 ㅠㅠ",
+            "다운로드에 받아둔 스캐너 드라이버 있잖아. 최신 버전으로 팀 드라이브 시연 장비 기록에 올려줘. 구버전 말고"
           ],
           "ask": {
-            "placeholder": "메일 주소를 입력해 주세요",
-            "accept": [
-              "sa.yoon@dyutong.co.kr"
-            ],
+            "deed": "p2_dcontact",
+            "grants": "p2_dcontact",
+            "next": [],
+            "placeholder": "사내 드라이브 시연 장비 대출 기록 페이지에 드라이버 파일을 올리면 확인됩니다",
             "ok": [
-              "오케이 바로 보낸다",
+              "오케이 받았다. 이제 돌려볼게",
               "고맙다"
             ],
             "no": [
               [
-                "어 그 주소 아닌데",
-                "D유통 구매팀 담당자야"
+                "아직 아무것도 안 올라왔는데",
+                "올렸어?"
               ],
               [
-                "거래재개 검토 문서에 있을걸",
-                "업무자료 2026 폴더의 D유통 폴더"
+                "다운로드 폴더에 드라이버 파일이 두 개 있을 거야",
+                "구버전 쪽을 열어보면 어느 게 최신인지 적혀 있어"
               ],
               [
-                "문서 > 업무자료 > 2026 > D유통 > 거래재개_검토.hwp",
-                "담당 줄에 메일 주소 적혀 있어. 그대로 보내줘"
+                "다운로드에 있는 스캐너 드라이버 파일 중 v3.2 쪽이야",
+                "사내 드라이브 \"시연 장비 대출 기록\" 페이지에 그 파일을 올려줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_dcontact"
+            ]
           }
         }
       },
@@ -18206,35 +18779,33 @@
           "thread": "junho",
           "from": "이준호",
           "lines": [
-            "한별아 거래처에서 옛날 유선 모델 얘기를 꺼내는데",
-            "단종된 BW-30 있잖아. 2023년 단가표에 대당 얼마로 적혀 있었지?",
-            "지금 팔지도 않는데 자꾸 물어봐서"
+            "한별아 거래처에서 자꾸 옛날 가격 얘기를 꺼내는데",
+            "우리 폴더에 옛날_단가표_참고용인지 뭔지 굴러다니는 거 있잖아. 그거 보고 헷갈린 사람이 또 있더라",
+            "예전에 버릴 자료만 모아둔 폴더 있잖아. 거기로 치워놔라"
           ],
           "ask": {
-            "placeholder": "단가를 입력해 주세요",
-            "accept": [
-              "13,000"
-            ],
+            "deed": "p2_bw30price",
+            "grants": "p2_bw30price",
+            "next": [],
+            "placeholder": "옛날_단가표_참고용.hwp를 버릴 자료 폴더로 옮기면 확인됩니다",
             "ok": [
-              "그렇지. 그때 그 가격이었지",
-              "고맙다. 단종이라고 잘 얘기할게"
+              "그래 그거 진작 치웠어야 했다",
+              "고맙다. 이제 그거 보고 헷갈릴 일은 없겠네"
             ],
             "no": [
               [
-                "음 그건 다른 모델 같은데",
-                "BW-30 말이야. 유선이고 단종된 거"
+                "아직 그 자리에 그대로 있던데",
+                "옮겼어?"
               ],
               [
-                "2023 폴더에 단가표 사본 남아 있을걸",
-                "업무자료 밑에"
+                "파일은 업무자료 밑 예전자료_정리안함 폴더에 있어",
+                "버릴 자료 모아둔 폴더는 연도 폴더 안에 따로 하나 있어"
               ],
               [
-                "문서 > 업무자료 > 2023 > 단가표_2023.hwp",
-                "BW-30 줄의 대당 금액 그대로 보내줘"
+                "문서 > 업무자료 > 예전자료_정리안함 > 옛날_단가표_참고용.hwp 를",
+                "문서 > 업무자료 > 2023 > 폐기예정 폴더로 옮겨줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_bw30price"
+            ]
           }
         }
       },
@@ -18323,35 +18894,33 @@
           "thread": "minseo",
           "from": "최민서",
           "lines": [
-            "선배님 죄송해요, 법무팀에서 양식 하나를 채우라는데 저 이런 건 처음이라 ㅠㅠ",
-            "우리 연간계약서 공통 조항에 분쟁 관할이 어디로 되어 있나요?",
-            "법원 이름 그대로 적어야 한대요"
+            "선배님 죄송해요, 법무팀에서 자료를 찾아달라는데 저 이런 건 처음이라 ㅠㅠ",
+            "예전에 거래 끊긴 곳 중에 대금이 안 들어온 데가 있는데, 그 경위서가 사내 드라이브에 안 올라가 있대요.",
+            "전임 담당자분이 폴더에 그냥 두고 가신 것 같아요. 찾아서 종료 거래처 페이지에 올려주실 수 있으세요?"
           ],
           "ask": {
-            "placeholder": "법원 이름을 입력해 주세요",
-            "accept": [
-              "서울중앙지방법원"
-            ],
+            "deed": "p2_court",
+            "grants": "p2_court",
+            "next": [],
+            "placeholder": "경위서를 찾아 드라이브 종료 거래처 페이지에 올리면 확인돼요",
             "ok": [
-              "그렇게 적으면 되는군요! 감사합니다",
+              "법무팀에서 찾았다고 연락 왔어요! 감사합니다",
               "선배님 없으면 저 진짜 큰일 나요 ㅠㅠ"
             ],
             "no": [
               [
-                "음… 거기가 맞나요?",
-                "계약서 공통 조항에 적혀 있다고 하던데요"
+                "아직 안 올라와 있대요 ㅠㅠ",
+                "드라이브에서 올리기 눌러 파일을 고르시면 돼요!"
               ],
               [
-                "연간계약 현황 문서를 보면 나올 것 같아요",
-                "업무자료 2026 폴더요"
+                "드라이브 '종료 거래처 정리' 표를 보면 미수금이 남은 곳이 한 군데예요.",
+                "그 회사 경위서가 정리 안 된 예전 자료 폴더에 남아 있을 거예요."
               ],
               [
-                "연간계약_현황.hwp 의 공통 조항이요",
-                "분쟁 관할 줄에 적힌 법원 이름 그대로 알려주세요!"
+                "문서 > 업무자료 > 예전자료_정리안함 > 구로유통_거래종료_경위서.hwp 요!",
+                "사내 드라이브 '종료 거래처 정리' 페이지에 그 파일을 올려주시면 돼요."
               ]
-            ],
-            "next": [],
-            "grants": "p2_court"
+            ]
           }
         }
       },
@@ -18401,35 +18970,33 @@
           "thread": "minseo",
           "from": "최민서",
           "lines": [
-            "선배님 발주현황 시트를 제가 갱신해야 하는데요,",
-            "B물산 건이 지금 어떤 상태로 잡혀 있는지 확인 좀 부탁드려요 ㅠㅠ",
-            "상태 칸에 적힌 문구 그대로 알려주시면 돼요!"
+            "선배님 발주현황 시트 갱신하다가 막혔어요 ㅠㅠ",
+            "B물산 줄이 아직 지난달 상태 그대로인 것 같은데, 8월에 물건이 나갔는지 제가 확인할 방법이 없어서요.",
+            "출고 기록 보시고 상태 칸 맞게 고쳐서 저장해 주실 수 있으세요? 제가 고치면 또 틀릴까 봐 무서워요…"
           ],
           "ask": {
-            "placeholder": "상태를 입력해 주세요",
-            "accept": [
-              "납기 조율"
-            ],
+            "deed": "p2_bstate",
+            "grants": "p2_bstate",
+            "next": [],
+            "placeholder": "거래처_발주현황.xlsx에서 B물산 상태를 고쳐 저장하면 확인돼요",
             "ok": [
-              "아 그렇게 되어 있군요! 감사합니다",
-              "제가 이번 주 안에 갱신해 둘게요 :)"
+              "오 고쳐졌네요! 감사합니다 선배님",
+              "이제 팀장님께 그대로 보고드릴 수 있어요 :)"
             ],
             "no": [
               [
-                "음… 그건 다른 거래처 상태 같아요",
-                "B물산 줄이요!"
+                "아직 그대로인데요 ㅠㅠ",
+                "고치고 저장까지 하셨어요?"
               ],
               [
-                "거래처 발주현황 파일이 있을 거예요",
-                "업무자료 2026 폴더요"
+                "B물산 줄의 상태 칸이요!",
+                "8월 출고 기록을 보시면 답이 나올 거예요."
               ],
               [
-                "거래처_발주현황.xlsx 의 2026 시트요",
-                "B물산 행의 상태 칸 그대로 알려주세요!"
+                "문서 > 업무자료 > 2026 > 거래처_발주현황.xlsx 의 \"2026\" 시트요!",
+                "B물산 행의 상태 칸을 \"출고 완료\"로 고치고 저장해 주세요."
               ]
-            ],
-            "next": [],
-            "grants": "p2_bstate"
+            ]
           }
         }
       },
@@ -18596,35 +19163,32 @@
           "thread": "soyoung",
           "from": "한소영",
           "lines": [
-            "한별아 워크숍 참가 표명 언제까지지?",
-            "우리 팀 애들 아직 아무도 안 냈다고 인사총무팀에서 쪼는데",
-            "마감 날짜만 알려줘"
+            "한별아 워크숍 참가 표명 우리 팀만 안 냈다고 인사총무팀에서 쪼아 😭",
+            "취합본 네가 갖고 있지? 우리 팀 줄 비고에 언제까지 낼 건지 좀 적어놔 줘",
+            "포털 공지에 적힌 마감 날짜 그대로 적으면 돼"
           ],
           "ask": {
-            "placeholder": "예: 0월 00일",
-            "accept": [
-              "8월 29일"
-            ],
+            "deed": "p2_wsdeadline",
+            "grants": "p2_wsdeadline",
+            "next": [],
+            "placeholder": "참가신청 현황의 우리 팀 비고를 채워 저장하면 확인됩니다",
             "ok": [
-              "헉 얼마 안 남았네. 애들 쪼아야겠다",
-              "고맙다~"
+              "오 들어왔다 고마워~",
+              "이제 애들 쪼면 되겠네"
             ],
             "no": [
               [
-                "그날 아닌 것 같은데",
-                "참가 표명 마감일 말이야"
+                "아직 비어 있는데? 저장은 했어?"
               ],
               [
-                "포털 사내소식에 인사총무팀 공지 있어",
-                "워크숍 관련 글"
+                "영업2팀 줄이야. 내 팀.",
+                "마감 날짜는 포털 사내소식에 인사총무팀이 올린 워크숍 공지에 있어"
               ],
               [
-                "AR 포털 사내소식 > 3분기 워크숍 참가 표명 마감 안내 글에서",
-                "마감 날짜를 그대로 보내줘"
+                "문서 > 업무자료 > 2026 > 워크숍_참가신청_현황.xlsx 의 \"부서별집계\" 시트, 영업2팀 줄 \"비고\" 칸에",
+                "'8월 29일' 이라고 적고 저장해줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_wsdeadline"
+            ]
           }
         }
       },
@@ -18635,35 +19199,32 @@
           "thread": "soyoung",
           "from": "한소영",
           "lines": [
-            "한별아 이번 워크숍 어디로 간대?",
-            "우리 팀은 아직 공지도 못 봤다. 장소 이름만 알려줘",
-            "포털에 떴다던데"
+            "한별아 작년 워크숍 사진 나도 좀 보자 🙂",
+            "근데 너 사진 목록 파일은 업무자료에 그냥 굴러다니지 않아? 예전에 그거 보고 사진 찾아줬잖아",
+            "목록만 딴 데 있으면 또 못 찾아. 사진 있는 폴더로 같이 옮겨놔"
           ],
           "ask": {
-            "placeholder": "장소 이름을 입력해 주세요",
-            "accept": [
-              "가평 AR수련원"
-            ],
+            "deed": "p2_wsplace",
+            "grants": "p2_wsplace",
+            "next": [],
+            "placeholder": "워크숍 사진 목록 파일을 사진이 있는 폴더로 옮기면 확인됩니다",
             "ok": [
-              "오 거기구나. 작년이랑 다른 데네",
-              "고마워~ 애들한테 알려줄게"
+              "오 이제 한 군데 있네 고마워~",
+              "사진은 이따 골라서 보내줘"
             ],
             "no": [
               [
-                "거기 아닌 것 같은데",
-                "이번 3분기 워크숍 장소야"
+                "아직 그대로인데?"
               ],
               [
-                "포털 사내소식에 인사총무팀 공지 있어",
-                "워크숍 참가 표명 관련 글"
+                "업무자료 2025 폴더에 그 목록 파일 있어.",
+                "열어보면 사진을 어디로 옮겼는지 적혀 있을걸"
               ],
               [
-                "AR 포털 사내소식 > 3분기 워크숍 참가 표명 마감 안내 글에서",
-                "장소로 적힌 이름 그대로 보내줘"
+                "문서 > 업무자료 > 2025 > 워크숍_사진_정리목록.txt 를",
+                "문서 > 개인 > 워크샵 폴더로 옮겨줘"
               ]
-            ],
-            "next": [],
-            "grants": "p2_wsplace"
+            ]
           }
         }
       },
@@ -18831,34 +19392,32 @@
           "from": "차민혁",
           "lines": [
             "정보보안팀 차민혁입니다. 한 가지만 더 부탁드립니다.",
-            "정보전략팀이 내려보낸 hosts 배포본이 최신인지 대조하고 있습니다.",
-            "대리님 PC의 hosts 파일에 적힌 배포본 날짜가 언제로 되어 있나요?"
+            "대리님 PC의 hosts 파일이 최신 배포본인지 확인해야 하는데, 배포는 정보전략팀 소관이라 저희가 직접 조회할 수 없습니다.",
+            "파일에 적힌 배포본 날짜를 본문에 적어서, 정보전략팀으로 대조 요청 메일을 한 통 보내 주시겠어요? 받는 주소는 그쪽에서 보낸 안내 메일에 있습니다."
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2026-05-02"
-            ],
+            "deed": "p2_hostsdate",
+            "grants": "p2_hostsdate",
+            "next": [],
+            "placeholder": "정보전략팀에 배포본 날짜를 적어 메일을 보내면 확인됩니다",
             "ok": [
-              "최신 배포본이 맞습니다. 확인 감사합니다.",
-              "이 파일은 임의로 수정하지 않도록 유의해 주세요."
+              "정보전략팀에서 회신이 왔습니다. 최신 배포본이 맞네요.",
+              "확인 감사합니다. 그 파일은 임의로 수정하지 않도록 유의해 주세요."
             ],
             "no": [
               [
-                "그 날짜로는 배포 기록이 없습니다.",
-                "파일 안에 주석으로 적혀 있을 겁니다."
+                "아직 정보전략팀 쪽에 접수된 것이 없습니다.",
+                "메일을 보내시면 회신이 올 겁니다."
               ],
               [
-                "아직 확인되지 않습니다.",
-                "hosts 파일은 메모장으로 열어 보실 수 있습니다."
+                "본문에 배포본 날짜가 있어야 대조가 됩니다. 날짜는 파일 안에 주석으로 적혀 있습니다.",
+                "받는 주소는 메일함에 와 있는 정보전략팀 안내 메일의 발신 주소입니다."
               ],
               [
-                "C:\\Windows\\System32\\drivers\\etc 폴더의 hosts 파일을 메모장으로 여세요.",
-                "정보전략팀 배포본이라고 적힌 줄 앞의 날짜를 그대로 보내주시면 됩니다."
+                "C:WindowsSystem32driversetc 폴더의 hosts 파일을 메모장으로 여세요.",
+                "정보전략팀 배포본이라고 적힌 줄 앞의 날짜를 본문에 그대로 적어, 메일함의 정보전략팀 안내 메일 발신 주소로 보내 주시면 됩니다."
               ]
-            ],
-            "next": [],
-            "grants": "p2_hostsdate"
+            ]
           }
         }
       },
@@ -18869,35 +19428,33 @@
           "thread": "security",
           "from": "차민혁",
           "lines": [
-            "정보보안팀 차민혁입니다. 교육 이수 기록 복구 건으로 한 가지만 더 여쭙겠습니다.",
-            "대리님이 이수하신 과정이 저희 표준 과정과 같은 것인지 확인이 필요합니다.",
-            "이수확인서에 적힌 과정 이름을 그대로 알려주시겠어요?"
+            "정보보안팀 차민혁입니다. 교육 기록 정리 건으로 하나만 더 부탁드립니다.",
+            "재작년 사내 보안 교육 수강 확인 파일도 이름이 규칙과 다르게 되어 있습니다.",
+            "다른 확인서와 같은 형식으로, 앞에는 교육이수확인서, 뒤에는 이수 연월 여섯 자리를 붙여 바꿔 주시겠어요?"
           ],
           "ask": {
-            "placeholder": "과정 이름을 입력해 주세요",
-            "accept": [
-              "개인정보보호 및 정보보안 기본교육"
-            ],
+            "deed": "p2_educourse",
+            "grants": "p2_educourse",
+            "next": [],
+            "placeholder": "보안 교육 수강 확인 파일 이름을 규칙대로 바꾸면 확인됩니다",
             "ok": [
-              "저희 표준 과정과 같습니다. 기록을 복구해 두겠습니다.",
-              "다만 재이수 시기는 지났으니 이번 분기 안에 신청해 주세요."
+              "확인했습니다. 기록에 붙여 두겠습니다.",
+              "재이수 시기는 지났으니 이번 분기 안에 신청해 주세요."
             ],
             "no": [
               [
-                "그 과정은 저희 목록에 없습니다.",
-                "이수확인서에 적힌 이름 그대로 부탁드립니다."
+                "아직 이름이 그대로입니다.",
+                "바꾸시면 이쪽에서 바로 조회됩니다."
               ],
               [
-                "아직 확인되지 않습니다.",
-                "이수확인서가 PC에 남아 있을 겁니다. 예전 연도 폴더도 살펴보세요."
+                "형식은 다른 이수확인서 파일과 같습니다. 앞은 교육이수확인서, 뒤는 이수 연월 여섯 자리입니다.",
+                "몇 월 교육이었는지는 파일 안에 적혀 있습니다."
               ],
               [
-                "업무자료 > 2024 폴더의 교육이수확인서 문서를 여세요.",
-                "'과정' 항목에 적힌 이름을 그대로 보내주시면 됩니다."
+                "문서 > 업무자료 > 2024 폴더의 사내 보안 교육 수강 확인 파일입니다.",
+                "이름을 '교육이수확인서_202405' 로 바꿔 주시면 됩니다. 확장자는 그대로 붙습니다."
               ]
-            ],
-            "next": [],
-            "grants": "p2_educourse"
+            ]
           }
         }
       },
@@ -18948,34 +19505,33 @@
           "from": "송지원",
           "lines": [
             "김한별 대리님, 회계팀 송지원입니다.",
-            "지난달 야근 식대 청구 건 중에 한도를 넘긴 영수증이 몇 장 섞여 있었습니다.",
-            "경비 처리 지침상 야근 식대 한도가 얼마로 되어 있는지 확인해서 알려주시겠어요? 사내 드라이브에 지침이 올라와 있습니다."
+            "지난달 야근 식대 청구 건 중에 한도를 넘긴 영수증이 몇 장 섞여 있었습니다. 그래서 8월 법인카드 건은 승인 원문과 한 줄씩 맞춰본 뒤에 올리기로 했습니다.",
+            "팀 정산 파일을 열어 보니 회의비 줄 상태가 두 글자로만 적혀 있어서, 그 줄이 카드 승인 몇 건에 대응하는지 알 수가 없습니다.",
+            "승인 원문과 대조해서 그 줄 상태 칸을 \"승인 O건 대사 완료\" 형식으로 채우고 저장해 주시겠어요?"
           ],
           "ask": {
-            "placeholder": "예: 0인 00,000원",
-            "accept": [
-              "1인 12,000원"
-            ],
+            "deed": "p2_mealcap",
+            "grants": "p2_mealcap",
+            "next": [],
+            "placeholder": "경비_정산_202608.xlsx의 회의비 줄 상태 칸을 채워 저장하면 확인됩니다",
             "ok": [
-              "네, 맞습니다. 초과분은 반려 처리하겠습니다.",
-              "번거롭게 해드려 죄송합니다."
+              "채워진 것 확인했습니다. 승인 원문과 그대로 맞네요.",
+              "이렇게 해두면 감사 때 카드사 원문이랑 바로 대조가 됩니다. 감사합니다."
             ],
             "no": [
               [
-                "그 금액은 아닙니다.",
-                "야근 식대 항목입니다. 교통비나 숙박 말고요."
+                "아직 그 줄 상태가 그대로입니다.",
+                "칸을 고치신 뒤에 저장까지 하셔야 저희 쪽에 반영됩니다."
               ],
               [
-                "아직 안 맞습니다.",
-                "경비 처리 지침이 사내 드라이브 전사 문서함에 있습니다."
+                "회의비로 잡힌 카드 승인이 몇 건인지부터 세어 보세요.",
+                "카드사 승인 원문 파일이 정산 파일과 같은 폴더에 내려가 있습니다."
               ],
               [
-                "사내 드라이브 > 전사 > 경비 처리 지침 문서를 여세요.",
-                "식대(야근) 줄의 한도 칸을 적힌 그대로 보내주시면 됩니다."
+                "문서 > 업무자료 > 2026 > 법인카드_사용내역_202608.xlsx 의 \"승인내역\" 시트에서 구분이 회의비인 줄을 세시면 됩니다.",
+                "그 건수를 같은 폴더 경비_정산_202608.xlsx 의 \"202608\" 시트, 회의비 줄 \"상태\" 칸에 \"승인 2건 대사 완료\" 처럼 적고 저장해 주세요."
               ]
-            ],
-            "next": [],
-            "grants": "p2_mealcap"
+            ]
           }
         }
       },
@@ -18986,35 +19542,33 @@
           "thread": "payroll",
           "from": "송지원",
           "lines": [
-            "회계팀 송지원입니다. 한 가지만 더 확인 부탁드립니다.",
-            "하반기 출장 예산을 다시 잡고 있는데, 숙박비 한도가 1박 얼마까지였죠?",
-            "경비 처리 지침 기준으로 알려주시면 됩니다."
+            "회계팀 송지원입니다. 8월 카드 정산 건으로 한 줄만 더 부탁드립니다.",
+            "하반기 출장 예산을 다시 잡기 전에 지난달 정산부터 마감해야 하는데, 사무용품으로 잡힌 줄도 상태 칸이 회의비 줄과 똑같은 상태입니다.",
+            "카드 승인 원문과 대조해서 그 줄도 \"승인 O건 대사 완료\" 형식으로 채우고 저장해 주시겠어요?"
           ],
           "ask": {
-            "placeholder": "금액을 입력해 주세요",
-            "accept": [
-              "95,000"
-            ],
+            "deed": "p2_staycap",
+            "grants": "p2_staycap",
+            "next": [],
+            "placeholder": "경비_정산_202608.xlsx의 사무용품 줄 상태 칸을 채워 저장하면 확인됩니다",
             "ok": [
-              "확인했습니다. 그 기준으로 잡겠습니다.",
-              "감사합니다."
+              "확인했습니다. 이 줄은 승인 원문이 한 건뿐이라 금방 끝나셨겠네요.",
+              "감사합니다. 남은 줄은 따로 부탁드리겠습니다."
             ],
             "no": [
               [
-                "그 금액은 다른 항목 같습니다.",
-                "출장 숙박 한도입니다."
+                "아직 그대로입니다.",
+                "고치신 다음 저장하셨는지 확인해 주시겠어요?"
               ],
               [
-                "아직 안 맞네요.",
-                "경비 처리 지침이 사내 드라이브 전사 문서함에 올라와 있습니다."
+                "사무용품으로 잡힌 카드 승인이 몇 건인지 세어 보시면 됩니다.",
+                "카드사 승인 원문 파일은 정산 파일과 같은 폴더에 있습니다."
               ],
               [
-                "사내 드라이브 > 전사 > 경비 처리 지침 문서를 여세요.",
-                "출장 숙박 줄의 한도 금액을 그대로 보내주시면 됩니다."
+                "문서 > 업무자료 > 2026 > 법인카드_사용내역_202608.xlsx 의 \"승인내역\" 시트에서 구분이 사무용품인 줄을 세세요.",
+                "그 건수를 경비_정산_202608.xlsx 의 \"202608\" 시트, 사무용품 줄 \"상태\" 칸에 \"승인 1건 대사 완료\" 로 적고 저장해 주시면 됩니다."
               ]
-            ],
-            "next": [],
-            "grants": "p2_staycap"
+            ]
           }
         }
       },
@@ -19025,35 +19579,33 @@
           "thread": "payroll",
           "from": "송지원",
           "lines": [
-            "회계팀 송지원입니다. 대리님 앞으로 오래된 영수증 청구가 한 건 올라와 있어 확인 중입니다.",
-            "경비 청구는 사용일로부터 며칠 이내에 올려야 하는지 알고 계신가요?",
-            "지침에 적힌 기한을 그대로 알려주시면 됩니다."
+            "회계팀 송지원입니다. 대리님 앞으로 오래된 영수증 청구가 한 건 올라와 있어, 8월 정산은 승인 원문을 전부 맞춰본 뒤에 올리기로 했습니다.",
+            "이제 교통·운송으로 묶인 줄 하나가 남았습니다. 그 줄만 카드사 원문에서 구분이 한 가지로 잡혀 있지 않으니 유의해서 세어 주세요.",
+            "대조하신 건수를 그 줄 상태 칸에 \"승인 O건 대사 완료\" 형식으로 적고 저장해 주시겠어요?"
           ],
           "ask": {
-            "placeholder": "예: 00일 이내",
-            "accept": [
-              "30일 이내"
-            ],
+            "deed": "p2_claimdays",
+            "grants": "p2_claimdays",
+            "next": [],
+            "placeholder": "경비_정산_202608.xlsx의 교통·운송 줄 상태 칸을 채워 저장하면 확인됩니다",
             "ok": [
-              "네, 그 기한이 맞습니다.",
-              "그 건은 기한이 지나 반려하겠습니다. 다음부터는 바로 올려 주세요."
+              "네, 그 건수가 맞습니다. 이 줄이 제일 헷갈리는 자리였는데 정확하시네요.",
+              "8월 카드 정산은 이걸로 대사가 끝났습니다. 감사합니다."
             ],
             "no": [
               [
-                "그 기한은 아닙니다.",
-                "지침 문서 첫 줄에 적혀 있습니다."
+                "아직 그 줄 상태가 그대로입니다.",
+                "칸을 고치고 저장까지 해주셔야 합니다."
               ],
               [
-                "아직 안 맞습니다.",
-                "경비 처리 지침이 사내 드라이브 전사 문서함에 있습니다."
+                "건수가 저희 집계와 다릅니다.",
+                "정산 파일에서 한 줄로 묶인 항목이 카드사 원문에서는 구분이 나뉘어 있습니다. 개인으로 잡힌 줄은 빼고 세셔야 하고요."
               ],
               [
-                "사내 드라이브 > 전사 > 경비 처리 지침 문서를 여세요.",
-                "맨 앞 안내 문장에 적힌 기한을 그대로 보내주시면 됩니다."
+                "문서 > 업무자료 > 2026 > 법인카드_사용내역_202608.xlsx 의 \"승인내역\" 시트에서 구분이 교통비인 줄과 운송비인 줄을 함께 세세요.",
+                "그 건수를 경비_정산_202608.xlsx 의 \"202608\" 시트, 교통·운송 줄 \"상태\" 칸에 \"승인 3건 대사 완료\" 로 적고 저장해 주시면 됩니다."
               ]
-            ],
-            "next": [],
-            "grants": "p2_claimdays"
+            ]
           }
         }
       },
@@ -19220,35 +19772,33 @@
           "thread": "jihyun",
           "from": "지현",
           "lines": [
-            "아 근데 너 그 로또 언제 산 거야?",
-            "기한 지나면 못 받는다던데. 확인해봐",
-            "구매일 며칠이야?"
+            "아 근데 너 그 로또 아직 확인 안 했지?",
+            "기한 지나면 못 받는다던데. 앱 구매내역 캡처는 폰에만 있는 거 아니야?",
+            "폰 잃어버리면 끝이야. 컴퓨터 개인 문서함으로 옮겨놔. 너 거기 로또 메모도 적어놨다며"
           ],
           "ask": {
-            "placeholder": "예: 0000-00-00",
-            "accept": [
-              "2026-07-18"
-            ],
+            "deed": "p2_lottodate",
+            "grants": "p2_lottodate",
+            "next": [],
+            "placeholder": "구매내역 캡처를 개인 문서함으로 옮기면 확인됩니다",
             "ok": [
-              "한 달 좀 넘었네. 아직 괜찮겠다",
+              "ㅇㅋ 이제 안 날아가겠네",
               "빨리 확인해봐라 진짜"
             ],
             "no": [
               [
-                "그날 아닌데",
-                "로또 산 날 말이야"
+                "아직 폰에만 있는데",
+                "옮겼어?"
               ],
               [
-                "앱 구매내역 캡처 폰에 있잖아",
-                "휴대폰 다운로드 폴더"
+                "로또 앱에서 캡처해둔 거 있잖아",
+                "휴대폰 다운로드 폴더 봐봐"
               ],
               [
-                "휴대폰 > 다운로드 > 동행복권_구매내역_캡처.jpg",
-                "맨 위 줄의 날짜 그대로 보내줘"
+                "휴대폰 > 다운로드 > 동행복권_구매내역_캡처.jpg 를 잘라내서",
+                "문서 > 개인 폴더에 붙여넣으면 돼. 네 로또 메모 있는 그 폴더"
               ]
-            ],
-            "next": [],
-            "grants": "p2_lottodate"
+            ]
           }
         }
       },
@@ -19259,35 +19809,33 @@
           "thread": "jihyun",
           "from": "지현",
           "lines": [
-            "야 나도 회사에 연차 한 달 붙여 쓰는 거 물어보려는데",
-            "너 신청서 사유란에 뭐라고 적었어? 우리 회사도 사유를 쓰라더라",
-            "적힌 그대로 알려줘. 나도 똑같이 쓰게"
+            "야 나도 회사에 한 달 붙여서 쉬는 거 물어보려는데",
+            "우리도 사유를 쓰라더라. 너 신청서 사본 아직 갖고 있지?",
+            "근데 파일 이름이 그냥 '사본'이면 나중에 못 찾잖아. 이름에 사유 좀 넣어놔. 나도 그거 보고 똑같이 쓰게"
           ],
           "ask": {
-            "placeholder": "신청 사유를 입력해 주세요",
-            "accept": [
-              "연차 소진"
-            ],
+            "deed": "p2_vacreason",
+            "grants": "p2_vacreason",
+            "next": [],
+            "placeholder": "휴가신청서 사본의 파일 이름을 바꾸면 확인됩니다",
             "ok": [
               "오 그렇게 쓰면 되는구나",
               "나도 똑같이 낸다. 고맙다"
             ],
             "no": [
               [
-                "그거 아닌데",
-                "신청서 사유란에 적은 말이야"
+                "아직 이름 그대로인데",
+                "바꿨어?"
               ],
               [
-                "너 휴가신청서 사본 있다며",
-                "문서 개인 폴더 봐봐"
+                "너 휴가신청서 사본 컴퓨터에 있다며",
+                "열어보면 사유 줄이 있잖아. 그걸 이름에 넣으라고"
               ],
               [
-                "문서 > 개인 > 휴가신청서_사본.hwp",
-                "사유 줄에 적힌 그대로 보내줘"
+                "문서 > 개인 폴더의 휴가신청서 사본 를 열어서 사유 줄을 보고,",
+                "파일 이름을 '휴가신청서_' 뒤에 그 사유를 띄어쓰기 없이 붙인 걸로 바꿔. 확장자는 .hwp 그대로 두고"
               ]
-            ],
-            "next": [],
-            "grants": "p2_vacreason"
+            ]
           }
         }
       },
@@ -19377,34 +19925,32 @@
           "from": "엄마",
           "lines": [
             "한별아 너 운동 좀 해라. 앉아만 있으니 얼굴이 그렇지",
-            "회사 근처에 헬스장 있다며? 엄마가 등록비 보내줄게. 이름이 뭐야",
-            "회사 제휴 할인도 된다고 했잖니"
+            "회사 근처에 제휴 할인 되는 데 있다며? 엄마가 등록비 부쳐줄게",
+            "대신 어디 등록할 건지 가계부에 적어놔라. 지난번처럼 말만 하고 흐지부지하지 말고"
           ],
           "ask": {
-            "placeholder": "헬스장 이름을 입력해 주세요",
-            "accept": [
-              "테헤란로 헬스클럽"
-            ],
+            "deed": "p2_gym",
+            "grants": "p2_gym",
+            "next": [],
+            "placeholder": "가계부 마지막 줄 메모 칸에 적고 저장하면 확인됩니다",
             "ok": [
-              "엄마가 오늘 저녁에 부쳐줄게. 꼭 등록해라",
+              "적어놨구나. 엄마가 오늘 저녁에 부쳐줄게",
               "몸 상하면 아무 소용 없다. 쉬엄쉬엄 해"
             ],
             "no": [
               [
-                "거기 말고 네 회사 근처 말이야",
-                "지하에 있다고 하지 않았어?"
+                "아직 비어 있는 것 같은데",
+                "적고 저장은 했니?"
               ],
               [
-                "엄마가 찾아보려는데 이름을 알아야지",
-                "인터넷에 '헬스장'이라고 검색해봐"
+                "엄마가 나중에 볼 거다. 네 가계부에 적어놔",
+                "이름은 인터넷에 '헬스장'이라고 검색해보면 나올 거야"
               ],
               [
-                "다온에서 '헬스장' 검색하면 회사 근처 헬스장이 나와",
-                "이름 그대로 알려줘"
+                "다온에서 '헬스장' 검색하면 네 회사 근처 데가 나와.",
+                "문서 > 개인 > 가계부_2026.xlsx 를 열어서 '상반기' 시트 마지막 4월 줄 '메모' 칸에 그 이름 그대로 적고 저장하면 된다"
               ]
-            ],
-            "next": [],
-            "grants": "p2_gym"
+            ]
           }
         }
       },
@@ -19532,35 +20078,33 @@
           "thread": "guesthouse",
           "from": "강 사장님",
           "lines": [
-            "한별님 안녕하세요 😊",
-            "예약하실 때 보내드린다고 한 귤 한 상자요, 집이 낮에 비신다고 하셔서 회사로 보내드릴까 하는데요.",
-            "회사 주소를 몇 층인지까지 알려주시겠어요? 택배 기사님이 헤매실까 봐요 ㅎㅎ"
+            "한별님 안녕하세요 😊 강 사장님이에요",
+            "정산 마무리하면서 예약 확인 화면을 한 번 더 맞춰봐야 해서요. 제가 보내드린 캡처 아직 갖고 계시죠?",
+            "다운로드 폴더에 두시면 정리하다 지워지더라고요. 갤러리로 옮겨서 보관해 주시겠어요? ㅎㅎ"
           ],
           "ask": {
-            "placeholder": "회사 주소를 층수까지 입력해 주세요",
-            "accept": [
-              "AR빌딩 7층"
-            ],
+            "deed": "p2_office",
+            "grants": "p2_office",
+            "next": [],
+            "placeholder": "예약 확인 캡처를 갤러리로 옮기면 확인됩니다",
             "ok": [
-              "적었어요 😊 내일 부칠게요",
-              "나비도 안부 전해달래요 ㅎㅎ"
+              "네 이제 보이네요 😊 이걸로 맞춰볼게요",
+              "다음에 오실 때 귤 한 상자 챙겨드릴게요. 나비도 안부 전해달래요 ㅎㅎ"
             ],
             "no": [
               [
-                "음, 몇 층인지가 빠졌는데요 ㅎㅎ",
-                "건물 이름이랑 층수까지요"
+                "음, 아직 그대로인 것 같은데요 😅",
+                "옮기고 저장하셨어요?"
               ],
               [
-                "사내 포털 같은 데 회사 주소가 적혀 있지 않나요?",
-                "보통 화면 맨 아래에 있잖아요"
+                "예약하실 때 화면 캡처해 두셨잖아요",
+                "휴대폰 다운로드 폴더 한번 봐주세요"
               ],
               [
-                "AR 포털 화면 맨 아래 회사 정보란을 보세요",
-                "주소 끝에 건물 이름과 층수가 적혀 있어요. 그 부분을 그대로요"
+                "휴대폰에 저장된 숙소_예약확인_캡처.jpg 를 잘라내서",
+                "휴대폰 > 갤러리 폴더에 붙여넣어 주시면 돼요"
               ]
-            ],
-            "next": [],
-            "grants": "p2_office"
+            ]
           }
         }
       },
@@ -20061,35 +20605,32 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, A상사 단가가 몇 년 사이 얼마나 올랐는지 정리해 두려고 해요.",
-            "2024년 상반기에 A상사로 나간 견적, 그때 총액이 얼마였죠?",
-            "지금 단가랑 비교해 보려고요."
+            "김대리, 다운로드에 굴러다니는 견적 초안 좀 정리해요.",
+            "두 개 있죠? 그중 이제 못 파는 구형 모델로 잡혀 있는 건 남겨두면 헷갈리기만 합니다.",
+            "예전 자료 버리는 폴더가 따로 있어요. 거기로 치워줘요."
           ],
           "ask": {
-            "placeholder": "2024 상반기 A상사 견적 총액을 입력해 주세요",
-            "accept": [
-              "640,000"
-            ],
+            "deed": "q2024a",
             "grants": "q2024a",
+            "next": [],
+            "placeholder": "구형 모델 견적 초안을 폐기예정 폴더로 옮기면 확인됩니다",
             "ok": [
-              "그렇군요. 생각보다 차이가 크네요.",
-              "고마워요, 비교표에 넣을게요."
+              "치웠네요. 고마워요.",
+              "이제 남은 초안 하나만 보면 되겠어요."
             ],
             "no": [
               [
-                "음, 그 숫자가 아닌 것 같은데요.",
-                "2024년 자료를 찾아봐 주세요."
+                "아직 다운로드에 그대로 있는데요.",
+                "옮겼어요?"
               ],
               [
-                "아직 아닙니다.",
-                "업무자료 폴더가 연도별로 나뉘어 있죠? 2024 안을 보세요."
+                "초안 두 개를 열어보면 품목이 다릅니다. 더는 못 파는 쪽이 버릴 겁니다.",
+                "버리는 폴더는 오래된 연도 폴더 안에 있어요."
               ],
               [
-                "업무자료 > 2024 > 견적서_2024_상반기 파일입니다.",
-                "'단가(총액)' 줄 금액 그대로요."
+                "다운로드 > 견적서_v1.hwp 를 문서 > 업무자료 > 2023 > 폐기예정 폴더로 옮기면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20138,35 +20679,34 @@
           "thread": "payroll",
           "from": "송지원",
           "lines": [
-            "대리님, 상반기 출장비 집행 내역을 다시 맞춰보고 있습니다.",
-            "5월 대전 출장 건 정산 금액이 저희 쪽에 누락돼 있는데요,",
-            "정산 자료에 얼마로 적혀 있는지 알려주시겠어요?"
+            "김한별 대리님, 회계팀 송지원입니다.",
+            "지난달 정산 서류를 문서고에 등록하는 중인데, 대리님이 올려 주신 경비 정산 파일이 이름만으로는 어느 결재 건인지 알 수가 없어 반려됐습니다.",
+            "회계 서류는 파일 이름 끝에 결재 문서번호를 붙이는 것이 규칙입니다. 문서번호는 그 파일 안에 결재 정보로 같이 들어 있습니다.",
+            "지금 이름 뒤에 밑줄 하나 넣고 문서번호를 붙여서 바꿔 주시겠어요? 확장자는 그대로 두시면 됩니다."
           ],
           "ask": {
-            "placeholder": "5월 대전 출장비를 입력해 주세요",
-            "accept": [
-              "112,000"
-            ],
+            "deed": "trip_may",
             "grants": "trip_may",
+            "next": [],
+            "placeholder": "경비 정산 파일 이름 끝에 결재 문서번호를 붙여 바꾸면 확인됩니다",
             "ok": [
-              "네, 그 금액으로 맞추겠습니다.",
-              "정산은 이미 끝난 건이라 기록만 채우면 됩니다. 감사합니다."
+              "등록됐습니다. 이제 문서고에서 결재 건으로 바로 조회가 됩니다.",
+              "다음부터는 올리실 때부터 이 형식으로 저장해 주시면 반려가 없습니다. 감사합니다."
             ],
             "no": [
               [
-                "저희 기록과 다릅니다.",
-                "출장 정산 자료를 확인해 주시겠어요?"
+                "문서고 목록에는 아직 예전 이름 그대로 올라와 있습니다.",
+                "파일 이름을 바꾸셨는지 확인해 주시겠어요?"
               ],
               [
-                "아직 안 맞습니다.",
-                "올해 출장 건이니 업무자료 2026 폴더에 있을 겁니다."
+                "이름은 바뀌었는데 문서번호가 아닙니다.",
+                "그 정산 파일에는 시트 탭이 하나 더 있습니다. 결재 정보가 거기 정리돼 있습니다."
               ],
               [
-                "출장비_정산_2026 파일을 열어보세요.",
-                "5월 대전 출장 줄의 금액 그대로입니다."
+                "문서 > 업무자료 > 2026 > 경비_정산_202608.xlsx 를 열어 \"결재\" 시트의 결재 문서번호 줄 값을 확인하세요.",
+                "그 값을 지금 파일명 뒤에 밑줄로 이어 붙여 \"경비_정산_202608_(문서번호).xlsx\" 형태로 이름을 바꿔 주시면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20177,35 +20717,33 @@
           "thread": "boss",
           "from": "박 팀장",
           "lines": [
-            "김대리, 4분기 계획 짜는 중인데 A상사 계약이 언제 끝나죠?",
-            "갱신 협의를 언제부터 시작해야 하는지 잡아두려고요.",
-            "종료일만 알려주면 됩니다."
+            "김대리, 계약 문서를 거래처 폴더로 모으는 중이에요.",
+            "B물산 연간계약 체결 보고서만 아직 거래처 폴더 밖에 굴러다니네요.",
+            "찾아서 B물산 폴더로 옮겨줄래요?"
           ],
           "ask": {
-            "placeholder": "A상사 계약 종료일을 입력해 주세요 (예: 2026-01-01)",
-            "accept": [
-              "2026-12-31"
-            ],
+            "deed": "contract_a",
             "grants": "contract_a",
+            "next": [],
+            "placeholder": "B물산 계약체결 보고서를 B물산 폴더로 옮기면 확인됩니다",
             "ok": [
-              "연말이군요. 그럼 11월부터 움직이면 되겠네요.",
+              "옮겼네요. 이제 거래처별로 다 모였습니다.",
               "고마워요."
             ],
             "no": [
               [
-                "그 날짜가 아닌 것 같은데요.",
-                "연간계약 현황 같은 자료가 있지 않았나요?"
+                "아직 제자리가 아닌데요.",
+                "B물산 폴더 안에 들어가 있어야 합니다."
               ],
               [
-                "아직 아닙니다.",
-                "팀에서 관리하는 연간계약 정리 문서를 찾아보세요."
+                "연도 폴더 어딘가에 그냥 들어가 있을 거예요. 올해 폴더 말고 그 전 해도 보세요.",
+                "체결 보고 문서입니다. 견적서 말고요."
               ],
               [
-                "연간계약_현황 파일입니다.",
-                "A상사 줄의 '계약 종료' 날짜 그대로 알려주세요."
+                "문서 > 업무자료 > 2025 의 계약체결_보고_B물산.hwp 를",
+                "문서 > 업무자료 > 2026 > B물산 폴더로 옮기면 됩니다."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20217,34 +20755,31 @@
           "from": "최민서",
           "lines": [
             "선배님, B물산 담당자분이 계약 갱신 얘기를 꺼내셨는데요",
-            "저희 계약이 언제까지인지 제가 몰라서요 ㅠㅠ",
-            "종료일이 언제인가요?"
+            "팀장님이 발송대장부터 표시해 두라고 하셨어요. 계약이 끝나기 전에 나간 마지막 견적 줄에 표시를 남기라고요 ㅠㅠ",
+            "저는 계약이 언제까지인지도 몰라서요… 선배님이 확인하고 그 줄 비고에 적어주실 수 있을까요?"
           ],
           "ask": {
-            "placeholder": "B물산 계약 종료일을 입력해 주세요 (예: 2026-01-01)",
-            "accept": [
-              "2026-09-15"
-            ],
+            "deed": "contract_b",
             "grants": "contract_b",
+            "next": [],
+            "placeholder": "견적_발송대장의 B물산 줄 비고를 채워 저장하면 확인됩니다",
             "ok": [
-              "헉 얼마 안 남았네요!",
-              "감사합니다 선배님, 바로 팀장님께 보고드릴게요."
+              "표시됐네요! 갱신 협의 들어가면 이 줄부터 본다고 하셨어요",
+              "감사합니다 선배님 ㅠㅠ"
             ],
             "no": [
               [
-                "음… 그 날짜는 아닌 것 같아요.",
-                "어디서 확인할 수 있을까요?"
+                "아직 비고가 비어 있어요 ㅠㅠ",
+                "고치고 저장까지 하셔야 해요"
               ],
               [
-                "아직 아닌 것 같아요.",
-                "팀 연간계약 정리해 둔 문서가 있다고 들었어요."
+                "거래처별 계약 현황을 정리해둔 문서가 2026 폴더에 있어요. 거기 B물산 줄에 종료일이 적혀 있고요",
+                "그 날짜보다 앞서 나간 B물산 견적 줄이 발송대장에 하나 있을 거예요"
               ],
               [
-                "연간계약_현황 파일 열어보시면 돼요!",
-                "B물산 줄의 '계약 종료' 날짜요."
+                "문서 > 업무자료 > 2026 > 견적_발송대장_2026.xlsx 의 \"발송\" 시트, B물산 줄 \"비고\" 칸에 \"계약 만료 전 최종 발송\" 이라고 적고 저장해주세요"
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20256,34 +20791,32 @@
           "from": "한소영",
           "lines": [
             "김 대리님, 영업2팀 한소영입니다.",
-            "저희도 이번에 계약서 문구를 손보는데, 영업1팀 표준 조항을 참고하고 싶어서요.",
-            "하자보증 기간을 납품일로부터 몇 개월로 잡고 계세요?"
+            "저희 고객사에서 무선 스캐너 하자보증 기간을 자꾸 물어보는데, 저희 팀엔 계약 자료가 없어서 매번 대리님께 여쭙게 되네요.",
+            "영업1팀 표준 조항 기준으로, 재고 파일 그 모델 줄 비고에 지금 표기는 두고 보증 기간만 덧붙여 주시면 어떨까요? 저도 그거 보고 답하면 되니까요."
           ],
           "ask": {
-            "placeholder": "하자보증 기간을 입력해 주세요",
-            "accept": [
-              "18개월"
-            ],
+            "deed": "warranty",
             "grants": "warranty",
+            "next": [],
+            "placeholder": "재고현황의 비고 칸에 보증 기간을 적어 저장하면 확인됩니다",
             "ok": [
-              "아 그렇군요. 저희는 12개월로 되어 있었는데 맞춰야겠네요.",
-              "도움 주셔서 감사합니다!"
+              "감사합니다! 저희 계약서도 그 기준으로 맞추겠습니다.",
+              "매번 여쭤봐서 죄송했어요."
             ],
             "no": [
               [
-                "음, 저희가 아는 것과 다른데요.",
-                "혹시 계약 관련 정리 문서가 있을까요?"
+                "아직 비어 있는 것 같은데요.",
+                "저장까지 하셔야 반영되는 것 같아요."
               ],
               [
-                "아직 아닌 것 같아요.",
-                "연간계약 쪽 자료에 공통 조항이 적혀 있지 않나요?"
+                "무선 모델 줄이요. 표 맨 윗줄이요.",
+                "지금 적힌 상태는 그대로 두고 뒤에 보증 기간만 덧붙이면 돼요. 기간은 연간계약 쪽 자료의 공통 조항에 있고요."
               ],
               [
-                "연간계약_현황 파일의 '공통 조항' 부분입니다.",
-                "'하자보증 기간' 줄에 적힌 개월 수 그대로요."
+                "문서 > 업무자료 > 2026 > 재고현황.xlsx 의 \"재고\" 시트, 맨 윗줄(BS-200)의 \"비고\" 칸을",
+                "\"정상 · 하자보증 18개월\" 로 고치고 저장해 주세요. 원래 있던 상태 표기는 지우지 마시고요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20295,34 +20828,32 @@
           "from": "최민서",
           "lines": [
             "선배님 죄송한데 하나만 더요!",
-            "이번 주 주간회의 회의실을 예약해야 하는데, 지난주에 어디서 했는지 기억이 안 나요.",
-            "회의록에는 적혀 있을 텐데 제가 지금 밖이라서요 ㅠㅠ"
+            "팀장님이 회의 자료는 파일 이름 뒤에 날짜를 붙여 두라고 하셨는데요,",
+            "선배님이 받아두신 주간회의 자료는 아직 '최종'으로만 되어 있더라고요 ㅠㅠ 규칙대로 이름 좀 바꿔주실 수 있으세요?"
           ],
           "ask": {
-            "placeholder": "회의 장소를 입력해 주세요",
-            "accept": [
-              "회의실1"
-            ],
+            "deed": "meetroom",
             "grants": "meetroom",
+            "next": [],
+            "placeholder": "주간회의 자료 파일 이름을 규칙대로 바꾸면 확인돼요",
             "ok": [
-              "아 맞다 거기였어요!",
-              "같은 곳으로 예약할게요. 감사합니다 선배님 :)"
+              "오 이제 뭐가 언제 건지 알아보겠어요!",
+              "감사합니다 선배님 :)"
             ],
             "no": [
               [
-                "음… 거기는 아닌 것 같아요.",
-                "8월 18일 회의록에 적혀 있을 거예요."
+                "아직 예전 이름 그대로인데요 ㅠㅠ",
+                "파일에서 오른쪽 클릭하시면 이름 바꾸기가 있어요!"
               ],
               [
-                "아직 아닌 것 같아요.",
-                "업무자료 2026 폴더에 주간회의록이 있을 거예요."
+                "다운로드 폴더에 있는 주간회의 자료요!",
+                "파일을 열면 표지에 회의 날짜가 적혀 있어요. 다른 자료들처럼 이름 뒤에 월일 네 자리를 붙이시면 돼요."
               ],
               [
-                "회의록_20260818 파일이요!",
-                "맨 위 '장소' 줄에 적힌 그대로 알려주세요."
+                "다운로드 폴더(이미 발표자료로 옮겼다면 그 폴더)의 회의자료_최종.pptx 요!",
+                "\"회의자료_0819\" 로 바꿔주세요. 확장자 .pptx 는 그대로 붙어요."
               ]
-            ],
-            "next": []
+            ]
           }
         }
       },
@@ -20576,11 +21107,10 @@
             "accept": [
               "sessionToken is not defined"
             ],
-            "grants": "console",
             "ok": [
-              "감사합니다. 세션 토큰 초기화 쪽 문제네요.",
-              "서버 조치 완료했습니다. 새로고침하시면 정상적으로 열릴 겁니다.",
-              "교육 이수도 잊지 마세요."
+              "감사합니다. 세션 토큰 초기화 쪽 문제로 보입니다.",
+              "서버 팀에 넘기려면 화면도 하나 있어야 합니다. 개발자 도구가 열린 그 화면을 캡처해서 파일로 보내주시겠어요?",
+              "키보드의 Print Screen 을 누르면 화면이 저장됩니다."
             ],
             "no": [
               [
@@ -20596,7 +21126,32 @@
                 "그 줄에 적힌 오류 문구를 그대로 보내주시면 됩니다."
               ]
             ],
-            "next": []
+            "next": [],
+            "then": {
+              "shot": {
+                "app": "devtools"
+              },
+              "grants": "console",
+              "placeholder": "개발자 도구가 열린 화면을 캡처해 파일로 보내주세요",
+              "ok": [
+                "캡처 확인했습니다. 서버 조치 완료했습니다. 새로고침하시면 정상적으로 열릴 겁니다.",
+                "교육 이수도 잊지 마세요."
+              ],
+              "no": [
+                [
+                  "캡처가 아직 안 왔습니다.",
+                  "오류가 떠 있는 화면 그대로 찍어 주시면 됩니다."
+                ],
+                [
+                  "개발자 도구 창을 맨 앞에 둔 채로 키보드의 Print Screen 을 누르세요.",
+                  "찍힌 파일은 바탕화면에 생깁니다."
+                ],
+                [
+                  "바탕화면 > 스크린샷 폴더의 화면캡처 파일을 이 대화에 첨부해서 보내주시면 됩니다."
+                ]
+              ],
+              "next": []
+            }
           }
         }
       },
@@ -21461,7 +22016,7 @@
                     "너 그날 계산하고 찍어놨잖아. 폰에 있어."
                   ],
                   [
-                    "휴대폰 > 다운로드 > 영수증_0723.jpg.",
+                    "휴대폰에 저장된 영수증_0723.jpg.",
                     "그거 채팅창으로 끌어다 놔."
                   ]
                 ],
@@ -21607,7 +22162,7 @@
                   "휴대폰에 남아 있을 거예요."
                 ],
                 [
-                  "휴대폰 > 다운로드 > 숙소_예약확인_캡처.jpg 요.",
+                  "휴대폰에 저장된 숙소_예약확인_캡처.jpg 요.",
                   "'예약번호' 줄에 있는 번호를 하이픈까지 그대로요."
                 ]
               ],
@@ -21630,7 +22185,7 @@
                     "방금 보신 예약 캡처에 결제 금액도 같이 있어요."
                   ],
                   [
-                    "휴대폰 > 다운로드 > 숙소_예약확인_캡처.jpg 의 '결제' 줄.",
+                    "휴대폰에 저장된 숙소_예약확인_캡처.jpg 의 '결제' 줄.",
                     "원 앞의 금액을 쉼표까지 그대로요."
                   ]
                 ],
@@ -22687,6 +23242,517 @@
             "next": []
           }
         }
+      },
+      {
+        "id": "deed_cell_orders_c",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 발주현황 시트 좀 손봐 줘요.",
+            "문서 > 업무자료 > 2026의 거래처_발주현황.xlsx, 2026 시트에서 C테크 상태를 \"납품 완료\"로 바꾸고 저장해요."
+          ],
+          "ask": {
+            "deed": "deed_cell_orders_c",
+            "grants": "deed_cell_orders_c",
+            "next": [],
+            "placeholder": "거래처_발주현황.xlsx의 C테크 상태를 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "확인했어요. 시트가 바로 반영되네요.",
+              "고마워요."
+            ],
+            "no": [
+              [
+                "아직 그대로예요. 저장했어요?",
+                "고치고 나서 저장 버튼(또는 Ctrl+S)을 눌러야 반영돼요."
+              ],
+              [
+                "C테크 줄이에요. 상태 칸만 바꾸면 돼요."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 거래처_발주현황.xlsx, \"2026\" 시트의 C테크 행 \"상태\" 칸을 \"납품 완료\"로 고치고 저장이요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_stock_bw50",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 재고현황 하나만 고쳐 줘.",
+            "업무자료 2026 폴더의 재고현황.xlsx에서 유선 제품 중 재고 정상인 것 입고예정을 70으로. 공장에서 20 더 보낸대."
+          ],
+          "ask": {
+            "deed": "deed_cell_stock_bw50",
+            "grants": "deed_cell_stock_bw50",
+            "next": [],
+            "placeholder": "재고현황.xlsx의 그 줄 입고예정을 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "됐다. 고맙다."
+            ],
+            "no": [
+              [
+                "아직 안 바뀐 것 같은데. 저장했어?"
+              ],
+              [
+                "유선 제품 중 재고 정상인 줄의 입고예정 칸이야. 현재고 말고."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 재고현황.xlsx, \"재고\" 시트 BW-50 행의 \"입고예정\"을 70으로 고치고 저장."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_orders_b",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 발주현황의 A상사 상태가 옛날 거예요.",
+            "납품 일정표에 적힌 지금 상태로 맞춰서 저장해 둬요."
+          ],
+          "ask": {
+            "deed": "deed_cell_orders_b",
+            "grants": "deed_cell_orders_b",
+            "next": [],
+            "placeholder": "발주현황의 A상사 상태를 일정표대로 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "맞네요. 두 파일이 이제 같은 말을 하네요."
+            ],
+            "no": [
+              [
+                "아직이에요. 일정표에 뭐라고 적혀 있는지 먼저 봐요."
+              ],
+              [
+                "납품 일정표는 업무자료 2026 폴더에 있어요. 거기 A상사 줄의 상태를 그대로 옮기면 돼요."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 납품_일정_2026.xlsx의 A상사 \"상태\"를 보고, 거래처_발주현황.xlsx \"2026\" 시트 A상사 행의 \"상태\" 칸에 똑같이 적고 저장이요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_cell_ws_sec",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "워크숍 참가 현황 네가 갖고 있지?",
+            "정보보안팀 남은 한 명도 간대. 그 팀은 이제 전원 참가로 고쳐 줘."
+          ],
+          "ask": {
+            "deed": "deed_cell_ws_sec",
+            "grants": "deed_cell_ws_sec",
+            "next": [],
+            "placeholder": "워크숍 참가 현황의 정보보안팀 참가 확정을 고쳐 저장하면 확인됩니다",
+            "ok": [
+              "오케이. 인사총무팀에 넘길게."
+            ],
+            "no": [
+              [
+                "아직 안 바뀌었는데. 저장은 했어?"
+              ],
+              [
+                "정보보안팀 줄이야. 재직 인원이 몇인지 같은 줄에 있잖아. 참가 확정을 그 수로."
+              ],
+              [
+                "문서 > 업무자료 > 2026 > 워크숍_참가신청_현황.xlsx \"부서별집계\" 시트, 정보보안팀 행의 \"참가 확정\"을 \"9명\"으로 고치고 저장."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_qc",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, C테크 구매팀에서 견적서를 메일로 다시 받고 싶으시대요.",
+            "업무자료 2026 > C테크 폴더의 견적서_C테크.hwp를 purchase@ctech.co.kr로 보내 주시겠어요? 본문에 견적서라고 적어 주시고요."
+          ],
+          "ask": {
+            "deed": "deed_mail_qc",
+            "grants": "deed_mail_qc",
+            "next": [],
+            "placeholder": "견적서_C테크.hwp를 첨부해 C테크 구매팀에 메일을 보내면 확인됩니다",
+            "ok": [
+              "답장 왔대요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 못 받으셨대요. 메일 앱에서 새 메일로 보내셔야 해요."
+              ],
+              [
+                "받는 사람은 purchase@ctech.co.kr, 첨부는 C테크 폴더의 견적서예요."
+              ],
+              [
+                "메일 > 새 메일: 받는 사람 purchase@ctech.co.kr, 첨부 문서 > 업무자료 > 2026 > C테크 > 견적서_C테크.hwp, 본문에 \"견적서\"를 넣어서요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_form",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 거래처 담당자 박정훈 씨가 우리 견적서 양식을 달래.",
+            "박정훈 씨한테 공통양식 폴더의 견적서_양식.hwp 보내 줘. 주소는 드라이브 거래처 담당자 변경 접수에 있어. 본문에 양식이라고 적고."
+          ],
+          "ask": {
+            "deed": "deed_mail_form",
+            "grants": "deed_mail_form",
+            "next": [],
+            "placeholder": "공통양식의 견적서 양식을 첨부해 그 담당자에게 메일을 보내면 확인됩니다",
+            "ok": [
+              "받았대. 땡큐."
+            ],
+            "no": [
+              [
+                "아직 안 갔대. 새 메일로 보내야 해."
+              ],
+              [
+                "받는 사람은 드라이브 거래처 담당자 변경 접수 페이지의 F상사 담당자 주소, 첨부는 공통양식에 있는 견적서 양식."
+              ],
+              [
+                "메일 > 새 메일: jh.park@fsangsa.co.kr 앞으로, 문서 > 업무자료 > 2026 > 공통양식 > 견적서_양식.hwp 첨부, 본문에 \"양식\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_qd",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, D유통 담당자한테 견적서를 메일로 한 부 보내 줘요.",
+            "주소는 우리가 받은 문서에 있을 거예요. 본문에 견적서라고 밝히고요."
+          ],
+          "ask": {
+            "deed": "deed_mail_qd",
+            "grants": "deed_mail_qd",
+            "next": [],
+            "placeholder": "D유통 담당자에게 견적서_D유통.hwp를 첨부해 메일을 보내면 확인됩니다",
+            "ok": [
+              "D유통에서 받았다고 연락 왔어요. 수고했어요."
+            ],
+            "no": [
+              [
+                "아직이에요. D유통 담당자 주소부터 찾아요."
+              ],
+              [
+                "D유통 폴더의 검토 문서나 계약서 발송대장에 담당자 메일이 적혀 있어요. 첨부는 초안 말고 최종 견적서요."
+              ],
+              [
+                "메일 > 새 메일: sa.yoon@dyutong.co.kr 앞으로, 문서 > 업무자료 > 2026 > D유통 > 견적서_D유통.hwp 첨부, 본문에 \"견적서\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_mail_gsan",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "G산업 쪽에서 지난번 회의록 사본 달래.",
+            "담당자 주소는 회의록에 적혀 있을 거야. 본문에 회의록이라고 써 줘."
+          ],
+          "ask": {
+            "deed": "deed_mail_gsan",
+            "grants": "deed_mail_gsan",
+            "next": [],
+            "placeholder": "G산업 담당자에게 회의록을 첨부해 메일을 보내면 확인됩니다",
+            "ok": [
+              "받았대. 고마워."
+            ],
+            "no": [
+              [
+                "아직 안 갔대. 회의록 파일부터 찾아."
+              ],
+              [
+                "그 회의록은 어디 저장했는지 나도 몰라. 탐색기 검색에 회의록이라고 쳐 봐. 담당자 주소는 그 안에 있어."
+              ],
+              [
+                "메일 > 새 메일: jh.han@gsanup.co.kr 앞으로, 탐색기에서 '회의록_20260812'를 검색해 나오는 회의록_20260812.hwp 첨부, 본문에 \"회의록\"."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_ppt",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, 다운로드 폴더에 회의자료 파일 하나 굴러다니죠?",
+            "문서 > 발표자료로 옮겨 놔요. 탐색기에서 잘라내서 붙여 넣으면 돼요."
+          ],
+          "ask": {
+            "deed": "deed_move_ppt",
+            "grants": "deed_move_ppt",
+            "next": [],
+            "placeholder": "회의자료 파일을 문서 > 발표자료로 옮기면 확인됩니다",
+            "ok": [
+              "정리됐네요. 고마워요."
+            ],
+            "no": [
+              [
+                "아직 다운로드에 있어요. 우클릭 > 잘라내기, 목적 폴더 빈자리에서 우클릭 > 붙여넣기예요."
+              ],
+              [
+                "파일은 다운로드에, 목적지는 문서 안의 발표자료 폴더예요."
+              ],
+              [
+                "다운로드의 회의자료 파일 우클릭 > 잘라내기, 그다음 문서 > 발표자료 빈자리 우클릭 > 붙여넣기요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_rename_ppt",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, 다운로드에 회의자료_최종_final.pptx요, 이름이 너무 헷갈려요.",
+            "회의자료_0825로 이름 바꿔 주시면 안 될까요? 확장자는 그대로요."
+          ],
+          "ask": {
+            "deed": "deed_rename_ppt",
+            "grants": "deed_rename_ppt",
+            "next": [],
+            "placeholder": "회의자료_최종_final.pptx의 이름을 회의자료_0825로 바꾸면 확인됩니다",
+            "ok": [
+              "훨씬 낫네요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 그대로예요. 파일 우클릭에 이름 바꾸기가 있어요."
+              ],
+              [
+                "다운로드 폴더의 회의자료_최종_final.pptx예요. 이름만 회의자료_0825로요."
+              ],
+              [
+                "다운로드 > 회의자료_최종_final.pptx 우클릭 > 이름 바꾸기 > \"회의자료_0825\" 입력 후 Enter요. 확장자 .pptx는 자동으로 붙어요."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_gminutes",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 지난주 G산업 회의록 어디 엉뚱한 데 저장해 둔 것 같은데.",
+            "G산업 쪽에 있어야 할 거 아냐. 제자리로 옮겨 줘."
+          ],
+          "ask": {
+            "deed": "deed_move_gminutes",
+            "grants": "deed_move_gminutes",
+            "next": [],
+            "placeholder": "G산업 회의록을 G산업 폴더로 옮기면 확인됩니다",
+            "ok": [
+              "찾았네. 이제 제자리다."
+            ],
+            "no": [
+              [
+                "아직 G산업 폴더에 없는데. 회의록부터 찾아 봐."
+              ],
+              [
+                "업무자료 바로 아래 \"새 폴더\"라는 게 하나 있어. 거기 들어 있을 거야."
+              ],
+              [
+                "문서 > 업무자료 > 새 폴더 > 회의록_20260812.hwp 우클릭 > 잘라내기, 문서 > 업무자료 > 2026 > G산업 빈자리 우클릭 > 붙여넣기."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_move_wsplan",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "워크숍 진행표 네가 받아 놨지? 아무 데나 두지 말고 워크샵 자료 모아 두는 데로 옮겨 줘."
+          ],
+          "ask": {
+            "deed": "deed_move_wsplan",
+            "grants": "deed_move_wsplan",
+            "next": [],
+            "placeholder": "워크숍_진행표.hwp를 개인 > 워크샵 폴더로 옮기면 확인됩니다",
+            "ok": [
+              "됐다. 나중에 찾기 편하겠네."
+            ],
+            "no": [
+              [
+                "아직 다운로드에 있어."
+              ],
+              [
+                "문서 > 개인 아래에 워크샵 폴더가 있어. 거기."
+              ],
+              [
+                "다운로드 > 워크숍_진행표.hwp 우클릭 > 잘라내기, 문서 > 개인 > 워크샵 빈자리 우클릭 > 붙여넣기."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_equote",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "boss",
+          "from": "박 팀장",
+          "lines": [
+            "김대리, E마트 재거래 견적서 사내 드라이브에도 올려 둬요.",
+            "영업1팀 공유 > 3분기 실적자료 페이지에 업로드 버튼 있어요."
+          ],
+          "ask": {
+            "deed": "deed_up_equote",
+            "grants": "deed_up_equote",
+            "next": [],
+            "placeholder": "드라이브 3분기 실적자료 페이지에 견적서_E마트_재거래.hwp를 올리면 확인됩니다",
+            "ok": [
+              "올라왔네요. 팀에서 다 볼 수 있겠어요."
+            ],
+            "no": [
+              [
+                "아직 안 보여요. 드라이브는 VPN 켜고 들어가야 해요."
+              ],
+              [
+                "드라이브 영업1팀 공유 폴더의 3분기 실적자료 페이지를 열면 위에 업로드가 있어요. 파일은 E마트 폴더에요."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 3분기 실적자료 > 업로드 > 문서 > 업무자료 > 2026 > E마트 > 견적서_E마트_재거래.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_bminutes",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "minseo",
+          "from": "최민서",
+          "lines": [
+            "선배님, B물산이랑 납기 얘기한 회의록 드라이브에 올려 주실 수 있어요?",
+            "거래처 납품 이력 페이지요. B물산 폴더에 8월 5일자 회의록 있어요."
+          ],
+          "ask": {
+            "deed": "deed_up_bminutes",
+            "grants": "deed_up_bminutes",
+            "next": [],
+            "placeholder": "드라이브 거래처 납품 이력 페이지에 회의록_20260805.hwp를 올리면 확인됩니다",
+            "ok": [
+              "확인했어요! 감사합니다."
+            ],
+            "no": [
+              [
+                "아직 안 올라왔어요. 드라이브 들어가셨어요?"
+              ],
+              [
+                "영업1팀 공유 > 거래처 납품 이력 페이지의 업로드요. 파일은 B물산 폴더에 있어요."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 거래처 납품 이력 > 업로드 > 문서 > 업무자료 > 2026 > B물산 > 회의록_20260805.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_sendbook",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "junho",
+          "from": "이준호",
+          "lines": [
+            "한별, 계약서 발송대장 드라이브에 올려 줘. 계약 관련 페이지에."
+          ],
+          "ask": {
+            "deed": "deed_up_sendbook",
+            "grants": "deed_up_sendbook",
+            "next": [],
+            "placeholder": "드라이브의 계약 관련 페이지에 계약서_발송대장.hwp를 올리면 확인됩니다",
+            "ok": [
+              "올라왔다. 고맙다."
+            ],
+            "no": [
+              [
+                "아직 안 보여. 드라이브 페이지 열어서 업로드 눌러야 해."
+              ],
+              [
+                "발송대장은 D유통 폴더에 있어. 드라이브에서 계약이라는 말이 붙은 페이지를 찾아."
+              ],
+              [
+                "drive.ar.local에서 제목에 계약이 들어간 페이지(주소창에 /contracts) > 업로드 > 문서 > 업무자료 > 2026 > D유통 > 계약서_발송대장.hwp."
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "id": "deed_up_creview",
+        "beat": {
+          "source": "workMessenger",
+          "thread": "soyoung",
+          "from": "한소영",
+          "lines": [
+            "C테크 신규거래 검토한 거 드라이브에 올려 둬. 담당 이력 페이지."
+          ],
+          "ask": {
+            "deed": "deed_up_creview",
+            "grants": "deed_up_creview",
+            "next": [],
+            "placeholder": "드라이브 거래처 담당 이력 페이지에 신규거래_검토.hwp를 올리면 확인됩니다",
+            "ok": [
+              "확인. 고마워."
+            ],
+            "no": [
+              [
+                "아직 안 올라왔어."
+              ],
+              [
+                "영업1팀 공유 > 거래처 담당 이력 페이지. 파일은 C테크 폴더."
+              ],
+              [
+                "drive.ar.local > 영업1팀 공유 > 거래처 담당 이력 > 업로드 > 문서 > 업무자료 > 2026 > C테크 > 신규거래_검토.hwp."
+              ]
+            ]
+          }
+        }
       }
     ]
   },
@@ -23636,7 +24702,7 @@
         "thread": "minseo",
         "from": "최민서",
         "lines": [
-          "선배님, 아까 말씀하신 그 소리요",
+          "선배님, 아까 점심시간 후에 말씀하신 그 삑삑거리는 소리요",
           "제 자리에서는 아무것도 안 들려요. 선배님 자리까지 가서 서 있어 봤는데요",
           "모니터 오래되면 그런다던데, 시설팀에 한번 말씀드려 볼까요?"
         ]
@@ -24248,5 +25314,490 @@
       }
     ],
     "refuse": "이 폴더에는 그 사진이 들어가지 않습니다."
+  },
+  "slacking": {
+    "apps": [
+      "mine",
+      "solitaire"
+    ],
+    "source": "workMessenger",
+    "thread": "boss",
+    "from": "박 팀장",
+    "delay": 4200,
+    "lines": [
+      "김대리, 아까 자리 지나가는데 화면에 뭐 떠 있던 것 같던데요.",
+      "일 끝내고 하는 거면 나는 뭐라 안 해요. 나도 신입 때 그거 하다가 부장님한테 걸렸고.",
+      "근데 모니터는 복도에서 다 보입니다. 그것만 알고 계세요."
+    ]
+  },
+  "calls": {
+    "contacts": [
+      {
+        "id": "stock",
+        "name": "A상사 구매팀",
+        "org": "A상사(주)",
+        "number": "02-0000-2201",
+        "mail": "purchase@asangsa.co.kr",
+        "greet": [
+          "네, A상사 구매팀입니다.",
+          "AR 김한별 대리님이시죠. 기다리고 있었습니다."
+        ],
+        "asking": [
+          "BS-200 지금 창고에 몇 대 남았는지요.",
+          "수량만 불러 주시면 품의를 올리겠습니다."
+        ],
+        "unclear": [
+          "죄송합니다, 수량을 못 들었습니다.",
+          "몇 대인지 숫자로만 다시 말씀해 주세요."
+        ],
+        "done": [
+          "네, 받아 적었습니다.",
+          "발주 나가면 다시 연락드리겠습니다."
+        ]
+      },
+      {
+        "id": "contact",
+        "name": "이수진 과장",
+        "org": "A상사(주) 구매팀",
+        "number": "02-0000-2203",
+        "mail": "sj.lee@asangsa.co.kr",
+        "greet": [
+          "네, A상사 구매팀 이수진입니다.",
+          "김한별 대리님, 안녕하세요."
+        ],
+        "needsMail": [
+          "자료는 전화로는 받기가 어렵습니다.",
+          "제품 소개자료는 메일로 부탁드립니다."
+        ]
+      },
+      {
+        "id": "e_eol_date",
+        "name": "윤지혜 과장",
+        "org": "E마트 구매기획팀",
+        "number": "02-0000-5100",
+        "mail": "jh.yoon@emart-corp.co.kr",
+        "greet": [
+          "네, E마트 구매기획팀 윤지혜입니다.",
+          "전화 주셔서 감사합니다."
+        ],
+        "asking": [
+          "생산 종료 개정일만 알려 주시겠어요.",
+          "품의서에 날짜를 그대로 옮겨 적어야 해서요."
+        ],
+        "unclear": [
+          "날짜를 아직 못 들었습니다.",
+          "개정일만 다시 한번 불러 주세요."
+        ],
+        "done": [
+          "네, 날짜 확인했습니다.",
+          "품의서에 그대로 기재하겠습니다."
+        ]
+      },
+      {
+        "id": "e_bmove",
+        "name": "오태식 부장",
+        "org": "B물산(주) 자재팀",
+        "number": "02-0000-3301",
+        "mail": "ts.oh@bmulsan.co.kr",
+        "greet": [
+          "네, B물산 자재팀 오태식입니다.",
+          "마침 여쭤보려던 참이었습니다."
+        ],
+        "asking": [
+          "저희 이전 후 처음 오셨던 날짜요.",
+          "그 날짜를 기준으로 방문 주기를 잡으려 합니다."
+        ],
+        "unclear": [
+          "날짜가 아직 안 나왔습니다.",
+          "이전 후 첫 방문일만 말씀해 주세요."
+        ],
+        "done": [
+          "확인했습니다. 그 주기로 잡아 두겠습니다.",
+          "연락 감사합니다."
+        ]
+      },
+      {
+        "id": "e_leaveend",
+        "name": "인사총무팀",
+        "org": "AR 주식회사",
+        "number": "02-0000-0110",
+        "mail": "ga@ar.co.kr",
+        "greet": [
+          "네, 인사총무팀입니다.",
+          "김한별 대리님, 무슨 일이신가요."
+        ],
+        "needsMail": [
+          "구두로는 접수가 되지 않습니다.",
+          "신청서 사본은 메일로 보내 주세요."
+        ]
+      },
+      {
+        "id": "p2_hostsdate",
+        "name": "정보전략팀",
+        "org": "AR 주식회사",
+        "number": "02-0000-0120",
+        "mail": "it@ar.co.kr",
+        "greet": [
+          "네, 정보전략팀입니다.",
+          "대조 요청 건으로 전화 주셨군요."
+        ],
+        "asking": [
+          "PC에 적용된 배포본 날짜를 불러 주세요.",
+          "저희 쪽 기록과 대조해 보겠습니다."
+        ],
+        "unclear": [
+          "날짜를 못 받았습니다.",
+          "파일 안에 적힌 배포일만 말씀해 주세요."
+        ],
+        "done": [
+          "대조했습니다. 저희 배포본과 같습니다.",
+          "별도 조치는 필요하지 않겠습니다."
+        ]
+      },
+      {
+        "id": "deed_mail_qc",
+        "name": "C테크 구매팀",
+        "org": "C테크(주)",
+        "number": "02-0000-1901",
+        "mail": "purchase@ctech.co.kr",
+        "greet": [
+          "네, C테크 구매팀입니다.",
+          "말씀하세요."
+        ],
+        "needsMail": [
+          "전화로는 문서를 받을 수가 없습니다.",
+          "메일로 보내 주시겠어요."
+        ]
+      },
+      {
+        "id": "deed_mail_form",
+        "name": "박정훈",
+        "org": "F상사 구매팀",
+        "number": "02-0000-6200",
+        "mail": "jh.park@fsangsa.co.kr",
+        "greet": [
+          "네, 박정훈입니다.",
+          "오후에 주셔서 다행입니다."
+        ],
+        "needsMail": [
+          "그 파일은 전화로는 못 받습니다.",
+          "메일로 보내 주시면 감사하겠습니다."
+        ]
+      },
+      {
+        "id": "deed_mail_qd",
+        "name": "윤서아 과장",
+        "org": "D유통 구매팀",
+        "number": "02-0000-4470",
+        "mail": "sa.yoon@dyutong.co.kr",
+        "greet": [
+          "네, D유통 구매팀 윤서아입니다.",
+          "직통으로 주셨네요."
+        ],
+        "needsMail": [
+          "그 문서는 전화로 받기 어렵습니다.",
+          "메일로 보내 주시면 검토하겠습니다."
+        ]
+      },
+      {
+        "id": "deed_mail_gsan",
+        "name": "한지호",
+        "org": "G산업 구매팀",
+        "number": "031-0000-9400",
+        "mail": "jh.han@gsanup.co.kr",
+        "greet": [
+          "네, G산업 구매팀 한지호입니다.",
+          "안산공장입니다."
+        ],
+        "needsMail": [
+          "그 문서는 전화로는 어렵습니다.",
+          "메일로 첨부해 보내 주세요."
+        ]
+      }
+    ],
+    "incoming": [
+      {
+        "id": "call_wrongnum",
+        "from": "모르는 번호",
+        "number": "0507-0000-3312",
+        "after": "reply",
+        "lines": [
+          "여보세요, 거기 대한물류 배차실 아닌가요.",
+          "아침부터 열 번째 거는 겁니다.",
+          "누가 번호를 잘못 적어 둔 모양이네요."
+        ],
+        "bye": [
+          "아닙니다, 끊겠습니다. 죄송합니다."
+        ],
+        "egg": "lore 하루 종일 남의 전화만 받는 사람도 어딘가에 있다"
+      },
+      {
+        "id": "call_parcel",
+        "from": "모르는 번호",
+        "number": "010-0000-6624",
+        "after": "e_leaveleft",
+        "lines": [
+          "택배입니다. 지금 댁 앞에 와 있는데요.",
+          "부재중이시라 문 앞에 두고 가겠습니다.",
+          "경비실은 이 시간이면 닫는다고 하네요."
+        ],
+        "bye": [
+          "네, 사진 찍어 보내 드리겠습니다."
+        ],
+        "egg": "lore 낮에는 늘 집이 비어 있다는 사실"
+      },
+      {
+        "id": "call_exmate",
+        "from": "모르는 번호",
+        "number": "010-0000-5108",
+        "after": "ot_daejeon",
+        "lines": [
+          "김한별 대리님, 접니다. 예전 물류팀에 있던.",
+          "번호가 아직 살아 있네요.",
+          "이 시간까지 계실 줄 알았습니다."
+        ],
+        "bye": [
+          "다음에 밥이나 한번 하시죠. 들어가세요."
+        ],
+        "egg": "reaction 야근하는 밤에만 걸려오는 옛 동료의 전화"
+      }
+    ],
+    "noAnswer": "지금 거신 번호는 없는 번호입니다. 번호를 확인해 주세요.",
+    "busy": [
+      "죄송한데 지금 회의 들어가는 길이라서요.",
+      "급한 건 아니시면 다음에 통화하시죠."
+    ],
+    "people": [
+      {
+        "id": "boss",
+        "name": "박 팀장",
+        "group": "업무",
+        "number": "010-0000-1102",
+        "lines": [
+          "네, 박 팀장입니다.",
+          "지금 회의 들어가요. 톡으로 남겨 둬요.",
+          "그럼 이따 봅시다."
+        ]
+      },
+      {
+        "id": "junho",
+        "name": "이준호",
+        "group": "업무",
+        "number": "010-0000-1147",
+        "lines": [
+          "어 왜, 자리에 있으면서 전화를 하냐",
+          "나 지금 창고 내려가는 중이야",
+          "올라가서 볼게. 끊는다"
+        ]
+      },
+      {
+        "id": "minseo",
+        "name": "최민서",
+        "group": "업무",
+        "number": "010-0000-1183",
+        "lines": [
+          "선배님, 최민서입니다.",
+          "저 지금 회의실 들어가는 길이라서요.",
+          "이따 자리로 찾아뵐게요. 들어가세요."
+        ]
+      },
+      {
+        "id": "soyoung",
+        "name": "한소영",
+        "group": "업무",
+        "number": "010-0000-1216",
+        "lines": [
+          "한별아, 무슨 일이야.",
+          "나 지금 밖이라 통화가 좀 그래.",
+          "이따 다시 걸게. 밥은 챙겨 먹고."
+        ]
+      },
+      {
+        "id": "security",
+        "name": "차민혁",
+        "group": "업무",
+        "number": "010-0000-1305",
+        "lines": [
+          "네, 정보보안팀 차민혁입니다.",
+          "확인 요청은 메신저로 남겨 주세요.",
+          "기록이 남아야 처리됩니다. 들어가겠습니다."
+        ]
+      },
+      {
+        "id": "payroll",
+        "name": "송지원",
+        "group": "업무",
+        "number": "010-0000-1348",
+        "lines": [
+          "네, 회계팀 송지원입니다.",
+          "지금 마감 중이라 통화가 어렵습니다.",
+          "메신저로 남겨 주시면 확인하겠습니다."
+        ]
+      },
+      {
+        "id": "jihyun",
+        "name": "지현",
+        "group": "개인",
+        "number": "010-0000-2274",
+        "lines": [
+          "어 웬일이야 네가 전화를 다 하고",
+          "나 지금 지하철이라 잘 안 들려",
+          "이따 다시 걸게. 끊어"
+        ]
+      },
+      {
+        "id": "mom",
+        "name": "엄마",
+        "group": "개인",
+        "number": "010-0000-2011",
+        "lines": [
+          "한별아. 웬일이니 이 시간에.",
+          "엄마 지금 밖이라 잘 안 들린다.",
+          "밥은 챙겨 먹어라. 이따 다시 하자."
+        ]
+      },
+      {
+        "id": "guesthouse",
+        "name": "강 사장님",
+        "group": "개인",
+        "number": "064-0000-7788",
+        "lines": [
+          "네, 귤빛 게스트하우스입니다.",
+          "지금 방 정리 중이라 손이 비질 않네요.",
+          "편하실 때 다시 연락 주세요."
+        ]
+      },
+      {
+        "id": "school_dahee",
+        "name": "다희",
+        "group": "개인",
+        "number": "010-0000-3391",
+        "lines": [
+          "어 한별아? 진짜 오랜만이다",
+          "나 지금 나가는 길이라 길게는 못 받아",
+          "단톡방에 답이나 좀 해라. 끊어"
+        ]
+      },
+      {
+        "id": "school_yerin",
+        "name": "예린",
+        "group": "개인",
+        "number": "010-0000-3427",
+        "lines": [
+          "여보세요? 한별이 맞지",
+          "나 지금 회사라 통화가 어려워",
+          "모임 얘기는 방에 올려놨어. 이따 봐"
+        ]
+      },
+      {
+        "id": "card",
+        "name": "우리카드",
+        "group": "업무",
+        "number": "1588-0000",
+        "lines": [
+          "우리카드 고객센터입니다.",
+          "이용대금 조회는 1번, 상담원은 0번.",
+          "연결이 지연됩니다. 잠시 후 다시 걸어 주세요."
+        ]
+      },
+      {
+        "id": "delivery",
+        "name": "한진택배",
+        "group": "업무",
+        "number": "1588-0011",
+        "lines": [
+          "한진택배 고객센터입니다.",
+          "배송 조회는 운송장 번호를 눌러 주세요.",
+          "상담원이 모두 통화 중입니다. 종료합니다."
+        ]
+      },
+      {
+        "id": "telecom",
+        "name": "다온모바일",
+        "group": "업무",
+        "number": "1599-0000",
+        "lines": [
+          "다온모바일 고객센터입니다.",
+          "요금 조회는 1번, 상담원 연결은 0번.",
+          "대기가 길어 통화를 종료합니다."
+        ]
+      },
+      {
+        "id": "loan",
+        "name": "0508-0000-9900",
+        "group": "업무",
+        "number": "0508-0000-9900",
+        "lines": [
+          "고객님, 대출 상담 안내입니다.",
+          "상담을 원하시면 잠시만 기다려 주세요.",
+          "연결되지 않아 통화를 종료합니다."
+        ]
+      }
+    ],
+    "spam": [
+      {
+        "id": "spam_loan",
+        "from": "0507-0000-4412",
+        "number": "0507-0000-4412",
+        "lines": [
+          "안녕하세요 고객님, 대출 상담 안내드립니다.",
+          "신용점수 조회 없이 한도만 확인해 드릴까요.",
+          "지금 통화 잠깐 괜찮으실까요."
+        ],
+        "bye": "말씀 없으시면 다음에 다시 걸겠습니다."
+      },
+      {
+        "id": "spam_survey",
+        "from": "모르는 번호",
+        "number": "0505-0000-1130",
+        "lines": [
+          "안녕하세요, 소비자 설문 조사 기관입니다.",
+          "직장인 대상 간단한 설문 하나만 부탁드립니다.",
+          "시간은 삼 분이면 충분합니다."
+        ],
+        "bye": "바쁘시면 다음에 다시 연락드리겠습니다."
+      },
+      {
+        "id": "spam_insurance",
+        "from": "모르는 번호",
+        "number": "02-0000-8871",
+        "lines": [
+          "고객님 명의로 가입된 실손보험 확인 차 연락드렸습니다.",
+          "보장 내용이 예전 기준이라 안내가 필요합니다.",
+          "잠시만 시간 내주실 수 있을까요."
+        ],
+        "bye": "확인만 도와드리려던 거였습니다. 끊겠습니다."
+      },
+      {
+        "id": "spam_net",
+        "from": "모르는 번호",
+        "number": "0503-0000-2277",
+        "lines": [
+          "인터넷 결합 할인 안내드리려고 연락드렸습니다.",
+          "지금 쓰시는 요금제보다 저렴한 조건이 있습니다."
+        ],
+        "bye": "다음에 다시 안내드리겠습니다."
+      },
+      {
+        "id": "spam_estate",
+        "from": "모르는 번호",
+        "number": "031-0000-5504",
+        "lines": [
+          "부동산에서 연락드렸습니다.",
+          "혹시 이사 계획 있으신가 해서요.",
+          "근처에 조건 괜찮은 매물이 나왔습니다."
+        ],
+        "bye": "생각 있으시면 이 번호로 연락 주세요."
+      }
+    ]
+  },
+  "again": {
+    "source": "workMessenger",
+    "thread": "boss",
+    "from": "박 팀장",
+    "lines": [
+      "…또 첫날이네요.",
+      "아니에요, 아무것도. 쉬엄쉬엄 해요."
+    ]
   }
 }

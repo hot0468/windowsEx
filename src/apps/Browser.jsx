@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  hostResolves, latestNews, looksLikeAddress, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay
-} from '../engine/store.js'
+  hostResolves, latestNews, looksLikeAddress, parseAddress, pathKnown, resolveSite, searchAds, searchBlogs, searchCompanies, searchNews, searchPlaces, searchQna, searchSites, searchTerms, siteView, specialPage, useGame, visibleByDay, addressHints} from '../engine/store.js'
 import Place from './Place.jsx'
 import TilePhoto from './TilePhoto.jsx'
 import Portal from './Portal.jsx'
 import Calendar from './Calendar.jsx'
-import News from './News.jsx'
+import News, { Article } from './News.jsx'
 import Wiki from './Wiki.jsx'
 import Drive from './Drive.jsx'
 import Board from './Board.jsx'
@@ -86,11 +85,17 @@ export default function Browser({ start }) {
   const vpn = useGame((s) => s.vpn)
   const routerDown = useGame((s) => s.routerDown)
   const myBookmarks = useGame((s) => s.myBookmarks)
+  const visited = useGame((s) => s.visited)
+  const noteVisit = useGame((s) => s.noteVisit)
   const toggleBookmark = useGame((s) => s.toggleBookmark)
   const [addr, setAddr] = useState('')
   const nav = useHistory(start ?? { kind: 'home' })
   const page = nav.at
+  const pageRef = useRef(null)
   const [q, setQ] = useState('')
+  // 주소창 제안. 이미 아는 곳만 내민다 — 근거는 addressHints 주석에.
+  const [hintAt, setHintAt] = useState(-1)
+  const [typing, setTyping] = useState(false)
   const [menu, setMenu] = useState(false)
   const openWindow = useGame((s) => s.openWindow)
   const closeWindow = useGame((s) => s.closeWindow)
@@ -132,6 +137,12 @@ export default function Browser({ start }) {
   useEffect(() => {
     setAddr(page.kind === 'site' ? page.url + (page.path ?? '') : page.kind === 'search' ? page.q : '')
   }, [page])
+  // 새 쪽으로 가면 맨 위부터 읽는다. 기사 아래의 관련 기사를 누르고 나서
+  // 화면이 그 자리에 머물면 다음 기사의 한복판이 열린 것처럼 보인다 —
+  // 링크가 어디로 가든 같은 문제라, 창을 여는 곳 한 군데에서 한 번만 되돌린다.
+  // ponytail: 뒤로 가기도 맨 위로 간다. 실제 브라우저처럼 읽던 자리를 되살리려면
+  // 방문 기록이 스크롤 위치를 함께 들고 다녀야 한다(folderNav.js의 useHistory).
+  useEffect(() => { if (pageRef.current) pageRef.current.scrollTop = 0 }, [page])
   useEffect(() => () => {
     useGame.getState().windows.filter((w) => w.app === 'devtools').forEach((w) => closeWindow(w.id))
   }, [])
@@ -160,6 +171,10 @@ export default function Browser({ start }) {
   useEffect(() => { setBrowserDev({ console: consoleLines(page, site, view), network: networkRows(page, site, view) }) }, [page, site, view])
   // The block card tells the player to ask 정보보안팀; 차민혁 gets there first.
   useEffect(() => { if (view === 'blocked') askedIp() }, [view])
+  // 실제로 열린 곳만 남는다. 막혔거나 못 찾은 주소는 기록이 아니다.
+  useEffect(() => {
+    if (page.kind === 'site' && view === 'ready' && site) noteVisit(site.url + (page.path ?? ''), site.title)
+  }, [page, site, view])
 
   // 회사가 깔아 둔 것 뒤에 플레이어가 얹은 것이 붙는다. 이름은 사이트가
   // 스스로 말하는 제목을 쓴다 — 소통방은 '소통방'으로 실린다.
@@ -169,6 +184,12 @@ export default function Browser({ start }) {
       .filter((u) => !scenario.bookmarks.some((b) => b.url === u))
       .map((u) => ({ url: u, title: scenario.sites.find((s) => s.url === u)?.title ?? u }))
   ]
+  // 주소창에 치는 동안 내미는 곳. 보고 있는 주소 그대로면 내밀 것이 없다.
+  const here = page.kind === 'site' ? page.url + (page.path ?? '') : ''
+  const hints = typing && addr !== here
+    ? addressHints(addr, { visited, bookmarks: marks, history: scenario.history })
+    : []
+
   const canMark = page.kind === 'site' && Boolean(site) && view === 'ready'
   const fixedMark = canMark && scenario.bookmarks.some((b) => b.url === site.url)
   const marked = canMark && marks.some((b) => b.url === site.url)
@@ -183,9 +204,42 @@ export default function Browser({ start }) {
           <ChevronRight size={18} strokeWidth={1.9} />
         </button>
         <button onClick={() => open('')} title="홈"><House size={17} strokeWidth={1.7} /></button>
-        <input value={addr} onChange={(e) => setAddr(e.target.value)}
-               onKeyDown={(e) => e.key === 'Enter' && open(addr)}
+        <input value={addr}
+               onChange={(e) => { setAddr(e.target.value); setTyping(true); setHintAt(-1) }}
+               onBlur={() => setTimeout(() => setTyping(false), 120)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Escape') return setTyping(false)
+                 if (e.key === 'ArrowDown' && hints.length) {
+                   e.preventDefault()
+                   return setHintAt((i) => (i + 1) % hints.length)
+                 }
+                 if (e.key === 'ArrowUp' && hints.length) {
+                   e.preventDefault()
+                   return setHintAt((i) => (i <= 0 ? hints.length : i) - 1)
+                 }
+                 if (e.key !== 'Enter') return
+                 setTyping(false)
+                 const pick = hints[hintAt]
+                 if (pick) return pick.blog ? nav.go({ kind: 'blog', id: pick.blog }) : open(pick.url)
+                 open(addr)
+               }}
                placeholder="주소를 입력하세요" aria-label="주소" spellCheck={false} />
+        {hints.length > 0 && (
+          <div className="bw-hints">
+            {hints.map((h, i) => (
+              <button key={h.url} className={'bw-hint' + (i === hintAt ? ' on' : '')}
+                      onMouseEnter={() => setHintAt(i)}
+                      onPointerDown={(e) => {
+                        e.preventDefault()
+                        setTyping(false)
+                        h.blog ? nav.go({ kind: 'blog', id: h.blog }) : open(h.url)
+                      }}>
+                <Clock size={13} strokeWidth={1.7} />
+                <span className="bw-hint-mid"><span>{h.title}</span><span className="bw-pop-url">{h.url}</span></span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* 열려 있는 곳만 즐겨찾기에 얹는다 — 주소만 쳐 넣고 못 들어간 곳을
             담아 두면 북마크 바가 가 본 적 없는 데를 가리킨다. 회사가 깔아 둔
             셋은 뺄 수 없다. */}
@@ -205,7 +259,23 @@ export default function Browser({ start }) {
               <button className="bw-pop-item bw-pop-dev" onClick={() => { toggleDev(); setMenu(false) }}>
                 <Code size={14} strokeWidth={1.9} /><span className="bw-pop-mid"><span>개발자 도구</span><span className="bw-pop-url">F12</span></span>
               </button>
-              <div className="bw-pop-head">방문 기록</div>
+              {visited.length > 0 && (
+                <>
+                  <div className="bw-pop-head">이번 주</div>
+                  {visited.slice(0, 6).map((h) => (
+                    <button key={h.url} className="bw-pop-item"
+                            onClick={() => { setMenu(false); open(h.url) }}>
+                      <Clock size={14} strokeWidth={1.7} />
+                      <span className="bw-pop-mid">
+                        <span>{h.title}</span>
+                        <span className="bw-pop-url">{h.url}</span>
+                      </span>
+                      <span className="bw-pop-date">{h.day}일차</span>
+                    </button>
+                  ))}
+                </>
+              )}
+              <div className="bw-pop-head">휴가 전</div>
               {scenario.history.map((h, i) => (
                 <button key={i} className="bw-pop-item"
                         onClick={() => { setMenu(false); h.blog ? nav.go({ kind: 'blog', id: h.blog }) : open(h.url) }}>
@@ -229,7 +299,7 @@ export default function Browser({ start }) {
         ))}
       </div>
 
-      <div className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
+      <div ref={pageRef} className={'page' + ((page.kind === 'blog' || page.kind === 'place' || page.kind === 'news' || (view && view !== 'error')) ? ' bleed' : '')}>
         {page.kind === 'home' && (
           <div className="portal">
             <button className="portal-cal" onClick={() => open('calendar.daon.com')} title="캘린더">
@@ -405,13 +475,13 @@ export default function Browser({ start }) {
 
         {page.kind === 'news' && (() => {
           const a = news.find((x) => x.id === page.id)
+          // 기사는 그 기사를 실은 신문 지면 안에서 읽힌다 — 목록으로 돌아가는
+          // 길이 화면 안에 있어야 뒤로 가기만 남지 않는다.
+          const paper = scenario.sites.find((x) => x.layout === 'news')
           return (
-            <article className="art">
-              <div className="art-press">{a.press}</div>
-              <h1>{a.title}</h1>
-              <div className="art-by">{a.date} · {a.reporter}</div>
-              {a.body.map((para, i) => <p key={i}>{para}</p>)}
-            </article>
+            <Article a={a} site={paper} news={news}
+                     onOpen={(id) => nav.go({ kind: 'news', id })}
+                     onHome={() => open(paper.url)} />
           )
         })()}
 

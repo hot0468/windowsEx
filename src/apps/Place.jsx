@@ -5,16 +5,36 @@ import { Check, Clock, Star } from '../icons/line.jsx'
 
 const CODE = () => 'RV-' + Math.floor(1000 + Math.random() * 9000)
 
+// 예약이 확정되기까지 기다리는 시간. 실제 예약 사이트가 그렇다.
+const WAIT = 1800
+
 function Booking({ place, onDone }) {
   const form = useGame((s) => s.scenario.booking)
   const book = useGame((s) => s.book)
   const [time, setTime] = useState(form.times[4])
   const [party, setParty] = useState(form.parties[1])
 
-  const confirm = () => {
-    const details = { date: form.date, time, party, code: CODE() }
-    book(place.name, details)
-    onDone(details)
+  // 누르면 잠시 기다린다. 확정 화면이 곧바로 갈아 끼워지면 예약이 아니라
+  // 화면 전환으로 읽힌다 — 어딘가에 보내서 답을 받는 시간이 있어야 한다.
+  const [sending, setSending] = useState(false)
+  useEffect(() => {
+    if (!sending) return
+    const t = setTimeout(() => {
+      const details = { date: form.date, time, party, code: CODE() }
+      book(place.name, details)
+      onDone(details)
+    }, WAIT)
+    return () => clearTimeout(t)
+  }, [sending])
+  const confirm = () => setSending(true)
+
+  if (sending) {
+    return (
+      <div className="pl-book pl-wait" role="status">
+        <span className="spinner" />
+        <p>{form.waiting ?? '예약을 확인하고 있습니다…'}</p>
+      </div>
+    )
   }
 
   return (

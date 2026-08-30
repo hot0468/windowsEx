@@ -1,7 +1,5 @@
 import { useRef, useState } from 'react'
 import { useGame } from '../engine/store.js'
-import Icon from '../icons/Icon.jsx'
-import { ChevronLeft } from '../icons/line.jsx'
 
 // 엣지 스와이프로 인식할 시작 영역. 이보다 안쪽에서 시작한 드래그는 앱
 // 내용의 스크롤이지 뒤로가기가 아니다.
@@ -9,7 +7,7 @@ const EDGE = 20
 // 이만큼 끌면 놓았을 때 뒤로 간다.
 const COMMIT = 70
 
-export default function PhoneApp({ title, icon, onBack, children }) {
+export default function PhoneApp({ onBack, children }) {
   const screens = useGame((s) => s.screens)
   const popScreen = useGame((s) => s.popScreen)
   const goPhoneHome = useGame((s) => s.goPhoneHome)
@@ -43,14 +41,9 @@ export default function PhoneApp({ title, icon, onBack, children }) {
          onPointerMove={onPointerMove}
          onPointerUp={onPointerUp}
          onPointerCancel={onPointerUp}>
-      <header className="pa-head">
-        <button className="pa-back" onClick={back} aria-label="뒤로">
-          <ChevronLeft size={22} strokeWidth={1.8} />
-        </button>
-        <span className="pa-title">
-          {icon && <Icon name={icon} size={17} />}{title}
-        </span>
-      </header>
+      {/* 제목줄도 뒤로가기도 여기 없다. 앱들은 저마다 제 머리(메일의 도구 줄,
+          브라우저의 주소창, 톡의 상단)를 이미 들고 있어 두 겹이 됐다.
+          나가는 길은 내비바와 엣지 스와이프가 맡는다. */}
       <div className="phone-body">{children}</div>
     </div>
   )

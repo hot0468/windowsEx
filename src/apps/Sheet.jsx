@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { useGame, cellKey, findFile } from '../engine/store.js'
+import { useGame, cellKey, fileById, sheetCell } from '../engine/store.js'
 import { Save } from '../icons/line.jsx'
 
 const colName = (i) => String.fromCharCode(65 + i)
 
 export default function Sheet({ fileId }) {
-  const fs = useGame((s) => s.scenario.fs)
   const edits = useGame((s) => s.sheetEdits)
   const drafts = useGame((s) => s.sheetDrafts)
   const draftCell = useGame((s) => s.draftCell)
@@ -13,7 +12,7 @@ export default function Sheet({ fileId }) {
   const [tab, setTab] = useState(0)
   const [cell, setCell] = useState({ r: 0, c: 0 })
   const [editing, setEditing] = useState(null)   // { r, c, text } while a cell is being typed into
-  const file = findFile(fs, fileId)
+  const file = useGame((s) => fileById(s, fileId))
   if (!file?.sheets?.length) return <div className="xl-none">시트를 열 수 없습니다.</div>
 
   const sheet = file.sheets[Math.min(tab, file.sheets.length - 1)]
@@ -81,7 +80,7 @@ export default function Sheet({ fileId }) {
                                if (e.key === 'Enter') commit()
                                if (e.key === 'Escape') setEditing(null)
                              }} />
-                    ) : value}
+                    ) : sheetCell(rows, r, c)}
                   </td>
                 ))}
               </tr>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
 import { allFiles, findFile, hostResolves, siteView, useGame } from '../src/engine/store.js'
 
@@ -45,6 +45,49 @@ describe('the VPN switch', () => {
     expect(useGame.getState().vpn).toBe(true)
     useGame.getState().restart()
     expect(useGame.getState().vpn).toBe(false)
+  })
+
+  // 클라이언트 창과 트레이 팝오버가 같은 길(dialVpn)을 쓴다. 어느 쪽에서든
+  // hosts 에 이름이 없으면 못 붙고, 붙는 데는 시간이 걸린다.
+  describe('dialing from anywhere', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      useGame.setState({ vpn: false, vpnDialing: false, edits: {} })
+    })
+    afterEach(() => vi.useRealTimers())
+
+    it('refuses while hosts does not know the server, and touches nothing', () => {
+      expect(useGame.getState().dialVpn()).toBe(false)
+      expect(useGame.getState().vpnDialing).toBe(false)
+      vi.runAllTimers()
+      expect(useGame.getState().vpn).toBe(false)
+    })
+
+    it('connects after a moment once the name resolves', () => {
+      useGame.setState({ edits: { [HOSTS.id]: `${HOSTS.content}
+${line}` } })
+      expect(useGame.getState().dialVpn()).toBe(true)
+      expect(useGame.getState().vpnDialing).toBe(true)
+      expect(useGame.getState().vpn).toBe(false)
+      vi.advanceTimersByTime(1800)
+      expect(useGame.getState().vpn).toBe(true)
+      expect(useGame.getState().vpnDialing).toBe(false)
+    })
+
+    it('drops from the tray the same way the client does', () => {
+      useGame.setState({ vpn: true })
+      useGame.getState().dropVpn()
+      expect(useGame.getState().vpn).toBe(false)
+    })
+
+    it('dialing twice does not start two timers', () => {
+      useGame.setState({ edits: { [HOSTS.id]: `${HOSTS.content}
+${line}` } })
+      useGame.getState().dialVpn()
+      const pending = vi.getTimerCount()
+      useGame.getState().dialVpn()
+      expect(vi.getTimerCount()).toBe(pending)
+    })
   })
 })
 

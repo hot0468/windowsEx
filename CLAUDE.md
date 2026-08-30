@@ -6,9 +6,9 @@
 
 - **workday.json을 cat/Read로 열지 마라.** `node scripts/query.mjs <명령>` 으로 조회한다 (`node scripts/query.mjs help`). 요청 한 건의 전 단계는 `ask <grants|pool:id>`, 잡담은 `chatter`, 부름은 `summons`. 구조 파악에 JSON 덤프가 필요했던 적은 없다.
 - **shell.css(125KB)·store.js(80KB)도 통째로 Read 말고** `grep -n`으로 위치 찾아 offset/limit로 읽어라. `docs/superpowers/plans/`의 완료된 plan은 읽지 마라.
-- 테스트는 먼저 관련 파일만: `npx vitest run test/<관련>.test.js`, 마지막에 한 번만 전체 `npm test`.
+- 테스트는 먼저 관련 파일만: `npx vitest run test/<관련>.test.js | tail -5`, 마지막에 한 번만 전체 `npm run test:q` (점 리포터 — 실패한 것만 이름이 찍힌다). 문법 검사는 `npm run check` (조용한 빌드).
 - JSON 수정은 node 스크립트로 (`JSON.parse` → 수정 → `JSON.stringify(s,null,2)+'\n'`). sed/Edit로 JSON을 건드리지 마라.
-- **JS/JSX 수정 시 CRLF 주의**: 대부분 파일이 CRLF다. 스크립트로 고칠 땐 `\r\n→\n` 정규화 후 수정, 저장 시 `\n→\r\n` 복원. bash heredoc 안의 `\n` 리터럴은 자주 깨지니 파이썬(io, newline='') 또는 Edit 도구를 써라.
+- **JS/JSX 수정 시 CRLF 주의**: 대부분 파일이 CRLF다. 스크립트로 고칠 땐 `\r\n→\n` 정규화 후 수정, 저장 시 `\n→\r\n` 복원. bash heredoc 안의 `\n` 리터럴은 자주 깨지니 파이썬(io, newline='') 또는 Edit 도구를 써라. **여러 줄 파이썬은 heredoc으로 넘기지 말고 스크래치패드에 `.py`로 써서 실행하라** — 따옴표·괄호가 섞이면 heredoc이 통째로 깨지고 아무것도 안 바뀐 채 한 턴을 태운다.
 - 병렬 에이전트에게 콘텐츠를 맡길 땐 **조각(fragment) JSON을 스크래치패드에 쓰게 하고 병합은 메인이** 한다. 에이전트에게 이 파일(CLAUDE.md)을 먼저 읽으라고 지시하면 규칙 재설명이 필요 없다.
 - 다른 Claude 세션이 같은 저장소에서 작업 중일 수 있다. 시작할 때 `git log --oneline -3`과 `git status --short`로 확인하라.
 
@@ -23,6 +23,7 @@
 - objective는 `id === grant`, 전역 유일. 파일 ask는 `files:[실존 id]` (accept와 배타).
 - 확장자는 hwp/txt/pptx/xlsx/exe/pdf만 (예외: `hosts`). xlsx `rows`는 열 수와 일치.
 - 숨김 폴더/파일 안에만 있는 답은 마지막 `no` 힌트에 **'숨긴 항목'**이라는 말이 있어야 한다 (보기 팝오버 토글 안내). 없으면 소프트락으로 간주해 테스트 실패.
+- **행동으로 푸는 ask**: `deed: <objective id>` (+ 마지막 단계면 `grants` 같은 값). accept 검사 면제 대신 그 objective에 `cell|mail|move|rename|upload` 스펙이 있어야 하고, 가리키는 파일·폴더·페이지·주소가 실존해야 한다 (`test/deed.test.js`). `attached` 파일은 쓰지 마라.
 
 ## 구조 요점
 
@@ -39,8 +40,9 @@
 ## 명령
 
 ```bash
-npm test                      # 전체 (382+)
+npm test                      # 전체 (1100+, 출력이 길다 — test:q 를 써라)
 npx vitest run test/x.test.js # 부분
-npm run build                 # JSX 문법 검증 겸용 (node --check는 JSX 불가)
+npm run check                 # JSX 문법 검증 (조용한 빌드 — node --check는 JSX 불가)
+npm run test:q                # 전체 테스트, 점 리포터
 node scripts/query.mjs help   # 시나리오 조회
 ```

@@ -18,19 +18,23 @@ export function checkGoal(goal, { attachmentId, body }) {
 // one it skipped (and the boss hears about it); then the body has to actually
 // name what is being asked for.
 
-export function checkOutbound(fetch, { to, subject, body }, etiquette, player) {
+export function checkOutbound(fetch, { to, subject, body, attachmentId = null }, etiquette, player) {
   if (!fetch || norm(to).toLowerCase() !== norm(fetch.to).toLowerCase()) {
     return { ok: false, reason: 'address', reply: null }
   }
-  // 이 메일은 본퀘스트다. 답장과 달리 예절을 어기면 되돌아온다.
-  const [rude] = checkEtiquette(
-    { ...etiquette, company: player.company, name: player.name },
-    { subject, body, outbound: true }
-  )
-  if (rude) {
-    return { ok: false, reason: rude, reply: fetch.rudeReplies[rude] }
+  // 이 메일은 본퀘스트다. 답장과 달리 예절을 어기면 되돌아온다 — 되돌릴 말을
+  // 가진 스펙(그날의 fetch)만. 요청 단위의 메일 목표는 잔소리로 갈음한다.
+  if (fetch.rudeReplies) {
+    const [rude] = checkEtiquette(
+      { ...etiquette, company: player.company, name: player.name },
+      { subject, body, outbound: true }
+    )
+    if (rude) return { ok: false, reason: rude, reply: fetch.rudeReplies[rude] }
   }
-  if (fetch.requiredKeywords.some((k) => !norm(body).includes(norm(k)))) {
+  if (fetch.requiredAttachment && attachmentId !== fetch.requiredAttachment) {
+    return { ok: false, reason: 'attachment', reply: fetch.wrongAttachmentReply }
+  }
+  if ((fetch.requiredKeywords ?? []).some((k) => !norm(body).includes(norm(k)))) {
     return { ok: false, reason: 'keyword', reply: fetch.unclearReply }
   }
   return { ok: true, reason: null, reply: fetch.reply }

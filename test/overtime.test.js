@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { dayDone, endingFor, overtimeOffer, requestsOf, useGame, workedEveryNight } from '../src/engine/store.js'
+import { appOf, dayDone, endingFor, overtimeOffer, requestsOf, sourceOf, useGame, workedEveryNight } from '../src/engine/store.js'
 import { grantsRaised, playDay } from './playDay.js'
 
 const days = scenario.days.length
@@ -9,7 +9,7 @@ const every = Object.fromEntries(Array.from({ length: days }, (_, i) => [i + 1, 
 describe('the offer to stay late', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    useGame.setState({ day: 1, overtime: {}, grants: {}, unlocked: {}, extraMessages: {}, pendingAsks: {}, locks: 1, ended: false, closing: false })
+    useGame.setState({ day: 1, overtime: {}, grants: {}, unlocked: {}, extraMessages: {}, pendingAsks: {}, locks: 1, ended: false, closing: false , awaitingCaller: null })
   })
   afterEach(() => vi.useRealTimers())
 
@@ -58,9 +58,17 @@ describe('the offer to stay late', () => {
 
   // 마칠 때 그날 밤 부름이 먼저 도착하고 결과는 잠시 뒤에 뜬다. 그 사이를
   // 건너뛰어야 결과 화면을 볼 수 있다.
+  // 부름이 오는 밤에는 하루가 그 대화를 기다린다. 플레이어가 알림을 지나치고
+  // 퇴근을 다시 누른 것과 같게 둘러 저녁까지 밀어 둔다.
   const clockOff = () => {
     useGame.getState().closeDay()
     vi.advanceTimersByTime(3000)
+    const waiting = useGame.getState().awaitingCaller
+    if (waiting) {
+      const app = appOf(sourceOf(scenario, waiting))
+      useGame.setState({ windows: [{ id: 99, key: app, app, z: 1 }] })
+      useGame.getState().closeWindow(99)
+    }
   }
 
   it('waits for the player to clock off, and asks again after a late night', () => {

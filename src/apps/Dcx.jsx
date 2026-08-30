@@ -1,12 +1,11 @@
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, fileById } from '../engine/store.js'
 
 // A vendor's own document format: the file is right there and still unreadable
 // until their viewer is installed. Same shape of refusal Windows gives for .hwp.
 export default function Dcx({ fileId }) {
-  const fs = useGame((s) => s.scenario.fs)
   const spec = useGame((s) => s.scenario.programs.dviewer)
   const installed = useGame((s) => Boolean(s.grants.dviewer))
-  const file = findFile(fs, fileId)
+  const file = useGame((s) => fileById(s, fileId))
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
   if (!installed) {

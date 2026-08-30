@@ -11,12 +11,16 @@ import { ArrowUp, ChevronLeft, ChevronRight, FolderOpen, Search, X } from '../ic
 export default function FileDialog({ start = '문서', onPick, onClose }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
+  const shots = useGame((s) => s.shots)
+  const photos = useGame((s) => s.photos)
   const restored = useGame((s) => s.restored)
   const showHidden = useGame((s) => s.showHidden)
   const dreamt = useGame((s) => s.dreamt)
   const tiles = useGame((s) => s.tiles)
+  const placed = useGame((s) => s.placed)
+  const touched = useGame((s) => s.touched)
   // a photo the dream gave back is not a file you can attach either
-  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, scenario })
+  const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, shots, photos, scenario })
   // a binned file is not a file you can attach
   const roots = Object.keys(fs).filter((r) => r !== '휴지통')
   const nav = useFolderNav(start)

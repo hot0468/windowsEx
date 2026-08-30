@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGame, findFile } from '../engine/store.js'
+import { useGame, fileById } from '../engine/store.js'
 import { docBody, docTitle } from './docLayout.js'
 
 const ZOOMS = [100, 125, 150]
@@ -7,9 +7,8 @@ const ZOOMS = [100, 125, 150]
 // A certificate downloaded from a government site. Read-only: the first line
 // is the document's title, the rest is laid out as it was issued.
 export default function Pdf({ fileId }) {
-  const fs = useGame((s) => s.scenario.fs)
   const [zoom, setZoom] = useState(0)
-  const file = findFile(fs, fileId)
+  const file = useGame((s) => fileById(s, fileId))
   if (!file) return <div className="hwp-none">문서를 열 수 없습니다.</div>
 
   // 통보서·증명서는 줄글이 아니라 서식이다. 서식으로 적힌 문서는 칸을 그려

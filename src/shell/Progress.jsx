@@ -11,6 +11,7 @@ export default function Progress() {
   const drawn = useGame((s) => s.drawn)
   const ripples = useGame((s) => s.ripples)
   const closing = useGame((s) => s.closing)
+  const awaiting = useGame((s) => Boolean(s.awaitingCaller))
   const closeDay = useGame((s) => s.closeDay)
   const [open, setOpen] = useState(false)
 
@@ -42,9 +43,14 @@ export default function Progress() {
           })}
         </ul>
       )}
-      <button className="pg-close" onClick={closeDay} disabled={!finished || closing}>
-        오늘 업무 마치기
-      </button>
+      {/* 비활성 버튼은 브라우저에 따라 툴팁을 안 띄운다 — 감싸는 칸이 대신 말한다. */}
+      <span className="pg-close-wrap"
+            title={awaiting ? '읽지 않은 메시지를 확인하고 대화를 닫으면 하루가 끝납니다'
+              : finished ? undefined : '업무 목록의 업무를 모두 해결하면 다음 날로 넘어갈 수 있습니다'}>
+        <button className="pg-close" onClick={closeDay} disabled={!finished || closing || awaiting}>
+          오늘 업무 마치기
+        </button>
+      </span>
     </div>
   )
 }

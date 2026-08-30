@@ -13,7 +13,14 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: var(--p-bg);
+  /* 바탕화면. 앱 화면(.phone-app)과 내비바는 불투명하므로 이 그라데이션은
+     홈과 상태바에서만 보인다 — 회사 파랑이 아닌, 창가에 든 이른 빛 쪽으로. */
+  background:
+    radial-gradient(130% 78% at 12% 0%, #dde6f5 0%, rgba(221, 230, 245, 0) 58%),
+    radial-gradient(115% 68% at 96% 6%, #f4e3e6 0%, rgba(244, 227, 230, 0) 52%),
+    radial-gradient(120% 60% at 50% 104%, #e7ecf4 0%, rgba(231, 236, 244, 0) 62%),
+    linear-gradient(180deg, #f4f6fb 0%, #f8f9fb 46%, #eef1f6 100%);
+  background-attachment: fixed;
   color: var(--p-ink);
   font-family: Pretendard, -apple-system, 'Malgun Gothic', sans-serif;
   font-size: 15px;
@@ -152,15 +159,15 @@
   transition: transform 90ms ease-out;
 }
 .ph-icon:active { transform: scale(.92); }
+/* 아이콘은 그림 자체로 선다. 흰 판을 깔면 실제 폰 홈이 아니라 타일이 된다 —
+   대신 옅은 그림자로 바탕에서 떠 있게만 한다. */
 .ph-glyph {
   display: grid;
   place-items: center;
   width: 62px;
   height: 62px;
-  border-radius: 18px;
-  background: var(--p-surface);
   color: var(--p-accent);
-  box-shadow: 0 1px 3px rgba(16, 19, 26, .08), 0 6px 16px rgba(16, 19, 26, .05);
+  filter: drop-shadow(0 2px 5px rgba(16, 19, 26, .18));
 }
 .ph-label {
   max-width: 74px;
@@ -174,7 +181,7 @@
 /* 앱 */
 .phone-app {
   position: absolute;
-  inset: 40px 0 0;             /* 상태바 아래 */
+  inset: 40px 0 44px;          /* 상태바 아래, 내비바 위 */
   display: flex;
   flex-direction: column;
   background: var(--p-bg);
@@ -185,37 +192,7 @@
   from { opacity: 0; transform: translateX(100%); }
   to { opacity: 1; transform: none; }
 }
-.pa-head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 52px;
-  padding: 0 8px 0 4px;
-  background: var(--p-surface);
-  border-bottom: 1px solid var(--p-line);
-  flex: none;
-}
-.pa-back {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 12px;
-  background: none;
-  color: var(--p-ink);
-  cursor: pointer;
-  transition: transform 90ms ease-out, background 90ms ease-out;
-}
-.pa-back:active { transform: scale(.9); background: rgba(16, 19, 26, .05); }
-.pa-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
+.phone.sealed .phone-app { bottom: 0; }   /* 굳은 뒤에는 내비바가 없다 */
 /* 앱 내용. 데스크톱의 .win-body가 하던 자리를 그대로 잇는다. */
 .phone-body {
   flex: 1;
@@ -251,6 +228,11 @@
 /* 안드로이드의 세 버튼: 켠 창 · 홈 · 뒤로. 홈 인디케이터를 대신한다 —
    앱 안에서도 홈으로 나가는 길이 늘 바닥에 있다. */
 .pn-nav {
+  /* 앱을 열면 홈(flex:1)이 사라져 내비바가 상태바 밑까지 올라온다.
+     세로로 남는 자리를 위쪽 여백으로 먹어 언제나 바닥에 붙는다. */
+  margin-top: auto;
+  position: relative;
+  z-index: 50;
   flex: none;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -320,3 +302,576 @@
   color: #fff;
   cursor: pointer;
 }
+
+/* 상단 알림창. 상태바를 아래로 끌면 내려온다. */
+.ph-drag { flex: none; touch-action: none; cursor: grab; }
+.ph-shade-wrap {
+  position: absolute;
+  inset: 0 0 44px;
+  z-index: 45;
+  background: rgba(16, 19, 26, .45);
+}
+.ph-shade {
+  /* 여기서 시작한 손짓은 올려 닫기다. 막지 않으면 브라우저가 스크롤로 채가고
+     pointermove 가 끊겨(pointercancel) 닫히지 않는다 — 목록만 예외로 둔다. */
+  touch-action: none;
+  padding: 12px 14px 6px;
+  border-radius: 0 0 18px 18px;
+  background: var(--p-surface);
+  box-shadow: 0 10px 30px rgba(16, 19, 26, .28);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: ph-shade-in .22s var(--p-ease);
+}
+@keyframes ph-shade-in { from { transform: translateY(-100%); } }
+/* 닫힐 때. 내려온 길을 그대로 되짚어 올라가고, 뒤에 깔린 그늘은 같이 걷힌다.
+   지우기 전에 이 시간(200ms)만큼 PhoneShell 이 기다려 준다. */
+.ph-shade.lifting { animation: ph-shade-out .2s var(--p-ease) forwards; }
+.ph-shade-wrap.lifting { animation: ph-shade-fade .2s linear forwards; }
+@keyframes ph-shade-out { to { transform: translateY(-100%); } }
+@keyframes ph-shade-fade { to { background: rgba(16, 19, 26, 0); } }
+.ph-tiles { display: flex; gap: 8px; flex: none; }
+.ph-tile {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 12px 6px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: #eef0f4;
+  color: var(--p-mute);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ph-tile span { color: var(--p-ink); font-size: 12.5px; font-weight: 600; }
+.ph-tile i { font-style: normal; font-size: 11px; }
+.ph-tile.on { background: var(--p-accent); color: rgba(255,255,255,.72); }
+.ph-tile.on span { color: #fff; }
+.ph-tile.flat { cursor: default; }
+.ph-tile.warn { color: #c9803a; }
+.ph-tile:disabled { opacity: .6; cursor: default; }
+.ph-shade-err { margin: 8px 2px 0; color: #c0392b; font-size: 12px; line-height: 1.6; }
+.ph-shade-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 2px 6px;
+  color: var(--p-mute);
+  font-size: 11.5px;
+  flex: none;
+}
+.ph-shade-head b { color: var(--p-ink); font-size: 13px; }
+.ph-todo { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; touch-action: pan-y; }
+.ph-todo li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 2px;
+  color: var(--p-mute);
+  font-size: 13px;
+  line-height: 1.5;
+  border-top: 1px solid var(--p-line);
+}
+.ph-todo li.ok { color: var(--p-ink); }
+.ph-todo-mark {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex: none;
+  border: 1px solid #ccd0d8;
+  border-radius: 5px;
+  color: #fff;
+}
+.ph-todo li.ok .ph-todo-mark { background: #2fbf5f; border-color: #2fbf5f; }
+.ph-shade-end {
+  margin: 10px 0 2px;
+  padding: 11px;
+  flex: none;
+  border: 0;
+  border-radius: 12px;
+  background: var(--p-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ph-shade-end:disabled { background: #eef0f4; color: var(--p-mute); cursor: default; }
+.ph-shade-grip { display: block; width: 100%; padding: 8px 0 4px; border: 0; background: none; cursor: pointer; }
+.ph-shade-grip i { display: block; width: 42px; height: 4px; margin: 0 auto; border-radius: 2px; background: #d3d7de; }
+
+/* ── 폰에서 보는 웹 페이지 ─────────────────────────────────
+   창 하나가 곧 화면 전체다. 데스크톱 창(≈900px)을 전제로 짠 폭들을
+   여기서 되돌린다. 데스크톱은 그대로 두려고 .phone 아래로만 건다. */
+
+/* 브라우저 크롬 — 좁으면 여백부터 줄인다. */
+.phone .page { padding: 16px 14px; }
+
+/* 포털 홈. 로고가 화면을 다 먹지 않게, 기사 카드는 한 줄에 하나씩. */
+.phone .portal { padding-top: 22px; }
+.phone .portal-logo { font-size: 34px; }
+.phone .portal-cal { top: 8px; right: 10px; padding: 5px 10px; font-size: 12px; }
+.phone .portal-search { margin: 20px 0 26px; }
+.phone .portal-search .btn-primary { padding: 8px 16px; }
+.phone .portal-news { padding: 0 2px 20px; }
+.phone .pn-grid { grid-template-columns: 1fr; gap: 0; }
+.phone .pn-thumb { width: 108px; height: 74px; }
+.phone .pn-card { gap: 10px; }
+/* 언론사 이름과 '구독 +' 가 한 줄에 다 들어가지 못하면 접힌다 —
+   기존에는 안 접혀 이름이 글자당 한 줄씩 세로로 찢어졌다. */
+.phone .pn-press { flex-wrap: wrap; gap: 4px 6px; font-size: 12px; }
+.phone .pn-press em { margin-left: 0; }
+.phone .pn-title { font-size: 13.5px; }
+
+/* 사내포털. 왼쪽 메뉴 · 본문 · 오른쪽 위젯 3열이 폰에서는 세로로 선다. */
+.phone .pt-grid { grid-template-columns: 1fr; padding: 10px; }
+
+/* 다온뉴스. 본문 + 오른쪽 300px 사이드가 한 줄씩. */
+.phone .nw-cols { grid-template-columns: 1fr; gap: 18px; }
+.phone .nw > * { padding-left: 14px; padding-right: 14px; }
+.phone .nw-lead { flex-direction: column; gap: 12px; }
+.phone .nw-lead-shot { width: 100%; max-width: none; }
+.phone .nw-crumb { flex-wrap: wrap; }
+
+/* 토스트. 폰에서는 아래 구석의 작은 알림이 아니라, 상태바 밑에서 내려와
+   화면 폭을 채우는 카드다 — 손이 닿는 자리가 위에 있다.
+   .phone 바깥(App.jsx 오버레이)에 그려지므로 클래스를 직접 받는다. */
+.toast.ph {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  top: 46px;
+  bottom: auto;
+  width: auto;
+  padding: 14px 16px 15px;
+  border-radius: 20px;
+  background: rgba(252, 253, 255, .97);
+  backdrop-filter: blur(12px);
+  color: #10131a;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 8px 28px rgba(16, 19, 26, .22), inset 0 0 0 1px rgba(16, 19, 26, .05);
+  animation: toast-drop .28s cubic-bezier(.32, .72, 0, 1);
+}
+.toast.ph b { margin-bottom: 5px; color: #6b7686; font-size: 12px; }
+.toast.ph.leaving { animation: toast-lift .26s cubic-bezier(.4, 0, .7, .2) forwards; }
+@keyframes toast-drop { from { opacity: 0; transform: translateY(-120%); } }
+@keyframes toast-lift { to { opacity: 0; transform: translateY(-110%); } }
+
+/* ── 폰에서 보는 웹 페이지 (조사 결과 반영) ───────────────── */
+/* 다온뉴스 */
+.phone .nw-top { grid-template-columns: 1fr; gap: 8px; }
+.phone .nw-search { grid-column: 1; grid-row: auto; justify-self: stretch; width: 100%; }
+.phone .nw-hot { flex-wrap: wrap; white-space: normal; overflow: visible; gap: 6px 12px; }
+.phone .nw-lead-title { font-size: 19px; }
+
+/* 사내포털 상단 메뉴는 잘리는 대신 옆으로 넘긴다. */
+.phone .pt-top { gap: 12px; padding: 10px 12px; }
+.phone .pt-top nav { gap: 12px; overflow-x: auto; scrollbar-width: none; }
+.phone .pt-top nav::-webkit-scrollbar { display: none; }
+
+/* 전자문서(dcx)는 고정 540px 종이였다. */
+.phone .dcx-page { width: auto; margin: 12px 10px; padding: 24px 18px; }
+
+/* 사내위키 — 왼쪽 문서 목록이 본문을 짜부라뜨렸다. 위로 올려 옆으로 넘긴다. */
+.phone .wk { flex-direction: column; }
+.phone .wk-side { width: auto; min-width: 0; flex-direction: row; gap: 10px; overflow-x: auto;
+                  padding: 10px; border-right: 0; border-bottom: 1px solid #e6e8ee; }
+.phone .wk-sec { margin-bottom: 0; display: flex; align-items: center; gap: 4px; }
+.phone .wk-sec-name { white-space: nowrap; }
+.phone .wk-link { width: auto; white-space: nowrap; }
+.phone .wk-space { padding: 0 6px 0 0; white-space: nowrap; }
+.phone .wk-page { padding: 18px 14px 32px; }
+.phone .wk-table th, .phone .wk-table td { padding: 7px 8px; }
+
+/* 공유기 관리 페이지. '비고'가 어느 기기인지 말해 주므로(7층 복합기 …)
+   열을 지우면 답이 사라진다 — 대신 좁혀서 줄바꿈을 허락한다. */
+.phone .rt-table th, .phone .rt-table td { padding: 5px 6px; font-size: 11px; word-break: break-all; }
+.phone .rt-table { table-layout: fixed; width: 100%; }
+.phone .rt-set > span { width: 110px; }
+
+/* 회사 소개 */
+.phone .cp-gnb, .phone .cp-hero, .phone .cp-notice, .phone .cp-foot { padding-left: 18px; padding-right: 18px; }
+.phone .cp-hero h1 { font-size: 24px; }
+.phone .cp-hero-art { display: none; }
+
+/* 캘린더 — 칸이 61px 뿐이라 일정 글씨를 줄이고 한 줄로 자른다. */
+.phone .cal-cell { min-height: 62px; padding: 3px 3px; }
+.phone .cal-ev { font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 폰에서 여는 앱들 ─────────────────────────────────────── */
+/* 브라우저 크롬 */
+.phone .addr-bar input { min-width: 0; }
+.phone .bm-bar { overflow-x: auto; scrollbar-width: none; }
+.phone .bm-bar::-webkit-scrollbar { display: none; }
+.phone .bm { flex: none; }
+.phone .bw-hints { left: 8px; right: 8px; }
+
+/* 메일 — 목록과 본문이 나란히 서면 둘 다 못 읽는다. 폰에서는 한 번에 하나만
+   그린다(Mail.jsx). 그리는 쪽이 하나뿐이므로 그것이 화면을 다 쓴다. */
+.phone .mail-list, .phone .mail-detail { width: auto; min-width: 0; flex: 1; border-right: 0; }
+.phone .md-bar { flex-wrap: wrap; }
+.phone .md-back { display: flex; align-items: center; gap: 3px; font-weight: 600; }
+
+/* 탐색기 — 왼쪽 트리를 위로 눕히고, 표에서는 '유형'만 접는다.
+   유형은 확장자로 알 수 있지만 크기·날짜는 답이 될 수 있어 남긴다. */
+.phone .explorer { flex-direction: column; }
+.phone .ex-side { width: auto; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto;
+                  padding: 8px; border-right: 0; border-bottom: 1px solid #eee; }
+.phone .ex-side > * { flex: none; white-space: nowrap; }
+.phone .ex-search { width: auto; flex: 1; min-width: 0; }
+.phone .ex-table th:nth-child(3), .phone .ex-table td:nth-child(3) { display: none; }
+.phone .ex-table th, .phone .ex-table td { padding: 5px 7px; font-size: 11.5px; }
+.phone .ex-table td:nth-child(2) { white-space: normal; }
+
+/* 드라이브 — 사이드만 접는다. 올린 사람·올린 시각은 답이 될 수 있다. */
+.phone .dr { flex-direction: column; }
+.phone .dr-side { width: auto; padding: 12px 10px; }
+.phone .dr table { font-size: 11.5px; }
+.phone .dr th, .phone .dr td { padding: 6px 7px; white-space: normal; }
+
+/* 파일 선택 창 */
+.phone .fd { width: 96vw; height: 86vh; }
+/* 뿌리 폴더 목록은 지우지 않는다 — 여기서만 갈 수 있는 자리가 있다.
+   옆에 세우는 대신 위에 눕혀 옆으로 넘긴다. */
+.phone .fd-body { flex-direction: column; }
+.phone .fd-side { width: auto; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto;
+                  padding: 8px; border-right: 0; border-bottom: 1px solid #f0f0f4; }
+.phone .fd-root { width: auto; flex: none; white-space: nowrap; }
+.phone .fd-foot { flex-wrap: wrap; }
+.phone .fd-search { width: auto; flex: 1; min-width: 0; }
+
+/* 문서 — 종이 여백이 화면의 4분의 1을 먹었다. 표는 줄바꿈을 허락한다. */
+.phone .hwp-page { padding: 24px 18px 28px; }
+.phone .doc-table th, .phone .doc-table td,
+.phone .pdf-grid th, .phone .pdf-grid td { white-space: normal; padding: 6px 7px; }
+
+/* 슬라이드 — 왼쪽 미리보기 줄은 접고 아래 페이지 이동만 남긴다. */
+.phone .sl-strip { display: none; }
+.phone .sl-slide { padding: 24px 22px; }
+
+/* 인쇄 대화상자 */
+.phone .pr { width: min(340px, 92vw); }
+
+/* 작업 관리자(토스트를 누르면 폰에서도 열린다) — 열을 지우지 않고 좁힌다.
+   무엇이 CPU를 먹는지 읽는 화면이라 숫자 하나도 없애면 안 된다. */
+.phone .tm-head, .phone .tm-row { grid-template-columns: 1fr 50px 56px 52px; gap: 4px;
+                                  padding-left: 10px; padding-right: 10px; font-size: 11px; }
+
+/* 메신저 — 받은 파일 말풍선이 화면보다 넓었다. */
+.phone .bubble.them.file { min-width: min(240px, 100%); }
+
+/* 솔리테어 — 7열이 한 화면에 들어가야 한다. 여백과 간격을 줄여 카드 폭을
+   벌고, 카드가 작아진 만큼 무늬 숫자도 줄인다. */
+.phone .sol { padding: 8px; --sp-3: 6px; --sp-4: 10px; --fs-3xl: 20px; --fs-sm: 10.5px; }
+.phone .sol-corner { top: 2px; left: 3px; }
+.phone .sol-pip { right: 4px; bottom: 2px; }
+.phone .sol-bar { flex-wrap: wrap; gap: 6px; }
+.phone .sol-btn { padding: 5px 9px; font-size: 11.5px; }
+/* 카드 위에서 시작한 손짓은 화면 넘김이 아니라 카드 끌기다. 이걸 막지 않으면
+   브라우저가 먼저 스크롤로 채가고 포인터 이벤트가 끊긴다(pointercancel).
+   더미가 화면보다 길어지는 일은 드물어 세로 스크롤은 카드 사이 여백으로 한다. */
+.phone .sol-slot, .phone .sol-stacked { touch-action: none; }
+
+/* ── 폰 잠금화면 ─────────────────────────────────────────
+   실제 폰처럼 두 겹이다. 시계가 있는 화면이 먼저 서고, 밀어 올려야
+   비밀번호를 묻는다. 시계는 위로 붙는다 — 아래는 손이 닿는 자리다. */
+.lock-phone {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 12vh 24px 6vh;
+  touch-action: none;
+  background:
+    radial-gradient(120% 80% at 50% 22%, rgba(190, 200, 235, .22), rgba(10, 14, 30, 0) 62%),
+    linear-gradient(180deg, #0d1226 0%, #141a33 46%, #0a0e1d 100%);
+  backdrop-filter: none;
+}
+.lock-phone .lock-time { font-size: 62px; font-weight: 200; letter-spacing: -1px; }
+.lock-phone .lock-date { margin-top: 6px; font-size: 15px; opacity: .8; }
+
+/* 화면을 미세요. 아래에 붙어 천천히 오르내린다 — 밀라는 말은 움직여야 읽힌다. */
+.lock-swipe {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, .75);
+  font-size: 13px;
+  animation: lock-nudge 2.4s ease-in-out infinite;
+}
+@keyframes lock-nudge {
+  0%, 100% { transform: translateY(4px); opacity: .7; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lock-swipe { animation: none; }
+}
+
+/* 비밀번호 판. 밀어 올린 자리에서 올라온다. */
+.lock-phone.on .lock-card {
+  margin-top: auto;
+  width: 100%;
+  gap: 14px;
+  animation: lock-rise .26s cubic-bezier(.32, .72, 0, 1);
+}
+@keyframes lock-rise { from { opacity: 0; transform: translateY(24px); } }
+.lock-phone .lock-card input { width: 100%; max-width: 300px; padding: 12px 14px; border-radius: 12px; font-size: 15px; text-align: center; }
+.lock-phone .lock-face { width: 66px; height: 66px; }
+.lock-phone .lock-err { padding: 0 10px; line-height: 1.6; }
+
+/* ── 전화 ────────────────────────────────────────────────
+   폰에만 있는 앱. 목록·키패드·통화 화면이 한 앱 안에 산다. */
+.cl { height: 100%; display: flex; flex-direction: column; background: var(--p-bg); }
+.cl-tabs { display: flex; flex: none; border-bottom: 1px solid var(--p-line); background: var(--p-surface); }
+.cl-tab { flex: 1; padding: 12px 4px; border: 0; background: none; color: var(--p-mute);
+          font: inherit; font-size: 13px; cursor: pointer; }
+.cl-tab.on { color: var(--p-ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--p-accent); }
+.cl-list { flex: 1; overflow-y: auto; }
+.cl-none { padding: 30px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
+.cl-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+          width: 100%; padding: 13px 16px; border: 0; border-bottom: 1px solid var(--p-line);
+          background: var(--p-surface); text-align: left; font: inherit; cursor: pointer; }
+.cl-row:active { background: #eef0f4; }
+.cl-row-mid { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cl-row-mid b { font-size: 14.5px; font-weight: 600; color: var(--p-ink); }
+.cl-row-mid em { font-style: normal; font-size: 12px; color: var(--p-mute); }
+.cl-missed { color: #b0553f; }
+.cl-row-day { flex: none; color: var(--p-mute); font-size: 11.5px; }
+
+/* 키패드 */
+.cl-pad { flex: 1; display: flex; flex-direction: column; padding: 10px 16px 16px; }
+.cl-typed { padding: 14px 0 10px; text-align: center; font-size: 26px; letter-spacing: 1px;
+            color: var(--p-ink); font-variant-numeric: tabular-nums; min-height: 56px; }
+.cl-typed i { font-style: normal; font-size: 14px; color: var(--p-mute); letter-spacing: 0; }
+.cl-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cl-keys button { padding: 14px 0; border: 0; border-radius: 999px; background: var(--p-surface);
+                  color: var(--p-ink); font: inherit; font-size: 20px; cursor: pointer;
+                  box-shadow: 0 1px 3px rgba(16, 19, 26, .08); }
+.cl-keys button:active { background: #e9ecf2; }
+.cl-pad-row { display: flex; gap: 10px; margin-top: 14px; }
+.cl-back, .cl-go { flex: 1; padding: 13px; border: 0; border-radius: 12px; font: inherit;
+                   font-size: 14px; font-weight: 600; cursor: pointer; }
+.cl-back { background: var(--p-surface); color: var(--p-mute); }
+.cl-go { background: #2f9e5c; color: #fff; }
+.cl-back:disabled, .cl-go:disabled { opacity: .45; cursor: default; }
+
+/* 통화 중 */
+/* 통화 화면은 내비바까지 덮는다 — 끊기 전에는 나갈 곳이 없다. */
+.cl-talk { position: fixed; inset: 0; z-index: 9991; display: flex; flex-direction: column;
+           padding: 16px 14px 14px; color: #fff;
+           background: linear-gradient(180deg, #10151f 0%, #1a2130 100%);
+           animation: cl-open .2s var(--p-ease); }
+@keyframes cl-open { from { opacity: 0; } }
+.cl-who { flex: none; text-align: center; padding: 8px 0 14px; }
+.cl-who-name { font-size: 21px; font-weight: 600; }
+.cl-who-num { margin-top: 4px; color: rgba(255, 255, 255, .6); font-size: 12.5px; }
+.cl-said { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+.cl-said p { max-width: 86%; margin: 0; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.6; }
+.cl-them { align-self: flex-start; background: rgba(255, 255, 255, .12); }
+.cl-me { align-self: flex-end; background: #2f6fd0; }
+.cl-say { display: flex; gap: 8px; padding: 10px 0 8px; flex: none; }
+.cl-say input { flex: 1; min-width: 0; padding: 11px 14px; border: 1px solid rgba(255, 255, 255, .2);
+                border-radius: 999px; background: rgba(255, 255, 255, .1); color: #fff;
+                font: inherit; font-size: 14px; outline: none; }
+.cl-say input::placeholder { color: rgba(255, 255, 255, .45); }
+.cl-say .btn-primary { flex: none; display: grid; place-items: center; width: 42px; padding: 0; border-radius: 999px; }
+.cl-end { display: flex; align-items: center; justify-content: center; gap: 8px; flex: none;
+          padding: 14px; border: 0; border-radius: 14px; background: #c0392b; color: #fff;
+          font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+
+/* 걸려오는 전화 — 무엇을 보고 있든 덮는다 */
+.ring { position: fixed; inset: 0; z-index: 9990; display: flex; flex-direction: column;
+        align-items: center; justify-content: space-between; padding: 16vh 24px 10vh;
+        background: linear-gradient(180deg, #0d1120 0%, #172033 100%); color: #fff; }
+.ring-who { text-align: center; }
+.ring-name { font-size: 26px; font-weight: 600; }
+.ring-num { margin-top: 6px; color: rgba(255, 255, 255, .7); font-size: 14px; }
+.ring-sub { margin-top: 12px; color: rgba(255, 255, 255, .5); font-size: 12.5px; animation: ring-pulse 1.8s ease-in-out infinite; }
+@keyframes ring-pulse { 50% { opacity: .35; } }
+.ring-keys { display: flex; gap: 56px; }
+.ring-no, .ring-yes { display: grid; place-items: center; width: 66px; height: 66px; border: 0;
+                      border-radius: 50%; color: #fff; cursor: pointer; }
+.ring-no { background: #c0392b; }
+.ring-yes { background: #2f9e5c; animation: ring-shake 1.4s ease-in-out infinite; }
+@keyframes ring-shake { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ring-sub, .ring-yes { animation: none; }
+}
+
+/* 홈 — 바탕에는 독 셋만. 나머지는 아래에서 밀어 올리는 서랍 안에 있다. */
+.ph-home { position: relative; touch-action: none; display: flex; flex-direction: column; }
+.ph-dock { margin-top: auto; display: flex; justify-content: center; gap: 22px; padding: 0 12px 6px; }
+.ph-drawer-grip { display: block; width: 100%; padding: 10px 0 12px; border: 0; background: none;
+                  cursor: pointer; flex: none; }
+.ph-drawer-grip i { display: block; width: 96px; height: 4px; margin: 0 auto; border-radius: 2px;
+                    background: rgba(16, 19, 26, .22); }
+.ph-drawer-grip.on i { background: rgba(16, 19, 26, .3); }
+.ph-drawer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px;
+  background: rgba(247, 248, 250, .92);
+  backdrop-filter: blur(16px);
+  animation: ph-drawer-up .24s var(--p-ease);
+}
+@keyframes ph-drawer-up { from { transform: translateY(100%); opacity: .6; } }
+.ph-drawer .ph-grid { flex: 1; align-content: start; overflow-y: auto; padding-top: 4px; }
+
+/* 목록의 한 줄 — 눌러 펼치고, 전화는 그 안에서 한 번 더 눌러야 걸린다. */
+.cl-item { border-bottom: 1px solid var(--p-line); background: var(--p-surface); }
+.cl-item .cl-row { border-bottom: 0; }
+.cl-item.open { background: #eef2f8; }
+.cl-actions { display: flex; padding: 0 16px 14px; }
+.cl-call { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+           padding: 12px; border: 0; border-radius: 12px; background: #2f9e5c; color: #fff;
+           font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cl-call:active { background: #268a4e; }
+
+/* 거는 중 · 끊김. 통화가 아니므로 말할 칸이 없다. */
+.cl-calling { justify-content: center; gap: 30px; }
+.cl-calling .cl-who { padding: 0; }
+.cl-state { margin-top: 14px; color: rgba(255, 255, 255, .72); font-size: 13.5px;
+            animation: cl-wait 1.4s ease-in-out infinite; }
+.cl-state.off { color: #ffb4a8; animation: cl-blink .5s steps(1, end) 3; }
+@keyframes cl-wait { 50% { opacity: .4; } }
+@keyframes cl-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cl-state { animation: none; }
+}
+
+/* 연락처의 무리 이름 — 일로 아는 사람과 그냥 아는 사람. */
+.cl-group { position: sticky; top: 0; z-index: 1; padding: 8px 16px;
+            background: var(--p-bg); color: var(--p-mute); font-size: 11.5px; font-weight: 600; }
+
+/* 카메라. 렌즈가 없으므로 뷰파인더는 어둡고, 무엇을 찍는지는 아래에서 고른다. */
+.cam { height: 100%; display: flex; flex-direction: column; background: #0d0f14; color: #fff; }
+/* 사진은 뷰파인더보다 크다 — 넘치는 부분은 잘라 낸다. 이게 없으면 사진이
+   앱 밖으로 삐져나온다. */
+.cam-view { position: relative; flex: 1; min-height: 0; overflow: hidden;
+            display: grid; place-items: center;
+            background: radial-gradient(120% 90% at 50% 30%, #1b2130, #0b0d12 70%); }
+.cam-grid { position: absolute; inset: 8%; display: grid; grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr; pointer-events: none; }
+.cam-grid i { border-right: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08); }
+.cam-meta { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex;
+            justify-content: space-between; color: rgba(255,255,255,.6); font-size: 12px; }
+.cam-flash { display: flex; flex-direction: column; align-items: center; gap: 6px;
+             padding: 22px 26px; border-radius: 14px; background: rgba(255,255,255,.92); color: #10131a;
+             animation: cam-pop .28s ease-out; }
+.cam-flash b { font-size: 14.5px; }
+.cam-flash span { font-size: 12px; color: #6b7686; }
+@keyframes cam-pop { from { opacity: 0; transform: scale(.92); } }
+.cam-subjects { display: flex; gap: 8px; padding: 12px 14px 4px; overflow-x: auto; scrollbar-width: none; }
+.cam-subjects::-webkit-scrollbar { display: none; }
+.cam-subject { flex: none; padding: 7px 13px; border: 0; border-radius: 999px;
+               background: rgba(255,255,255,.1); color: rgba(255,255,255,.7);
+               font: inherit; font-size: 12.5px; cursor: pointer; }
+.cam-subject.on { background: #fff; color: #10131a; font-weight: 600; }
+.cam-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 20px; }
+.cam-roll { position: relative; display: grid; place-items: center; width: 46px; height: 46px;
+            border: 0; border-radius: 12px; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; }
+.cam-roll em { position: absolute; right: -4px; top: -4px; min-width: 18px; padding: 0 4px;
+               border-radius: 9px; background: #2f9e5c; color: #fff; font-style: normal;
+               font-size: 10.5px; line-height: 18px; }
+.cam-shutter { display: grid; place-items: center; width: 68px; height: 68px; border: 0;
+               border-radius: 50%; background: rgba(255,255,255,.18); cursor: pointer; }
+.cam-shutter span { width: 54px; height: 54px; border-radius: 50%; background: #fff;
+                    transition: transform 90ms ease-out; }
+.cam-shutter:active span { transform: scale(.86); }
+.cam-space { width: 46px; }
+
+/* 지도. 종이 지도의 색 — 길은 희고 블록은 연한 회록색이다. */
+.mp { height: 100%; display: flex; flex-direction: column; background: #eef1ec; }
+.mp-search { display: flex; align-items: center; gap: 9px; flex: none; margin: 10px 12px;
+             padding: 10px 14px; border-radius: 999px; background: var(--p-surface);
+             color: var(--p-mute); box-shadow: 0 1px 5px rgba(16, 19, 26, .1); }
+.mp-search input { flex: 1; min-width: 0; border: 0; outline: none; background: none;
+                   font: inherit; font-size: 13.5px; color: var(--p-ink); }
+.mp-canvas { position: relative; flex: 1; min-height: 0; overflow: hidden;
+             background:
+               repeating-linear-gradient(90deg, rgba(0,0,0,.02) 0 1px, transparent 1px 40px),
+               repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 1px, transparent 1px 40px),
+               #e7ece4; }
+.mp-road { position: absolute; left: 0; right: 0; top: 46%; height: 26px; background: #fff;
+           box-shadow: 0 0 0 1px rgba(0,0,0,.05); }
+.mp-road.v { top: 0; bottom: 0; left: 22%; width: 16px; height: auto; }
+.mp-road-name { position: absolute; left: 12px; top: calc(46% + 5px); color: #9aa3a0;
+                font-size: 10.5px; letter-spacing: .5px; }
+.mp-here { position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center;
+           gap: 5px; padding: 4px 9px; border-radius: 999px; background: #2f4a8a; color: #fff;
+           font-size: 11px; font-weight: 600; white-space: nowrap; }
+.mp-here i { width: 6px; height: 6px; border-radius: 50%; background: #8fd0ff; }
+.mp-pin { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column;
+          align-items: center; gap: 2px; border: 0; background: none; cursor: pointer; padding: 0; }
+.mp-pin-dot { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50% 50% 50% 4px;
+              transform: rotate(-45deg); background: #fff; color: #46514e; font-size: 10px; font-weight: 700;
+              box-shadow: 0 2px 6px rgba(16, 19, 26, .22); }
+.mp-pin-dot > * { transform: rotate(45deg); }
+.mp-pin em { font-style: normal; font-size: 10px; color: #46514e; white-space: nowrap;
+             background: rgba(255,255,255,.8); padding: 0 3px; border-radius: 3px; }
+.mp-pin.on .mp-pin-dot { background: #2f9e5c; color: #fff; }
+.mp-none { position: absolute; left: 0; right: 0; top: 40%; text-align: center;
+           color: var(--p-mute); font-size: 13px; }
+
+/* 아래에서 올라오는 상세 시트 */
+.mp-sheet { position: relative; flex: none; padding: 16px 16px 18px; border-radius: 18px 18px 0 0;
+            background: var(--p-surface); box-shadow: 0 -6px 24px rgba(16, 19, 26, .16);
+            animation: mp-up .22s var(--p-ease); }
+@keyframes mp-up { from { transform: translateY(40px); opacity: .5; } }
+.mp-sheet-x { position: absolute; right: 12px; top: 12px; width: 28px; height: 28px; border: 0;
+              border-radius: 50%; background: #eef0f4; color: var(--p-mute); font-size: 12px; cursor: pointer; }
+.mp-sheet-name { font-size: 17px; font-weight: 700; color: var(--p-ink); }
+.mp-sheet-cat { margin-top: 3px; color: var(--p-mute); font-size: 12px; }
+.mp-sheet-rows { margin: 12px 0 0; }
+.mp-sheet-rows > div { display: flex; gap: 10px; padding: 5px 0; font-size: 13px; }
+.mp-sheet-rows dt { flex: none; width: 58px; color: var(--p-mute); font-size: 12px; }
+.mp-sheet-rows dd { margin: 0; display: flex; align-items: center; gap: 4px; color: var(--p-ink);
+                    user-select: text; }
+.mp-sheet-note { margin: 10px 0 0; color: #6b7686; font-size: 12.5px; line-height: 1.6; }
+.mp-sheet-go { width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 12px;
+               background: var(--p-accent); color: #fff; font: inherit; font-size: 13.5px;
+               font-weight: 600; cursor: pointer; }
+
+/* 갤러리. 찍은 것과 원래 있던 것이 한 격자에 쌓인다. */
+.gl { height: 100%; display: flex; flex-direction: column; background: var(--p-bg); }
+.gl-tabs { display: flex; gap: 8px; flex: none; padding: 10px 12px; }
+.gl-tab { padding: 7px 13px; border: 0; border-radius: 999px; background: var(--p-surface);
+          color: var(--p-mute); font: inherit; font-size: 12.5px; cursor: pointer;
+          box-shadow: 0 1px 3px rgba(16, 19, 26, .06); }
+.gl-tab.on { background: var(--p-accent); color: #fff; }
+.gl-tab em { font-style: normal; opacity: .7; margin-left: 4px; }
+.gl-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr);
+           gap: 3px; padding: 0 3px 8px; align-content: start; }
+.gl-cell { position: relative; aspect-ratio: 1; padding: 0; border: 0; overflow: hidden;
+           background: #e7e9ee; cursor: pointer; }
+.gl-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gl-shot { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 3px; padding: 6px; color: #55606f; background: #f1f3f7; }
+.gl-shot b { font-size: 11.5px; font-weight: 600; color: var(--p-ink); }
+.gl-shot i { font-style: normal; font-size: 10px; color: var(--p-mute); }
+.gl-gone { position: absolute; inset: 0; display: grid; place-items: center; padding: 8px;
+           color: #b0553f; font-size: 10.5px; line-height: 1.4; text-align: center; background: #f4eeec; }
+.gl-none { padding: 26px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
+
+/* 카메라 렌즈에 사진이 깔리면 그 위에 격자와 시각이 얹힌다. 사진은 뷰파인더보다
+   커서, 기기를 기울이거나 손으로 끌면 그 안을 둘러본다. */
+.cam-view { touch-action: none; }
+.cam-lens { position: absolute; left: 50%; top: 50%; object-fit: cover;
+            transform-origin: center; translate: -50% -50%; will-change: transform;
+            transition: transform 120ms ease-out; }
+.cam-note { position: absolute; left: 16px; right: 16px; bottom: 40px; margin: 0;
+            text-align: center; color: rgba(255, 255, 255, .62); font-size: 11.5px; line-height: 1.5; }
+.cam-tilt { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+            padding: 8px 14px; border: 0; border-radius: 999px;
+            background: rgba(255, 255, 255, .92); color: #10131a;
+            font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }

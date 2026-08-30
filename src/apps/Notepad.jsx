@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGame, contentOf, findFile } from '../engine/store.js'
+import { useGame, contentOf, fileById } from '../engine/store.js'
 
 export default function Notepad({ fileId }) {
   const scenario = useGame((s) => s.scenario)
@@ -8,7 +8,7 @@ export default function Notepad({ fileId }) {
   const edits = useGame((s) => s.edits)
   const editFile = useGame((s) => s.editFile)
   const unlockSite = useGame((s) => s.unlockSite)
-  const file = fileId ? findFile(scenario.fs, fileId) : null
+  const file = useGame((s) => (fileId ? fileById(s, fileId) : null))
   const [draft, setDraft] = useState('')
   const [saved, setSaved] = useState(false)
 
