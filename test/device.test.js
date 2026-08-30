@@ -43,6 +43,36 @@ describe('화면 캡처', () => {
   })
 })
 
+// 폰 카메라는 PC 의 화면 캡처와 짝이다. 찍은 것이 톡으로 보낼 수 있는
+// 파일이 되는 것이 요점 — 갤러리에 실제로 들어가야 한다.
+describe('폰 카메라', () => {
+  beforeEach(() => useGame.setState({ photos: [], day: 2 }))
+
+  const view = () => fsView(scenario.fs, { photos: useGame.getState().photos, scenario })
+
+  it('찍으면 갤러리에 사진이 생긴다', () => {
+    const before = entriesAt(view(), ['휴대폰', '갤러리']).length
+    const photo = useGame.getState().takePhoto('책상 위')
+    const after = entriesAt(view(), ['휴대폰', '갤러리'])
+    expect(after.length).toBe(before + 1)
+    expect(after.map((f) => f.id)).toContain(photo.id)
+    expect(photo.shot.title).toBe('책상 위')
+    expect(photo.shot.day).toBe(2)
+  })
+
+  it('원래 있던 사진을 밀어내지 않는다', () => {
+    useGame.getState().takePhoto()
+    const names = entriesAt(view(), ['휴대폰', '갤러리']).map((f) => f.id)
+    expect(names).toContain('file_cat1')
+  })
+
+  it('사진 뷰어가 열고, 파일로 다룰 수 있다', () => {
+    const photo = useGame.getState().takePhoto()
+    expect(fileOpener(photo).app).toBe('viewer')
+    expect(findFile(view(), photo.id).name).toBe(photo.name)
+  })
+})
+
 describe('바탕화면 보기', () => {
   beforeEach(() => useGame.setState({
     peeked: [],

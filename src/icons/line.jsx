@@ -284,3 +284,17 @@ export const PhoneOff = (p) => (
     <path d="m2 2 20 20" />
   </S>
 )
+
+export const Camera = (p) => (
+  <S {...p}>
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z" />
+    <circle cx="12" cy="13" r="3.2" />
+  </S>
+)
+export const Image = (p) => (
+  <S {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.8" cy="8.8" r="1.4" />
+    <path d="m21 15-4.5-4.5L5 21" />
+  </S>
+)

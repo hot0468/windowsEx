@@ -393,13 +393,14 @@ export default function Messenger({ source }) {
         </div>
 
         <div className="mg-list">
+          {/* 내 상태메시지는 내가 고친 적이 없다 — 날짜가 그것을 바꾼다 (subOn) */}
           <div className="mg-me">
-            <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.sub,
+            <Avatar t={{ id: m.me.avatar ?? 'me', name: m.me.name, sub: m.me.subOn?.[day] ?? m.me.sub,
                              color: m.me.color, phone: m.me.phone, online: true }}
                     size={42} onOpen={setProfile} />
             <span className="mg-row-mid">
               <span className="mg-row-name">{m.me.name}</span>
-              <span className="mg-row-sub">{m.me.sub}</span>
+              <span className="mg-row-sub">{m.me.subOn?.[day] ?? m.me.sub}</span>
             </span>
             <span className="mg-pc">PC</span>
           </div>
@@ -591,7 +592,10 @@ export default function Messenger({ source }) {
               </div>
             )}
             {picking && (
-              <FileDialog start={pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
+              {/* 폰에서 무언가를 보낼 때 뒤지는 곳은 갤러리다 — 사진을 찍어
+                  보내는 것이 그 기기에서 가장 자연스러운 일이다. */}
+              <FileDialog start={phone ? ['휴대폰', '갤러리']
+                : pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
                           onPick={(f) => { sendFile(f); setPicking(false) }}
                           onClose={() => setPicking(false)} />
             )}

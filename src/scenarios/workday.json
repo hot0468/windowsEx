@@ -29,8 +29,11 @@
   "workMessenger": {
     "me": {
       "name": "김한별",
-      "sub": "영업1팀 · 오늘 복귀했습니다",
-      "color": "#3f6fb5"
+      "sub": "휴가 중 🌴",
+      "color": "#3f6fb5",
+      "subOn": {
+        "5": ""
+      }
     },
     "sections": [
       {

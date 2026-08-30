@@ -13,7 +13,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots', 'photos']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -370,6 +370,8 @@ export const useGame = create((set, get) => ({
   // 찍어 둔 화면 캡처. 바탕화면의 '스크린샷' 폴더는 이것이 하나라도 있을 때
   // 비로소 생긴다(작업 폴더와 같은 방식이다).
   shots: restored?.shots ?? [],
+  // 폰 카메라로 찍은 것. 갤러리에 그대로 쌓인다.
+  photos: restored?.photos ?? [],
   // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
   // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
   // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
@@ -1005,6 +1007,23 @@ export const useGame = create((set, get) => ({
     get().showToast({ from: '화면 캡처', text: `${shot.name} 을(를) 바탕화면 > 스크린샷 에 저장했습니다.`, app: 'explorer', props: { startFolder: ['바탕화면', '스크린샷'] } })
     return shot
   },
+  // 폰 카메라. 자산이 있는 사진을 만들어 내지는 못하므로, PC 의 화면 캡처와
+  // 같은 방식으로 '무엇을 언제 찍었는지'를 남긴다 — 톡으로 보낼 수 있는 파일이
+  // 되는 것이 이 기능의 요점이다.
+  takePhoto: (subject = null) => {
+    const s = get()
+    const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
+    const n = s.photos.length + 1
+    const photo = {
+      id: 'cam_' + n,
+      name: `IMG_9${String(n).padStart(3, '0')}.jpg`,
+      date: `${s.scenario.days[s.day - 1]?.date ?? ''} ${clock.time}`,
+      shot: { title: subject, at: clock.time, day: s.day, camera: true }
+    }
+    set({ photos: [...s.photos, photo] })
+    play('click')
+    return photo
+  },
   setVpn: (on) => set({ vpn: on }),
   // VPN 연결. 클라이언트 창과 트레이 팝오버가 같은 길을 쓴다 — 이름이 hosts 에 없으면
   // 어느 쪽에서도 못 붙는다. 끊기가 창에 있으면 팝오버는 그 사이를 몰랐다.
@@ -1587,12 +1606,22 @@ export const tileShots = (scenario, kind, key) =>
 // until restored, then reappears where the data always kept it.
 // 찍은 화면들이 사는 폴더. 하나도 없으면 폴더 자체가 없다 — 실제로도 첫
 // 캡처가 폴더를 만든다.
+// 찍은 사진은 갤러리에 쌓인다 — 폴더 자체는 원래 있으므로 아이 노릇만 한다.
+export function fsWithPhotos(fs, photos = []) {
+  if (!photos.length) return fs
+  return {
+    ...fs,
+    휴대폰: (fs['휴대폰'] ?? []).map((e) => (
+      e.name === '갤러리' ? { ...e, children: [...e.children, ...photos] } : e))
+  }
+}
+
 export function fsWithShots(fs, shots = []) {
   if (!shots.length) return fs
   return { ...fs, 바탕화면: [...fs['바탕화면'], { name: '스크린샷', children: shots }] }
 }
 
-export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, shots = [], scenario } = {}) {
+export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}, touched = {}, shots = [], photos = [], scenario } = {}) {
   const binned = []
   const strip = (entries) => entries.flatMap((e) => {
     if (e.children) return [{ ...e, children: strip(e.children) }]
@@ -1605,7 +1634,7 @@ export function fsView(fs, { pinned = [], restored = {}, tiles = [], placed = {}
   })
   const out = Object.fromEntries(Object.entries(fs).map(([root, entries]) => [root, strip(entries)]))
   out['휴지통'] = [...(out['휴지통'] ?? []), ...binned]
-  return fsWithShots(fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles), shots)
+  return fsWithPhotos(fsWithShots(fsWithTiles(scenario, fsWithPinned(place(out, placed), pinned), tiles), shots), photos)
 }
 
 // 옮기거나 이름을 바꾼 파일. 원래 자리에서 빼서 목적 폴더 끝에 넣는다 —
