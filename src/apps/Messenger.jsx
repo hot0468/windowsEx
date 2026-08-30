@@ -591,9 +591,9 @@ export default function Messenger({ source }) {
                 </div>
               </div>
             )}
+            {/* 폰에서 무언가를 보낼 때 뒤지는 곳은 갤러리다 — 사진을 찍어
+                보내는 것이 그 기기에서 가장 자연스러운 일이다. */}
             {picking && (
-              {/* 폰에서 무언가를 보낼 때 뒤지는 곳은 갤러리다 — 사진을 찍어
-                  보내는 것이 그 기기에서 가장 자연스러운 일이다. */}
               <FileDialog start={phone ? ['휴대폰', '갤러리']
                 : pinned.length ? ['바탕화면', WORK_FOLDER] : '문서'}
                           onPick={(f) => { sendFile(f); setPicking(false) }}
