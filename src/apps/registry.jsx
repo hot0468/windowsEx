@@ -25,10 +25,7 @@ export const APPS = {
   mail: { title: '메일', icon: 'mail', comp: Mail, w: 780, h: 540 },
   explorer: { title: '파일 탐색기', icon: 'folder', comp: FileExplorer, w: 640, h: 420 },
   notepad: { title: '메모장', icon: 'notepad', comp: Notepad, w: 520, h: 400 },
-  // 아이콘이 카메라인 이유: 폰의 켠 창 목록에서 갤러리 앱(사진 · image)과
-  // 사진을 연 뷰어 창이 제목까지 같아, 아이콘마저 같으면 두 카드가 구별되지
-  // 않았다. 뷰어 창은 카메라 글리프를 쓴다.
-  viewer: { title: '사진', icon: 'camera', comp: Viewer, w: 720, h: 520, theme: '#2f3038' },
+  viewer: { title: '사진', icon: 'image', comp: Viewer, w: 720, h: 520, theme: '#2f3038' },
   hwp: { title: '한글', icon: 'hwp', comp: Hwp, w: 700, h: 620, theme: '#1f5aa8', grant: 'hangul' },
   pdf: { title: 'PDF 뷰어', icon: 'pdf', comp: Pdf, w: 700, h: 620, theme: '#b3261e' },
   dcx: { title: 'DY Viewer', icon: 'doc', comp: Dcx, w: 660, h: 580, theme: '#123a7a', grant: 'dviewer' },
