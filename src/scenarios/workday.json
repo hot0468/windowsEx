@@ -22980,7 +22980,7 @@
             "deed": "deed_cell_stock_bw50",
             "grants": "deed_cell_stock_bw50",
             "next": [],
-            "placeholder": "재고현황.xlsx의 BW-50 입고예정을 고쳐 저장하면 확인됩니다",
+            "placeholder": "재고현황.xlsx의 그 줄 입고예정을 고쳐 저장하면 확인됩니다",
             "ok": [
               "됐다. 고맙다."
             ],
@@ -23108,7 +23108,7 @@
             "deed": "deed_mail_form",
             "grants": "deed_mail_form",
             "next": [],
-            "placeholder": "견적서_양식.hwp를 첨부해 F상사에 메일을 보내면 확인됩니다",
+            "placeholder": "공통양식의 견적서 양식을 첨부해 그 담당자에게 메일을 보내면 확인됩니다",
             "ok": [
               "받았대. 땡큐."
             ],

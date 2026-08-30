@@ -263,8 +263,10 @@ describe('행동 요청의 스펙', () => {
 
   it('행동 요청의 대사는 다른 요청의 정답을 말하지 않는다', () => {
     const accepts = everyAccept().filter((a) => a.length > 2)
+    // 안내문(placeholder)도 본다. 행동 질문의 안내문은 힌트가 아니라 요청이
+    // 오는 순간부터 입력칸 자리에 늘 떠 있는 글이다.
     for (const r of scenario.pool.requests.filter((r) => r.beat.ask.deed)) {
-      const said = r.beat.lines.join(' ')
+      const said = [...r.beat.lines, ...steps(r.beat.ask).map((a) => a.placeholder)].join(' ')
       for (const a of accepts) expect(said.includes(a), r.id + ' says ' + a).toBe(false)
     }
   })
