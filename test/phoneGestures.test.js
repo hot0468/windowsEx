@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { infoPull, swipeStep } from '../src/apps/Viewer.jsx'
 import { settleBack } from '../src/shell/PhoneApp.jsx'
+import { pullDir } from '../src/shell/useViewport.js'
 import { fileCreated, fmtStampLong } from '../src/engine/store.js'
 import { readFileSync } from 'node:fs'
 import { openTap } from '../src/shell/useViewport.js'
@@ -160,5 +161,33 @@ describe('뒤로 스와이프를 놓을 때', () => {
   it('기준은 화면 폭에 따라 달라진다', () => {
     expect(settleBack({ dx: 120, vx: 0, width: 390 })).toBe(true)
     expect(settleBack({ dx: 120, vx: 0, width: 1200 })).toBe(false)
+  })
+})
+
+// 위아래로 미는 손짓 하나로 앱 서랍을 여닫고 설정창을 내린다. 판별을 한 곳에
+// 두지 않으면 화면마다 기준이 달라져, 어떤 데서는 되고 어떤 데서는 안 된다.
+describe('위아래로 미는 손짓', () => {
+  it('위로 충분히 밀면 -1, 아래로 밀면 1', () => {
+    expect(pullDir({ dy: -80, dx: 4 })).toBe(-1)
+    expect(pullDir({ dy: 80, dx: -4 })).toBe(1)
+  })
+
+  it('짧게 스친 것은 손짓이 아니다', () => {
+    expect(pullDir({ dy: -20, dx: 0 })).toBe(0)
+    expect(pullDir({ dy: 30, dx: 0 })).toBe(0)
+  })
+
+  // 가로가 더 길면 그건 옆으로 넘기는 손짓이다 — 대각선에서 둘 다 발동하면
+  // 서랍이 열리면서 화면이 넘어간다.
+  it('가로가 더 긴 손짓은 받지 않는다', () => {
+    expect(pullDir({ dy: -80, dx: 120 })).toBe(0)
+    expect(pullDir({ dy: 60, dx: -90 })).toBe(0)
+  })
+
+  // 설정창은 더 짧게 밀어도 닫힌다 — 이미 열려 있는 것을 내리는 손짓이라
+  // 여는 것만큼 확실할 필요가 없다.
+  it('기준 거리를 낮춰 부를 수 있다', () => {
+    expect(pullDir({ dy: -30, dx: 0 })).toBe(0)
+    expect(pullDir({ dy: -30, dx: 0 }, 24)).toBe(-1)
   })
 })

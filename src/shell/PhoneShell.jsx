@@ -5,6 +5,7 @@ import PhoneApp from './PhoneApp.jsx'
 import PhoneShade from './PhoneShade.jsx'
 import Icon from '../icons/Icon.jsx'
 import { ChevronLeft, X } from '../icons/line.jsx'
+import { pullDir } from './useViewport.js'
 
 
 // Taskbar의 시작 메뉴와 같은 확인 문구. 저장/불러오기/새 게임의 의미가
@@ -88,7 +89,7 @@ function Home({ drawer, onDrawer }) {
   const grants = useGame((s) => s.grants)
   const pushScreen = useGame((s) => s.pushScreen)
   const openWindow = useGame((s) => s.openWindow)
-  const [grab, setGrab] = useState(null)
+  const grab = useRef(null)
   const apps = phoneApps(grants)
   const dock = DOCK.map((id) => apps.find((a) => a.id === id)).filter(Boolean)
   const rest = apps.filter((a) => !DOCK.includes(a.id))
@@ -102,17 +103,20 @@ function Home({ drawer, onDrawer }) {
     // 있어야 다음 앱을 이어서 연다. 홈 버튼은 서랍까지 걷는다.
   }
 
-  // 서랍은 밀어서 열고 밀어서 닫는다. 시작한 곳의 y 하나만 기억하면 된다.
+  // 서랍은 밀어서 열고 밀어서 닫는다. 시작한 곳을 ref 에 적어 둔다 — state 로
+  // 두면 같은 프레임 안의 onPointerMove 가 아직 갱신 전 값을 읽어 첫 손짓이
+  // 통째로 무시된다.
   const swipe = (open_) => ({
-    onPointerDown: (e) => setGrab(e.clientY),
+    onPointerDown: (e) => { grab.current = { y: e.clientY, x: e.clientX } },
     onPointerMove: (e) => {
-      if (grab == null) return
-      const dy = e.clientY - grab
-      if (open_ && dy < -50) { setGrab(null); onDrawer(true) }
-      if (!open_ && dy > 60) { setGrab(null); onDrawer(false) }
+      const g = grab.current
+      if (!g) return
+      const dir = pullDir({ dy: e.clientY - g.y, dx: e.clientX - g.x })
+      if (dir === -1 && open_) { grab.current = null; onDrawer(true) }
+      if (dir === 1 && !open_) { grab.current = null; onDrawer(false) }
     },
-    onPointerUp: () => setGrab(null),
-    onPointerCancel: () => setGrab(null)
+    onPointerUp: () => { grab.current = null },
+    onPointerCancel: () => { grab.current = null }
   })
 
   return (
@@ -231,7 +235,7 @@ export default function PhoneShell() {
   // 닫힐 때는 올라가는 동안 한 겹 더 산다. 내려올 땐 CSS 애니메이션 하나면
   // 되지만, 사라지는 쪽은 지우기 전에 기다려 줘야 보인다.
   const [lifting, setLifting] = useState(false)
-  const [grab, setGrab] = useState(null)
+  const grab = useRef(null)
   const closeShade = () => {
     setLifting(true)
     setTimeout(() => { setShade(false); setLifting(false) }, 200)
@@ -311,13 +315,20 @@ export default function PhoneShell() {
 
   return (
     <div className={'phone' + (sealed ? ' sealed' : '')}>
+      {/* 상태바를 끌어내리면 설정창이 열린다. 서랍과 같은 판별을 쓴다 —
+          화면마다 기준이 다르면 어떤 데서는 되고 어떤 데서는 안 된다. */}
       <div className="ph-drag"
-           onPointerDown={(e) => { if (!shade) setGrab(e.clientY) }}
+           onPointerDown={(e) => { if (!shade) grab.current = { y: e.clientY, x: e.clientX } }}
            onPointerMove={(e) => {
-             if (grab != null && e.clientY - grab > 24) { setGrab(null); setShade(true) }
+             const g = grab.current
+             if (!g) return
+             if (pullDir({ dy: e.clientY - g.y, dx: e.clientX - g.x }, 24) === 1) {
+               grab.current = null
+               setShade(true)
+             }
            }}
-           onPointerUp={() => { if (grab != null) setShade(true); setGrab(null) }}
-           onPointerCancel={() => setGrab(null)}>
+           onPointerUp={() => { grab.current = null }}
+           onPointerCancel={() => { grab.current = null }}>
         <StatusBar />
       </div>
       {!entry && !winCfg && (

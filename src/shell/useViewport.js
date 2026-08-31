@@ -32,6 +32,13 @@ const read = () => pickShell({
 export const openTap = (shell, open) =>
   shell === 'phone' ? { onClick: open } : { onDoubleClick: open }
 
+// 세로로 민 손짓인가. 위로 밀면 -1, 아래로 밀면 1, 아니면 0.
+// 가로가 더 길면 0 — 그건 옆으로 넘기는 손짓이지 여닫는 손짓이 아니다.
+export function pullDir({ dy = 0, dx = 0 }, threshold = 48) {
+  if (Math.abs(dy) < threshold || Math.abs(dy) <= Math.abs(dx)) return 0
+  return dy < 0 ? -1 : 1
+}
+
 export function useViewport() {
   const [shell, setShell] = useState(read)
   useEffect(() => {

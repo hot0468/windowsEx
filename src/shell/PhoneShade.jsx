@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGame, objectiveDone, requestsOf } from '../engine/store.js'
 import { isMuted, play, setMuted } from './sound.js'
+import { pullDir } from './useViewport.js'
 import { Check, ShieldCheck, Volume, VolumeOff, Wifi, WifiOff } from '../icons/line.jsx'
 
 // 상단에서 내리는 알림창. 안드로이드의 그것처럼 오늘 할 일과 스위치가 같이
 // 산다 — 폰에는 데스크톱의 Progress도 트레이도 없으므로, 앱을 보고 있는
 // 동안 오늘 뭐가 남았는지 · VPN이 켜져 있는지 볼 곳이 여기밖에 없다.
 export default function PhoneShade({ onClose, lifting = false }) {
+  // 미는 손짓의 시작점. state 로 두면 같은 프레임의 move 가 옛 값을 읽는다.
+  const pull = useRef(null)
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
   const grants = useGame((s) => s.grants)
@@ -24,7 +27,6 @@ export default function PhoneShade({ onClose, lifting = false }) {
   const dropVpn = useGame((s) => s.dropVpn)
   const [quiet, setQuiet] = useState(isMuted())
   const [err, setErr] = useState('')
-  const [grab, setGrab] = useState(null)
 
   const state = { grants, unlocked }
   const list = requestsOf(scenario, day, overtime, drawn, ripples)
@@ -42,21 +44,27 @@ export default function PhoneShade({ onClose, lifting = false }) {
   }
 
   return (
-    <div className={'ph-shade-wrap' + (lifting ? ' lifting' : '')} onPointerDown={onClose}>
+    <div className={'ph-shade-wrap' + (lifting ? ' lifting' : '')}
+         onPointerDown={(e) => {
+           // 바깥의 어두운 자리를 누르면 그대로 닫힌다(예전 그대로).
+           if (e.target === e.currentTarget) return onClose()
+           // 할 일 목록은 그 안에서 스크롤한다 — 거기서 시작한 손짓은 받지 않는다.
+           pull.current = e.target.closest?.('.ph-todo') ? null : { y: e.clientY, x: e.clientX }
+         }}
+         onPointerMove={(e) => {
+           const g = pull.current
+           if (!g) return
+           if (pullDir({ dy: e.clientY - g.y, dx: e.clientX - g.x }, 24) === -1) {
+             pull.current = null
+             onClose()
+           }
+         }}
+         onPointerUp={() => { pull.current = null }}
+         onPointerCancel={() => { pull.current = null }}>
       {/* 내린 것과 같은 손짓으로 올려 닫는다. 할 일 목록 안에서 시작한
           손짓은 목록 스크롤이므로 건드리지 않는다. */}
       <div className={'ph-shade' + (lifting ? ' lifting' : '')}
-           onPointerDown={(e) => {
-             e.stopPropagation()
-             setGrab(e.target.closest?.('.ph-todo') ? null : e.clientY)
-           }}
-           onPointerMove={(e) => { if (grab != null && e.clientY - grab < -24) onClose() }}
-           onPointerUp={(e) => {
-             // 짧고 빠른 손짓은 pointermove 가 한두 번밖에 안 온다 — 뗀 자리로도 본다.
-             if (grab != null && e.clientY - grab < -24) onClose()
-             setGrab(null)
-           }}
-           onPointerCancel={() => setGrab(null)}>
+>
         <div className="ph-tiles">
           {Boolean(grants.vpnInstalled) && (
             <button className={'ph-tile' + (vpn ? ' on' : '')} disabled={vpnDialing}
