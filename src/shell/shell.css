@@ -2479,3 +2479,21 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .phone .mt-face { width: 44px; height: 44px; font-size: 16px; }
 .phone .mt-side { border-left: 0; border-top: 1px solid #262b35; }
 .phone .mt-url { display: none; }
+
+/* 회의실 예약. 현황 아래에 방·날·시각·시간을 고르는 칸. 겹치면 누가 잡았는지
+   말해 주고 예약은 되지 않는다 — 그 다음은 당사자와의 일이다. */
+.pt-room-date { flex-shrink: 0; padding: 1px 5px; border-radius: 3px; background: #eef1f6; color: #556; font-size: 10px; }
+.pt-room.yielded .pt-room-time, .pt-room.yielded .pt-room-who { text-decoration: line-through; color: #bbb; }
+.pt-room.mine .pt-room-who { color: #1b4fa8; }
+.pt-room-cancel { flex-shrink: 0; padding: 2px 8px; border: 1px solid #d8dce5; border-radius: 999px; background: #fff; color: #6b7280; font-size: 10px; cursor: pointer; }
+.pt-room-cancel:hover { border-color: #c2381f; color: #c2381f; }
+.pt-book-h { margin: 18px 0 8px !important; }
+.pt-book { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-items: end; }
+.pt-book label { display: flex; flex-direction: column; gap: 4px; color: #7b8496; font-size: 11px; }
+.pt-book select, .pt-book input { padding: 7px 8px; border: 1px solid #dde2ea; border-radius: 6px; background: #fff; color: #23262b; font: inherit; font-size: 12px; }
+.pt-book-note { grid-column: 1 / 4; }
+.pt-book .btn-primary { padding: 8px 12px; font-size: 12px; }
+.pt-book-said { margin: 10px 0 0; padding: 8px 12px; border-radius: 6px; background: #edf6ef; color: #1f6f4a; font-size: 12px; }
+.pt-book-said.bad { background: #fbeae7; color: #b3261e; }
+.phone .pt-book { grid-template-columns: repeat(2, 1fr); }
+.phone .pt-book-note { grid-column: 1 / 3; }

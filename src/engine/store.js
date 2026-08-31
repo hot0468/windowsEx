@@ -1184,6 +1184,30 @@ export const useGame = create((set, get) => ({
   },
   book: (place, details) =>
     set((s) => ({ bookings: { ...s.bookings, [place]: details }, bookedFor: s.day })),
+  // 회의실 예약. 겹치면 누가 잡았는지 돌려주고, 양보를 구할 수 있는 줄이면 그걸
+  // 봤다는 사실을 기억한다 — 당사자에게 부탁하는 말은 겹친 것을 본 사람에게만
+  // 열린다. 되면 bookings 에 남고, 어느 요청이 기다리던 그 예약이면 grant 가
+  // 켜진다. 식당 예약(book)과 자리는 같이 쓰되 bookedFor 는 건드리지 않는다 —
+  // 그건 식당 예약의 날이다.
+  bookRoom: (req) => {
+    const s = get()
+    const rows = s.scenario.sites.find((x) => x.layout === 'portal')?.portal?.rooms ?? []
+    const clash = roomClash(rows, s.bookings, req, s.grants)
+    if (clash) {
+      if (clash.yieldOn && !s.grants.room_clash) set((st) => ({ grants: { ...st.grants, room_clash: true } }))
+      return { clash }
+    }
+    set((st) => ({ bookings: { ...st.bookings, [roomKey(req)]: { ...req, who: st.scenario.player.name } } }))
+    for (const o of s.scenario.objectives) {
+      if (o.book && !get().grants[o.grant] && bookFits(o.book, req)) get().grant(o.grant)
+    }
+    return { ok: true }
+  },
+  cancelRoom: (key) => set((s) => {
+    const bookings = { ...s.bookings }
+    delete bookings[key]
+    return { bookings }
+  }),
   // Small talk lands between the work. A deed that someone was waiting on
   // brings their reaction; otherwise every other solved request brings one
   // line of the day's idle chatter, a few a day at most.
@@ -2023,6 +2047,31 @@ export const shellLines = (lines) => (
   onPhoneNow() && lines?.some((l) => typeof l === 'string' && WIN_ONLY.test(l))
     ? [...lines, PHONE_POINTER] : lines
 )
+
+// 회의실 예약. 현황표의 한 줄('15:00 ~ 16:00')과 요청이 같은 방·같은 날에
+// 겹치는지 본다. 양보받은 줄(yieldOn 이 켜진 것)은 비운 것으로 친다.
+export const minutesOf = (hhmm) => { const [h, m] = String(hhmm).split(':').map(Number); return h * 60 + m }
+export const parseRange = (time) => { const [a, b] = String(time).split('~').map((x) => x.trim()); return [minutesOf(a), minutesOf(b)] }
+export const overlaps = ([a0, a1], [b0, b1]) => a0 < b1 && b0 < a1
+export const fmtRange = (start, minutes) => {
+  const end = minutesOf(start) + minutes
+  return `${start} ~ ${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`
+}
+export const roomKey = ({ room, date, start }) => `room:${room}|${date}|${start}`
+export function roomClash(rows, bookings, req, grants = {}) {
+  const want = [minutesOf(req.start), minutesOf(req.start) + req.minutes]
+  const fixed = rows
+    .filter((r) => r.room === req.room && r.date === req.date && !(r.yieldOn && grants[r.yieldOn]))
+    .find((r) => overlaps(parseRange(r.time), want))
+  if (fixed) return fixed
+  return Object.values(bookings)
+    .filter((b) => b?.room === req.room && b.date === req.date)
+    .find((b) => overlaps([minutesOf(b.start), minutesOf(b.start) + b.minutes], want)) ?? null
+}
+// 어느 요청이 기다리던 그 방·그 날·그 시간인가. 시작 시각은 여럿일 수 있다 —
+// "3시가 안 되면 2시".
+export const bookFits = (spec, req) =>
+  spec.room === req.room && spec.date === req.date && spec.starts.includes(req.start) && req.minutes >= (spec.minutes ?? 0)
 
 // A question may want a file instead of typed text; any of the ones it names will do.
 // 파일로 답하는 질문. 정해진 파일(files)이거나, 정해진 창을 찍은 화면 캡처(shot)다 —

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, portalFeed, visibleByDay } from '../engine/store.js'
+import { useGame, portalFeed, visibleByDay, fmtRange, minutesOf, roomKey } from '../engine/store.js'
 import { faceOf } from '../assets/photos.js'
 import { Bell, ChevronLeft, ChevronRight, Search } from '../icons/line.jsx'
 import Download from './Download.jsx'
@@ -36,13 +36,71 @@ const Panel = ({ title, more, onOpen, children }) => (
 const State = ({ value }) => <span className={'pt-state s-' + value}>{value}</span>
 
 // 회의실 한 줄. 홈 사이드바와 업무관리 페이지가 같은 것을 그린다.
-const Room = ({ r, i }) => (
-  <div className="pt-room">
+// 회의실 현황의 한 줄. 날짜가 없으면 오늘 것이고, 양보받은 줄은 지워진 채
+// 남는다 — 그 자리가 왜 비었는지가 보여야 한다.
+const Room = ({ r, i, yielded = false, onCancel }) => (
+  <div className={'pt-room' + (yielded ? ' yielded' : '') + (r.mine ? ' mine' : '')}>
     <span className={'pt-room-tag r' + ((i % 3) + 1)}>{r.room}</span>
+    {r.date && <span className="pt-room-date">{r.date.replace(/^(\d+)월 (\d+)일.*$/, '$1/$2')}</span>}
     <span className="pt-room-time">{r.time}</span>
-    <span className="pt-room-who">{r.who}</span>
+    <span className="pt-room-who">{yielded ? '취소 · ' : ''}{r.who}</span>
+    {r.mine && onCancel && <button className="pt-room-cancel" onClick={onCancel}>취소</button>}
   </div>
 )
+
+// 회의실 예약. 방·날·시각·시간을 고르면 현황과 대조해 준다. 겹치면 누가 잡았는지
+// 말해 주고 예약은 되지 않는다 — 그 다음은 당사자와의 일이다.
+const STARTS = Array.from({ length: 18 }, (_, i) => `${String(9 + Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+const LENGTHS = [30, 60, 90, 120]
+function RoomBooking({ p }) {
+  const scenario = useGame((s) => s.scenario)
+  const day = useGame((s) => s.day)
+  const grants = useGame((s) => s.grants)
+  const bookings = useGame((s) => s.bookings)
+  const bookRoom = useGame((s) => s.bookRoom)
+  const cancelRoom = useGame((s) => s.cancelRoom)
+  const rows = p.rooms ?? []
+  const roomsList = [...new Set(['회의실1', '회의실2', '대회의실', ...rows.map((r) => r.room)])]
+  const dates = [scenario.days[day - 1]?.date, scenario.days[day]?.date].filter(Boolean)
+  const [room, setRoom] = useState(roomsList[0])
+  const [date, setDate] = useState(dates[0])
+  const [start, setStart] = useState('15:00')
+  const [minutes, setMinutes] = useState(60)
+  const [note, setNote] = useState('')
+  const [said, setSaid] = useState(null)
+
+  const mine = Object.entries(bookings).filter(([k]) => k.startsWith('room:'))
+    .map(([k, b]) => ({ key: k, room: b.room, date: b.date, time: fmtRange(b.start, b.minutes), who: `${p.me.team} _ ${b.who} ${p.me.rank} · ${b.note || '내 예약'}`, mine: true }))
+  const shown = [...rows, ...mine].sort((a, b) =>
+    (a.date ?? '').localeCompare(b.date ?? '') || minutesOf(a.time.split('~')[0].trim()) - minutesOf(b.time.split('~')[0].trim()))
+
+  const submit = () => {
+    const r = bookRoom({ room, date, start, minutes, note: note.trim() })
+    if (r.clash) setSaid({ bad: true, text: `이미 예약된 시간입니다 — ${r.clash.who}${r.clash.yieldOn ? '. 당사자에게 문의해 주세요.' : ''}` })
+    else setSaid({ text: `${room} ${date} ${fmtRange(start, minutes)} 예약되었습니다.` })
+  }
+
+  return (
+    <section className="pt-list-rooms">
+      <h4>회의실 현황</h4>
+      {shown.map((r, i) => (
+        <Room key={r.key ?? i} r={r} i={roomsList.indexOf(r.room)}
+              yielded={Boolean(r.yieldOn && grants[r.yieldOn])}
+              onCancel={r.mine ? () => { cancelRoom(r.key); setSaid(null) } : undefined} />
+      ))}
+      <h4 className="pt-book-h">회의실 예약</h4>
+      <div className="pt-book">
+        <label>회의실<select value={room} onChange={(e) => setRoom(e.target.value)}>{roomsList.map((x) => <option key={x}>{x}</option>)}</select></label>
+        <label>날짜<select value={date} onChange={(e) => setDate(e.target.value)}>{dates.map((x) => <option key={x}>{x}</option>)}</select></label>
+        <label>시작<select value={start} onChange={(e) => setStart(e.target.value)}>{STARTS.map((x) => <option key={x}>{x}</option>)}</select></label>
+        <label>시간<select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>{LENGTHS.map((x) => <option key={x} value={x}>{x}분</option>)}</select></label>
+        <label className="pt-book-note">용도<input value={note} onChange={(e) => setNote(e.target.value)} placeholder="예: 거래처 미팅" /></label>
+        <button className="btn-primary" onClick={submit}>예약</button>
+      </div>
+      {said && <p className={'pt-book-said' + (said.bad ? ' bad' : '')}>{said.text}</p>}
+    </section>
+  )
+}
 
 // 홈 패널의 한 줄. 본문이 달린 것(소식)은 눌러서 열린다.
 const Row = ({ r, onPost }) => (r.body && onPost
@@ -320,12 +378,7 @@ const List = ({ page, p, onBack, onPost }) => {
       <div className="pt-list-rows">
         {rows.map((r, i) => <Row key={i} r={r} onPost={onPost} />)}
       </div>
-      {page.rooms && p.rooms && (
-        <section className="pt-list-rooms">
-          <h4>회의실 현황</h4>
-          {p.rooms.map((r, i) => <Room key={i} r={r} i={i} />)}
-        </section>
-      )}
+      {page.rooms && p.rooms && <RoomBooking p={p} />}
     </article>
   )
 }
