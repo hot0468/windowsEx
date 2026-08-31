@@ -90,6 +90,16 @@ describe('what yesterday leaves behind', () => {
     expect(rippleHolds(wait, 3, { ...base, grants: { a: true, b: true }, ripples: { _a: 2, _b: 3 } })).toBe(true)
   })
 
+  // 같은 일을 두 갈래로 끝낼 수 있을 때, 어느 쪽이었는지는 시트의 그 칸이 안다.
+  it('reads which of two answers went into a cell', () => {
+    const cell = { file: 'f', sheet: 's', row: 1, col: 2, value: '유상 처리' }
+    const key = 'f:s:1:2'
+    expect(rippleHolds({ cellIs: cell }, 3, { ...base, sheetEdits: { [key]: '유상 처리' } })).toBe(true)
+    expect(rippleHolds({ cellIs: cell }, 3, { ...base, sheetEdits: { [key]: ' 유상 처리 ' } })).toBe(true)
+    expect(rippleHolds({ cellIs: cell }, 3, { ...base, sheetEdits: { [key]: '보증 처리' } })).toBe(false)
+    expect(rippleHolds({ cellIs: cell }, 3, { ...base, sheetEdits: {} })).toBe(false)
+  })
+
   it('follows a late night with a lighter morning', () => {
     const when = ripple('tired').when
     expect(rippleHolds(when, 3, { ...base, overtime: { 2: true } })).toBe(true)

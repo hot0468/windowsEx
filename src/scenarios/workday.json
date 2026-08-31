@@ -11242,7 +11242,10 @@
         "sheet": "접수",
         "row": 3,
         "col": 5,
-        "value": "유상 처리"
+        "value": "유상 처리",
+        "also": [
+          "보증 처리"
+        ]
       }
     },
     {
@@ -25113,6 +25116,58 @@
           "덕분에 영업1팀 장비는 정리가 끝났습니다",
           "한 가지만… 등록 대장에 층이 하나 더 잡혀 있네요. 7층 다음에",
           "총무팀에 물어봐야겠습니다. 신경 쓰지 마세요"
+        ]
+      }
+    },
+    {
+      "id": "dphone_by_book",
+      "when": {
+        "grant": "dphone",
+        "afterDays": 1,
+        "cellIs": {
+          "file": "file_h_as2026",
+          "sheet": "접수",
+          "row": 3,
+          "col": 5,
+          "value": "유상 처리"
+        }
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "junho",
+        "from": "이준호",
+        "lines": [
+          "D유통 어제 통화했다. 유상이라니까 한숨을 한 번 쉬더라",
+          "그래도 접수는 했대. 견적 나오면 보고 결정한다고",
+          "규정대로 한 거니까 신경 쓰지 마"
+        ]
+      }
+    },
+    {
+      "id": "dphone_generous",
+      "when": {
+        "grant": "dphone",
+        "afterDays": 1,
+        "cellIs": {
+          "file": "file_h_as2026",
+          "sheet": "접수",
+          "row": 3,
+          "col": 5,
+          "value": "보증 처리"
+        }
+      },
+      "effect": {
+        "slipPenalty": 2
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "boss",
+        "from": "박 팀장",
+        "lines": [
+          "김대리, D유통 AS 건 보증으로 처리했어요?",
+          "납품일 확인해 봤어요? 보증 기간 지난 걸로 나오는데",
+          "고객은 좋아하겠지. 그런데 그 수리비는 우리 팀 예산에서 나가요",
+          "이번엔 그냥 두는데, 다음부터는 계약서 먼저 봐요"
         ]
       }
     }

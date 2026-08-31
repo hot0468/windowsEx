@@ -1,10 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import scenario from '../src/scenarios/workday.json'
-import { allFiles, fileById, fsView, place, useGame } from '../src/engine/store.js'
+import { allFiles, fileById, fsView, place, useGame, cellMatches } from '../src/engine/store.js'
 
 // 요청의 86%가 '찾아서 타이핑'이었다. 행동으로 푸는 요청은 ask가 텍스트
 // 대신 grant를 기다린다 — 그 행동이 일어나면 창이 닫혀 있어도 답이 온다.
 const DEED = { deed: 'orders', placeholder: '시트를 고쳐 저장하면 확인됩니다', ok: ['고쳤네요, 감사합니다.'], no: [['a'], ['b'], ['c']], next: [] }
+
+// 한 칸에 두 답이 허용되는 일. 규정대로 한 답도, 그렇지 않은 답도 일을 끝내고,
+// 차이는 며칠 뒤에 돌아온다 — 그러니 둘 다 '끝낸 것'으로 잡혀야 한다.
+describe('두 갈래로 끝나는 셀', () => {
+  it('also 에 적힌 값도 일을 끝낸다', () => {
+    const o = { cell: { file: 'f', sheet: 's', row: 0, col: 0, value: 'A', also: ['B'] } }
+    expect(cellMatches(o, { 'f:s:0:0': 'A' })).toBe(true)
+    expect(cellMatches(o, { 'f:s:0:0': 'B' })).toBe(true)
+    expect(cellMatches(o, { 'f:s:0:0': 'C' })).toBe(false)
+  })
+
+  it('갈림이 있는 일에는 갈래마다 뒷이야기가 있다', () => {
+    for (const o of scenario.objectives.filter((x) => x.cell?.also)) {
+      for (const v of [o.cell.value, ...o.cell.also]) {
+        const follows = scenario.ripples.some((r) => r.when.grant === o.id && r.when.cellIs?.value === v)
+        expect(follows, `${o.id} 의 '${v}' 에 뒷이야기가 없다`).toBe(true)
+      }
+    }
+  })
+})
 
 describe('행동을 기다리는 질문', () => {
   beforeEach(() => {

@@ -2171,9 +2171,12 @@ export const unsavedFile = (state, win) => {
   return Object.keys(state.sheetDrafts ?? {}).some((k) => k.startsWith(id + ':')) ? id : null
 }
 
+// 셀 하나에 적어야 하는 값. `also` 가 있으면 그것도 받는다 — 규정대로 한 답과
+// 그렇지 않은 답이 둘 다 '일을 끝낸 것'이고, 차이는 며칠 뒤 ripple 이 묻는다.
 export const cellMatches = (objective, sheetEdits) => {
-  const { file, sheet, row, col, value } = objective.cell
-  return (sheetEdits[cellKey(file, sheet, row, col)] ?? '').trim() === value.trim()
+  const { file, sheet, row, col, value, also = [] } = objective.cell
+  const wrote = (sheetEdits[cellKey(file, sheet, row, col)] ?? '').trim()
+  return [value, ...also].some((v) => wrote === v.trim())
 }
 
 // The jammed printer wants the wiki's steps in order; a wrong press jams it again.
@@ -2235,7 +2238,7 @@ export function ripplesFor(scenario, n, state) {
 export function rippleHolds(when = {}, n, state) {
   const {
     overtime = {}, locks = 0, slips = 0, mining = false, cleaned = false, roomQuestions = 0,
-    grants = {}, minedSince = null, bookedFor = null, ripples = {}, edits = {}
+    grants = {}, minedSince = null, bookedFor = null, ripples = {}, edits = {}, sheetEdits = {}
   } = state
   if (when.fromDay && n < when.fromDay) return false
   if (n < 2 && !when.fromDay) return false          // nothing ripples onto day one
@@ -2266,6 +2269,12 @@ export function rippleHolds(when = {}, n, state) {
   if (when.bookingKept && bookedFor === null) return false
   // a synced file the player rewrote, and did not put back
   if (when.edited && !rewritten(state.scenario ?? scenario, edits, when.edited)) return false
+  // 시트의 어느 칸에 무엇을 적었는가. 같은 일을 두 갈래로 끝낼 수 있을 때
+  // 어느 쪽이었는지는 여기서 갈린다.
+  if (when.cellIs) {
+    const { file, sheet, row, col, value } = when.cellIs
+    if ((sheetEdits[cellKey(file, sheet, row, col)] ?? '').trim() !== value.trim()) return false
+  }
   return true
 }
 
