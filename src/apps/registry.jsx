@@ -46,9 +46,9 @@ export const APPS = {
   // 전화도 폰의 물건이다. PC 에는 걸 곳도 받을 곳도 없다.
   dial: { title: '전화', icon: 'phone', comp: Dial, w: 380, h: 560, phoneOnly: true },
   // 카메라도 폰의 물건이다. PC 의 Print Screen 과 짝을 이룬다.
-  camera: { title: '카메라', icon: 'image', comp: Camera, w: 380, h: 560, phoneOnly: true },
+  camera: { title: '카메라', icon: 'camera', comp: Camera, w: 380, h: 560, phoneOnly: true },
   // 지도. 브라우저의 장소 검색과 같은 자료를 자리로 본다 — 걸어 다니는 사람의 물건이다.
-  maps: { title: '지도', icon: 'globe', comp: Maps, w: 400, h: 600, phoneOnly: true },
+  maps: { title: '지도', icon: 'map', comp: Maps, w: 400, h: 600, phoneOnly: true },
   // 갤러리. 탐색기로도 같은 폴더를 보지만, 폰에서 사진은 격자로 본다.
   gallery: { title: '갤러리', icon: 'image', comp: Gallery, w: 400, h: 600, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
@@ -82,7 +82,7 @@ export const knownWindows = (windows) => windows.filter((w) => APPS[w.app])
 // 이름을 '사내 드라이브'로 하면 안 된다 — drive.ar.local이 이미 그 이름을
 // 쓰고 있고, 그쪽은 VPN과 hosts로 잠긴 별개의 퍼즐이다.
 const PHONE_EXTRA = [
-  { id: 'files', title: '파일', icon: 'folder', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'], roots: ['휴대폰'] } },
+  { id: 'files', title: '파일', icon: 'files', app: 'explorer', props: { startFolder: ['휴대폰', '다운로드'], roots: ['휴대폰'] } },
   { id: 'drive', title: '내 PC 드라이브', icon: 'folder', app: 'explorer', props: { startFolder: '문서', roots: ['문서', '다운로드', '휴지통', '로컬 디스크 (C:)'] } }
 ]
 

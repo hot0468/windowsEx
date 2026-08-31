@@ -270,3 +270,17 @@ describe('설정 앱', () => {
     expect(shell).not.toContain('newGame')
   })
 })
+
+describe('홈 아이콘은 서로 구별된다', () => {
+  // 카메라와 갤러리가 둘 다 image 아이콘이면 홈에서 같은 그림 두 개가 된다.
+  // 이름이 달라도 눈으로는 구별이 안 된다.
+  it('카메라와 갤러리가 다른 아이콘을 쓴다', () => {
+    expect(APPS.camera.icon).not.toBe(APPS.gallery.icon)
+  })
+
+  it('홈에 같은 아이콘이 두 번 나오지 않는다', () => {
+    const icons = phoneApps({ vpnInstalled: true }).map((a) => a.icon)
+    const dupes = icons.filter((x, i) => icons.indexOf(x) !== i)
+    expect(dupes).toEqual([])
+  })
+})

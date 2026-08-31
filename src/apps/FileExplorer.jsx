@@ -188,7 +188,8 @@ export default function FileExplorer({ startFolder, roots: only }) {
                 <thead><tr><th>이름</th><th>수정한 날짜</th><th>유형</th><th className="num">크기</th></tr></thead>
                 <tbody>
                   {folders.map((f) => (
-                    <tr key={f.name} className={f.hidden ? 'dim' : ''} onDoubleClick={() => goTo([...nav.path, f.name])}>
+                    <tr key={f.name} className={f.hidden ? 'dim' : ''}
+                        {...openTap(shell, () => goTo([...nav.path, f.name]))}>
                       <td><Icon name="folder" size={18} />{f.name}</td>
                       <td>{fmtStampShort(fileStamp(f, nav.path))}</td>
                       <td>{fileKind(f)}</td>
@@ -204,7 +205,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
                     <tr key={f.id} className={(clipboard === f.id ? 'cut' : '') + (f.hidden ? ' dim' : '')}
                         {...(inTrash ? {} : fileDragProps(f))}
                         onContextMenu={onContext(f)}
-                        onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                        {...openTap(shell, () => openWindow(fileOpener(f).app, { fileId: f.id }))}>
                       <td>
                         <FileGlyph file={f} size={18} photo={18} />
                         {renaming?.id === f.id ? (

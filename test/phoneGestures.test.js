@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { swipeStep } from '../src/apps/Viewer.jsx'
+import { readFileSync } from 'node:fs'
 import { openTap } from '../src/shell/useViewport.js'
 
 // 폰의 손짓 둘 — 사진을 옆으로 밀어 넘기고, 파일을 한 번 탭해 연다.
@@ -39,5 +40,23 @@ describe('여는 손짓은 셸을 따른다', () => {
     const p = openTap('desktop', open)
     expect(p.onDoubleClick).toBe(open)
     expect(p.onClick).toBeUndefined()
+  })
+})
+
+// 보기 방식을 바꿔도 손짓은 같아야 한다. 아이콘 뷰만 한 번 탭이고 자세히
+// 보기는 더블클릭이면, 폰에서 보기를 바꾼 순간 파일이 열리지 않는다.
+describe('여는 손짓은 보기 방식과 무관하다', () => {
+  const src = readFileSync(new URL('../src/apps/FileExplorer.jsx', import.meta.url), 'utf8')
+
+  it('FileExplorer 안에 여는 onDoubleClick 이 남아 있지 않다', () => {
+    const lines = src.split(/\r?\n/)
+      .filter((l) => l.includes('onDoubleClick'))
+      .filter((l) => !l.includes('stopPropagation'))
+    expect(lines).toEqual([])
+  })
+
+  it('여는 자리는 모두 openTap 을 거친다', () => {
+    // 폴더로 들어가는 곳과 파일을 여는 곳 — 아이콘 뷰와 자세히 보기 둘 다.
+    expect((src.match(/openTap\(/g) ?? []).length).toBeGreaterThanOrEqual(4)
   })
 })
