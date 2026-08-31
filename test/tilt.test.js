@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { framePct, panFrom, REST, RANGE, shiftPct, tiltNote } from '../src/shell/tilt.js'
+import { framePct, panFrom, REST, RANGE, sensorState, shiftPct, tiltNote } from '../src/shell/tilt.js'
 
 // 뷰파인더보다 큰 사진을 기울여 둘러보는 계산. 화면 없이 검사할 수 있게
 // 순수 함수로 떼어 두었다 — 여기서 어긋나면 사진 가장자리가 빈다.
@@ -76,5 +76,44 @@ describe('기울기가 안 될 때', () => {
   it('되고 있을 때는 아무 말도 하지 않는다', () => {
     expect(tiltNote('on')).toBe(null)
     expect(tiltNote('off')).toBe(null)
+  })
+})
+
+// 기울기가 안 되는 이유를 가리는 규칙. 틀린 진단은 없는 것만 못하다 — 폴드에
+// 자이로가 없을 리 없는데 "이 기기에는 센서가 없습니다"가 떴다.
+describe('왜 안 되는지 가리기', () => {
+  // 안드로이드 크롬은 http 로 열면 이벤트를 주지 않는다. 생성자는 그대로 있으므로
+  // 센서가 없는 것이 아니라 주소가 문제다.
+  it('http 로 열었으면 주소 문제라고 한다', () => {
+    expect(sensorState({ hasEvent: true, secure: false, protocol: 'http:', host: '192.168.0.5' })).toBe('insecure')
+  })
+
+  // isSecureContext 를 안 주는 브라우저가 있다. 없다고 안전한 것으로 치면
+  // http 인데도 그냥 지나쳐 엉뚱한 진단이 나온다.
+  it('보안 컨텍스트를 모르겠으면 주소로 판단한다', () => {
+    expect(sensorState({ hasEvent: true, secure: undefined, protocol: 'http:', host: '192.168.0.5' })).toBe('insecure')
+    expect(sensorState({ hasEvent: true, secure: undefined, protocol: 'https:', host: 'example.com' })).toBe('listen')
+  })
+
+  // localhost 는 http 라도 보안 컨텍스트다 — PC 개발 중에 잘못된 경고가 뜨면 안 된다.
+  it('localhost 는 http 라도 괜찮다', () => {
+    expect(sensorState({ hasEvent: true, secure: undefined, protocol: 'http:', host: 'localhost' })).toBe('listen')
+    expect(sensorState({ hasEvent: true, secure: undefined, protocol: 'http:', host: '127.0.0.1' })).toBe('listen')
+  })
+
+  // 주소가 멀쩡한데 생성자가 없으면 그때가 진짜 '센서 없음'이다.
+  it('주소가 멀쩡한데 이벤트가 없으면 그때가 센서 없음이다', () => {
+    expect(sensorState({ hasEvent: false, secure: true, protocol: 'https:', host: 'example.com' })).toBe('unsupported')
+  })
+
+  // http 이면서 생성자도 없으면 주소부터 고쳐야 한다 — 고치면 생성자가 없다는
+  // 사실 자체가 달라질 수 있으므로, 먼저 짚을 것을 짚는다.
+  it('둘 다 문제면 주소를 먼저 짚는다', () => {
+    expect(sensorState({ hasEvent: false, secure: false, protocol: 'http:', host: '192.168.0.5' })).toBe('insecure')
+  })
+
+  // iOS 는 손짓 안에서만 권한을 묻는다 — 버튼을 보여야 한다.
+  it('권한을 물어야 하는 기기는 물어야 한다고 한다', () => {
+    expect(sensorState({ hasEvent: true, secure: true, protocol: 'https:', host: 'x', needsPermission: true })).toBe('off')
   })
 })

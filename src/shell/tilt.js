@@ -34,6 +34,30 @@ export const framePct = ({ x = 0, y = 0 }) => ({
   y: Math.round(50 + y * 30)
 })
 
+// http 로 열었는가. localhost 는 http 라도 보안 컨텍스트라 예외다.
+// isSecureContext 를 안 주는 브라우저가 있어 주소로도 본다 — 모른다고 안전한
+// 것으로 치면 http 인데도 그냥 지나쳐 엉뚱한 진단이 나온다.
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/
+
+export const isInsecure = ({ secure, protocol = '', host = '' }) => {
+  if (secure === true) return false
+  if (protocol === 'https:' || LOCAL.test(host.replace(/:\d+$/, ''))) return false
+  return true
+}
+
+// 기울기가 안 되는 이유를 가린다. 순서가 곧 진단의 질이다 — 주소가 문제면
+// 다른 것을 짚어 봐야 소용이 없다(http 에서는 생성자가 있어도 이벤트가 안 온다).
+//   listen      들을 수 있다. 바로 붙인다
+//   off         권한을 물어야 하는 기기다(iOS) — 버튼을 보여 준다
+//   insecure    http 로 열려 브라우저가 센서를 막았다
+//   unsupported 이 브라우저에 센서 이벤트 자체가 없다
+export function sensorState({ hasEvent, secure, protocol, host, needsPermission = false }) {
+  // 주소를 먼저 짚는다. 고치면 나머지 사실 자체가 달라질 수 있다.
+  if (isInsecure({ secure, protocol, host })) return 'insecure'
+  if (!hasEvent) return 'unsupported'
+  return needsPermission ? 'off' : 'listen'
+}
+
 // 센서를 쓰는 훅. 기울기가 안 오는 이유가 여러 가지라(권한·http·센서 없음)
 // 무엇 때문인지를 state 로 돌려준다 — 화면은 그것을 그대로 말해 준다.
 //   on         기울기가 오고 있다
@@ -65,14 +89,19 @@ export function useTilt() {
   }
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.DeviceOrientationEvent) {
+    if (typeof window === 'undefined') {
       setState('unsupported')
       return undefined
     }
-    // http 로 열면 브라우저가 센서를 아예 주지 않는다(안드로이드 크롬).
-    // 이것은 게임의 문제가 아니라 주소의 문제라, 그렇게 말해 줘야 한다.
-    if (window.isSecureContext === false) setState('insecure')
-    else if (typeof window.DeviceOrientationEvent.requestPermission !== 'function') start()
+    const verdict = sensorState({
+      hasEvent: Boolean(window.DeviceOrientationEvent),
+      secure: window.isSecureContext,
+      protocol: window.location?.protocol,
+      host: window.location?.host,
+      needsPermission: typeof window.DeviceOrientationEvent?.requestPermission === 'function'
+    })
+    if (verdict === 'listen') start()
+    else setState(verdict)
     return () => {
       clearTimeout(idle.current)
       if (on.current) {
@@ -96,9 +125,11 @@ export function useTilt() {
     }
   }
 
+  // 물어볼 수 있을 때만 버튼을 보인다. 주소가 문제면 물어도 소용없고, 이미
+  // 거절당했으면 다시 물어도 같은 답이 온다.
   const needsAsk = typeof window !== 'undefined'
     && typeof window.DeviceOrientationEvent?.requestPermission === 'function'
-    && state !== 'on'
+    && !['on', 'insecure', 'denied'].includes(state)
 
   return { pan, setPan, state, ask, needsAsk }
 }
@@ -107,6 +138,6 @@ export function useTilt() {
 export const tiltNote = (state) => ({
   insecure: 'https 로 열어야 기울기 센서가 켜집니다. 지금은 끌어서 둘러보세요.',
   denied: '기울기 권한이 없습니다. 끌어서 둘러보세요.',
-  unsupported: '이 기기에는 기울기 센서가 없습니다. 끌어서 둘러보세요.',
+  unsupported: '이 브라우저는 기울기 센서를 지원하지 않습니다. 끌어서 둘러보세요.',
   idle: '기울기가 잡히지 않습니다. 끌어서 둘러보세요.'
 }[state] ?? null)
