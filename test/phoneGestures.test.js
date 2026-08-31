@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { infoPull, swipeStep } from '../src/apps/Viewer.jsx'
+import { settleBack } from '../src/shell/PhoneApp.jsx'
 import { fileCreated, fmtStampLong } from '../src/engine/store.js'
 import { readFileSync } from 'node:fs'
 import { openTap } from '../src/shell/useViewport.js'
@@ -131,5 +132,33 @@ describe('사진 정보에 찍은 날짜가 있다', () => {
   it('사진마다 찍힌 때가 다르다', () => {
     const stamps = gallery.map(({ file, path }) => JSON.stringify(fileCreated(file, path)))
     expect(new Set(stamps).size).toBeGreaterThan(1)
+  })
+})
+
+// 손을 뗀 순간 뒤로 갈지 제자리로 돌아갈지. 실제 폰은 거리만 보지 않는다 —
+// 짧아도 빠르게 튕기면 넘어가고, 길어도 느리게 끌다 멈추면 돌아온다.
+describe('뒤로 스와이프를 놓을 때', () => {
+  it('충분히 끌었으면 뒤로 간다', () => {
+    expect(settleBack({ dx: 120, vx: 0, width: 390 })).toBe(true)
+  })
+
+  it('조금 끌다 놓으면 제자리로 돌아온다', () => {
+    expect(settleBack({ dx: 30, vx: 0, width: 390 })).toBe(false)
+  })
+
+  // 빠르게 튕기는 손짓(플릭)은 거리가 짧아도 넘어간다.
+  it('짧아도 빠르게 튕기면 뒤로 간다', () => {
+    expect(settleBack({ dx: 42, vx: 1.2, width: 390 })).toBe(true)
+  })
+
+  // 왼쪽으로 되돌리는 속도면 마음이 바뀐 것이다.
+  it('되돌리는 속도면 돌아온다', () => {
+    expect(settleBack({ dx: 120, vx: -1.4, width: 390 })).toBe(false)
+  })
+
+  // 화면이 넓으면 같은 픽셀도 덜 끈 것이다 — 비율로 본다.
+  it('기준은 화면 폭에 따라 달라진다', () => {
+    expect(settleBack({ dx: 120, vx: 0, width: 390 })).toBe(true)
+    expect(settleBack({ dx: 120, vx: 0, width: 1200 })).toBe(false)
   })
 })

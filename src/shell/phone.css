@@ -911,3 +911,49 @@
 .vw-info-alt { margin: 14px 0 0; padding-top: 12px;
                border-top: 1px solid rgba(255, 255, 255, .08);
                color: rgba(255, 255, 255, .62); font-size: 12.5px; line-height: 1.7; }
+
+/* ── 손에 붙는 감각 ────────────────────────────────────────────────
+   시스템 UI가 투박하게 느껴지는 까닭은 대개 모션이 없어서가 아니라,
+   들어올 때만 있고 나갈 때는 없어서다. 그리고 눌러도 아무 일이 없으면
+   기기가 굼떠 보인다. 여기서 그 둘을 메운다. */
+
+/* 파란 사각형이 번쩍이는 것과 두 번 탭을 기다리는 300ms 지연을 끈다.
+   눌린 표시는 아래에서 직접 그린다. */
+.phone, .phone * {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* 끄는 동안에는 전환을 걸지 않는다 — 손가락보다 늦게 따라오면 고무처럼
+   늘어져 보인다. 마무리는 PhoneApp 이 인라인으로 시간을 실어 준다. */
+.phone-app.dragging { will-change: transform; }
+
+/* 눌리는 것은 눌린 티가 나야 한다. 목록의 한 줄, 파일 한 칸, 대화 한 건 —
+   실제로 손이 가장 많이 닿는 자리들이 여태 아무 반응이 없었다. */
+.phone .ex-file,
+.phone .mg-row,
+.phone .ph-todo li,
+.phone .gl-cell,
+.phone .pn-card,
+.phone .set-row,
+.phone tbody tr {
+  transition: background-color 110ms ease-out, transform 110ms ease-out;
+}
+.phone .ex-file:active,
+.phone .gl-cell:active,
+.phone .pn-card:active { transform: scale(.97); }
+.phone .mg-row:active,
+.phone .ph-todo li:active,
+.phone .set-row:active,
+.phone tbody tr:active { background-color: rgba(16, 19, 26, .06); }
+
+/* 목록을 세로로 훑는 손짓과 화면을 가로로 미는 손짓이 서로 걸리지 않게 한다.
+   브라우저가 방향을 먼저 정해 주면 스크롤이 손가락에 붙는다. */
+.phone-body, .ph-home, .phone .ex-main, .phone .mg-list { touch-action: pan-y; }
+
+/* 버튼은 눌리는 순간 살짝 들어간다. 90ms — 알아채기 전에 끝나지만
+   없으면 허전하다. */
+.phone button:not(.ph-icon):not(.pa-home):not(.vw-info-hint):active {
+  transform: scale(.97);
+}
+.phone button { transition: transform 90ms ease-out, background-color 110ms ease-out; }
