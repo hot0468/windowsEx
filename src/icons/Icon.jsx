@@ -38,11 +38,37 @@ export default function Icon({ name, size = 16 }) {
 
 // A picture file shows the picture, the way Explorer does. Falls back to the
 // type icon when the photo itself was never downloaded.
+// 발표 자료의 미리보기에 쓸 것. 첫 슬라이드의 제목과 장수 — 아이콘 자리에
+// 실제 첫 장이 보이면 덱마다 다르게 생긴다. 슬라이드가 없는 파일은 null.
+export const deckThumb = (file) =>
+  file?.slides?.length
+    ? { title: file.slides[0].title ?? '', lines: (file.slides[0].bullets ?? []).length, count: file.slides.length }
+    : null
+
+// 작은 아이콘(목록의 18px 같은 것)에서는 슬라이드 미리보기가 얼룩으로만 보인다.
+// 그 아래에서는 종류 아이콘을 그대로 쓴다.
+const DECK_MIN = 24
+
 export function FileGlyph({ file, size = 36, photo = size }) {
   const shot = file.image && fileImage(file.image)
-  if (!shot) return <Icon name={fileOpener(file).icon} size={size} />
-  return (
-    <img className="thumb" src={shot} width={photo} height={photo}
-         alt="" draggable="false" title={file.name} />
-  )
+  if (shot) {
+    return (
+      <img className="thumb" src={shot} width={photo} height={photo}
+           alt="" draggable="false" title={file.name} />
+    )
+  }
+  // 사진처럼, 발표 자료도 아이콘 대신 첫 장이 보인다 — 슬라이드 뷰어의 그
+  // 흰 4:3 카드를 그대로 줄인 것이라 같은 물건으로 읽힌다.
+  const deck = deckThumb(file)
+  if (deck && photo >= DECK_MIN) {
+    return (
+      <span className="deck" style={{ width: photo, height: Math.round(photo * 0.75), fontSize: Math.max(5, Math.round(photo / 8)) }}
+            title={`${file.name} · ${deck.count}장`} draggable="false">
+        <b>{deck.title}</b>
+        {Array.from({ length: Math.min(deck.lines, 3) }, (_, i) => <i key={i} />)}
+        {deck.count > 1 && <em>{deck.count}</em>}
+      </span>
+    )
+  }
+  return <Icon name={fileOpener(file).icon} size={size} />
 }
