@@ -191,28 +191,31 @@ function NavBar({ screens, windows, grants, onRecents, recents, shade, onShade, 
   )
 }
 
-// 켠 창 목록. 스택에 쌓인 순서 그대로, 맨 위(지금 보고 있는 것)가 앞에 온다.
-function Recents({ screens, windows, grants, onPick, onClose, onDismiss }) {
-  const cards = [...screens].reverse().map((key) => {
-    if (key.startsWith('win:')) {
-      const w = windows.find((x) => x.id === Number(key.slice(4)))
-      const cfg = w ? APPS[w.app] : null
-      return cfg ? { key, title: cfg.title, icon: cfg.icon } : null
-    }
-    const entry = phoneApps(grants).find((a) => 'app:' + a.id === key)
-    return entry ? { key, title: entry.title, icon: entry.icon } : null
-  }).filter(Boolean)
+// 켠 창 목록. 화면 스택이 아니라 실제로 열려 있는 창을 본다 — 홈으로 나와도
+// 앱은 켜져 있고, PC 의 작업표시줄이 보는 것과 같은 목록이다. 나중에 연 것이
+// 앞에 온다.
+function Recents({ windows, grants, onPick, onClose, onDismiss }) {
+  const home = phoneApps(grants)
+  const cards = [...knownWindows(windows)]
+    .sort((a, b) => b.z - a.z)
+    .map((w) => {
+      // 폰 홈에 있는 앱이 연 창인가. 그렇다면 그 앱 화면으로 건너뛴다.
+      const entry = home.find((a) => a.app + JSON.stringify(a.props ?? {}) === w.key)
+      const cfg = APPS[w.app]
+      return cfg && { id: w.id, app: entry?.id ?? null, title: entry?.title ?? cfg.title, icon: entry?.icon ?? cfg.icon }
+    })
+    .filter(Boolean)
 
   return (
     <div className="pn-recents" onPointerDown={onDismiss}>
       {cards.length === 0 && <div className="pn-recents-none">켠 창이 없습니다</div>}
       <div className="pn-tasks" onPointerDown={(e) => e.stopPropagation()}>
         {cards.map((c) => (
-          <div key={c.key} className="pn-task">
-            <button className="pn-task-x" onClick={() => onClose(c.key)} aria-label="닫기">
+          <div key={c.id} className="pn-task">
+            <button className="pn-task-x" onClick={() => onClose(c)} aria-label="닫기">
               <X size={13} strokeWidth={2.4} />
             </button>
-            <button className="pn-task-face" onClick={() => onPick(c.key)}>
+            <button className="pn-task-face" onClick={() => onPick(c)}>
               <Icon name={c.icon} size={30} />
               <span>{c.title}</span>
             </button>
@@ -232,8 +235,8 @@ export default function PhoneShell() {
   const pushScreen = useGame((s) => s.pushScreen)
   const goPhoneHome = useGame((s) => s.goPhoneHome)
   const closeWindow = useGame((s) => s.closeWindow)
-  const goScreen = useGame((s) => s.goScreen)
-  const dropScreen = useGame((s) => s.dropScreen)
+  const goWindow = useGame((s) => s.goWindow)
+  const closeTask = useGame((s) => s.closeTask)
   const [recents, setRecents] = useState(false)
   // 상단에서 끌어내리는 알림창. 누르는 곳(pointerdown)의 y와 비교해 아래로
   // 끌면 열고, 그냥 톡 누르면(마우스로 보는 경우) 그것도 연다.
@@ -361,9 +364,9 @@ export default function PhoneShell() {
       )}
       {shade && !sealed && <PhoneShade lifting={lifting} onClose={closeShade} />}
       {recents && (
-        <Recents screens={screens} windows={windows} grants={grants}
-                 onPick={(k) => { goScreen(k); setRecents(false) }}
-                 onClose={dropScreen}
+        <Recents windows={windows} grants={grants}
+                 onPick={(c) => { goWindow(c.id, c.app); setRecents(false) }}
+                 onClose={(c) => closeTask(c.id, c.app)}
                  onDismiss={() => setRecents(false)} />
       )}
       {/* 굳은 뒤에는 돌아갈 곳도 켤 것도 없다 — 그 페이지 하나만 남는다. */}

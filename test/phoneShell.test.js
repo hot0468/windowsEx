@@ -193,41 +193,62 @@ describe('restart()', () => {
 // 하단 내비게이션의 '켠 창'. 목록에서 하나를 고르면 그 위에 쌓인 화면을
 // 걷어낸다. 창 화면을 걷을 땐 창도 같이 닫아야 한다 — 스택에서만 빼면
 // 폰 셸이 그것을 '새로 생긴 창' 으로 보고 도로 밀어 넣는다.
+// 켠 창은 화면 스택이 아니라 실제로 열려 있는 창을 본다. 스택으로 만들면
+// 홈 버튼 한 번에(goPhoneHome 이 스택을 비운다) 목록이 통째로 사라져,
+// 앱은 켜져 있는데 없다고 말하는 화면이 된다.
 describe('켠 창 목록', () => {
-  const win = (id) => ({ id, key: 'k' + id, app: 'mail', props: {} })
+  const win = (id, z = id) => ({ id, key: 'mail{}', app: 'mail', props: {}, z, minimized: false })
 
-  beforeEach(() => useGame.setState({ screens: [], windows: [] }))
+  beforeEach(() => useGame.setState({ screens: [], windows: [], nextZ: 10 }))
 
-  it('고른 화면 위에 쌓인 것을 걷어낸다', () => {
-    useGame.setState({ screens: ['app:messenger', 'app:photos', 'win:7'], windows: [win(7)] })
-    useGame.getState().goScreen('app:messenger')
-    expect(useGame.getState().screens).toEqual(['app:messenger'])
-  })
-
-  it('걷어낸 창은 닫는다', () => {
-    useGame.setState({ screens: ['app:messenger', 'win:7'], windows: [win(7), win(8)] })
-    useGame.getState().goScreen('app:messenger')
-    expect(useGame.getState().windows.map((w) => w.id)).toEqual([8])
-  })
-
-  it('없는 화면을 고르면 아무 일도 없다', () => {
-    useGame.setState({ screens: ['app:messenger'], windows: [] })
-    useGame.getState().goScreen('app:mail')
-    expect(useGame.getState().screens).toEqual(['app:messenger'])
-  })
-
-  it('목록에서 치우면 화면도 창도 사라진다', () => {
-    useGame.setState({ screens: ['app:messenger', 'win:7'], windows: [win(7)] })
-    useGame.getState().dropScreen('win:7')
-    expect(useGame.getState().screens).toEqual(['app:messenger'])
-    expect(useGame.getState().windows).toEqual([])
-  })
-
-  it('창이 아닌 화면을 치우면 창은 그대로다', () => {
-    useGame.setState({ screens: ['app:messenger'], windows: [win(7)] })
-    useGame.getState().dropScreen('app:messenger')
+  it('홈으로 나와도 켠 창은 남는다', () => {
+    useGame.setState({ screens: ['app:mail'], windows: [win(7)] })
+    useGame.getState().goPhoneHome()
     expect(useGame.getState().screens).toEqual([])
     expect(useGame.getState().windows.map((w) => w.id)).toEqual([7])
+  })
+
+  it('고르면 그 창이 맨 앞으로 오고 화면이 열린다', () => {
+    useGame.setState({ windows: [win(7)] })
+    useGame.getState().goWindow(7)
+    expect(useGame.getState().screens).toEqual(['win:7'])
+    expect(useGame.getState().windows[0].minimized).toBe(false)
+    expect(useGame.getState().windows[0].z).toBe(10)
+  })
+
+  // 폰 홈에 있는 앱은 'app:<id>' 화면으로 연다 — 홈에서 연 것과 두 겹으로
+  // 쌓이면 뒤로가기가 한 번 헛돈다.
+  it('홈에 있는 앱은 앱 화면으로 간다', () => {
+    useGame.setState({ windows: [win(7)] })
+    useGame.getState().goWindow(7, 'mail')
+    expect(useGame.getState().screens).toEqual(['app:mail'])
+  })
+
+  it('이미 열려 있던 화면을 고르면 그 위를 걷어낸다', () => {
+    useGame.setState({ screens: ['app:mail', 'win:9'], windows: [win(7)] })
+    useGame.getState().goWindow(7, 'mail')
+    expect(useGame.getState().screens).toEqual(['app:mail'])
+  })
+
+  it('없는 창을 고르면 아무 일도 없다', () => {
+    useGame.setState({ screens: ['app:mail'], windows: [] })
+    useGame.getState().goWindow(7)
+    expect(useGame.getState().screens).toEqual(['app:mail'])
+  })
+
+  // 창을 닫았는데 그것을 가리키던 화면이 남으면 없는 창을 그리는 빈 화면이 된다.
+  it('닫으면 창도 그것을 가리키던 화면도 사라진다', () => {
+    useGame.setState({ screens: ['app:mail'], windows: [win(7), win(8)] })
+    useGame.getState().closeTask(7, 'mail')
+    expect(useGame.getState().windows.map((w) => w.id)).toEqual([8])
+    expect(useGame.getState().screens).toEqual([])
+  })
+
+  it('창 화면을 가리키던 것도 같이 걷는다', () => {
+    useGame.setState({ screens: ['win:7'], windows: [win(7)] })
+    useGame.getState().closeTask(7)
+    expect(useGame.getState().screens).toEqual([])
+    expect(useGame.getState().windows).toEqual([])
   })
 
   // 홈으로 나가는 길이 늘 바닥에 있어야 한다. 앱 안에서도.

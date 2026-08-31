@@ -523,26 +523,29 @@ export const useGame = create((set, get) => ({
   // 폰 홈으로. 게임의 goHome(퇴근하기)과 이름이 겹치지 않게 따로 둔다 —
   // 그쪽은 하루를 끝내는 동작이라 홈 버튼이 건드려서는 안 된다.
   goPhoneHome: () => set({ screens: [] }),
-  // 최근 목록에서 하나를 고르면 그 위에 쌓인 화면을 걷어낸다. 창 화면을
-  // 걷을 땐 창도 같이 닫는다 — 스택에서만 빼면 다음 렌더에서 '새로 생긴
-  // 창'으로 보여 도로 밀려 들어온다.
-  goScreen: (key) => set((s) => {
+  // '켠 창'은 화면 스택이 아니라 실제로 열려 있는 창을 보여 준다. 홈 버튼이
+  // 스택을 비우는 것과 무관하게 앱은 계속 켜져 있고, 데스크톱의 작업표시줄과
+  // 같은 것을 본다 — 두 셸이 같은 windows 를 쓰기 때문이다.
+  //
+  // 하나를 고르면 그 창으로 건너뛴다. 폰 홈에 있는 앱이면 그 앱 화면으로,
+  // 아니면 창 화면으로 — 여는 길이 둘인 것은 폰 셸이 원래 그렇다.
+  goWindow: (id, appScreen = null) => set((s) => {
+    const win = s.windows.find((w) => w.id === id)
+    if (!win) return s
+    const key = appScreen ? 'app:' + appScreen : 'win:' + id
     const at = s.screens.lastIndexOf(key)
-    if (at < 0) return s
-    const gone = s.screens.slice(at + 1)
-      .filter((k) => k.startsWith('win:'))
-      .map((k) => Number(k.slice(4)))
     return {
-      screens: s.screens.slice(0, at + 1),
-      windows: s.windows.filter((w) => !gone.includes(w.id))
+      // 이미 스택에 있으면 그 위를 걷어내고, 없으면 새로 민다.
+      screens: at < 0 ? [...s.screens, key] : s.screens.slice(0, at + 1),
+      windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.nextZ, minimized: false } : w)),
+      nextZ: s.nextZ + 1
     }
   }),
-  // 최근 목록에서 하나를 치운다.
-  dropScreen: (key) => set((s) => ({
-    screens: s.screens.filter((k) => k !== key),
-    windows: key.startsWith('win:')
-      ? s.windows.filter((w) => w.id !== Number(key.slice(4)))
-      : s.windows
+  // 최근 목록에서 창 하나를 닫는다. 그 창을 가리키던 화면도 같이 걷는다 —
+  // 남겨 두면 없는 창을 그리는 빈 화면이 된다.
+  closeTask: (id, appScreen = null) => set((s) => ({
+    windows: s.windows.filter((w) => w.id !== id),
+    screens: s.screens.filter((k) => k !== 'win:' + id && (!appScreen || k !== 'app:' + appScreen))
   })),
 
   // 스택이 아무리 깊어도 지금 어느 앱 안에 있는지는 바닥이 정한다.
