@@ -198,10 +198,35 @@ describe('통화로 푸는 길', () => {
     useGame.getState().dial(spoken.number)
     expect(useGame.getState().call.stage).toBe('dialing')
     vi.advanceTimersByTime(2300)
-    const call = useGame.getState().call
-    expect(call.stage).toBe('talking')
-    expect(call.name).toBe(spoken.name)
-    expect(call.asking).toBe(true)
+    expect(useGame.getState().call.stage).toBe('talking')
+    expect(useGame.getState().call.name).toBe(spoken.name)
+    // 상대가 말하는 동안에는 말할 칸이 열리지 않는다 — 끼어드는 자리가 아니다.
+    expect(useGame.getState().call.asking).toBe(false)
+    vi.advanceTimersByTime(20000)
+    expect(useGame.getState().call.asking).toBe(true)
+  })
+
+  // 말이 한 번에 쏟아지면 사람이 한 말로 읽히지 않는다.
+  it('상대의 말은 한 줄씩 도착한다', () => {
+    useGame.getState().dial(spoken.number)
+    vi.advanceTimersByTime(2300)
+    expect(useGame.getState().call.said).toHaveLength(0)
+    expect(useGame.getState().call.speaking).toBe(true)
+    vi.advanceTimersByTime(1200)
+    expect(useGame.getState().call.said).toHaveLength(1)
+    vi.advanceTimersByTime(1200)
+    expect(useGame.getState().call.said).toHaveLength(2)
+    vi.advanceTimersByTime(20000)
+    expect(useGame.getState().call.speaking).toBe(false)
+  })
+
+  // 끊었는데 남은 말이 계속 도착하면, 다음 통화에 남의 말이 섞인다.
+  it('끊으면 남은 말은 오지 않는다', () => {
+    useGame.getState().dial(spoken.number)
+    vi.advanceTimersByTime(2300 + 1200)
+    useGame.getState().hangUp()
+    vi.advanceTimersByTime(20000)
+    expect(useGame.getState().call).toBe(null)
   })
 
   it('모르는 번호는 신호만 가다 끊긴다', () => {
@@ -226,11 +251,14 @@ describe('통화로 푸는 길', () => {
   // 메일과 같은 판정을 지난다: 필요한 값을 말하면 열리고, 아니면 되묻는다.
   it('필요한 값을 말하면 메일과 같은 목표가 열린다', () => {
     useGame.getState().dial(spoken.number)
-    vi.advanceTimersByTime(2300)
+    vi.advanceTimersByTime(2300 + 20000)          // 상대가 할 말을 마칠 때까지
     expect(useGame.getState().sayOnCall('잠시만요, 확인해 볼게요')).toBe(false)
+    // 되묻는 말이 끝나야 다시 말할 수 있다 — 상대가 말하는 중에는 못 끼어든다.
+    vi.advanceTimersByTime(20000)
     const key = mailOf(spoken.id).requiredKeywords[0]
     expect(useGame.getState().sayOnCall(`확인해 보니 ${key} 입니다`)).toBe(true)
     vi.advanceTimersByTime(1000)
+    vi.advanceTimersByTime(20000)
     expect(useGame.getState().grants[spoken.id]).toBe(true)
   })
 
@@ -242,7 +270,7 @@ describe('통화로 푸는 길', () => {
     const far = calls.contacts.find((c) => !requestsOf(
       scenario, 1, {}, {}, {}).some((o) => o.id === c.id))
     useGame.getState().dial(far.number)
-    vi.advanceTimersByTime(2300)
+    vi.advanceTimersByTime(2300 + 20000)          // 인사부터 끝인사까지 다 듣는다
     const call = useGame.getState().call
     expect(call.stage).toBe('talking')
     expect(call.asking).toBeFalsy()

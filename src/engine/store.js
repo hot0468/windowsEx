@@ -224,6 +224,8 @@ const BEAT_GAP = 3600
 export const CALLER_DELAY = 2200
 const SAY_FIRST = 1200
 const SAY_GAP = 1500
+// 통화에서 한 줄과 다음 줄 사이. 톡보다 짧다 — 말은 글보다 빠르다.
+const CALL_GAP = 1100
 const sayTime = (count, gap = SAY_GAP) => SAY_FIRST + Math.max(0, count - 1) * gap
 // And how long between consecutive lines of one conversation opening up:
 // short enough to read as one person typing, long enough to read each toast.
@@ -1473,16 +1475,43 @@ export const useGame = create((set, get) => ({
 
   // A mail the player starts. Only the day's brief knows which address is real;
   // everything else bounces. `{to}` and `{subject}` in the reply are filled in.
-  // ── 전화 ────────────────────────────────────────────────
+    // ── 전화 ────────────────────────────────────────────────
   // 폰에만 있다. 두 가지를 한다: 걸려오는 전화를 받고, 메일로 묻던 것을
   // 전화로도 묻는다. 판정은 메일과 같은 자리(checkOutbound)를 지나므로
   // 어느 쪽으로 하든 같은 목표가, 같은 조건에서 열린다.
+  // 통화의 말은 한 번에 쏟지 않는다 — 사람이 말하듯 한 줄씩 도착한다.
+  // 중간에 끊으면 남은 줄은 오지 않는다(통화마다 붙은 seq 로 가린다).
+  speakOnCall: (lines, { asking = false } = {}) => {
+    const seq = get().call?.seq
+    const alive = () => get().call?.seq === seq && get().call?.stage === 'talking'
+    if (!lines.length) {
+      return set((s) => (alive() ? { call: { ...s.call, speaking: false, asking } } : s))
+    }
+    set((s) => (s.call ? { call: { ...s.call, speaking: true, asking: false } } : s))
+    lines.forEach((text, i) => setTimeout(() => {
+      if (!alive()) return
+      const last = i === lines.length - 1
+      set((st) => ({
+        call: {
+          ...st.call,
+          said: [...st.call.said, { them: true, text }],
+          speaking: !last,
+          // 상대가 말하는 동안에는 말할 칸을 열지 않는다 — 끼어드는 자리가 아니다.
+          asking: last ? asking : false
+        }
+      }))
+    }, (i + 1) * CALL_GAP))
+  },
   ringIn: (id) => {
     const s = get()
     const spec = [...s.scenario.calls?.incoming ?? [], ...s.scenario.calls?.spam ?? []]
       .find((c) => c.id === id)
     if (!spec || s.call || s.calledIn[id]) return
-    set({ call: { kind: 'in', id, name: spec.from, number: spec.number, stage: 'ringing', said: [] } })
+    const seq = (s.callSeq ?? 0) + 1
+    set({
+      callSeq: seq,
+      call: { kind: 'in', seq, id, name: spec.from, number: spec.number, stage: 'ringing', said: [] }
+    })
     play('notify')
     // 벨이 영원히 울리지는 않는다. 안 받으면 끊기고 부재중으로 남는다.
     setTimeout(() => {
@@ -1504,16 +1533,13 @@ export const useGame = create((set, get) => ({
         const bye = [].concat(spec.bye).map((text) => ({ them: true, text }))
         set({ call: { ...now, said: [...now.said, ...bye] } })
         setTimeout(() => { if (get().call?.id === id) get().hangUp() }, 2600)
-      }, 1200 + (spec.lines?.length ?? 1) * 1600)
+      }, ((spec.lines?.length ?? 1) + 1) * CALL_GAP + 900)
     }
     set((s) => (s.call?.kind !== 'in' ? s : {
-      call: {
-        ...s.call,
-        stage: 'talking',
-        said: (spec?.lines ?? []).map((text) => ({ them: true, text }))
-      },
+      call: { ...s.call, stage: 'talking', said: [] },
       calledIn: { ...s.calledIn, [s.call.id]: true }
     }))
+    get().speakOnCall(spec?.lines ?? [])
   },
   // 스팸 전화. 하루에 한 번을 넘지 않고, 같은 곳이 두 번 걸지 않는다.
   // 확률로 거는 것이라 일부러 부를 수도 있게 한 조각으로 떼어 둔다.
@@ -1568,9 +1594,8 @@ export const useGame = create((set, get) => ({
       if (now?.seq !== seq) return           // 그 사이 끊었다
       if (!who) {
         if (!known) return get().noAnswer()
-        return set({
-          call: { ...now, id: known.id, name: known.name, stage: 'talking', asking: false, said: known.lines.map((text) => ({ them: true, text })) }
-        })
+        set({ call: { ...now, id: known.id, name: known.name, stage: 'talking', asking: false, said: [] } })
+        return get().speakOnCall(known.lines)
       }
       const st = get()
       const done = Boolean(st.grants[who.id])
@@ -1586,15 +1611,10 @@ export const useGame = create((set, get) => ({
             ? who.needsMail ?? who.asking ?? []
             : st.scenario.calls?.busy ?? [])
       ]
-      set({
-        call: {
-          ...now,
-          stage: 'talking',
-          // 말할 수 있는 상태인지: 오늘 부탁받은 일이고, 첨부를 요구하지 않는 상대.
-          asking: live && !who.needsMail,
-          said: lines.map((text) => ({ them: true, text }))
-        }
-      })
+      set({ call: { ...now, stage: 'talking', asking: false, said: [] } })
+      // 말할 수 있는 상태인지: 오늘 부탁받은 일이고, 첨부를 요구하지 않는 상대.
+      // 그 칸은 상대가 할 말을 마친 뒤에 열린다.
+      get().speakOnCall(lines, { asking: live && !who.needsMail })
     }, 2200)
   },
   // 받지 않았다. 끊겼다는 말을 잠깐 보여 주고 걸던 화면으로 돌아간다.
@@ -1618,13 +1638,9 @@ export const useGame = create((set, get) => ({
     const spec = { ...objective.mail, rudeReplies: undefined }
     const verdict = checkOutbound(spec, { to: spec.to, subject: '', body: text }, s.scenario.etiquette, s.scenario.player)
     const reply = (verdict.ok ? who.done : who.unclear) ?? []
-    set((st) => ({
-      call: {
-        ...st.call,
-        asking: !verdict.ok,
-        said: [...st.call.said, { them: false, text }, ...reply.map((t) => ({ them: true, text: t }))]
-      }
-    }))
+    // 내 말은 바로 올라가고, 상대의 대답은 한 줄씩 온다.
+    set((st) => ({ call: { ...st.call, asking: false, said: [...st.call.said, { them: false, text }] } }))
+    get().speakOnCall(reply, { asking: !verdict.ok })
     if (verdict.ok) setTimeout(() => get().grant(call.id), 900)
     else play('error')
     return verdict.ok

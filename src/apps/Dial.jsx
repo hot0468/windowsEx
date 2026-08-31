@@ -62,6 +62,12 @@ export function CallScreen() {
         {call.said.map((line, i) => (
           <p key={i} className={line.them ? 'cl-them' : 'cl-me'}>{line.text}</p>
         ))}
+        {/* 아직 할 말이 남았다. 톡의 '입력 중'과 같은 자리다. */}
+        {call.speaking && (
+          <p className="cl-them cl-speaking" aria-label="말하는 중">
+            <i /><i /><i />
+          </p>
+        )}
         <span ref={tail} />
       </div>
       {call.asking && (
