@@ -14,11 +14,13 @@ import { Camera as CameraIcon, Image } from '../icons/line.jsx'
 // 사진은 뷰파인더보다 이만큼 크다. 사방으로 30%씩 둘러볼 여유가 생긴다.
 const OVER = 1.6
 
+// 찍을 수 있는 자리. 책상만 넷이면 다 비슷해 보인다 — 사무실 안에서
+// 실제로 걸어갈 만한 네 곳으로 둔다.
 const SUBJECTS = [
   ['desk', '책상 위'],
-  ['screen', '모니터 화면'],
-  ['paper', '서류'],
-  ['window', '창밖']
+  ['window', '창밖'],
+  ['pantry', '탕비실'],
+  ['hall', '복도']
 ]
 
 // 180° 파노라마를 그리는 뷰파인더. 사진을 구 안쪽에 발라 놓고 그 한가운데서

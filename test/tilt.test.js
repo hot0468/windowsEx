@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { framePct, panFrom, REST, RANGE, sensorState, shiftPct, tiltNote } from '../src/shell/tilt.js'
+import { DEAD, EASE, framePct, panFrom, REST, RANGE, sensorState, shiftPct, smoothPan, tiltNote } from '../src/shell/tilt.js'
 
 // 뷰파인더보다 큰 사진을 기울여 둘러보는 계산. 화면 없이 검사할 수 있게
 // 순수 함수로 떼어 두었다 — 여기서 어긋나면 사진 가장자리가 빈다.
@@ -115,5 +115,55 @@ describe('왜 안 되는지 가리기', () => {
   // iOS 는 손짓 안에서만 권한을 묻는다 — 버튼을 보여야 한다.
   it('권한을 물어야 하는 기기는 물어야 한다고 한다', () => {
     expect(sensorState({ hasEvent: true, secure: true, protocol: 'https:', host: 'x', needsPermission: true })).toBe('off')
+  })
+})
+
+// 센서는 초당 예순 번씩 값을 준다. 그대로 넣으면 손 떨림이 그대로 보여 화면이
+// 부들거린다 — 사람은 폰을 완벽히 고정하지 못한다.
+describe('기울기를 부드럽게 잇기', () => {
+  it('목표 쪽으로 조금씩 간다 — 한 번에 가지 않는다', () => {
+    const a = smoothPan({ x: 0, y: 0 }, { x: 1, y: 0 })
+    expect(a.x).toBeGreaterThan(0)
+    expect(a.x).toBeLessThan(1)
+    expect(a.x).toBeCloseTo(EASE, 6)
+  })
+
+  // 떨림은 한 프레임에 끝난다. 데드존보다 작은 차이는 조금씩 따라가지 않고
+  // 바로 맞춰 버리므로, 다음 프레임부터는 아무 일도 일어나지 않는다 —
+  // 미세한 값이 계속 들어와도 화면이 흔들리지 않는다.
+  it('아주 작은 흔들림은 한 프레임에 삼킨다', () => {
+    const still = { x: 0.5, y: 0.5 }
+    const jitter = { x: 0.5 + DEAD / 2, y: 0.5 }
+    const after = smoothPan(still, jitter)
+    expect(after).toEqual(jitter)
+    // 그리고 멈춘다 — 같은 값이 또 들어와도 더 움직이지 않는다
+    expect(smoothPan(after, jitter)).toEqual(after)
+    // 눈에 보일 만큼 움직이지도 않았다
+    expect(Math.abs(after.x - still.x)).toBeLessThan(DEAD)
+  })
+
+  it('큰 움직임은 따라간다', () => {
+    const moved = smoothPan({ x: 0, y: 0 }, { x: 0.8, y: -0.8 })
+    expect(moved.x).toBeGreaterThan(0)
+    expect(moved.y).toBeLessThan(0)
+  })
+
+  // 끝에 다다르면 목표에 붙인다. 안 그러면 영영 0.001 씩 남아 루프가 안 멈춘다.
+  it('충분히 가까워지면 목표에 붙는다', () => {
+    const to = { x: 1, y: 1 }
+    expect(smoothPan({ x: 1 - DEAD / 2, y: 1 }, to)).toEqual(to)
+  })
+
+  // 여러 번 부르면 결국 도착한다 — 영영 못 가면 화면이 목표를 따라잡지 못한다.
+  it('되풀이하면 도착한다', () => {
+    let at = { x: 0, y: 0 }
+    const to = { x: 1, y: -1 }
+    for (let i = 0; i < 200; i++) at = smoothPan(at, to)
+    expect(at).toEqual(to)
+  })
+
+  it('이미 도착했으면 그대로다', () => {
+    const at = { x: 0.3, y: -0.3 }
+    expect(smoothPan(at, at)).toEqual(at)
   })
 })
