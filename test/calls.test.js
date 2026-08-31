@@ -106,6 +106,12 @@ describe('전화번호 이스터에그', () => {
     for (const e of eggs) expect(listed.has(e.number), e.name + ' 이 목록에 있다').toBe(false)
   })
 
+  // 키패드가 이름을 띄우면, 걸기도 전에 특별한 번호라는 것을 알려 주는 셈이다.
+  it('연락처에 없으니 키패드도 이름을 모른다', () => {
+    const listed = [...calls.contacts, ...calls.people].map((c) => c.number.replace(/[^0-9]/g, ''))
+    for (const e of eggs) expect(listed).not.toContain(e.number.replace(/[^0-9]/g, ''))
+  })
+
   it('아무것도 주지 않는다', () => {
     for (const e of eggs) {
       expect(e.grants).toBeUndefined()

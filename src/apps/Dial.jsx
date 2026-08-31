@@ -129,9 +129,10 @@ export default function Dial() {
     ['업무', [...people.filter((p) => p.group === '업무'), ...contacts]],
     ['개인', people.filter((p) => p.group !== '업무')]
   ]
-  // 키패드에 다 누르고 나면 누구인지 알려 준다 — 목록에 없는 번호(eggs)도
-  // 여기서는 이름이 뜬다. 눌러 본 사람에게 주는 대답이다.
-  const nameOf = (number) => [...contacts, ...people, ...scenario.calls?.eggs ?? []]
+  // 실제 폰이 그러듯 연락처에 있는 번호만 이름이 뜬다. 목록에 없는 번호는
+  // 걸어 보기 전까지 누구인지 알 수 없어야 한다 — 알려 주면 특별한 번호라는
+  // 것을 걸기도 전에 말해 버리는 셈이다.
+  const nameOf = (number) => [...contacts, ...people]
     .find((c) => c.number.replace(/[^0-9]/g, '') === number.replace(/[^0-9]/g, ''))?.name
 
   return (
