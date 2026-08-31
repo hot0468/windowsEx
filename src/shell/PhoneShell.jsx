@@ -206,13 +206,13 @@ function Recents({ screens, windows, grants, onPick, onClose, onDismiss }) {
   return (
     <div className="pn-recents" onPointerDown={onDismiss}>
       {cards.length === 0 && <div className="pn-recents-none">켠 창이 없습니다</div>}
-      <div className="pn-cards" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="pn-tasks" onPointerDown={(e) => e.stopPropagation()}>
         {cards.map((c) => (
-          <div key={c.key} className="pn-card">
-            <button className="pn-card-x" onClick={() => onClose(c.key)} aria-label="닫기">
+          <div key={c.key} className="pn-task">
+            <button className="pn-task-x" onClick={() => onClose(c.key)} aria-label="닫기">
               <X size={13} strokeWidth={2.4} />
             </button>
-            <button className="pn-card-face" onClick={() => onPick(c.key)}>
+            <button className="pn-task-face" onClick={() => onPick(c.key)}>
               <Icon name={c.icon} size={30} />
               <span>{c.title}</span>
             </button>

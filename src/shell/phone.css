@@ -268,11 +268,13 @@
   backdrop-filter: blur(6px);
 }
 .pn-recents-none { flex: 1; text-align: center; color: #fff; font-size: 13px; opacity: .8; }
-.pn-cards { display: flex; gap: 12px; padding: 0 16px; overflow-x: auto; }
-.pn-card { position: relative; flex: none; }
-.pn-card-face {
-  display: grid;
-  place-items: center;
+.pn-tasks { display: flex; gap: 12px; padding: 0 16px; overflow-x: auto; }
+.pn-task { position: relative; flex: none; }
+.pn-task-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
   width: 118px;
   height: 168px;
@@ -286,22 +288,25 @@
   text-align: center;
   cursor: pointer;
 }
-.pn-card-face:active { transform: scale(.97); }
-.pn-card-x {
+.pn-task-face:active { transform: scale(.97); }
+/* 닫기는 카드 안쪽 모서리에 붙는다 — 밖으로 내밀면 카드에서 떨어져 나온
+   것처럼 보이고, 뒤에 깔린 흐린 화면 위에 혼자 떠 있게 된다. */
+.pn-task-x {
   position: absolute;
-  top: -7px;
-  right: -7px;
+  top: 6px;
+  right: 6px;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: 0;
   border-radius: 50%;
-  background: #10131a;
-  color: #fff;
+  background: rgba(16, 19, 26, .07);
+  color: var(--p-mute);
   cursor: pointer;
 }
+.pn-task-x:active { background: rgba(16, 19, 26, .16); }
 
 /* 상단 알림창. 상태바를 아래로 끌면 내려온다. */
 .ph-drag { flex: none; touch-action: none; cursor: grab; }
@@ -945,14 +950,14 @@
 .phone .mg-row,
 .phone .ph-todo li,
 .phone .gl-cell,
-.phone .pn-card,
+.phone .pn-task,
 .phone .set-row,
 .phone tbody tr {
   transition: background-color 110ms ease-out, transform 110ms ease-out;
 }
 .phone .ex-file:active,
 .phone .gl-cell:active,
-.phone .pn-card:active { transform: scale(.97); }
+.phone .pn-task:active { transform: scale(.97); }
 .phone .mg-row:active,
 .phone .ph-todo li:active,
 .phone .set-row:active,
