@@ -17,6 +17,7 @@ import Camera from './Camera.jsx'
 import Steps from './Steps.jsx'
 import Maps from './Maps.jsx'
 import Gallery from './Gallery.jsx'
+import Sms from './Sms.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
@@ -53,6 +54,8 @@ export const APPS = {
   maps: { title: '지도', icon: 'map', comp: Maps, w: 400, h: 600, phoneOnly: true },
   // 갤러리. 탐색기로도 같은 폴더를 보지만, 폰에서 사진은 격자로 본다.
   gallery: { title: '갤러리', icon: 'image', comp: Gallery, w: 400, h: 600, phoneOnly: true },
+  // 문자. 인증번호가 여기로도 온다(메일로도 가므로 PC 가 막히지 않는다).
+  sms: { title: '문자', icon: 'sms', comp: Sms, w: 380, h: 560, phoneOnly: true },
   // 폰이 주머니에 있는 동안 세어 둔 걸음. 설명은 없다.
   steps: { title: '만보기', icon: 'steps', comp: Steps, w: 380, h: 600, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },

@@ -27,17 +27,52 @@ import { newsShot, shotOf } from '../assets/photos.js'
 
 
 function Login({ site, onOk }) {
-  const { idLabel, id, password, hint } = site.login
+  const { idLabel, id, password, hint, otp } = site.login
+  const issueCode = useGame((s) => s.issueCode)
+  const verifyCode = useGame((s) => s.verifyCode)
   const [who, setWho] = useState('')
   const [pw, setPw] = useState('')
   const [misses, setMisses] = useState(0)
   const [asked, setAsked] = useState(false)
+  // 2단계 인증. 비밀번호가 맞으면 번호가 나가고, 그 번호를 쳐야 들어간다.
+  const [stage, setStage] = useState('pw')
+  const [code, setCode] = useState('')
+  const [codeMiss, setCodeMiss] = useState(0)
 
-  const submit = () =>
-    (pw === password && (!id || who.trim().toUpperCase() === id)
-      ? onOk()
-      : setMisses((n) => n + 1))
+  const submit = () => {
+    if (!(pw === password && (!id || who.trim().toUpperCase() === id))) return setMisses((n) => n + 1)
+    if (!otp) return onOk()
+    issueCode(site.url)
+    setStage('otp')
+  }
+  const submitCode = () => (verifyCode(site.url, code) ? onOk() : setCodeMiss((n) => n + 1))
   const onKey = (e) => e.key === 'Enter' && submit()
+
+  if (stage === 'otp') {
+    return (
+      <div className="lg">
+        <div className="lg-hero">
+          <h1>인증번호 확인</h1>
+          <p>{otp.where}</p>
+        </div>
+        <div className="lg-card">
+          <label className="lg-field">
+            <span>인증번호</span>
+            <input value={code} inputMode="numeric" autoFocus spellCheck={false}
+                   onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                   onKeyDown={(e) => e.key === 'Enter' && submitCode()}
+                   placeholder="6자리" aria-label="인증번호" />
+          </label>
+          {codeMiss > 0 && <p className="pw-error">인증번호가 올바르지 않습니다.</p>}
+          <button className="lg-submit" onClick={submitCode} disabled={code.length < 6}>확인</button>
+          {/* 못 받았으면 다시 보낸다 — 옛 번호는 그 순간 죽는다. */}
+          <button className="lg-forgot" onClick={() => { issueCode(site.url); setCode(''); setCodeMiss(0) }}>
+            인증번호 다시 받기
+          </button>
+        </div>
+      </div>
+    )
+  }
   // Shown on request, and offered unprompted once someone is clearly stuck.
   const showHint = asked || misses >= 2
 

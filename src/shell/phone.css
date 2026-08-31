@@ -1047,3 +1047,14 @@
 /* 180° 파노라마 뷰파인더. 평면 사진의 .cam-lens 와 같은 자리를 차지하되,
    여기서는 WebGL 이 그린다 — 기울이면 원근이 바뀐다. */
 .cam-pano { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #0a0c10; }
+
+/* 문자. 인증번호 같은 짧은 것들이 위에서부터 쌓인다. */
+.sm { height: 100%; overflow-y: auto; background: var(--p-bg); padding: 8px 0; }
+.sm-none { padding: 30px 16px; text-align: center; color: var(--p-mute); font-size: 13px; }
+.sm-row { margin: 0 12px 8px; padding: 12px 14px; border-radius: 14px; background: var(--p-surface);
+          box-shadow: 0 1px 3px rgba(16, 19, 26, .06); }
+.sm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sm-head b { font-size: 13.5px; color: var(--p-ink); }
+.sm-head span { font-size: 11px; color: var(--p-mute); }
+.sm-text { margin: 6px 0 0; font-size: 14px; line-height: 1.55; color: var(--p-ink); user-select: text;
+           white-space: pre-wrap; }

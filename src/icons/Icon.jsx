@@ -3,6 +3,7 @@ import camera from './camera.svg'
 import files from './files.svg'
 import cards from './cards.svg'
 import chat from './chat.svg'
+import sms from './sms.svg'
 import cmd from './cmd.svg'
 import doc from './doc.svg'
 import exe from './exe.svg'
@@ -30,7 +31,7 @@ import xls from './xls.svg'
 import { fileImage } from '../assets/photos.js'
 import { fileOpener } from '../engine/store.js'
 
-const SRC = { camera, cards, files, map, meet, chat, cmd, doc, exe, folder, globe, hwp, image, mail, mine, notepad, pdf, phone, ppt, settings, shield, steps, trash, trophy, vpn, workchat, xls }
+const SRC = { sms, camera, cards, files, map, meet, chat, cmd, doc, exe, folder, globe, hwp, image, mail, mine, notepad, pdf, phone, ppt, settings, shield, steps, trash, trophy, vpn, workchat, xls }
 
 export default function Icon({ name, size = 16 }) {
   return <img className="icon" src={SRC[name]} width={size} height={size} alt="" draggable="false" />
