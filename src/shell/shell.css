@@ -913,7 +913,7 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
 .quick-hint:hover:not(:disabled) svg { color: #2f4fbf; }
 .quick-hint:hover:not(:disabled) { border-color: #b9c6dd; background: #f8faff; color: #2f4fbf; }
 .quick-hint:disabled { opacity: .5; cursor: default; }
-.quick { display: flex; flex-shrink: 0; gap: 6px; padding: 10px; border-top: 1px solid #dde; }
+.quick { display: flex; flex-wrap: wrap; flex-shrink: 0; gap: 6px; padding: 10px; border-top: 1px solid #dde; }
 .quick button { flex: 1; padding: 8px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #cdd; font-size: 12px; }
 .quick button:hover:not(:disabled) { background: #e5f1fb; }
 .quick button:disabled { opacity: .45; cursor: default; }
@@ -2497,3 +2497,10 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .pt-book-said.bad { background: #fbeae7; color: #b3261e; }
 .phone .pt-book { grid-template-columns: repeat(2, 1fr); }
 .phone .pt-book-note { grid-column: 1 / 3; }
+
+/* 잡담 칸. 정해진 답장 버튼 아래 한 줄로 늘 열려 있다 — 요청이 없을 때
+   말을 걸 자리가 여기밖에 없다. 버튼과 같은 줄에 서면 셋 다 좁아지므로
+   제 줄을 차지한다(.quick 이 감싸 준다). */
+.quick-chat { display: flex; gap: 6px; width: 100%; }
+.quick-chat .quick-input { flex: 1; min-width: 0; }
+.quick-chat .quick-send { flex: 0 0 auto; }

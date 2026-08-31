@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useGame, WORK_FOLDER, answerFits, fileFits, fileOpener, findFile, heldThreads, hintAfter, hintKey, hintReply, offerable, quickSets, readUpTo, threadMessages, unreadCount } from '../engine/store.js'
 import { historyChunks } from '../engine/history.js'
 import FileDialog from './FileDialog.jsx'
+import { replyTo } from '../engine/smalltalk.js'
 import { useFileDrop } from './dragFile.js'
 import { useViewport } from '../shell/useViewport.js'
 import { faceOf, fileImage, photoOf } from '../assets/photos.js'
@@ -227,6 +228,8 @@ export default function Messenger({ source }) {
   // other side says something new.
   const arrived = shown.filter((msg) => !msg.me).length
   const spent = thread && answeredAt[thread.id] >= arrived
+  // 잡담을 아는 상대인가. 단톡방과 이름 없는 계정에는 말을 걸 자리가 없다.
+  const talks = Boolean(thread && !quiet && scenario.smalltalk?.[thread.id])
   // A reaction can hand the conversation a new set of choices; otherwise the
   // thread's own sets advance as you keep replying.
   // A conversation still waiting its turn offers nothing to say back yet.
@@ -327,6 +330,20 @@ export default function Messenger({ source }) {
     // typing at a question that wants a file is always the wrong kind of answer
     if (!ask.files && answerFits(ask, text)) solved()
     else missed()
+  }
+
+  // 요청이 걸려 있지 않을 때 거는 말. 아무것도 주지 않고, 틀린 답으로도 세지
+  // 않는다 — 그냥 말을 건 것이다. 상대가 알아듣는 화제면 그 말을, 아니면
+  // 맞장구를, 아까 한 말이면 그것을 짚는다.
+  const chat = () => {
+    const text = draft.trim()
+    if (!text) return
+    const talk = scenario.smalltalk?.[thread.id]
+    const mine = shown.filter((msg) => msg.me).map((msg) => msg.text)
+    const reply = replyTo(talk, text, { said: mine, n: mine.length })
+    say(thread.id, { text })
+    setDraft('')
+    if (reply) speak(reply.lines)
   }
 
   const choose = (text) => {
@@ -574,14 +591,30 @@ export default function Messenger({ source }) {
                   <button className="quick-send" disabled={busy || !draft.trim()}
                           onClick={answer}>전송</button>
                 </>
-              ) : choices.length === 0 ? (
-                <span className="quick-done">대화가 끝났습니다</span>
-              ) : spent ? (
-                <span className="quick-done">답장을 보냈습니다</span>
               ) : (
-                choices.map((text) => (
-                  <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
-                ))
+                <>
+                  {/* 정해진 답장이 남아 있으면 먼저 보여 준다 — 그것이 이
+                      대화를 이어 가는 길이다. 잡담 칸은 그 아래 늘 열려 있다. */}
+                  {!spent && choices.map((text) => (
+                    <button key={text} disabled={busy} onClick={() => choose(text)}>{text}</button>
+                  ))}
+                  {talks && (
+                    <span className="quick-chat">
+                      <input className="quick-input" value={draft} disabled={busy}
+                             onChange={(e) => setDraft(e.target.value)}
+                             onKeyDown={(e) => e.key === 'Enter' && !busy && chat()}
+                             placeholder="메시지 보내기" aria-label="메시지 보내기" />
+                      <button className="quick-send" disabled={busy || !draft.trim()}
+                              onClick={chat}>전송</button>
+                    </span>
+                  )}
+                  {!talks && choices.length === 0 && (
+                    <span className="quick-done">대화가 끝났습니다</span>
+                  )}
+                  {!talks && spent && choices.length > 0 && (
+                    <span className="quick-done">답장을 보냈습니다</span>
+                  )}
+                </>
               )}
             </div>
             {confirming && (
