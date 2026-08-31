@@ -90,9 +90,18 @@ function Home({ drawer, onDrawer }) {
   const pushScreen = useGame((s) => s.pushScreen)
   const openWindow = useGame((s) => s.openWindow)
   const grab = useRef(null)
+  // 격자가 화면을 넘치는가. 넘칠 때만 스크롤이 되고, 그때는 아래로 미는
+  // 손짓을 브라우저가 가져간다.
+  const grid = useRef(null)
+  const [overflows, setOverflows] = useState(false)
   const apps = phoneApps(grants)
   const dock = DOCK.map((id) => apps.find((a) => a.id === id)).filter(Boolean)
   const rest = apps.filter((a) => !DOCK.includes(a.id))
+
+  useEffect(() => {
+    const el = grid.current
+    setOverflows(Boolean(el) && el.scrollHeight > el.clientHeight + 1)
+  }, [drawer, apps.length])
 
   const open = (a) => {
     // 창 목록은 그대로 쓴다 — 앱이 어떤 파일을 열고 있는지 같은 상태가
@@ -133,7 +142,10 @@ function Home({ drawer, onDrawer }) {
           <button className="ph-drawer-grip on" onClick={() => onDrawer(false)} aria-label="앱 서랍 닫기">
             <i />
           </button>
-          <div className="ph-grid">
+          {/* 아이콘이 한 화면에 다 들어오면 스크롤할 것이 없다. 그때는 격자
+              위에서 아래로 미는 손짓이 서랍을 닫는다. 넘칠 때만 스크롤로
+              돌려준다 — 목록을 훑는 중에 서랍이 닫히면 성가시다. */}
+          <div className={'ph-grid' + (overflows ? ' scrolls' : '')} ref={grid}>
             {rest.map((a) => <AppIcon key={a.id} app={a} onOpen={open} />)}
           </div>
         </div>

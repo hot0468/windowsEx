@@ -709,7 +709,7 @@
 .ph-home { position: relative; touch-action: none; display: flex; flex-direction: column; }
 .ph-dock { margin-top: auto; display: flex; justify-content: center; gap: 22px; padding: 0 12px 6px; }
 .ph-drawer-grip { display: block; width: 100%; padding: 10px 0 12px; border: 0; background: none;
-                  cursor: pointer; flex: none; }
+                  cursor: pointer; flex: none; touch-action: none; }
 .ph-drawer-grip i { display: block; width: 96px; height: 4px; margin: 0 auto; border-radius: 2px;
                     background: rgba(16, 19, 26, .22); }
 .ph-drawer-grip.on i { background: rgba(16, 19, 26, .3); }
@@ -725,7 +725,12 @@
   animation: ph-drawer-up .24s var(--p-ease);
 }
 @keyframes ph-drawer-up { from { transform: translateY(100%); opacity: .6; } }
-.ph-drawer .ph-grid { flex: 1; align-content: start; overflow-y: auto; padding-top: 4px; }
+/* 격자 위에서도 아래로 밀면 서랍이 닫혀야 한다. overflow-y:auto 만 두면
+   브라우저가 그 손짓을 스크롤로 가져가, 손잡이에서만 닫히는 것처럼 느껴진다.
+   앱이 한 화면에 다 들어오는 동안에는 스크롤할 것도 없다 — 넘칠 때만
+   스크롤되도록 하고(JSX 가 클래스를 붙인다), 그때는 브라우저에 돌려준다. */
+.ph-drawer .ph-grid { flex: 1; align-content: start; padding-top: 4px; touch-action: none; }
+.ph-drawer .ph-grid.scrolls { overflow-y: auto; touch-action: pan-y; }
 
 /* 목록의 한 줄 — 눌러 펼치고, 전화는 그 안에서 한 번 더 눌러야 걸린다. */
 .cl-item { border-bottom: 1px solid var(--p-line); background: var(--p-surface); }
