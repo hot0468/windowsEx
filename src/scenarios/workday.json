@@ -24814,7 +24814,7 @@
         "from": "차민혁",
         "lines": [
           "김한별 대리님, 확인차 여쭙습니다.",
-          "사내망 비인가 게시판(sotong.ar.local)에 접속 기록이 남아 있습니다.",
+          "사내망 비인가 게시판(소통방)에 접속 기록이 남아 있습니다.",
           "해당 서버는 자산 목록에 없는 장비입니다. 업무 목적이 아니라면 hosts 등록을 지워 주세요."
         ]
       }
@@ -25035,6 +25035,84 @@
         "lines": [
           "김대리님 자리에 모니터암 새로 다신 거예요? 좋아 보이는데요",
           "아침에 어떤 분이 두고 가시던데, 아는 분이에요? 저도 하나 구해야겠어요"
+        ]
+      }
+    },
+    {
+      "id": "stock_recount",
+      "when": {
+        "grant": "stock",
+        "afterDays": 1
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "minseo",
+        "from": "최민서",
+        "lines": [
+          "선배님, A상사에서 연락이 왔는데요",
+          "어제 회신한 재고 수량이 창고 실사랑 여덟 대 안 맞는대요",
+          "일단 확인해 보겠다고 했어요. 저희 쪽 문제는 아닌 것 같은데…"
+        ]
+      }
+    },
+    {
+      "id": "stock_confessed",
+      "when": {
+        "grant": "stock",
+        "afterDays": 2
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "junho",
+        "from": "이준호",
+        "lines": [
+          "야 그 여덟 대",
+          "내가 시연용으로 빼놓은 거다. 창고 대장에 안 적었네",
+          "민서한테는 말했다. A상사도 정리됐대. 미안"
+        ]
+      }
+    },
+    {
+      "id": "newsletter_pick",
+      "when": {
+        "anyGrant": [
+          "stagepic",
+          "e_dinnerpic",
+          "teampic"
+        ],
+        "afterDays": 1
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "soyoung",
+        "from": "한소영",
+        "lines": [
+          "워크숍 사진 사내 뉴스레터에 실린대",
+          "총무팀이 우리 팀 거를 골랐어. 뒤통수 나오는 그거",
+          "다음 주에 나온다니까 미리 말해 주는 거야"
+        ]
+      }
+    },
+    {
+      "id": "asset_registered",
+      "when": {
+        "anyGrant": [
+          "host",
+          "mac",
+          "gateway",
+          "e_dns"
+        ],
+        "count": 2
+      },
+      "beat": {
+        "source": "workMessenger",
+        "thread": "security",
+        "from": "차민혁",
+        "lines": [
+          "정보보안팀 차민혁입니다. 자산 등록 협조 감사합니다",
+          "덕분에 영업1팀 장비는 정리가 끝났습니다",
+          "한 가지만… 등록 대장에 층이 하나 더 잡혀 있네요. 7층 다음에",
+          "총무팀에 물어봐야겠습니다. 신경 쓰지 마세요"
         ]
       }
     }
@@ -25723,6 +25801,48 @@
         "lines": [
           "내일 오후 손님 오는 거 회의실 잡았지? 나도 들어간다",
           "그분 커피 블랙만 마심. 참고해라"
+        ]
+      }
+    },
+    {
+      "id": "ch_a_stagepic",
+      "after": "stagepic",
+      "egg": "reaction — 장기자랑 사진이 팀에 돌아다닌다",
+      "beat": {
+        "source": "workMessenger",
+        "thread": "junho",
+        "from": "이준호",
+        "lines": [
+          "소영 선배가 받은 장기자랑 사진 나한테도 돌렸는데",
+          "맨 뒤에 뒤통수 하나 누구냐. 너지"
+        ]
+      }
+    },
+    {
+      "id": "ch_a_dinnerpic",
+      "after": "e_dinnerpic",
+      "egg": "reaction — 회식 사진이 단톡에 올라간다",
+      "beat": {
+        "source": "workMessenger",
+        "thread": "soyoung",
+        "from": "한소영",
+        "lines": [
+          "준호가 회식 사진 단톡에 올렸더라",
+          "너 그날 젓가락 들고 무슨 표정이야"
+        ]
+      }
+    },
+    {
+      "id": "ch_a_teampic",
+      "after": "teampic",
+      "egg": "reaction — 단체사진이 집까지 갔다",
+      "beat": {
+        "source": "workMessenger",
+        "thread": "junho",
+        "from": "이준호",
+        "lines": [
+          "너희 어머님한테 단체사진 보냈다고? 나 거기 나오는데",
+          "잘 나온 걸로 보냈지?"
         ]
       }
     }

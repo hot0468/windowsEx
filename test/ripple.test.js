@@ -30,7 +30,7 @@ describe('what yesterday leaves behind', () => {
     ].filter(Boolean))
 
     for (const r of scenario.ripples) {
-      for (const key of [r.when.grant, r.when.notGrant, r.effect?.extraRequest]) {
+      for (const key of [r.when.grant, r.when.notGrant, r.effect?.extraRequest, ...(r.when.anyGrant ?? [])]) {
         if (key) expect(granted.has(key), `${r.id} watches ${key}, which nothing grants`).toBe(true)
       }
     }
@@ -57,10 +57,37 @@ describe('what yesterday leaves behind', () => {
     }
   })
 
+  // 다음날 아침에 오는 말이 정답을 담고 있으면, 어제 못 푼 것이 오늘 그냥 풀린다.
+  it('never says an answer', () => {
+    const answers = []
+    const walk = (o) => {
+      if (!o || typeof o !== 'object') return
+      if (Array.isArray(o)) return o.forEach(walk)
+      if (o.accept) answers.push(...[o.accept].flat(2).filter((a) => typeof a === 'string' && a.length >= 4))
+      Object.values(o).forEach(walk)
+    }
+    walk(scenario)
+    const said = scenario.ripples.flatMap((r) => r.beat.lines).join(' ')
+    for (const a of new Set(answers)) expect(said, a).not.toContain(a)
+    expect(said).not.toMatch(/ㅋㅋ/)
+  })
+
   it('never lands on the first morning', () => {
     for (const r of scenario.ripples) {
       expect(rippleHolds(r.when, 1, { ...base, overtime: { 1: true }, locks: 0, slips: 99, mining: true, roomQuestions: 99 }), r.id).toBe(false)
     }
+  })
+
+  // 풀에서 뽑히는 요청은 어느 것이 나올지 모른다. 여럿을 묶어 "이 중 둘"로 걸면
+  // 한 주에 한 번은 이야기가 닿는다 — 그리고 가장 먼저 한 날부터 며칠을 센다.
+  it('counts any of several deeds, and waits from the first of them', () => {
+    const when = { anyGrant: ['a', 'b', 'c'], count: 2 }
+    expect(rippleHolds(when, 3, { ...base, grants: { a: true } })).toBe(false)
+    expect(rippleHolds(when, 3, { ...base, grants: { a: true, c: true } })).toBe(true)
+    const wait = { anyGrant: ['a', 'b'], afterDays: 1 }
+    expect(rippleHolds(wait, 3, { ...base, grants: { b: true }, ripples: { _b: 2 } })).toBe(true)
+    expect(rippleHolds(wait, 3, { ...base, grants: { b: true }, ripples: { _b: 3 } })).toBe(false)
+    expect(rippleHolds(wait, 3, { ...base, grants: { a: true, b: true }, ripples: { _a: 2, _b: 3 } })).toBe(true)
   })
 
   it('follows a late night with a lighter morning', () => {

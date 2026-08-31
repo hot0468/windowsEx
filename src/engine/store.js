@@ -2208,7 +2208,7 @@ export function requestsOf(scenario, day, overtime = {}, drawn = {}, ripples = {
 
 // Grants a consequence is waiting on, so `grant` only stamps the ones that matter.
 export const watched = (scenario, key) =>
-  (scenario.ripples ?? []).some((r) => r.when.grant === key)
+  (scenario.ripples ?? []).some((r) => r.when.grant === key || r.when.anyGrant?.includes(key))
 
 // Which consequences land on the morning of day `n`. A ripple lands once, and
 // only when the state it names is actually true.
@@ -2254,6 +2254,12 @@ export function rippleHolds(when = {}, n, state) {
   // something the player did, and something they then did not do
   if (when.grant && !grants[when.grant]) return false
   if (when.notGrant && grants[when.notGrant]) return false
+  // 여러 일 중 몇 개. 풀에서 무작위로 뽑히는 요청들은 어느 것이 나올지 모르므로,
+  // "이 중 둘을 했으면"으로 묶어야 한 주에 한 번은 이야기가 닿는다.
+  if (when.anyGrant) {
+    const have = when.anyGrant.filter((k) => grants[k]).length
+    if (have < (when.count ?? 1)) return false
+  }
   // the bill comes due a couple of days after the thing itself
   if (when.afterDays && !doneLongEnough(ripples, when, n)) return false
   // a table booked, and a night spent at the office instead
@@ -2271,8 +2277,10 @@ const rewritten = (sc, edits, id) => {
 // A consequence with `afterDays` waits that many days after the deed before it
 // lands, so the player has a window in which to put it right.
 const doneLongEnough = (ripples, when, n) => {
-  const at = ripples['_' + when.grant]
-  return at !== undefined && n - at >= when.afterDays
+  // 여러 일을 묶었으면 그중 가장 먼저 한 날부터 센다.
+  const keys = when.anyGrant ?? [when.grant]
+  const days = keys.map((k) => ripples['_' + k]).filter((d) => d !== undefined)
+  return days.length > 0 && n - Math.min(...days) >= when.afterDays
 }
 
 // Days after the first keep a fixed core and draw the rest, so no two weeks
