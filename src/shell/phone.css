@@ -875,3 +875,39 @@
             padding: 8px 14px; border: 0; border-radius: 999px;
             background: rgba(255, 255, 255, .92); color: #10131a;
             font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+
+/* 사진 정보. 아래에서 밀어 올리면 사진 위로 시트가 올라온다 — 안드로이드
+   갤러리의 그 자리. 뷰어는 어두우므로 시트도 어둡게 간다. */
+.vw-info-hint { position: absolute; left: 50%; bottom: 10px; z-index: 3;
+                transform: translateX(-50%); padding: 10px 26px; border: 0;
+                background: none; cursor: pointer; }
+.vw-info-hint i { display: block; width: 84px; height: 4px; border-radius: 2px;
+                  background: rgba(255, 255, 255, .5); }
+.vw-info-hint:active i { background: rgba(255, 255, 255, .8); }
+
+.vw-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+           max-height: 74%; overflow-y: auto; overscroll-behavior: contain;
+           -webkit-overflow-scrolling: touch;
+           padding: 6px 20px 24px; border-radius: 18px 18px 0 0;
+           background: #1b1e25; color: #f2f4f8;
+           box-shadow: 0 -8px 30px rgba(0, 0, 0, .45);
+           animation: vw-info-up 220ms var(--p-ease); }
+@keyframes vw-info-up { from { transform: translateY(100%); } to { transform: none; } }
+
+.vw-info-grip { display: block; width: 100%; padding: 8px 0 12px; border: 0;
+                background: none; cursor: pointer; }
+.vw-info-grip i { display: block; width: 40px; height: 4px; margin: 0 auto;
+                  border-radius: 2px; background: rgba(255, 255, 255, .3); }
+.vw-info h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.vw-info dl { margin: 0; }
+.vw-info dl > div { display: flex; gap: 14px; padding: 9px 0;
+                    border-top: 1px solid rgba(255, 255, 255, .08); }
+.vw-info dt { flex: none; width: 78px; color: rgba(255, 255, 255, .5); font-size: 12.5px; }
+.vw-info dd { margin: 0; flex: 1; font-size: 13px; line-height: 1.5;
+              overflow-wrap: anywhere; }
+/* 찍힌 때가 이 시트를 여는 이유다. 한 줄만 크게 둔다. */
+.vw-info dl > div:first-child { border-top: 0; }
+.vw-info dl > div:first-child dd { font-size: 14.5px; font-weight: 600; }
+.vw-info-alt { margin: 14px 0 0; padding-top: 12px;
+               border-top: 1px solid rgba(255, 255, 255, .08);
+               color: rgba(255, 255, 255, .62); font-size: 12.5px; line-height: 1.7; }

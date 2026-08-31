@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { swipeStep } from '../src/apps/Viewer.jsx'
+import { infoPull, swipeStep } from '../src/apps/Viewer.jsx'
+import { fileCreated, fmtStampLong } from '../src/engine/store.js'
 import { readFileSync } from 'node:fs'
 import { openTap } from '../src/shell/useViewport.js'
 
@@ -58,5 +59,77 @@ describe('여는 손짓은 보기 방식과 무관하다', () => {
   it('여는 자리는 모두 openTap 을 거친다', () => {
     // 폴더로 들어가는 곳과 파일을 여는 곳 — 아이콘 뷰와 자세히 보기 둘 다.
     expect((src.match(/openTap\(/g) ?? []).length).toBeGreaterThanOrEqual(4)
+  })
+})
+
+// 사진 정보는 아래에서 위로 밀어 올린다 — 안드로이드 갤러리의 그 손짓.
+// 이미 있는 손짓 둘(옆으로 밀어 넘기기, 확대 중의 팬)과 겹치면 안 된다.
+describe('사진 정보 밀어 올리기', () => {
+  it('위로 충분히 밀면 정보가 열린다', () => {
+    expect(infoPull({ dx: 4, dy: -90 })).toBe(1)
+  })
+
+  it('아래로 충분히 밀면 정보가 닫힌다', () => {
+    expect(infoPull({ dx: 0, dy: 90, open: true })).toBe(-1)
+  })
+
+  it('짧게 스친 것은 손짓이 아니다', () => {
+    expect(infoPull({ dx: 0, dy: -30 })).toBe(0)
+    expect(infoPull({ dx: 0, dy: 40, open: true })).toBe(0)
+  })
+
+  // 가로가 더 길면 그건 사진을 넘기는 손짓이다. 두 손짓이 같은 화면에
+  // 있으므로 여기서 갈라 두지 않으면 대각선에서 둘 다 발동한다.
+  it('가로가 더 긴 손짓은 넘김이지 정보가 아니다', () => {
+    expect(infoPull({ dx: -120, dy: -60 })).toBe(0)
+    expect(swipeStep({ dx: -120, dy: -60 })).toBe(1)
+  })
+
+  // 확대 중의 세로 손짓은 사진을 위아래로 끄는 팬이다.
+  it('확대 중에는 정보를 열지 않는다', () => {
+    expect(infoPull({ dx: 0, dy: -140, zoomed: true })).toBe(0)
+  })
+
+  // 닫혀 있을 때 아래로 밀어도 더 닫을 것이 없고, 열려 있을 때 위로 밀어도
+  // 더 열 것이 없다. 같은 손짓이 두 번 먹으면 화면이 덜컹인다.
+  it('이미 그 상태면 아무 일도 없다', () => {
+    expect(infoPull({ dx: 0, dy: 90 })).toBe(0)
+    expect(infoPull({ dx: 0, dy: -90, open: true })).toBe(0)
+  })
+})
+
+// 사진 정보가 실제로 무언가를 말해 주는가. 시트를 띄워 놓고 날짜 칸이
+// 비어 있으면 손짓만 있고 알맹이가 없는 것이다.
+describe('사진 정보에 찍은 날짜가 있다', () => {
+  const scenario = JSON.parse(
+    readFileSync(new URL('../src/scenarios/workday.json', import.meta.url), 'utf8'))
+
+  const walk = (entries, trail, out = []) => {
+    for (const e of entries) {
+      if (e.children) walk(e.children, [...trail, e.name], out)
+      else out.push({ file: e, path: trail })
+    }
+    return out
+  }
+  const all = Object.entries(scenario.fs).flatMap(([root, es]) => walk(es, [root]))
+  const gallery = all.filter(({ file, path }) => file.image && path.includes('갤러리'))
+
+  it('갤러리에 사진이 있다', () => {
+    expect(gallery.length).toBeGreaterThan(0)
+  })
+
+  it('갤러리 사진은 모두 찍은 때를 읽을 수 있다', () => {
+    for (const { file, path } of gallery) {
+      const st = fileCreated(file, path)
+      expect(st, file.name).toBeTruthy()
+      expect(fmtStampLong(scenario, st)).toMatch(/\d{4}년 \d+월 \d+일 .요일/)
+    }
+  })
+
+  // 정보 시트는 fileCreated 를 쓴다. 그 값이 파일마다 다르지 않으면
+  // 사진을 넘겨도 같은 날짜가 나와 정보가 없는 것과 같다.
+  it('사진마다 찍힌 때가 다르다', () => {
+    const stamps = gallery.map(({ file, path }) => JSON.stringify(fileCreated(file, path)))
+    expect(new Set(stamps).size).toBeGreaterThan(1)
   })
 })

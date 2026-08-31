@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame, dreamGallery, findFile, fsView, galleryOf } from '../engine/store.js'
+import {
+  useGame, dreamGallery, fileCreated, fileKind, fileSize, findFile, fmtSize, fmtStampLong,
+  fsView, galleryOf
+} from '../engine/store.js'
+import { useViewport } from '../shell/useViewport.js'
 import { cameraShot, fileImage } from '../assets/photos.js'
 import { APPS } from './registry.jsx'
 import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
@@ -16,6 +20,73 @@ export function swipeStep({ dx, dy, zoomed = false }, threshold = 48) {
   if (zoomed) return 0
   if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy)) return 0
   return dx < 0 ? 1 : -1
+}
+
+// 아래에서 위로 밀면 사진 정보가 올라온다 — 안드로이드 갤러리의 그 손짓.
+// 1이면 열고, -1이면 닫고, 0이면 손짓이 아니다.
+//
+// 같은 화면에 손짓이 셋이라 경계를 분명히 둔다. 가로가 더 길면 그건 장을
+// 넘기는 손짓이고(swipeStep 이 가져간다), 확대 중의 세로는 사진을 끄는
+// 팬이다. 이미 열려 있는데 또 위로 미는 것도 손짓이 아니다.
+export function infoPull({ dx, dy, zoomed = false, open = false }, threshold = 56) {
+  if (zoomed) return 0
+  if (Math.abs(dy) < threshold || Math.abs(dy) <= Math.abs(dx)) return 0
+  if (dy < 0) return open ? 0 : 1
+  return open ? -1 : 0
+}
+
+// 사진이 어느 폴더에 있는지. 정보 시트의 '위치' 한 줄에만 쓴다.
+function pathOf(fs, id) {
+  const walk = (entries, trail) => {
+    for (const e of entries) {
+      if (e.id === id) return trail
+      const hit = e.children && walk(e.children, [...trail, e.name])
+      if (hit) return hit
+    }
+    return null
+  }
+  for (const [root, entries] of Object.entries(fs)) {
+    const hit = walk(entries, [root])
+    if (hit) return hit
+  }
+  return []
+}
+
+// 사진 한 장이 들고 있는 것들. 찍힌 때가 맨 위다 — 안드로이드 사진 정보의
+// 그 순서.
+function PhotoInfo({ scenario, file, path, onClose }) {
+  // 열린 시트를 도로 내리는 손짓은 시트가 직접 받는다. 손가락이 사진 위가
+  // 아니라 시트 위에 있으므로 vw-canvas 의 핸들러에는 닿지 않는다.
+  const touch = useRef(null)
+  const onTouchStart = (e) => { touch.current = e.touches[0].clientY }
+  const onTouchEnd = (e) => {
+    const from = touch.current
+    touch.current = null
+    // 시트 안이 스크롤되고 있으면 그건 목록을 읽는 손짓이지 닫는 손짓이 아니다.
+    if (from == null || e.currentTarget.scrollTop > 0) return
+    if (infoPull({ dx: 0, dy: e.changedTouches[0].clientY - from, open: true }) < 0) onClose()
+  }
+  const rows = [
+    ['찍은 날짜', fmtStampLong(scenario, fileCreated(file, path))],
+    ['파일 이름', file.name],
+    ['위치', path.join(' › ')],
+    ['종류', fileKind(file)],
+    ['크기', fmtSize(fileSize(scenario, file))]
+  ]
+  return (
+    <div className="vw-info" role="dialog" aria-label="사진 정보"
+         onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <button className="vw-info-grip" onClick={onClose} aria-label="정보 닫기"><i /></button>
+      <h3>사진 정보</h3>
+      <dl>
+        {rows.map(([k, v]) => (
+          <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+        ))}
+      </dl>
+      {/* 무엇이 찍혔는지는 alt 에 이미 적혀 있다. 없으면 줄을 그리지 않는다. */}
+      {file.alt && <p className="vw-info-alt">{file.alt}</p>}
+    </div>
+  )
 }
 
 export default function Viewer({ fileId }) {
@@ -36,6 +107,9 @@ export default function Viewer({ fileId }) {
   const placed = useGame((s) => s.placed)
   const touched = useGame((s) => s.touched)
   const [menu, setMenu] = useState(null)
+  // 사진 정보는 폰에서만 밀어 올린다. 데스크톱에는 파일 속성 창이 이미 있다.
+  const [info, setInfo] = useState(false)
+  const shell = useViewport()
 
   const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, shots, photos, scenario })
   const gallery = galleryOf(fs, fileId, showHidden)
@@ -53,6 +127,8 @@ export default function Viewer({ fileId }) {
     if (!next) return
     setShown(next.id)
     setZoom(0)
+    // 넘긴 뒤에도 정보가 남으면 앞 사진의 날짜를 이 사진의 것으로 읽는다.
+    setInfo(false)
   }
 
   // 폰의 손짓: 양옆으로 밀어 앞뒤 사진으로. preventDefault를 부르지 않으므로
@@ -67,7 +143,14 @@ export default function Viewer({ fileId }) {
     touch.current = null
     if (!from) return
     const t = e.changedTouches[0]
-    const by = swipeStep({ dx: t.clientX - from.x, dy: t.clientY - from.y, zoomed: zoom > 0 })
+    const g = { dx: t.clientX - from.x, dy: t.clientY - from.y, zoomed: zoom > 0 }
+    // 세로면 정보, 가로면 넘김. infoPull 과 swipeStep 이 가로세로로 갈라
+    // 두므로 한 손짓이 둘 다 발동하는 일은 없다.
+    if (shell === 'phone') {
+      const pull = infoPull({ ...g, open: info })
+      if (pull) return setInfo(pull > 0)
+    }
+    const by = swipeStep(g)
     if (by) step(by)
   }
   const onKeyDown = (e) => {
@@ -132,6 +215,15 @@ export default function Viewer({ fileId }) {
         </div>
         )}
       </div>
+      {shell === 'phone' && !info && (
+        <button className="vw-info-hint" onClick={() => setInfo(true)} aria-label="사진 정보 보기">
+          <i />
+        </button>
+      )}
+      {info && (
+        <PhotoInfo scenario={scenario} file={file} path={pathOf(fs, shown)}
+                   onClose={() => setInfo(false)} />
+      )}
       {menu && (
         <>
           <div className="ctx-catch" onPointerDown={() => setMenu(null)}
