@@ -948,8 +948,15 @@
 .phone tbody tr:active { background-color: rgba(16, 19, 26, .06); }
 
 /* 목록을 세로로 훑는 손짓과 화면을 가로로 미는 손짓이 서로 걸리지 않게 한다.
-   브라우저가 방향을 먼저 정해 주면 스크롤이 손가락에 붙는다. */
-.phone-body, .ph-home, .phone .ex-main, .phone .mg-list { touch-action: pan-y; }
+   브라우저가 방향을 먼저 정해 주면 스크롤이 손가락에 붙는다.
+
+   .ph-home 은 여기 들어오면 안 된다 — 홈에서 위로 미는 것은 스크롤이 아니라
+   앱 서랍을 여는 손짓이라, pan-y 를 주면 브라우저가 그 손짓을 스크롤로
+   가져가 서랍이 열리지 않는다. 마우스는 touch-action 을 보지 않아서 PC 에서만
+   되고 실기기에서 안 되는, 눈에 안 띄는 종류의 고장이었다. */
+.phone-body, .phone .ex-main, .phone .mg-list { touch-action: pan-y; }
+/* 홈과 서랍의 세로 손짓은 앱이 받는다. */
+.ph-home, .ph-drawer { touch-action: none; }
 
 /* 버튼은 눌리는 순간 살짝 들어간다. 90ms — 알아채기 전에 끝나지만
    없으면 허전하다. */
