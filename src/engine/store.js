@@ -1576,9 +1576,10 @@ export const useGame = create((set, get) => ({
     const dialed = String(number).replace(/[^0-9]/g, '')
     const digits = (n) => String(n).replace(/[^0-9]/g, '')
     const who = (s.scenario.calls?.contacts ?? []).find((c) => digits(c.number) === dialed)
-    // 일 때문이 아니라 그냥 아는 사람들 — 팀 사람, 엄마, 지현. 여기에는
-    // 아무 목표도 걸려 있지 않다. 받고, 몇 마디 하고, 끊는다.
-    const known = who ? null : (s.scenario.calls?.people ?? []).find((c) => digits(c.number) === dialed)
+    // 일 때문이 아니라 그냥 아는 사람들 — 팀 사람, 엄마, 지현. 그리고 눌러 본
+    // 사람에게만 열리는 번호들(eggs). 어느 쪽에도 목표는 걸려 있지 않다.
+    const known = who ? null : [...s.scenario.calls?.people ?? [], ...s.scenario.calls?.eggs ?? []]
+      .find((c) => digits(c.number) === dialed)
     // 신호 가는 동안 끊고 다시 걸 수 있다. 그 사이 늦게 도착한 타이머가
     // 지워진 통화를 되살리지 않도록 통화마다 번호를 붙인다.
     const seq = (s.callSeq ?? 0) + 1
@@ -1595,7 +1596,18 @@ export const useGame = create((set, get) => ({
       if (!who) {
         if (!known) return get().noAnswer()
         set({ call: { ...now, id: known.id, name: known.name, stage: 'talking', asking: false, said: [] } })
-        return get().speakOnCall(known.lines)
+        get().speakOnCall(known.lines)
+        // 끊는 말을 가진 쪽은 제 할 말을 마치고 스스로 끊는다.
+        if (known.bye) {
+          const id = known.id
+          setTimeout(() => {
+            const st = get().call
+            if (st?.id !== id || st.stage !== 'talking') return
+            set({ call: { ...st, said: [...st.said, { them: true, text: known.bye }] } })
+            setTimeout(() => { if (get().call?.id === id) get().hangUp() }, 2400)
+          }, (known.lines.length + 1) * CALL_GAP + 700)
+        }
+        return undefined
       }
       const st = get()
       const done = Boolean(st.grants[who.id])

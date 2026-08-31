@@ -96,6 +96,59 @@ describe('아는 사람들', () => {
   })
 })
 
+// 눌러 본 사람에게만 열리는 번호들. 목록에 없고, 아무것도 주지 않는다 —
+// 웃거나 서늘하면 그것으로 끝이다.
+describe('전화번호 이스터에그', () => {
+  const eggs = scenario.calls.eggs
+
+  it('연락처에는 없다', () => {
+    const listed = new Set([...calls.contacts, ...calls.people].map((c) => c.number))
+    for (const e of eggs) expect(listed.has(e.number), e.name + ' 이 목록에 있다').toBe(false)
+  })
+
+  it('아무것도 주지 않는다', () => {
+    for (const e of eggs) {
+      expect(e.grants).toBeUndefined()
+      expect(e.ask).toBeUndefined()
+      expect(e.lines.length).toBeGreaterThan(0)
+    }
+  })
+
+  // 정답을 흘리면 이스터에그가 아니라 지름길이 된다.
+  it('정답을 말하지 않는다', () => {
+    const said = eggs.flatMap((e) => [...e.lines, e.bye ?? '']).join(' ')
+    for (const c of calls.contacts) {
+      for (const key of mailOf(c.id).requiredKeywords ?? []) expect(said).not.toContain(key)
+    }
+  })
+
+  it('걸면 받고, 말이 한 줄씩 온다', () => {
+    vi.useFakeTimers()
+    useGame.setState({ call: null, callSeq: 0, callLog: [], grants: {} })
+    const hq = eggs.find((e) => e.id === 'egg_hq')
+    useGame.getState().dial(hq.number)
+    vi.advanceTimersByTime(2300)
+    expect(useGame.getState().call.name).toBe(hq.name)
+    expect(useGame.getState().call.said).toHaveLength(0)
+    vi.advanceTimersByTime(1200)
+    expect(useGame.getState().call.said).toHaveLength(1)
+    expect(useGame.getState().call.asking).toBe(false)
+    vi.useRealTimers()
+  })
+
+  // 없는 층의 내선은 저쪽에서 끊는다 — 사람이 받은 것이 아니기 때문이다.
+  it('끊는 말을 가진 번호는 스스로 끊는다', () => {
+    vi.useFakeTimers()
+    useGame.setState({ call: null, callSeq: 0, callLog: [], grants: {} })
+    const floor8 = eggs.find((e) => e.bye)
+    useGame.getState().dial(floor8.number)
+    vi.advanceTimersByTime(2300 + 30000)
+    expect(useGame.getState().call).toBe(null)
+    expect(useGame.getState().callLog[0].number).toBe(floor8.number)
+    vi.useRealTimers()
+  })
+})
+
 describe('걸려오는 전화', () => {
   it('실존하는 일이 끝난 뒤에 걸려온다', () => {
     const ids = new Set(scenario.objectives.map((o) => o.grant))

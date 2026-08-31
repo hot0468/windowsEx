@@ -129,7 +129,10 @@ export default function Dial() {
     ['업무', [...people.filter((p) => p.group === '업무'), ...contacts]],
     ['개인', people.filter((p) => p.group !== '업무')]
   ]
-  const nameOf = (number) => [...contacts, ...people].find((c) => c.number === number)?.name
+  // 키패드에 다 누르고 나면 누구인지 알려 준다 — 목록에 없는 번호(eggs)도
+  // 여기서는 이름이 뜬다. 눌러 본 사람에게 주는 대답이다.
+  const nameOf = (number) => [...contacts, ...people, ...scenario.calls?.eggs ?? []]
+    .find((c) => c.number.replace(/[^0-9]/g, '') === number.replace(/[^0-9]/g, ''))?.name
 
   return (
     <div className="cl">
