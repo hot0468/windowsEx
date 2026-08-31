@@ -367,6 +367,51 @@ const Profile = ({ page, p, onBack, onOpen }) => (
   </article>
 )
 
+// 복지포인트. 해마다 주고 연말에 소멸되는 그 포인트다. 퍼즐이 아니라
+// 그냥 조회 화면 — 잔액과 쓴 내역이 전부다.
+const Welfare = ({ page, onBack, onGo }) => {
+  const w = page.welfare
+  const won = (n) => n.toLocaleString() + 'P'
+  const used = w.granted - w.balance
+  return (
+    <article className="pt-post pt-wf">
+      <button className="pt-back" onClick={onBack}>
+        <ChevronLeft size={13} strokeWidth={2.2} />인사관리
+      </button>
+      <h1>{page.title}</h1>
+      <p className="pt-att-note">{w.note}</p>
+      <div className="pt-wf-sum">
+        <div className="pt-wf-big">
+          <dt>사용 가능</dt>
+          <dd>{won(w.balance)}</dd>
+        </div>
+        <div><dt>연간 지급</dt><dd>{won(w.granted)}</dd></div>
+        <div><dt>사용</dt><dd>{won(used)}</dd></div>
+        <div><dt>소멸 예정</dt><dd className="hot">{w.expires}</dd></div>
+      </div>
+      <div className="pt-wf-bar">
+        <i style={{ width: `${Math.round((used / w.granted) * 100)}%` }} />
+      </div>
+      {page.shop && onGo && (
+        <button className="pt-card-link" onClick={() => onGo(page.shop.url)}>
+          {page.shop.label}
+        </button>
+      )}
+      <h2 className="pt-wf-h2">사용 내역</h2>
+      <table className="pt-att-table">
+        <thead><tr><th>일자</th><th>내용</th><th className="num">포인트</th></tr></thead>
+        <tbody>
+          {w.used.map((r) => (
+            <tr key={r.date + r.what}>
+              <td>{r.date}</td><td>{r.what}</td><td className="num">{won(r.point)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </article>
+  )
+}
+
 // Each sub-page is known by the one field its data carries, and says where its
 // back button goes. A page whose shape nothing here recognises draws nothing.
 const SUBPAGES = [
@@ -374,6 +419,7 @@ const SUBPAGES = [
   [Menu, 'menu', ''],
   [Bereavement, 'board', '/hr'],
   [Leave, 'leave', '/hr'],
+  [Welfare, 'welfare', '/hr'],
   [Events, 'event', '/hr'],
   [List, 'list', ''],
   [Profile, 'profile', '']
@@ -418,7 +464,7 @@ export default function Portal({ site, path = '', onOpen, onGo }) {
       {post
         ? <Post post={post} onBack={() => setPost(null)} />
         : sub ? <Sub page={site.pages[path]} p={p} onBack={() => onOpen?.(back)}
-                     onOpen={onOpen} onPost={setPost} /> : (
+                     onOpen={onOpen} onGo={onGo} onPost={setPost} /> : (
       <div className="pt-grid">
         <aside className="pt-me">
           <Face id={p.me.id} size={64} />

@@ -2361,3 +2361,62 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .mc-obituary .mc-close { color: #6f747b; }
 .mc-foot { margin-top: 26px; color: #bdb3a5; font-size: 10.5px; letter-spacing: 1px; }
 .mc-obituary .mc-foot { color: #9aa0a7; }
+
+/* 복지포인트. 잔액과 쓴 내역이 전부인 조회 화면이다. */
+.pt-wf-sum { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 16px 0 12px; }
+.pt-wf-sum > div { padding: 12px 14px; border: 1px solid #e8eaf0; border-radius: 8px; background: #fbfcfe; }
+.pt-wf-sum dt { color: #7b8496; font-size: 11.5px; }
+.pt-wf-sum dd { margin: 4px 0 0; font-size: 15px; font-weight: 600; }
+.pt-wf-sum dd.hot { color: #c2381f; }
+.pt-wf-big { grid-column: 1 / -1; background: #eef4ff !important; border-color: #d5e2f7 !important; }
+.pt-wf-big dd { font-size: 24px; letter-spacing: -.5px; }
+.pt-wf-bar { height: 6px; border-radius: 3px; background: #eceef3; overflow: hidden; }
+.pt-wf-bar i { display: block; height: 100%; background: #2f6fd0; }
+.pt-wf-h2 { margin: 22px 0 8px; font-size: 13px; font-weight: 600; }
+
+/* 복지몰. 포인트로 물건을 담고 주문까지 가지만 마지막에서 막힌다. */
+.ml { min-height: 100%; background: #f6f7fa; color: #1e222b; font-size: 13px; }
+.ml-top { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: #fff; border-bottom: 1px solid #e6e9f0; }
+.ml-brand { border: 0; background: none; color: #1b4fa8; font-size: 15px; font-weight: 700; cursor: pointer; }
+.ml-bal { margin-left: auto; color: #6b7280; font-size: 12px; }
+.ml-bal b { color: #1e222b; font-size: 13px; }
+.ml-cart { position: relative; padding: 6px 14px; border: 1px solid #d7dce6; border-radius: 999px; background: #fff; font-size: 12px; cursor: pointer; }
+.ml-cart.on { border-color: #1b4fa8; color: #1b4fa8; }
+.ml-cart i { margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: #1b4fa8; color: #fff; font-style: normal; font-size: 10.5px; }
+.ml-note { margin: 0; padding: 9px 18px; color: #7b8496; font-size: 11.5px; background: #eef2f8; }
+
+.ml-cats { display: flex; gap: 6px; padding: 14px 18px 0; flex-wrap: wrap; }
+.ml-cats button { padding: 5px 12px; border: 1px solid #dde2ea; border-radius: 999px; background: #fff; font-size: 12px; cursor: pointer; }
+.ml-cats button.on { background: #1b4fa8; border-color: #1b4fa8; color: #fff; }
+
+.ml-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin: 0; padding: 14px 18px 24px; }
+.ml-grid li { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid #e6e9f0; border-radius: 10px; background: #fff; }
+.ml-grid li.over { opacity: .6; }
+.ml-name { font-weight: 600; }
+.ml-desc { flex: 1; color: #7b8496; font-size: 11.5px; line-height: 1.6; }
+.ml-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.ml-pt { font-weight: 700; color: #1b4fa8; }
+.ml-row button { padding: 6px 14px; border: 0; border-radius: 6px; background: #1b4fa8; color: #fff; font-size: 12px; cursor: pointer; }
+.ml-row button:disabled { background: #d5d9e2; color: #8b909c; cursor: default; }
+
+.ml-cartview { max-width: 560px; margin: 0 auto; padding: 22px 18px 30px; }
+.ml-cartview h2 { margin: 0 0 14px; font-size: 15px; }
+.ml-empty { color: #8b909c; }
+.ml-lines { list-style: none; margin: 0; padding: 0; }
+.ml-lines li { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #e6e9f0; }
+.ml-lines li > span:first-child { flex: 1; }
+.ml-lines button { border: 0; background: none; color: #9aa0ac; cursor: pointer; }
+.ml-total { display: flex; justify-content: space-between; padding: 12px 0 0; font-size: 14px; }
+.ml-total b { font-weight: 700; }
+.ml-after { color: #7b8496; font-size: 12.5px; }
+.ml-after b.short { color: #c2381f; }
+.ml-warn { margin: 10px 0 0; color: #c2381f; font-size: 12px; }
+.ml-order { display: block; width: 100%; margin-top: 18px; padding: 12px; border: 0; border-radius: 8px; background: #1b4fa8; color: #fff; font-size: 14px; cursor: pointer; }
+.ml-order:disabled { background: #d5d9e2; color: #8b909c; cursor: default; }
+
+.ml-fail { max-width: 440px; margin: 0 auto; padding: 46px 22px; text-align: center; }
+.ml-fail-mark { width: 46px; height: 46px; margin: 0 auto 16px; border-radius: 50%; background: #fbeae7; color: #c2381f; font-size: 24px; font-weight: 700; line-height: 46px; }
+.ml-fail h2 { margin: 0 0 14px; font-size: 16px; }
+.ml-fail p { margin: 0 0 6px; color: #5a616e; line-height: 1.8; }
+.ml-fail-code { margin-top: 18px; padding: 7px 12px; border-radius: 6px; background: #f1f3f7; color: #7b8496; font-family: Consolas, monospace; font-size: 11.5px; display: inline-block; }
+.ml-back { display: block; margin: 22px auto 0; padding: 9px 20px; border: 1px solid #d7dce6; border-radius: 999px; background: #fff; font-size: 12.5px; cursor: pointer; }

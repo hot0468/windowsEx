@@ -14,6 +14,7 @@ import Lotto from './Lotto.jsx'
 import Floor8 from './Floor8.jsx'
 import Notes from './Notes.jsx'
 import Card from './Card.jsx'
+import Mall from './Mall.jsx'
 import Vendor from './Vendor.jsx'
 import Corp from './Corp.jsx'
 import Router from './Router.jsx'
@@ -584,6 +585,7 @@ export default function Browser({ start }) {
               : site.layout === 'floor8' ? <Floor8 site={site} />
               : site.layout === 'notes' ? <Notes site={site} />
               : site.layout === 'card' ? <Card site={site} />
+              : site.layout === 'mall' ? <Mall site={site} />
               : site.layout === 'vendor' ? <Vendor site={site} />
               : site.layout === 'corp' ? <Corp site={site} />
               : site.layout === 'router' ? <Router site={site} />

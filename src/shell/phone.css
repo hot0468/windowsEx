@@ -957,3 +957,26 @@
   transform: scale(.97);
 }
 .phone button { transition: transform 90ms ease-out, background-color 110ms ease-out; }
+
+/* 만보기. 숫자와 막대가 전부다 — 앱이 대신 말해 주지 않는다. */
+.sp { min-height: 100%; padding: 24px 20px 32px; background: var(--p-bg); color: var(--p-ink); }
+.sp-head { text-align: center; padding: 8px 0 22px; }
+.sp-today { font-size: 46px; font-weight: 600; letter-spacing: -1.5px; }
+.sp-unit { margin-left: 6px; color: var(--p-mute); font-size: 15px; }
+.sp-when { margin: 6px 0 0; color: var(--p-mute); font-size: 12.5px; }
+
+.sp-chart { padding: 18px 16px 12px; border-radius: 16px; background: var(--p-surface); box-shadow: 0 1px 3px rgba(16,19,26,.06); }
+.sp-chart h2 { margin: 0 0 14px; font-size: 12.5px; font-weight: 600; color: var(--p-mute); }
+.sp-chart ol { display: flex; align-items: flex-end; gap: 4px; height: 108px; margin: 0; padding: 0; list-style: none; }
+.sp-chart li { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 5px; }
+.sp-chart i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #6fb4ff, #3d7fe0); }
+/* 걸음이 없는 날은 바닥에 선 하나만 남는다. 비어 있다는 것도 기록이다. */
+.sp-chart i.zero { height: 2px !important; background: var(--p-line); }
+.sp-chart span { font-size: 9px; color: var(--p-mute); }
+
+.sp-sum { margin-top: 16px; padding: 4px 16px; border-radius: 16px; background: var(--p-surface); box-shadow: 0 1px 3px rgba(16,19,26,.06); }
+.sp-sum > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 0; border-top: 1px solid var(--p-line); font-size: 13.5px; }
+.sp-sum > div:first-child { border-top: 0; }
+.sp-sum dt { color: var(--p-mute); }
+.sp-sum dd { margin: 0; font-weight: 600; }
+.sp-foot { margin: 18px 4px 0; color: var(--p-mute); font-size: 11.5px; line-height: 1.7; text-align: center; }

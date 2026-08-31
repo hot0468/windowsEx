@@ -14,6 +14,7 @@ import Installer from './Installer.jsx'
 import Settings from './Settings.jsx'
 import Dial from './Dial.jsx'
 import Camera from './Camera.jsx'
+import Steps from './Steps.jsx'
 import Maps from './Maps.jsx'
 import Gallery from './Gallery.jsx'
 import TaskManager from './TaskManager.jsx'
@@ -51,6 +52,8 @@ export const APPS = {
   maps: { title: '지도', icon: 'map', comp: Maps, w: 400, h: 600, phoneOnly: true },
   // 갤러리. 탐색기로도 같은 폴더를 보지만, 폰에서 사진은 격자로 본다.
   gallery: { title: '갤러리', icon: 'image', comp: Gallery, w: 400, h: 600, phoneOnly: true },
+  // 폰이 주머니에 있는 동안 세어 둔 걸음. 설명은 없다.
+  steps: { title: '만보기', icon: 'steps', comp: Steps, w: 380, h: 600, phoneOnly: true },
   taskmgr: { title: '작업 관리자', icon: 'cmd', comp: TaskManager, w: 620, h: 470 },
   antivirus: { title: 'AR 백신', icon: 'shield', comp: Antivirus, w: 460, h: 480, theme: '#1f6f4a' },
   cmd: { title: '명령 프롬프트', icon: 'cmd', comp: Cmd, w: 660, h: 400, theme: '#1a1a1a' },
