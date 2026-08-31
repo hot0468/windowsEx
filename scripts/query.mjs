@@ -81,7 +81,27 @@ const cmds = {
   file: () => {
     const f = allFiles().find((x) => x.id === arg || x.name === arg)
     console.log(f ? JSON.stringify(f, null, 1) : 'not found — try: files')
-  }
+  },
+  // 전화. 업무 연락처(메일 목표와 짝) · 아는 사람 · 이스터에그 · 걸려오는 것 · 스팸.
+  calls: () => {
+    const c = s.calls ?? {}
+    for (const [kind, list] of Object.entries({ contacts: c.contacts, people: c.people, eggs: c.eggs, incoming: c.incoming, spam: c.spam })) {
+      for (const x of list ?? []) {
+        console.log(`${kind}	${x.id}	${x.number}	${x.name ?? x.from ?? ''}	${x.mail ?? x.after ?? x.group ?? ''}	${x.needsMail ? '메일필요' : x.asking ? '통화가능' : ''}`)
+      }
+    }
+    if (c.busy) console.log(`busy	${c.busy.join(' / ')}`)
+  },
+  // 잡담. 인자 없으면 인물별 화제 수, 인물 id 를 주면 그 사람의 화제·맞장구.
+  smalltalk: () => {
+    const t = s.smalltalk ?? {}
+    if (!arg) return Object.entries(t).forEach(([id, v]) => console.log(`${id}	화제 ${v.topics.length}	맞장구 ${v.any.length}	되풀이 ${v.again?.length ?? 0}	${v.topics.map((x) => x.when[0]).join(',')}`))
+    console.log(JSON.stringify(t[arg] ?? `없음 — 있는 것: ${Object.keys(t).join(', ')}`, null, 1))
+  },
+  // 대화 상대 한눈에. 두 메신저의 스레드 id · 이름 · 정적 메시지 수 · 요청 유무.
+  threads: () => [s.workMessenger, s.privateMessenger].forEach((m, i) =>
+    m.sections.flatMap((x) => x.threads).forEach((t) =>
+      console.log(`${i ? '개인' : '업무'}	${t.id}	${t.name}	메시지 ${t.messages?.length ?? 0}	${t.ask ? '요청' : ''}${t.reactions?.length ? '	반응 ' + t.reactions.length : ''}`)))
 }
 
 ;(cmds[cmd] ?? cmds.help)()

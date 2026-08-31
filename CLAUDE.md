@@ -10,6 +10,10 @@
 - JSON 수정은 node 스크립트로 (`JSON.parse` → 수정 → `JSON.stringify(s,null,2)+'\n'`). sed/Edit로 JSON을 건드리지 마라.
 - **JS/JSX 수정 시 CRLF 주의**: 대부분 파일이 CRLF다. 스크립트로 고칠 땐 `\r\n→\n` 정규화 후 수정, 저장 시 `\n→\r\n` 복원. bash heredoc 안의 `\n` 리터럴은 자주 깨지니 파이썬(io, newline='') 또는 Edit 도구를 써라. **여러 줄 파이썬은 heredoc으로 넘기지 말고 스크래치패드에 `.py`로 써서 실행하라** — 따옴표·괄호가 섞이면 heredoc이 통째로 깨지고 아무것도 안 바뀐 채 한 턴을 태운다.
 - 병렬 에이전트에게 콘텐츠를 맡길 땐 **조각(fragment) JSON을 스크래치패드에 쓰게 하고 병합은 메인이** 한다. 에이전트에게 이 파일(CLAUDE.md)을 먼저 읽으라고 지시하면 규칙 재설명이 필요 없다.
+- **`npm run check`는 수정한 *뒤에* 돌려라.** 한 명령줄에서 `check && python 수정.py` 순서로 묶으면 검사가 수정 전 코드를 보고 통과해, 깨진 채 커밋된다. 파이썬 스크립트에 `assert old in s`를 여러 개 두면 앞의 것이 실패했을 때 **파일이 전혀 안 써진다** — 그 뒤 "이미 적용됐다"고 믿지 말고 grep 으로 확인하라.
+- **JSX 주석 `{/* */}`을 조건식 괄호 안(`{cond && ( … )}`)에 넣지 마라** — 자식이 둘이 되어 빌드가 깨진다. 주석은 그 바깥에 둔다.
+- 폰·전화·잡담 데이터는 `query.mjs`의 `calls` `smalltalk <id>` `threads` 로 본다. `node -e` 로 JSON 을 훑는 것보다 짧다.
+- **다른 세션이 같은 브랜치에서 `git add -A`로 커밋한다.** 내 커밋은 경로를 지정해 올리고, 커밋 직전 `git status --short`로 남의 변경이 섞이지 않았는지 보라. 파일이 "changed on disk" 로 뜨면 그쪽 작업이니 되돌리지 말고 다시 읽어라.
 - 다른 Claude 세션이 같은 저장소에서 작업 중일 수 있다. 시작할 때 `git log --oneline -3`과 `git status --short`로 확인하라.
 
 ## 시나리오 데이터 불변 규칙 (테스트가 강제함)
@@ -35,6 +39,9 @@
 - **부름**(`scenario.summons`): 4일차 밤 이름 없는 계정이 여는 8단계 질답. 답은 전부 게임 안에 이미 있는 것만 묻고, 마지막 질문은 `free: true`(정답 없음 — 플레이어가 스스로 결론 내는 자리). `grants: summoned` → 부고를 끝내 안 보면 `wake`. **새 질문을 넣을 땐 정답이 게임 안에서 실제로 찾아지는지, 그리고 계정이 결론을 대신 말해버리지 않는지** 테스트가 검사한다.
 - **달력은 하나**: `days[0].date`(8월 23일 월) 기준, 실제 2026년과 다르다. 날짜에 요일을 적을 땐 `test/friday.test.js`가 검사한다.
 - 상태 저장 목록은 `store.js`의 `PROGRESS` 배열 — 새 진행 상태를 추가하면 반드시 여기에도.
+- **폰 셸**(`src/shell/PhoneShell.jsx`, 폭 ≤820 또는 `?shell=phone`): 창을 그리지 않고 **화면 스택 `screens`**(뒤로가기용 이력)로 보인다. `windows`는 데스크톱과 공유하는 "무엇이 켜져 있나"라 둘을 섞지 마라 — 켠 창 목록은 `windows`, 뒤로가기는 `screens`. 홈 앱은 `registry.jsx`의 `phoneApps()`(`PHONE_EXTRA` + `APPS` − `NOT_ON_PHONE`; `phoneOnly: true`면 폰에만), 바탕에는 `DOCK` 셋만 서고 나머지는 앱 서랍. **폰 홈 앱이 여는 창은 창 감시 effect가 건너뛰므로**, 코드로 열 때(토스트 등)는 `pushScreen('app:<id>')`를 직접 불러라. 폰용 CSS는 `phone.css`에 `.phone` 하위로만 쓴다(데스크톱 무변화). 토스트·통화·벨은 `.phone` 바깥 오버레이라 `useViewport()`로 폰을 판별한다.
+- **폰에만 있는 것은 진행을 막지 못한다**: 전화(`scenario.calls` — 메일 목표의 대체 경로, 판정은 `checkOutbound` 공유), 카메라·갤러리, 지도, 잡담(`scenario.smalltalk`). 걸려오는 전화·스팸·이스터에그 번호(`calls.eggs`)는 **아무것도 주지 않는다**. 반대로 PC에만 있는 명령 프롬프트 값은 폰의 설정 앱(`NET_ROWS`)이 들고 있고, 그것을 가리키는 대사는 `phoneText`/`noPhone`(없으면 런타임에 한 줄 덧붙임)으로 갈린다.
+- 개발용 문(dev 전용): `?shell=phone` · `?ending=<이름|seal|say>` · `?meet=<회의 id>`. 기울기 센서는 https 에서만 켜진다 — `.certs/`에 자체 서명 인증서가 있으면 `vite.config.js`가 https 로 연다.
 - 설계 문서: `docs/superpowers/specs/`. 테스트 철학: UI가 아니라 "게임이 깨지는 방식"을 검사한다 — 새 퍼즐엔 (a) 답이 실제로 찾아지는가 (b) 답이 새지 않는가 테스트를 같이 넣어라.
 
 ## 명령
@@ -44,5 +51,5 @@ npm test                      # 전체 (1100+, 출력이 길다 — test:q 를 �
 npx vitest run test/x.test.js # 부분
 npm run check                 # JSX 문법 검증 (조용한 빌드 — node --check는 JSX 불가)
 npm run test:q                # 전체 테스트, 점 리포터
-node scripts/query.mjs help   # 시나리오 조회
+node scripts/query.mjs help   # 시나리오 조회 (calls · smalltalk · threads · ripples · chatter …)
 ```
