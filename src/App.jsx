@@ -294,6 +294,7 @@ export default function App() {
   //                 끝까지 내리면 마지막 장면이 실제와 똑같이 돈다.
   //   ?ending=say   부고를 이미 본 것으로 치고 메시지부터 바로 튼다.
   //   ?ending=true  그 이름의 엔딩 화면으로 바로 간다.
+  //   ?meet=kickoff 화상회의 화면을 바로 연다(id 를 비우면 첫 회의).
   //
   // 부팅 전에 돈다. 굳은 채로 저장된 판을 복구하는 길과 부딪히면 미리보기가
   // 시작하자마자 끝나 버린다.
@@ -307,6 +308,24 @@ export default function App() {
     g.unlockSite('portal.ar.co.kr')
     g.openWindow('browser', { start: { kind: 'site', url: 'portal.ar.co.kr', path: '/hr/bereavement' } })
   }, [])
+
+  // ?meet=<회의 id> 로 화상회의 화면을 바로 열어 본다. 실제로는 톡의 요청이
+  // 열어 주는 창이라, 그 요청까지 가지 않고는 화면을 볼 수 없었다.
+  // id 를 안 적으면 첫 회의를 연다. 없는 id 면 무엇이 있는지 알려 준다.
+  useEffect(() => {
+    if (!import.meta.env.DEV || !booted) return
+    const want = new URLSearchParams(window.location.search).get('meet')
+    if (want === null) return
+    const g = useGame.getState()
+    const rooms = g.scenario.meetings ?? {}
+    const id = want && rooms[want] ? want : Object.keys(rooms)[0]
+    if (!id) return
+    if (want && !rooms[want]) {
+      // 조용히 딴 회의를 열면 왜 다른 화면이 떴는지 알 수 없다.
+      console.warn(`[dev] '${want}' 라는 회의는 없다. 있는 것: ${Object.keys(rooms).join(', ')}`)
+    }
+    g.openWindow('meet', { id })
+  }, [booted])
 
   // 메시지부터 보는 문은 부팅이 끝나기를 기다린다. 부팅 화면 뒤에서 말이
   // 오가면 첫 줄을 놓친다.

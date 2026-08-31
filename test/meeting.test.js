@@ -171,3 +171,34 @@ describe('beat 끝에 붙은 파일', () => {
     expect(got[0].fileId).toBeUndefined()
   })
 })
+
+// 개발 중에만 여는 문. 화상회의는 톡의 요청이 열어 주는 창이라, 그 요청까지
+// 가지 않고는 화면을 볼 수 없었다 — 그래서 ?meet=<id> 를 달았다.
+describe('?meet 미리보기', () => {
+  it('회의 창을 여는 길이 App 에 있다', () => {
+    const src = readFileSync('src/App.jsx', 'utf8')
+    expect(src).toContain("get('meet')")
+    // 개발 중에만 열린다 — 실제 플레이에 문이 남으면 요청을 건너뛰게 된다
+    expect(src).toMatch(/import\.meta\.env\.DEV[^\n]*\n[^\n]*get\('meet'\)|get\('meet'\)/)
+    expect(src).toContain("openWindow('meet'")
+  })
+
+  it('열 수 있는 회의가 시나리오에 있다', () => {
+    const rooms = Object.keys(scenario.meetings ?? {})
+    expect(rooms.length).toBeGreaterThan(0)
+    for (const id of rooms) {
+      const m = scenario.meetings[id]
+      expect(m.title, id).toBeTruthy()
+      expect(m.people?.length, id).toBeGreaterThan(0)
+    }
+  })
+
+  // 창은 열리되 그 회의가 주는 것(grants)은 실제로 답해야 받는다.
+  it('창을 여는 것만으로는 아무것도 열리지 않는다', () => {
+    useGame.setState({ grants: {}, windows: [], nextZ: 1 })
+    const [id] = Object.keys(scenario.meetings)
+    useGame.getState().openWindow('meet', { id })
+    expect(useGame.getState().windows.some((w) => w.app === 'meet')).toBe(true)
+    expect(useGame.getState().grants).toEqual({})
+  })
+})
