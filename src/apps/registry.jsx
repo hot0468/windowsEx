@@ -20,6 +20,7 @@ import Gallery from './Gallery.jsx'
 import TaskManager from './TaskManager.jsx'
 import Antivirus from './Antivirus.jsx'
 import Vpn from './Vpn.jsx'
+import Meet from './Meet.jsx'
 import Minesweeper from './Minesweeper.jsx'
 import Solitaire from './Solitaire.jsx'
 
@@ -62,7 +63,10 @@ export const APPS = {
   // 판은 창 안에서만 살고 창을 닫으면 사라진다. 다만 켜 둔 채로 일을 끝내면
   // 팀장이 그걸 본다(store.js의 slacking).
   mine: { title: '지뢰찾기', icon: 'mine', comp: Minesweeper, w: 400, h: 500 },
-  solitaire: { title: '솔리테어', icon: 'cards', comp: Solitaire, w: 760, h: 600, theme: '#166534' }
+  solitaire: { title: '솔리테어', icon: 'cards', comp: Solitaire, w: 760, h: 600, theme: '#166534' },
+  // 화상회의. 링크로만 들어간다 — 시작 메뉴에도 폰 홈에도 없다. 어느 회의인지는
+  // props.id 가 정하고, 물을 것은 그 회의의 주최자 스레드에 걸린 질문이 정한다.
+  meet: { title: '화상회의', icon: 'meet', comp: Meet, w: 840, h: 560, theme: '#1f2430', noLaunch: true }
 }
 
 // The start menu lists programs, not the windows other things open: the dev

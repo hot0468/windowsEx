@@ -1221,7 +1221,7 @@ export const useGame = create((set, get) => ({
     // 걸리므로, 다음 대화는 그때까지 기다린다 — 안 그러면 한 줄씩 오는 도중에
     // 다른 사람이 끼어들어 두 대화가 뒤엉킨다.
     const watching = watchingThread(s, { source: beat.source, thread: beat.thread })
-    s.saying(beat.thread, beat.from, beat.lines)
+    s.saying(beat.thread, beat.from, beat.lines, undefined, beat.attach)
     if (beat.ask) get().queueAsk(beat.thread, beat.ask)
     // a question with buttons: the thread's own reactions answer it
     if (beat.choices) get().queueAsk(beat.thread, { choices: beat.choices })
@@ -1271,11 +1271,14 @@ export const useGame = create((set, get) => ({
   // 한 사람이 잇달아 여러 줄을 말한다. 그 대화를 보고 있으면 한 줄씩 도착하고,
   // 안 보고 있으면 한꺼번에 넣는다 — 어차피 열었을 때 함께 읽는다. 눈앞에서
   // 네 줄이 한 번에 튀어나오면 사람이 친 말로 읽히지 않는다.
-  saying: (threadId, from, lines, gap) => {
+  saying: (threadId, from, lines, gap, attach = null) => {
     const s = get()
     const source = sourceOf(s.scenario, threadId)
-    if (watchingThread(s, { source, thread: threadId })) get().sayBack(threadId, from, lines, gap)
-    else shellLines(lines).forEach((text) => get().pushMessage(threadId, { from, text }))
+    if (watchingThread(s, { source, thread: threadId })) return get().sayBack(threadId, from, lines, gap, attach)
+    shellLines(lines).forEach((text) => get().pushMessage(threadId, { from, text }))
+    // 말 끝에 붙은 파일은 보고 있지 않아도 도착한다 — 열었을 때 함께 읽는다.
+    // 없으면 beat 가 들고 온 자료가 대화를 안 보고 있던 사람에게는 영영 안 온다.
+    if (attach) get().pushMessage(threadId, { from, file: attach.name, size: attach.size, fileId: attach.fileId })
   },
   // Which set of choices a conversation has reached.
   setBranch: (threadId, next) =>

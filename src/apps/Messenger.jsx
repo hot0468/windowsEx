@@ -118,6 +118,8 @@ export default function Messenger({ source }) {
   const setAsk = useGame((s) => s.setAsk)
   const grant = useGame((s) => s.grant)
   const slip = useGame((s) => s.slip)
+  const openWindow = useGame((s) => s.openWindow)
+  const meetings = useGame((s) => s.scenario.meetings ?? {})
   const mercy = useGame((s) => s.mercy)
   // 좁은 화면에서는 목록과 대화가 한 화면에 같이 못 선다.
   const phone = useViewport() === 'phone'
@@ -550,6 +552,13 @@ export default function Messenger({ source }) {
                 ask.choices.map((text) => (
                   <button key={text} disabled={busy} onClick={() => pick(text)}>{text}</button>
                 ))
+              ) : ask?.meet ? (
+                // 회의에서 답하는 질문. 여기서 칠 것이 없다 — 들어가는 문만 둔다.
+                // 채팅에 입력칸을 두면 회의에 들어가지 않고도 답하게 된다.
+                <button className="quick-meet" disabled={busy}
+                        onClick={() => openWindow('meet', { id: ask.meet })}>
+                  <span className="quick-meet-dot" />화상회의 참여 · {meetings[ask.meet]?.title ?? '회의'}
+                </button>
               ) : ask?.deed ? (
                 // 행동으로 푸는 질문. 칠 것이 없다 — 무엇을 하면 되는지만 남긴다.
                 <span className="quick-done quick-deed">{ask.placeholder}</span>
