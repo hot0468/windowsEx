@@ -13,6 +13,7 @@ import Gov from './Gov.jsx'
 import Lotto from './Lotto.jsx'
 import Floor8 from './Floor8.jsx'
 import Notes from './Notes.jsx'
+import Card from './Card.jsx'
 import Vendor from './Vendor.jsx'
 import Corp from './Corp.jsx'
 import Router from './Router.jsx'
@@ -572,7 +573,7 @@ export default function Browser({ start }) {
         {view === 'login' && <Login key={site.url} site={site} onOk={() => unlockSite(site.url)} />}
 
         {view === 'ready' && !lost && (
-          site.layout === 'portal' ? <Portal site={site} path={page.path} onOpen={(p) => open(site.url + p)} />
+          site.layout === 'portal' ? <Portal site={site} path={page.path} onOpen={(p) => open(site.url + p)} onGo={open} />
             : site.layout === 'wiki' ? <Wiki site={site} path={page.path} />
             : site.layout === 'drive' ? <Drive site={site} path={page.path} />
             : site.layout === 'calendar' ? <Calendar site={site} />
@@ -582,6 +583,7 @@ export default function Browser({ start }) {
               : site.layout === 'lotto' ? <Lotto site={site} />
               : site.layout === 'floor8' ? <Floor8 site={site} />
               : site.layout === 'notes' ? <Notes site={site} />
+              : site.layout === 'card' ? <Card site={site} />
               : site.layout === 'vendor' ? <Vendor site={site} />
               : site.layout === 'corp' ? <Corp site={site} />
               : site.layout === 'router' ? <Router site={site} />

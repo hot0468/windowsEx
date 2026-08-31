@@ -1321,7 +1321,7 @@ button.pt-logo { padding: 0; border: none; background: none; color: inherit; fon
      돌아간다 — 움직임 없이도 사라지기는 해야 한다. */
   .window { animation: none; }
   .window.minimized { transition: none; }
-  .win-buttons button, .desktop-icon, .tb-app { transition: none; }
+  .win-buttons button, .desktop-icon, .tb-app, .pt-card-link, .mc-acc-toggle i { transition: none; }
   .desktop-icon:active { transform: none; }
   .phone-app, .vw-info { animation: none; }
   .ph-icon, .pa-bar, .ph-day-end, .ph-menu-btn { transition: none; }
@@ -2307,3 +2307,57 @@ button.pt-row-open:hover .pt-row-title { color: #4a5ee0; }
 .vw-shot-body { display: flex; flex-direction: column; gap: 6px; padding: 26px 18px 30px; text-align: center; }
 .vw-shot-body b { font-size: 15px; color: #1f2430; }
 .vw-shot-body span { font-size: 12.5px; color: #7b8291; }
+
+/* 모바일 청첩장·부고장. 회사 경조사 안내에 붙는 그 링크가 여는 한 장짜리
+   페이지다. 청첩장과 부고장은 같은 뼈대를 쓰고 색만 갈린다 — 실제로도
+   같은 업체가 같은 틀로 만들어 준다. */
+.pt-card-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 7px 14px; border: 1px solid #d8dce5; border-radius: 999px; background: #fff; color: #33405a; font-size: 12px; cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
+.pt-card-link:hover { background: #f3f6fb; border-color: #b9c3d6; }
+.pt-card-link::before { content: '🔗'; font-size: 11px; }
+
+.mc { min-height: 100%; padding: 0 0 40px; background: #fbf9f6; color: #2c2a27; font-size: 14px; text-align: center; }
+.mc-obituary { background: #f4f5f6; color: #24262a; }
+
+.mc-cover { padding: 44px 24px 34px; background: linear-gradient(180deg, #f4ece2 0%, #fbf9f6 100%); }
+.mc-obituary .mc-cover { background: linear-gradient(180deg, #e6e8ea 0%, #f4f5f6 100%); }
+.mc-eyebrow { display: block; margin-bottom: 18px; color: #a08e76; font-size: 11px; letter-spacing: 4px; }
+.mc-obituary .mc-eyebrow { color: #6c7076; letter-spacing: 8px; }
+.mc-names { margin: 0; font-family: '바탕', Batang, serif; font-size: 27px; font-weight: 500; letter-spacing: 1px; }
+.mc-names i { margin: 0 12px; color: #c98b7a; font-style: normal; font-size: 18px; vertical-align: 3px; }
+.mc-lead { margin: 0; font-family: '바탕', Batang, serif; font-size: 24px; font-weight: 500; }
+.mc-when { margin: 16px 0 0; color: #7a6f60; font-size: 13px; line-height: 1.8; }
+.mc-obituary .mc-when { color: #5e636a; }
+.mc-where { margin: 4px 0 0; color: #7a6f60; font-size: 13px; }
+
+.mc-greet { padding: 30px 26px; color: #574f45; font-size: 13px; line-height: 2.2; }
+.mc-obituary .mc-greet { color: #474b52; }
+.mc-greet p { margin: 0; }
+
+.mc-family { display: inline-flex; flex-direction: column; gap: 7px; margin-bottom: 8px; padding: 16px 26px; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
+.mc-family > div { display: flex; gap: 12px; font-size: 13px; }
+.mc-family dt { color: #9a8f80; }
+.mc-obituary .mc-family dt { color: #7b8087; }
+.mc-family dd { margin: 0; }
+
+.mc-block { margin: 26px 20px 0; padding: 20px; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.05); text-align: left; }
+.mc-block h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; text-align: center; letter-spacing: 1px; }
+.mc-block dl { margin: 0; }
+.mc-block dl > div { display: flex; gap: 14px; padding: 8px 0; border-top: 1px solid #f0eeea; font-size: 13px; }
+.mc-obituary .mc-block dl > div { border-top-color: #eef0f1; }
+.mc-block dl > div:first-child { border-top: 0; }
+.mc-block dt { flex: none; width: 58px; color: #9a8f80; }
+.mc-obituary .mc-block dt { color: #7b8087; }
+.mc-block dd { margin: 0; flex: 1; line-height: 1.6; }
+
+/* 계좌는 접어 둔다. 실제 청첩장이 그렇게 한다 — 돈 이야기를 맨 앞에
+   펼쳐 두지 않는 것이 예의다. */
+.mc-acc-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 4px; border: 0; background: none; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.mc-acc-toggle i { font-style: normal; color: #b3a695; transition: transform .16s ease-out; }
+.mc-acc-toggle i.up { transform: rotate(180deg); }
+.mc-acc dl { margin-top: 12px; }
+.mc-num { font-family: Consolas, monospace; font-size: 12.5px; user-select: text; }
+
+.mc-close { margin: 26px 26px 0; color: #8b8073; font-size: 12px; line-height: 1.8; }
+.mc-obituary .mc-close { color: #6f747b; }
+.mc-foot { margin-top: 26px; color: #bdb3a5; font-size: 10.5px; letter-spacing: 1px; }
+.mc-obituary .mc-foot { color: #9aa0a7; }

@@ -187,7 +187,7 @@ const Bereavement = ({ page, onBack }) => {
   const posts = visibleByDay(b.posts, day)
   const [open, setOpen] = useState(null)
   const post = posts.find((x) => x.id === open)
-  if (post) return <Notice post={post} onBack={() => setOpen(null)} />
+  if (post) return <Notice post={post} onBack={() => setOpen(null)} onGo={onGo} />
   return (
     <article className="pt-post pt-obit">
       <button className="pt-back" onClick={onBack}>
@@ -216,7 +216,7 @@ const Bereavement = ({ page, onBack }) => {
 // One week's notice, read all the way down. Opening the page is not the moment
 // the game remembers — scrolling far enough to reach the last entry is. Backing
 // out at the wedding leaves the week unread.
-const Notice = ({ post, onBack }) => {
+const Notice = ({ post, onBack, onGo }) => {
   const witness = useGame((s) => s.witness)
   const end = useRef(null)
   useEffect(() => {
@@ -241,6 +241,13 @@ const Notice = ({ post, onBack }) => {
           <dl>
             {sec.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
           </dl>
+          {/* 회사 안내에 붙는 모바일 청첩장·부고장. 게시판이 알려 주는 것과
+              같은 것을 말하는 한 장짜리 페이지로 나간다. */}
+          {sec.link && onGo && (
+            <button className="pt-card-link" onClick={() => onGo(sec.link.url)}>
+              {sec.link.label}
+            </button>
+          )}
           {sec.mine && <i ref={end} className="pt-obit-end" aria-hidden="true" />}
         </section>
       ))}
@@ -372,7 +379,7 @@ const SUBPAGES = [
   [Profile, 'profile', '']
 ]
 
-export default function Portal({ site, path = '', onOpen }) {
+export default function Portal({ site, path = '', onOpen, onGo }) {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
   // the board moves on with the days
