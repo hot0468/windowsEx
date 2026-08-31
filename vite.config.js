@@ -1,5 +1,23 @@
+import { existsSync, readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+// 폰의 기울기 센서(deviceorientation)는 보안 컨텍스트에서만 켜진다. localhost 는
+// http 라도 보안 컨텍스트지만 랜 주소(192.168.x.x)는 아니라서, 폰으로 열면
+// 브라우저가 센서를 아예 주지 않는다 — 카메라의 '기울여서 둘러보기'가 그래서
+// 죽어 있었다.
+//
+// 인증서가 있으면 https 로 연다. 만드는 법은 README 에 적어 두었다. 없으면
+// 예전처럼 http 로 뜬다 — 없다고 서버가 안 뜨면 그게 더 나쁘다.
+//
+// 자체 서명이라 폰 브라우저가 한 번 경고한다. '고급 → 계속' 을 누르면 되고,
+// 그 뒤로는 기억한다. 그리고 https 는 http 와 다른 출처라 세이브가 갈린다 —
+// 폰에서 https 로 열면 빈 주에서 시작한다.
+const KEY = '.certs/dev-key.pem'
+const CERT = '.certs/dev-cert.pem'
+const https = existsSync(KEY) && existsSync(CERT)
+  ? { key: readFileSync(KEY), cert: readFileSync(CERT) }
+  : undefined
 
 export default defineConfig({
   plugins: [react()],
@@ -24,6 +42,7 @@ export default defineConfig({
     host: true,
     port: 5173,
     strictPort: true,
+    https,
     watch: { ignored: ['**/src/assets/**/*.png'] }
   }
 })

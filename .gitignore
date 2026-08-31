@@ -5,3 +5,6 @@ dist/
 # 합성 원본. 게임은 src/assets/shots/의 webp 변환본을 쓴다
 **/*_ori.png
 **/Gemini_Generated_Image_*.png
+
+# 개발용 자체 서명 인증서. 기기마다 제 IP 로 새로 만든다(README 참고)
+.certs/

@@ -9,7 +9,8 @@
     "images": "node --env-file=.env scripts/fetch-images.mjs",
     "query": "node scripts/query.mjs",
     "check": "vite build --logLevel warn",
-    "test:q": "vitest run --reporter=./scripts/quiet.mjs"
+    "test:q": "vitest run --reporter=./scripts/quiet.mjs",
+    "cert": "node scripts/dev-cert.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
