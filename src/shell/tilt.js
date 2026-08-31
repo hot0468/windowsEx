@@ -22,30 +22,29 @@ export function panFrom({ beta = REST, gamma = 0 } = {}, range = RANGE) {
 // 센서는 초당 예순 번씩 값을 준다. 그대로 화면에 넣으면 손의 미세한 떨림이
 // 그대로 보여 화면이 부들거린다 — 사람은 폰을 완벽히 고정하지 못한다.
 //
-// 두 가지로 눕힌다. 아주 작은 움직임은 아예 무시하고(DEAD), 나머지는 새 값을
-// 한 번에 반영하지 않고 조금씩 따라간다(EASE).
+// 두 가지로 눕힌다. 데드존(DEAD)보다 작은 움직임은 제자리에 두고, 나머지는
+// 새 값을 한 번에 반영하지 않고 조금씩 따라간다(EASE).
 //
-// EASE 가 실제로 떨림을 잡는 쪽이다. 떨림은 방향이 계속 바뀌므로 조금씩만
-// 따라가면 서로 상쇄되고, 기울이는 것은 한 방향이라 살아남는다. 0.12 로는
-// 실기기에서 여전히 부들거려 0.06 으로 내렸다 — 재 보면 떨림이 절반 가까이
-// 줄고(0.323→0.184) 기울임은 0.6초면 따라잡는다.
+// 데드존이 실제로 떨림을 잡는 쪽이다. RANGE 가 22° 이므로 0.045 는 ±1° —
+// 사람이 폰을 들고 있을 때의 흔들림이 그 언저리다. EASE 는 그보다 큰
+// 움직임을 눕히는 몫이고, 떨림은 방향이 계속 바뀌므로 조금씩 따라가면
+// 서로 상쇄된다.
 //
-// DEAD 는 크게 두지 않는다. RANGE 가 22° 라 0.012 는 ±0.26° 로, 센서가 멈춰
-// 있을 때 마지막 한 톨을 털어 내는 몫이다. 이것을 손 떨림만큼(±2°) 키우면
-// 떨림 대신 계단이 생겨 오히려 더 나빠진다 — 재 보고 알았다.
-export const EASE = 0.06
-export const DEAD = 0.012
+// 재 보고 고른 값이다: ±0.3° 미세 떨림은 화면이 아예 움직이지 않고(0),
+// ±1.2° 도 눈에 띄지 않을 만큼 눕으며(0.077), 기울이면 0.5초 안에 따라온다.
+export const EASE = 0.08
+export const DEAD = 0.045
 
 // 지금 있는 자리에서 목표로 얼마나 갈 것인가. 손짓이 크면 성큼, 떨림이면
 // 제자리 — 끝에 다다르면 목표에 붙여 둔다(영영 0.001 씩 남는 것을 막는다).
 export function smoothPan(from = { x: 0, y: 0 }, to = { x: 0, y: 0 }, ease = EASE, dead = DEAD) {
   const step = (a, b) => {
-    // 차이가 데드존보다 작으면 움직이지 않는다 — 손 떨림이 그것이다.
-    // 다만 '제자리'가 아니라 '목표'로 붙인다. 그대로 두면 0.001 씩 영영 남아
-    // 루프가 멈추지 않고, 다음 프레임에 또 같은 판단을 되풀이한다.
-    if (Math.abs(b - a) < dead) return b
-    const next = a + (b - a) * ease
-    return Math.abs(b - next) < dead ? b : next
+    // 차이가 데드존보다 작으면 **움직이지 않는다**. 여기서 목표로 붙여 버리면
+    // 미세한 떨림이 필터를 통째로 우회한다 — 매 프레임 차이가 데드존 안이라
+    // 센서 값을 그대로 따라가게 되고, 작은 떨림일수록 오히려 필터가 없어진다.
+    // 실기기에서 계속 부들거린 까닭이 이것이었다.
+    if (Math.abs(b - a) < dead) return a
+    return a + (b - a) * ease
   }
   return { x: step(from.x, to.x), y: step(from.y, to.y) }
 }
@@ -111,10 +110,13 @@ export function useTilt() {
   // 있는 동안 프레임마다 도는 루프는 배터리를 축낸다.
   const follow = () => {
     const next = smoothPan(now.current, want.current)
-    const done = next.x === now.current.x && next.y === now.current.y
+    // 움직임이 멎으면 멈춘다. step 이 데드존 안에서 제자리를 돌려주므로,
+    // 값이 그대로면 더 갈 곳이 없다는 뜻이다 — 가만히 있는 동안 프레임마다
+    // 도는 루프는 배터리를 축낸다.
+    const still = next.x === now.current.x && next.y === now.current.y
     now.current = next
     setPan(next)
-    raf.current = done ? 0 : requestAnimationFrame(follow)
+    raf.current = still ? 0 : requestAnimationFrame(follow)
   }
 
   const start = () => {

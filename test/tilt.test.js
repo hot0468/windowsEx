@@ -128,38 +128,35 @@ describe('기울기를 부드럽게 잇기', () => {
     expect(a.x).toBeCloseTo(EASE, 6)
   })
 
-  // 떨림은 한 프레임에 끝난다. 데드존보다 작은 차이는 조금씩 따라가지 않고
-  // 바로 맞춰 버리므로, 다음 프레임부터는 아무 일도 일어나지 않는다 —
-  // 미세한 값이 계속 들어와도 화면이 흔들리지 않는다.
-  it('아주 작은 흔들림은 한 프레임에 삼킨다', () => {
+  // 떨림은 화면을 아예 움직이지 않는다. 예전에는 데드존 안이면 목표로
+  // '붙여' 버렸는데, 그러면 미세한 떨림이 필터를 통째로 우회한다 — 매 프레임
+  // 차이가 데드존 안이라 센서 값을 그대로 따라가게 된다. 실기기에서 계속
+  // 부들거린 까닭이 이것이었다.
+  it('데드존 안의 흔들림은 화면을 움직이지 않는다', () => {
     const still = { x: 0.5, y: 0.5 }
-    const jitter = { x: 0.5 + DEAD / 2, y: 0.5 }
-    const after = smoothPan(still, jitter)
-    expect(after).toEqual(jitter)
-    // 그리고 멈춘다 — 같은 값이 또 들어와도 더 움직이지 않는다
-    expect(smoothPan(after, jitter)).toEqual(after)
-    // 눈에 보일 만큼 움직이지도 않았다
-    expect(Math.abs(after.x - still.x)).toBeLessThan(DEAD)
+    expect(smoothPan(still, { x: 0.5 + DEAD / 2, y: 0.5 })).toEqual(still)
+    expect(smoothPan(still, { x: 0.5, y: 0.5 - DEAD / 2 })).toEqual(still)
   })
 
-  it('큰 움직임은 따라간다', () => {
-    const moved = smoothPan({ x: 0, y: 0 }, { x: 0.8, y: -0.8 })
-    expect(moved.x).toBeGreaterThan(0)
-    expect(moved.y).toBeLessThan(0)
+  // 떨림이 이어져도 마찬가지다 — 한 번 걸러지면 계속 걸러진다.
+  it('떨림이 이어져도 제자리다', () => {
+    let at = { x: 0.5, y: 0.5 }
+    for (let i = 0; i < 30; i++) {
+      at = smoothPan(at, { x: 0.5 + Math.sin(i) * DEAD * 0.4, y: 0.5 })
+    }
+    expect(at).toEqual({ x: 0.5, y: 0.5 })
   })
 
-  // 끝에 다다르면 목표에 붙인다. 안 그러면 영영 0.001 씩 남아 루프가 안 멈춘다.
-  it('충분히 가까워지면 목표에 붙는다', () => {
-    const to = { x: 1, y: 1 }
-    expect(smoothPan({ x: 1 - DEAD / 2, y: 1 }, to)).toEqual(to)
-  })
-
-  // 여러 번 부르면 결국 도착한다 — 영영 못 가면 화면이 목표를 따라잡지 못한다.
-  it('되풀이하면 도착한다', () => {
+  // 데드존만큼은 끝내 좁히지 않는다. 눈에 보이지 않는 거리이고, 그 대신
+  // 떨림을 잡는다 — 정확히 붙이려 들면 떨림도 함께 따라간다.
+  it('데드존 안으로 들어오면 거기서 멈춘다', () => {
     let at = { x: 0, y: 0 }
     const to = { x: 1, y: -1 }
-    for (let i = 0; i < 200; i++) at = smoothPan(at, to)
-    expect(at).toEqual(to)
+    for (let i = 0; i < 400; i++) at = smoothPan(at, to)
+    expect(Math.abs(to.x - at.x)).toBeLessThanOrEqual(DEAD)
+    expect(Math.abs(to.y - at.y)).toBeLessThanOrEqual(DEAD)
+    // 그리고 더는 움직이지 않는다 — 루프가 멈출 수 있다
+    expect(smoothPan(at, to)).toEqual(at)
   })
 
   it('이미 도착했으면 그대로다', () => {
