@@ -9,6 +9,15 @@ import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
 const ZOOMS = [1, 1.5, 2, 4]
 const label = (z) => (z === 1 ? '맞춤' : `${z * 100}%`)
 
+// 손가락으로 옆으로 밀면 몇 장 넘어가는가. 확대 중에는 0 — 같은 손짓이
+// 사진을 끄는(팬) 데 쓰이고 있으므로, 그때 장을 넘기면 사진을 살펴보다가
+// 옆 사진으로 튕겨 나간다. 짧은 끌림과 세로 스크롤도 넘김이 아니다.
+export function swipeStep({ dx, dy, zoomed = false }, threshold = 48) {
+  if (zoomed) return 0
+  if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy)) return 0
+  return dx < 0 ? 1 : -1
+}
+
 export default function Viewer({ fileId }) {
   const scenario = useGame((s) => s.scenario)
   const pinned = useGame((s) => s.pinned)
@@ -45,6 +54,22 @@ export default function Viewer({ fileId }) {
     setShown(next.id)
     setZoom(0)
   }
+
+  // 폰의 손짓: 양옆으로 밀어 앞뒤 사진으로. preventDefault를 부르지 않으므로
+  // 확대 중의 네이티브 팬 스크롤은 그대로 산다 — 그때는 swipeStep이 0을 준다.
+  const touch = useRef(null)
+  const onTouchStart = (e) => {
+    const t = e.touches[0]
+    touch.current = { x: t.clientX, y: t.clientY }
+  }
+  const onTouchEnd = (e) => {
+    const from = touch.current
+    touch.current = null
+    if (!from) return
+    const t = e.changedTouches[0]
+    const by = swipeStep({ dx: t.clientX - from.x, dy: t.clientY - from.y, zoomed: zoom > 0 })
+    if (by) step(by)
+  }
   const onKeyDown = (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault()
@@ -77,7 +102,7 @@ export default function Viewer({ fileId }) {
           {label(ZOOMS[zoom])}
         </button>
       </div>
-      <div className="vw-canvas">
+      <div className="vw-canvas" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {/* 캡처에는 그림이 없다. 그때 맨 앞에 무엇이 있었고 몇 시였는지를
             창 모양으로 그린다 — 화면을 찍었다는 사실 자체가 내용이다. */}
         {file.shot && !src ? (

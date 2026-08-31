@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_SIZE, fitY, resizeRect } from '../src/engine/store.js'
+import { KEEP, MIN_SIZE, clampPos, fitY, resizeRect, useGame } from '../src/engine/store.js'
 
 // viewportH 900 → 852 usable above the 48px taskbar
 describe('fitY', () => {
@@ -50,5 +50,50 @@ describe('resizeRect', () => {
 
   it('leaves untouched edges alone', () => {
     expect(resizeRect(start, 'e', 20, 999)).toEqual({ x: 100, y: 80, w: 620, h: 400 })
+  })
+})
+
+// 화면이 줄면 오른쪽·아래에 있던 창은 밖으로 나간다. 작업표시줄은 z만 올리므로
+// 한 번 나가면 되찾을 길이 없다 — 그래서 자리는 화면 크기를 따라다녀야 한다.
+describe('clampPos', () => {
+  it('leaves a window that already fits where it is', () => {
+    expect(clampPos(300, 200, 1440, 900)).toEqual({ x: 300, y: 200 })
+  })
+
+  it('pulls a window back when the screen shrinks under it', () => {
+    const p = clampPos(1500, 700, 900, 600)
+    expect(p.x).toBe(900 - KEEP.right)
+    expect(p.y).toBe(600 - KEEP.bottom)
+  })
+
+  it('never lets the titlebar go above the top', () => {
+    expect(clampPos(0, -80, 1440, 900).y).toBe(0)
+  })
+
+  it('still allows pushing a window off to the left', () => {
+    expect(clampPos(-9000, 100, 1440, 900).x).toBe(KEEP.left)
+  })
+})
+
+describe('fitWindows', () => {
+  const openAt = (windows) => useGame.setState({ windows })
+
+  it('brings every window that fell off the screen back into reach', () => {
+    openAt([
+      { id: 1, app: 'notepad', x: 1500, y: 760, z: 1 },
+      { id: 2, app: 'notepad', x: 120, y: 80, z: 2 }
+    ])
+    useGame.getState().fitWindows(900, 600)
+    const [a, b] = useGame.getState().windows
+    expect(a.x).toBeLessThanOrEqual(900 - KEEP.right)
+    expect(a.y).toBeLessThanOrEqual(600 - KEEP.bottom)
+    expect(b).toEqual({ id: 2, app: 'notepad', x: 120, y: 80, z: 2 })   // 멀쩡한 창은 그대로
+  })
+
+  it('changes nothing — not even the array — when every window already fits', () => {
+    const windows = [{ id: 1, app: 'notepad', x: 120, y: 80, z: 1 }]
+    openAt(windows)
+    useGame.getState().fitWindows(1440, 900)
+    expect(useGame.getState().windows).toBe(windows)
   })
 })

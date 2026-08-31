@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronDown, Flag, Info, Lock, MessageSquare, ThumbsDown, ThumbsUp, X } from '../icons/line.jsx'
-import { useGame, boardPosts, myPosts, roomReply, roomTopic } from '../engine/store.js'
+import { useGame, boardPosts, canPick, myPosts, postComments, roomReply, roomTopic } from '../engine/store.js'
 
 // An outside community site: a list of posts, one post at a time, nothing to
 // log into. A room with an `ask` block also lets the player post a question.
@@ -15,6 +15,9 @@ export default function Board({ site }) {
   const scenario = useGame((s) => s.scenario)
   const posted = useGame((s) => s.posted)
   const postTo = useGame((s) => s.postTo)
+  const grants = useGame((s) => s.grants)
+  const boardPicks = useGame((s) => s.boardPicks)
+  const pickOnPost = useGame((s) => s.pickOnPost)
   const [writing, setWriting] = useState(null)
   const [notice, setNotice] = useState(false)
   // Hers sit on top of the board's own, newest first, the way a board works.
@@ -25,6 +28,9 @@ export default function Board({ site }) {
   const traces = scenario.sites.find((x) => x.layout === 'notes')?.notes.traces
   const sawTrace = useGame((s) => s.sawTrace)
   useEffect(() => { if (post && post.id === traces?.sotong) sawTrace('sotong') }, [post?.id])
+  // 글에 남긴 답과 그 답글까지 합친 댓글. 목록의 댓글 수도 같은 셈을 쓴다.
+  const pickOf = (p) => boardPicks[site.url + '/' + p.id]
+  const commentsOf = (p) => postComments(p, pickOf(p), day)
   // A post of hers that is no longer listed was taken down. Saying so is the
   // whole point — silently bouncing back to the list would read as a bug.
   const removed = !post && id
@@ -82,9 +88,9 @@ export default function Board({ site }) {
             <span className="bd-likes"><ThumbsUp size={12} strokeWidth={2} />{post.likes}</span>
           </div>
           {post.body.map((line, i) => <p key={i}>{line}</p>)}
-          <div className="bd-cm-head">댓글 {post.comments.length}</div>
-          {post.comments.map((c, i) => (
-            <div key={i} className="bd-cm">
+          <div className="bd-cm-head">댓글 {commentsOf(post).length}</div>
+          {commentsOf(post).map((c, i) => (
+            <div key={i} className={'bd-cm' + (c.me ? ' me' : '')}>
               <div className="bd-cm-top">
                 <span className="bd-cm-who">{c.author}</span>
                 <span className="bd-cm-time">{c.time}</span>
@@ -102,6 +108,17 @@ export default function Board({ site }) {
               </div>
             </div>
           ))}
+          {/* 답할 수 있는 글이면 준비된 말 중에서 고른다. 자유 입력이 아닌
+              이유는 글쓰기와 같다 — 쓴 말을 읽고 답하는 척은 반드시 들킨다. */}
+          {canPick(post, pickOf(post), grants) && (
+            <div className="bd-pick">
+              {post.picks.map((o) => (
+                <button key={o.text} onClick={() => pickOnPost(site.url, post.id, o)}>
+                  {o.text}
+                </button>
+              ))}
+            </div>
+          )}
         </article>
       ) : (
         <>
@@ -139,7 +156,7 @@ export default function Board({ site }) {
               <button key={p.id} className="bd-row" onClick={() => setId(p.id)}>
                 <span className="bd-co">{p.company}</span>
                 <span className="bd-title">{p.title}</span>
-                <span className="bd-n"><MessageSquare size={12} strokeWidth={2} />{p.comments.length}</span>
+                <span className="bd-n"><MessageSquare size={12} strokeWidth={2} />{commentsOf(p).length}</span>
                 <span className="bd-n"><ThumbsUp size={12} strokeWidth={2} />{p.likes}</span>
                 <span className="bd-time">{p.time}</span>
               </button>

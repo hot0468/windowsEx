@@ -21,7 +21,7 @@ const PENDING_KEY = 'windowsEx.pendingLoad'
 export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThreads', 'extraMails',
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
-  'roomQuestions', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
+  'roomQuestions', 'boardPicks', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
   'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots', 'photos']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
@@ -201,6 +201,16 @@ const restored = startingPoint()
 let winId = Math.max(0, ...(restored?.windows ?? []).map((w) => w.id))
 let toastId = 0
 
+// 알림은 화면에 한 칸뿐이고, 뒤엣것이 앞엣것을 덮었다. 그런데 대화가 열리며
+// 쏟아지는 줄들은 2.2초 간격(NUDGE_GAP)으로 오고 토스트는 4.5초를 산다 —
+// 지현이 첫날 여덟 줄을 보내면 실제로 읽히는 것은 마지막 하나뿐이었다.
+// 자리가 차 있으면 덮지 말고 줄을 세운다. 다만 무한정 쌓아 두지는 않는다:
+// 한참 전에 지나간 말을 뒤늦게 띄우면 그건 알림이 아니라 밀린 로그다.
+const TOAST_QUEUE_MAX = 5
+// 알림을 통째로 걷어내는 자리들(잠금·크래시·엔딩·새 하루)이 쓰는 한 벌.
+// 현재 알림만 지우고 줄은 남겨 두면 잠금 화면 뒤에서 지난 알림이 되살아난다.
+const NO_TOAST = { toast: null, queuedToasts: [] }
+
 // How long the day waits between two things being said.
 const BEAT_GAP = 3600
 // 한 줄씩 말할 때의 간격. 이 줄들이 다 나올 때까지 다음 대화는 기다린다.
@@ -238,6 +248,8 @@ export const useGame = create((set, get) => ({
   scenario,
   booted: false,
   toast: null,
+  // 지금 못 띄운 알림들. 앞엣것이 사라지면 하나씩 올라온다.
+  queuedToasts: [],
   crashed: false,
   // Which program took the machine down, so the reboot knows who to blame.
   crashSource: null,
@@ -333,6 +345,8 @@ export const useGame = create((set, get) => ({
   // How many questions the anonymous room has been asked, which ripples have
   // already landed, and whether today's wrong answers are being forgiven.
   roomQuestions: restored?.roomQuestions ?? 0,
+  // 게시판 글에 남긴 답들. {url/postId: {text, day}} — 답글이 다음날 달린다.
+  boardPicks: restored?.boardPicks ?? {},
   ripples: restored?.ripples ?? {},
   mercy: restored?.mercy ?? false,
   // The day the miner started and which day a table was booked for — two small
@@ -425,7 +439,10 @@ export const useGame = create((set, get) => ({
     // 말 자체는 대화창에 그대로 쌓인다. 알림만 건너뛴다.
     if (s.toast?.sticky && !toast.sticky) return
     play('notify')
-    set({ toast: { ...toast, id: ++toastId } })
+    const next = { ...toast, id: ++toastId }
+    // 자리가 비어 있으면 바로, 차 있으면 뒤에 선다.
+    if (!s.toast) return set({ toast: next })
+    set({ queuedToasts: [...s.queuedToasts, next].slice(-TOAST_QUEUE_MAX) })
   },
   // A conversation that has just opened says everything it has to say, one line
   // at a time, so the player sees it arrive the way the other side sent it —
@@ -462,9 +479,23 @@ export const useGame = create((set, get) => ({
   // 어떤 화면을 봤다는 표식. 퍼즐이 아니라 반응을 위한 것이다 — 근태의
   // 빈칸을 본 사람에게만 부름이 그것을 짚는다.
   notice: (key) => set((s) => (s.grants[key] ? s : { grants: { ...s.grants, [key]: true } })),
-  clearToast: () => set({ toast: null }),
+  // 다음 차례를 올린다. 기다리는 사이에 플레이어가 그 대화를 열었다면 그 알림은
+  // 버린다 — 보고 있는 화면을 두고 다시 알릴 이유가 없다.
+  clearToast: () => set((s) => {
+    const rest = s.queuedToasts.filter((t) => !watchingThread(s, t))
+    return { toast: rest[0] ?? null, queuedToasts: rest.slice(1) }
+  }),
   deliverMessage: () =>
     set((s) => ({ msgCount: Math.min(s.msgCount + 1, s.scenario.messenger.length) })),
+
+  // 게시판 글에 남긴 답. 글쓴이의 답글은 다음날 아침에 달린다 — 글 하나에
+  // 한 번만 답할 수 있고, 무엇을 골랐는지가 남아야 답글이 짝을 찾는다.
+  pickOnPost: (url, postId, option) => {
+    const key = url + '/' + postId
+    if (get().boardPicks[key]) return
+    set((s) => ({ boardPicks: { ...s.boardPicks, [key]: { text: option.text, day: s.day } } }))
+    if (option.grant) get().grant(option.grant)
+  },
 
   // 폰 셸의 화면 스택. []면 홈이고, 'app:<id>'가 바닥에 깔린 뒤 앱이 제
   // 안에서 더 들어갈 때마다 쌓인다. 데스크톱 셸은 이 값을 보지 않는다.
@@ -585,15 +616,24 @@ export const useGame = create((set, get) => ({
   toggleMaximize: (id) =>
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, maximized: !w.maximized } : w)) })),
   moveWindow: (id, x, y) => {
-    const maxX = (typeof window !== 'undefined' ? window.innerWidth : 1920) - 60
-    const maxY = (typeof window !== 'undefined' ? window.innerHeight : 1080) - 90
+    const v = viewport()
     set((s) => ({
-      windows: s.windows.map((w) =>
-        w.id === id
-          ? { ...w, x: Math.max(-500, Math.min(x, maxX)), y: Math.max(0, Math.min(y, maxY)) }
-          : w)
+      windows: s.windows.map((w) => (w.id === id ? { ...w, ...clampPos(x, y, v.w, v.h) } : w))
     }))
   },
+  // 창을 놓아둘 수 있는 자리는 화면 크기에 딸려 있는데, 브라우저 창이 줄어도
+  // 열려 있던 창은 제자리에 남아 화면 밖으로 나가 버렸다. 작업표시줄을 눌러도
+  // focusWindow는 z만 올리므로 되찾을 길이 없었다 — 화면이 바뀌면 다시 앉힌다.
+  fitWindows: (viewportW, viewportH) => set((s) => {
+    let moved = false
+    const windows = s.windows.map((w) => {
+      const p = clampPos(w.x, w.y, viewportW, viewportH)
+      if (p.x === w.x && p.y === w.y) return w
+      moved = true
+      return { ...w, ...p }
+    })
+    return moved ? { windows } : s
+  }),
 
   saveGame: () => {
     const s = get()
@@ -626,9 +666,9 @@ export const useGame = create((set, get) => ({
   // what is lost is every open window and whatever was on screen in them.
   crash: (source = null) => {
     play('error')
-    set({ crashed: true, crashSource: source, toast: null })
+    set({ crashed: true, crashSource: source, ...NO_TOAST })
   },
-  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], toast: null, locked: false, vpn: false, closing: false, screens: [] }),
+  restart: () => set({ crashed: false, crashSource: null, booted: false, windows: [], ...NO_TOAST, locked: false, vpn: false, closing: false, screens: [] }),
   // Finishing the last request does nothing on its own; the player clocks off
   // from the request list, and only then the evening (offer, then the door) begins.
   // 하루를 마치면 결과가 뜨기 전에 그날 밤 몫이 먼저 도착한다. 답은 다음
@@ -650,7 +690,7 @@ export const useGame = create((set, get) => ({
   },
   // Windows keep running behind the lock screen; only the screen is covered.
   // Every lock is counted: a week with none means the player never once left.
-  lock: () => set((s) => ({ locked: true, toast: null, locks: s.locks + 1 })),
+  lock: () => set((s) => ({ locked: true, ...NO_TOAST, locks: s.locks + 1 })),
   unlock: () => {
     play('ok')
     set({ locked: false })
@@ -756,7 +796,7 @@ export const useGame = create((set, get) => ({
   // opening, so nothing else has to happen here.
   editFile: (fileId, text) => set((s) => ({ edits: { ...s.edits, [fileId]: text } })),
   // The layoff comes as a message, and the answer to it is the ending.
-  layOff: (choice) => { rememberEnding('layoff:' + choice); set({ ended: 'layoff:' + choice, toast: null, locked: false }) },
+  layOff: (choice) => { rememberEnding('layoff:' + choice); set({ ended: 'layoff:' + choice, ...NO_TOAST, locked: false }) },
 
   // Clocking off restarts the machine and brings tomorrow's work with it.
   startDay: (n) => {
@@ -798,7 +838,7 @@ export const useGame = create((set, get) => ({
   },
   // The last clock-off brings either a weekend or the truth, depending on
   // what the player has read along the way.
-  endGame: (kind) => { rememberEnding(kind); set({ ended: kind, toast: null, locked: false }) },
+  endGame: (kind) => { rememberEnding(kind); set({ ended: kind, ...NO_TOAST, locked: false }) },
   // 부고를 여는 순간 그 주는 멈춘다. 남은 요청도, 열려 있던 창도 갈 곳이
   // 없다 — 그 페이지가 떠 있던 창 하나만 그 자리에 굳는다.
   //
@@ -821,7 +861,7 @@ export const useGame = create((set, get) => ({
       // 띄운 창을 못 찾으면 그냥 다 굳힌다 — 화면을 통째로 비우는 것보다 낫다.
       windows: keep ? [{ ...keep, minimized: false }] : s.windows,
       screens: keep ? ['win:' + keep.id] : s.screens,
-      beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, toast: null, closing: false
+      beatQueue: [], beatAsk: null, pendingAsks: {}, typing: {}, ...NO_TOAST, closing: false
     })
     const e = s.scenario.ending
     let at = 0
@@ -1155,6 +1195,10 @@ export const useGame = create((set, get) => ({
     setTimeout(() => {
       const { beat } = chosen
       get().saying(beat.thread, beat.from, beat.lines)
+      // 잡담도 가끔은 대답을 기다린다. ask(막는 질문)는 잡담에 금지지만,
+      // next는 고르든 말든 하루를 막지 않는 선택지라 잡담이 얹을 수 있다 —
+      // 엄마가 수상한 문자를 물어올 때, 대답하지 않는 것도 대답이 된다.
+      if (beat.next) get().setBranch(beat.thread, beat.next)
       get().showToast({ from: beat.from, text: beat.lines[0], app: appOf(beat.source), source: beat.source, thread: beat.thread })
     }, 2600)
   },
@@ -1879,6 +1923,24 @@ export const visibleByDay = (items = [], day = 1) => items.filter((x) => (x.day 
 // The sort is stable, so the authored order inside a day survives.
 export const boardPosts = (posts = [], day = 1) =>
   [...visibleByDay(posts, day)].sort((a, b) => (b.day ?? 0) - (a.day ?? 0))
+
+// 답할 수 있는 글(picks)의 댓글 목록. 답을 남겼으면 내 댓글이 바로 붙고,
+// 글쓴이의 답글은 다음날 아침에 달린다 — 익명 게시판의 글쓴이는 메신저에
+// 없는 사람이라, 뒷이야기가 돌아올 자리는 여기뿐이다.
+export function postComments(post, pick, day = 1) {
+  const base = post.comments ?? []
+  if (!pick) return base
+  const option = (post.picks ?? []).find((o) => o.text === pick.text)
+  const mine = { author: '익명(나)', time: '오늘', text: pick.text, likes: 0, me: true }
+  if (!option?.reply || day <= pick.day) return [...base, mine]
+  return [...base, mine, option.reply]
+}
+
+// 답 버튼이 보이는 조건: 아직 답하지 않았고, 아는 사람만 답할 수 있는 글이면
+// 그 일을 실제로 해 본 사람(needs)이어야 한다 — 복합기를 고쳐 본 적 없는
+// 사람이 고치는 법을 알려 줄 수는 없다.
+export const canPick = (post, pick, grants = {}) =>
+  Boolean(post.picks?.length) && !pick && (!post.pickNeeds || Boolean(grants[post.pickNeeds]))
 
 // A wiki page as it stands today. Editing one puts her name on it for the rest
 // of the day; by the next morning the approved version is back, and the note
@@ -2835,6 +2897,26 @@ export function resizeRect(start, dir, dx, dy, min = MIN_SIZE) {
     rect.y = start.y + (start.h - rect.h)
   }
   return rect
+}
+
+// 창이 화면 밖으로 달아나지 않게 붙잡는 한 가지 규칙. 끌 때도, 화면이 줄어
+// 다시 앉힐 때도 여기를 지난다 — 규칙이 둘이면 한쪽만 고쳐진다.
+// 오른쪽·아래로는 붙잡을 만큼(제목표시줄 한 뼘)을 남기고, 왼쪽으로는 창을
+// 반쯤 밀어 두는 것까지 허용한다.
+export const KEEP = { right: 60, bottom: 90, left: -500 }
+
+export function clampPos(x, y, viewportW, viewportH) {
+  return {
+    x: Math.max(KEEP.left, Math.min(x, viewportW - KEEP.right)),
+    y: Math.max(0, Math.min(y, viewportH - KEEP.bottom))
+  }
+}
+
+// 테스트 환경에는 window가 없다. 그때는 흔한 화면 하나를 가정한다.
+function viewport() {
+  return typeof window === 'undefined'
+    ? { w: 1920, h: 1080 }
+    : { w: window.innerWidth, h: window.innerHeight }
 }
 
 // Files under `path` whose name matches, each with the folder trail that leads to

@@ -21,6 +21,9 @@ describe('what yesterday leaves behind', () => {
         .flatMap((d) => d.asks.flatMap((a) => steps(a.ask))).map((a) => a.grants),
       ...scenario.pool.requests.flatMap((r) => steps(r.beat.ask)).map((a) => a.grants),
       ...threads.flatMap((t) => (t.reactions ?? []).map((r) => r.grants)),
+      // 게시판 글에 남긴 답도 하나의 deed다 — 나눔을 받겠다고 자리를 밝히는 일
+      ...scenario.sites.flatMap((s) => s.board?.posts ?? [])
+        .flatMap((p) => p.picks ?? []).map((p) => p.grant),
       ...scenario.sites.flatMap((s) => s.printerweb?.queue ?? []).map((q) => q.grants),
       'cleanpc',   // the antivirus awards this one by cleaning the machine
       'router_broke', 'router_secured'   // the router's admin page awards these

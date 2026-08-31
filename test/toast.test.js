@@ -4,7 +4,7 @@ import { appOf, requestsOf, useGame, watchingThread } from '../src/engine/store.
 
 const chat = { from: '차민혁', text: '보냈습니다', app: 'messenger', source: 'workMessenger', thread: 'boss' }
 
-beforeEach(() => useGame.setState({ toast: null, windows: [], openThread: {}, day: 1 }))
+beforeEach(() => useGame.setState({ toast: null, queuedToasts: [], windows: [], openThread: {}, day: 1 }))
 
 describe('a notification for a conversation already on screen', () => {
   it('does not ring while that thread is the one open', () => {
@@ -175,5 +175,68 @@ describe('a conversation that opens says all of it', () => {
   it('says nothing for a thread with nothing to say today', () => {
     useGame.setState({ day: 4 })
     expect(rungBy('jihyun')).toHaveLength(0)
+  })
+})
+
+// ── 알림은 줄을 선다 ─────────────────────────────────────────────────────
+//
+// 화면의 알림 칸은 하나뿐이고 4.5초를 산다. 그런데 대화가 열리며 쏟아지는
+// 줄들은 2.2초 간격으로 오고(NUDGE_GAP), 1일차 팀장의 네 마디는 그보다도
+// 촘촘하다 — 덮어쓰면 실제로 읽히는 것은 마지막 하나뿐이다.
+describe('두 알림이 겹치면', () => {
+  const second = { ...chat, text: '하나 더' }
+
+  beforeEach(() => useGame.setState({ toast: null, queuedToasts: [], windows: [], openThread: {}, day: 1 }))
+
+  it('앞엣것을 덮지 않고 뒤에 세운다', () => {
+    const g = () => useGame.getState()
+    g().showToast(chat)
+    g().showToast(second)
+    expect(g().toast.text).toBe(chat.text)
+    expect(g().queuedToasts).toHaveLength(1)
+    g().clearToast()
+    expect(g().toast.text).toBe(second.text)
+    g().clearToast()
+    expect(g().toast).toBe(null)
+  })
+
+  it('한 대화가 여덟 줄을 쏟아내도 마지막 하나만 남지 않는다', () => {
+    const g = () => useGame.getState()
+    const lines = Array.from({ length: 8 }, (_, i) => ({ ...chat, text: '줄 ' + i }))
+    for (const l of lines) g().showToast(l)
+    const shown = []
+    while (g().toast) { shown.push(g().toast.text); g().clearToast() }
+    expect(shown.length).toBeGreaterThan(1)
+    expect(shown[0]).toBe('줄 0')
+  })
+
+  it('밀린 로그가 되도록 무한정 쌓지는 않는다', () => {
+    const g = () => useGame.getState()
+    for (let i = 0; i < 40; i++) g().showToast({ ...chat, text: '줄 ' + i })
+    expect(g().queuedToasts.length).toBeLessThanOrEqual(5)
+    // 버릴 때는 오래된 것부터 — 가장 새로운 말이 줄 끝에 남는다
+    expect(g().queuedToasts.at(-1).text).toBe('줄 39')
+  })
+
+  it('기다리는 사이에 그 대화를 열었으면 그 알림은 버린다', () => {
+    const g = () => useGame.getState()
+    g().showToast({ ...chat, thread: 'jihyun', source: 'privateMessenger', app: 'chat' })
+    g().showToast(chat)   // boss, 줄에 선다
+    useGame.setState({
+      windows: [{ id: 1, app: 'messenger', minimized: false }],
+      openThread: { workMessenger: 'boss' }
+    })
+    g().clearToast()
+    expect(g().toast).toBe(null)
+  })
+
+  it('잠금·크래시·엔딩은 줄까지 걷어낸다', () => {
+    const g = () => useGame.getState()
+    g().showToast(chat)
+    g().showToast({ ...chat, text: '하나 더' })
+    g().lock()
+    expect(g().toast).toBe(null)
+    expect(g().queuedToasts).toEqual([])
+    useGame.setState({ locked: false })
   })
 })

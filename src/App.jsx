@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   useGame, dayDone, dreamGallery, findFile, laidOff, objectiveDone, overtimeOffer,
   requestsOf, rumorPending, scriptLeft
@@ -14,6 +14,7 @@ import Ending from './shell/Ending.jsx'
 import Lock from './shell/Lock.jsx'
 import PhoneShell from './shell/PhoneShell.jsx'
 import { useViewport } from './shell/useViewport.js'
+import { watchActivity } from './shell/idle.js'
 import './shell/phone.css'
 import Icon from './icons/Icon.jsx'
 import { fileImage, wallpaper } from './assets/photos.js'
@@ -37,8 +38,14 @@ function Boot() {
   )
 }
 
+// 알림 하나가 머무는 시간. 뒤에 줄이 서 있으면 짧게 비켜 준다 — 여덟 줄이
+// 한꺼번에 온 날 하나에 4.5초씩 주면 마지막 줄은 30초 뒤에나 보인다.
+const TOAST_DWELL = { alone: 4500, waiting: 2400 }
+const FADE = 300
+
 function Toast() {
   const toast = useGame((s) => s.toast)
+  const waiting = useGame((s) => s.queuedToasts.length)
   const clearToast = useGame((s) => s.clearToast)
   const openWindow = useGame((s) => s.openWindow)
   const setOpenThread = useGame((s) => s.setOpenThread)
@@ -48,16 +55,22 @@ function Toast() {
   // 토스트는 폰 셸(.phone) 바깥에 그려지므로 CSS 만으로는 폰인지 알 수 없다.
   // 폰에서는 안드로이드처럼 화면 위에서 내려오는 카드가 된다.
   const phone = useViewport() === 'phone'
+  const shownAt = useRef(0)
+  useEffect(() => { shownAt.current = Date.now() }, [toast])
   useEffect(() => {
     if (!toast) return
     setLeaving(false)
     // 머무는 알림은 스스로 가지 않는다. 하루를 막고 서 있는 말이라
     // 4초 뒤 사라지면 무언가 온 것만 보고 내용을 못 읽는다.
     if (toast.sticky) return
-    const out = setTimeout(() => setLeaving(true), 4200)
-    const gone = setTimeout(clearToast, 4500)
+    // 줄이 뒤늦게 생겨도 이미 보여 준 시간은 셈에 넣는다 — 그러지 않으면
+    // 뒤에 알림이 하나 설 때마다 앞엣것의 목숨이 도로 늘어난다.
+    const dwell = waiting ? TOAST_DWELL.waiting : TOAST_DWELL.alone
+    const left = Math.max(0, dwell - (Date.now() - shownAt.current))
+    const out = setTimeout(() => setLeaving(true), Math.max(0, left - FADE))
+    const gone = setTimeout(clearToast, left)
     return () => { clearTimeout(out); clearTimeout(gone) }
-  }, [toast, clearToast])
+  }, [toast, waiting, clearToast])
   if (!toast) return null
   const app = APPS[toast.app]
   return (
@@ -329,17 +342,29 @@ export default function App() {
         e.preventDefault()
         useGame.getState().showDesktop()
       }
-      arm()
+      // arm()은 watchActivity가 keydown까지 듣고 있으므로 여기서 부르지 않는다.
     }
     window.addEventListener('keydown', onKey)
-    window.addEventListener('pointerdown', arm)
+    const unwatch = watchActivity(window, arm)
     arm()
     return () => {
       clearTimeout(idle)
       window.removeEventListener('keydown', onKey)
-      window.removeEventListener('pointerdown', arm)
+      unwatch()
     }
   }, [booted])
+
+  // 브라우저 창이 줄면 오른쪽·아래에 있던 창은 화면 밖에 남는다. 작업표시줄로도
+  // 되돌릴 수 없으므로, 크기가 바뀔 때마다 열린 창을 다시 화면 안에 앉힌다.
+  useEffect(() => {
+    const onResize = () => useGame.getState().fitWindows(window.innerWidth, window.innerHeight)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+    }
+  }, [])
 
   useEffect(() => {
     if (!booted) return

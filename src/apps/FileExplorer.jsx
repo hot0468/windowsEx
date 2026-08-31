@@ -5,9 +5,9 @@ import {
 } from '../engine/store.js'
 import { useFolderNav } from './folderNav.js'
 import { fileDragProps } from './dragFile.js'
+import { openTap, useViewport } from '../shell/useViewport.js'
 import Icon, { FileGlyph } from '../icons/Icon.jsx'
 import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Monitor, Search, X } from '../icons/line.jsx'
-import { useViewport } from '../shell/useViewport.js'
 
 export default function FileExplorer({ startFolder, roots: only }) {
   const scenario = useGame((s) => s.scenario)
@@ -42,8 +42,10 @@ export default function FileExplorer({ startFolder, roots: only }) {
   const day = useGame((s) => s.day)
   const overtime = useGame((s) => s.overtime)
   const dayAt = useGame((s) => s.dayAt)
-  // 폰에는 우클릭이 없다 — 같은 메뉴를 여는 손잡이를 대신 그린다.
-  const phone = useViewport() === 'phone'
+  // 폰에는 우클릭이 없다 — 같은 메뉴를 여는 손잡이를 대신 그린다. 여는 손짓도
+  // 다르다: 폰에서는 한 번 탭이 연다(더블탭을 기다리면 아무것도 안 열린다).
+  const shell = useViewport()
+  const phone = shell === 'phone'
 
   const fs = fsView(dreamGallery(scenario, scenario.fs, dreamt), { pinned, restored, tiles, placed, touched, shots, photos, scenario })
   const roots = only ?? Object.keys(fs)
@@ -169,7 +171,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
             {hits.map(({ file, trail }) => (
               <button key={file.id} className="ex-hit" {...(inTrash ? {} : fileDragProps(file))}
                       onContextMenu={onContext(file, [...nav.path, ...trail])}
-                      onDoubleClick={() => openWindow(fileOpener(file).app, { fileId: file.id })}>
+                      {...openTap(shell, () => openWindow(fileOpener(file).app, { fileId: file.id }))}>
                 <FileGlyph file={file} size={26} />
                 <span className="ex-hit-mid">
                   <span>{file.name}</span>
@@ -232,7 +234,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
             {entries.length === 0 && <div className="ex-empty">이 폴더는 비어 있습니다</div>}
             {folders.map((f) => (
               <button key={f.name} className={'ex-file' + (f.hidden ? ' dim' : '')}
-                      onDoubleClick={() => goTo([...nav.path, f.name])}>
+                      {...openTap(shell, () => goTo([...nav.path, f.name]))}>
                 <div className="glyph"><Icon name="folder" size={36} /></div>{f.name}
               </button>
             ))}
@@ -246,7 +248,7 @@ export default function FileExplorer({ startFolder, roots: only }) {
               : (
                 <button key={f.id} className={'ex-file' + (clipboard === f.id ? ' cut' : '')} {...(inTrash ? {} : fileDragProps(f))}
                         onContextMenu={onContext(f)}
-                        onDoubleClick={() => openWindow(fileOpener(f).app, { fileId: f.id })}>
+                        {...openTap(shell, () => openWindow(fileOpener(f).app, { fileId: f.id }))}>
                   {phone && (
                     <span role="button" className="ex-more" aria-label="더 보기"
                           onClick={(e) => { e.stopPropagation(); onContext(f)(e) }}>⋯</span>
