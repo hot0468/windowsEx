@@ -18,14 +18,23 @@
 대상을 더 넣고 싶으면 `Camera.jsx` 의 `SUBJECTS` 에 `['id', '이름']` 을 더하고
 같은 이름의 `.webp` 를 여기에 두면 된다.
 
-## 크기
+## 크기 — 두 가지를 다 읽는다
 
-**뷰파인더보다 크게 넣어라.** 사진은 화면의 1.6배로 깔리고, 기기를 기울이거나
-손으로 끌면 그 안을 사방으로 둘러본다(`src/shell/tilt.js`). 작게 넣으면 늘어난다.
+**180° 파노라마(2:1)** 를 넣으면 뷰파인더가 VR 뷰어가 된다. 사진을 구 안쪽에
+바른 것처럼 그려서(`src/shell/pano.js`, WebGL) 기울이면 원근이 실제로 바뀐다 —
+가운데는 적게, 가장자리는 많이 움직인다. 지금 넷이 다 이것이다(1456×720).
 
-세로로 긴 폰 화면을 채우므로 3:4 안팎(예: 1440×1920 — 화면의 1.6배를 감안한
-크기)이 알맞다. 화면에서만
-읽히므로 용량을 우선한다 — 다른 사진들처럼 webp 로, 200KB 아래를 권한다.
+**평면 사진(3:4 같은 것)** 을 넣으면 예전처럼 화면의 1.6배로 깔리고 밀어서
+둘러본다. 파일을 바꾸기만 하면 되고 코드는 건드리지 않는다 — 가로가 세로의 두
+배에 가까우면(±5%) 파노라마로 보고, 아니면 평면으로 본다.
+
+용량은 어느 쪽이든 webp 로, 200KB 아래를 권한다. 파노라마는 1456×720 이면
+50~70KB 로 줄어든다.
+
+```bash
+# png 로 뽑았다면
+node -e "require('sharp')('desk.png').webp({quality:80}).toFile('desk.webp')"
+```
 
 ```bash
 # 예: png 를 webp 로
@@ -39,6 +48,9 @@ npx sharp-cli --input desk.png --output desk.webp --format webp
 넷 다 **김한별의 폰 카메라가 보는 것**이다. 2026년 8월 말, 서울 강남 테헤란로
 AR빌딩 7층 영업1팀. 형광등, 회색 파티션, 모니터 두 대, 포스트잇, 텀블러.
 사람은 넣지 않는다 — 폰을 들고 있는 사람이 곧 플레이어다.
+
+넷 다 **180° 파노라마**(가로 2 : 세로 1)로 뽑는다. 눈앞 180°가 한 장에 담기고,
+게임이 그것을 펴서 보여 준다.
 
 **세 가지를 지켜야 게임이 안 깨진다.**
 
@@ -59,7 +71,8 @@ cool fluorescent ceiling light mixed with grey daylight,
 muted desaturated palette, greys, warm beige paper, dull green,
 quiet ordinary workday mood, slightly worn and lived-in, nothing staged,
 no people, no faces, no hands,
-vertical 3:4, high detail across the entire frame including edges and corners
+180-degree equirectangular panorama, 2:1 aspect ratio,
+high detail across the entire frame including edges and corners
 ```
 
 ## 부정 프롬프트 (공통)
@@ -137,8 +150,8 @@ a dead fly and dust on the sill, the edge of a desk in the near foreground
 
 1. 만든 그림을 이 폴더에 `desk.webp` · `screen.webp` · `paper.webp` ·
    `window.webp` 로 저장한다. `.webp` 만 읽는다.
-2. **화면보다 크게** — 사진은 뷰파인더의 1.6배로 깔린다. 세로 1440×1920 이상을
-   권한다(그보다 작으면 늘어난다).
+2. **파노라마면 2:1** (예: 1456×720 · 2912×1440). 평면 사진이면 세로 1440×1920
+   이상 — 뷰파인더의 1.6배로 깔리므로 그보다 작으면 늘어난다.
 3. 용량은 200KB 아래로 줄인다. png/jpg 로 뽑았다면:
 
 ```bash

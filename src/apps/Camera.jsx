@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gameClock, useGame } from '../engine/store.js'
 import { cameraShot } from '../assets/photos.js'
 import { framePct, shiftPct, tiltNote, useTilt } from '../shell/tilt.js'
+import { isPano, makePano, panoFrame } from '../shell/pano.js'
 import { Camera as CameraIcon, Image } from '../icons/line.jsx'
 
 // 폰 카메라. 실제 렌즈가 없으므로 '무엇을 찍었는지'를 남긴다 — PC 의 화면
@@ -20,6 +21,53 @@ const SUBJECTS = [
   ['window', '창밖']
 ]
 
+// 180° 파노라마를 그리는 뷰파인더. 사진을 구 안쪽에 발라 놓고 그 한가운데서
+// 둘러보는 것과 같은 그림이다 — 기울이면 원근이 실제로 바뀐다(가운데는 적게,
+// 가장자리는 많이 움직인다). 평면 사진을 밀 때는 없던 것이다.
+//
+// WebGL 이 없는 환경에서는 아무것도 그리지 않는다. 부르는 쪽이 그때 평면으로
+// 되돌리므로 화면이 비지는 않는다.
+function PanoView({ src, pan, onFail }) {
+  const canvas = useRef(null)
+  const view = useRef(null)
+  const at = useRef(pan)
+  at.current = pan
+
+  useEffect(() => {
+    let alive = true
+    let raf = 0
+    const img = new window.Image()
+    img.onload = () => {
+      if (!alive || !canvas.current) return
+      let made = null
+      try {
+        made = makePano(canvas.current, img)
+      } catch {
+        made = null
+      }
+      if (!made) return onFail?.()
+      view.current = made
+      // 기울기는 매 프레임 바뀐다. 그릴 것이 한 장뿐이라 루프가 싸다.
+      const loop = () => {
+        if (!alive) return
+        view.current?.draw(at.current)
+        raf = requestAnimationFrame(loop)
+      }
+      loop()
+    }
+    img.onerror = () => onFail?.()
+    img.src = src
+    return () => {
+      alive = false
+      cancelAnimationFrame(raf)
+      view.current?.dispose()
+      view.current = null
+    }
+  }, [src])
+
+  return <canvas className="cam-pano" ref={canvas} />
+}
+
 export default function Camera() {
   const scenario = useGame((s) => s.scenario)
   const day = useGame((s) => s.day)
@@ -35,6 +83,9 @@ export default function Camera() {
   // 권한을 안 준 자리에서는 손으로 끌어서 같은 일을 한다.
   const { pan, setPan, state: tilt, ask, needsAsk } = useTilt()
   const grab = useRef(null)
+  // 사진이 파노라마(2:1)인지는 실제로 읽어 봐야 안다. 넷 중 일부만 파노라마일
+  // 수 있으므로 대상마다 따로 기억한다 — 평면 사진이 구에 발리면 어색해진다.
+  const [pano, setPano] = useState({})
   const clock = gameClock(scenario, { day, overtime, dayAt })
 
   // 찍은 직후의 흰 번쩍임. 셔터를 눌렀다는 것을 화면이 알린다.
@@ -47,6 +98,16 @@ export default function Camera() {
   const label = SUBJECTS.find(([id]) => id === subject)?.[1]
   const lens = cameraShot(subject)
   const shift = shiftPct(pan, OVER)
+  const wide = pano[subject] === true
+
+  // 이 사진이 파노라마인지 한 번만 재어 둔다.
+  useEffect(() => {
+    if (!lens || subject in pano) return
+    const img = new window.Image()
+    img.onload = () => setPano((p) => ({ ...p, [subject]: isPano(img) }))
+    img.onerror = () => setPano((p) => ({ ...p, [subject]: false }))
+    img.src = lens
+  }, [lens, subject])
 
   // 손으로 끌기. 화면 절반을 끌면 끝까지 돈다.
   const drag = {
@@ -77,7 +138,11 @@ export default function Camera() {
           <>
             {/* 렌즈에 보이는 것. 사진을 넣어 두면 그것이 보이고, 없으면
                 어두운 화면 그대로다. */}
-            {lens && (
+            {lens && wide && (
+              <PanoView src={lens} pan={pan}
+                        onFail={() => setPano((p) => ({ ...p, [subject]: false }))} />
+            )}
+            {lens && !wide && (
               <img className="cam-lens" src={lens} alt="" draggable="false"
                    style={{
                      width: OVER * 100 + '%',
@@ -117,7 +182,7 @@ export default function Camera() {
           <em>{photos.length}</em>
         </button>
         <button className="cam-shutter" aria-label="사진 찍기"
-                onClick={() => setShot(takePhoto(label, subject, framePct(pan)))}>
+                onClick={() => setShot(takePhoto(label, subject, wide ? panoFrame(pan) : framePct(pan)))}>
           <span />
         </button>
         <span className="cam-space" />

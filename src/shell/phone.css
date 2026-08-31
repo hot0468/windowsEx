@@ -1006,3 +1006,7 @@
 .ag-time { flex: none; width: 42px; color: var(--p-mute); font-size: 11.5px; }
 .ag-title { flex: 1; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
 .ag-none { padding: 34px 20px; text-align: center; color: var(--p-mute); font-size: 13px; }
+
+/* 180° 파노라마 뷰파인더. 평면 사진의 .cam-lens 와 같은 자리를 차지하되,
+   여기서는 WebGL 이 그린다 — 기울이면 원근이 바뀐다. */
+.cam-pano { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #0a0c10; }
