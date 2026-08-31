@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FOV_H, FOV_V, VIEW, isPano, lookAt, panoFrame } from '../src/shell/pano.js'
+import { FOV_H, FOV_V, VIEW, isPano, lookAt, panoFrame, reachOf } from '../src/shell/pano.js'
 
 // 180° 파노라마를 뷰파인더에 그리는 계산. 화면 없이 검사할 수 있게 순수
 // 함수로 떼어 두었다 — 여기서 어긋나면 끝까지 기울였을 때 사진 밖이 보인다.
@@ -31,15 +31,45 @@ describe('어디를 보는가', () => {
     expect(lookAt({ x: 0, y: 0 })).toEqual({ yaw: 0, pitch: 0 })
   })
 
-  // 파노라마 밖을 보면 검은 자리가 생긴다. 끝까지 기울여도 남은 각도만큼만
-  // 돌아야 가장자리가 비지 않는다.
-  it('끝까지 기울여도 사진 밖으로 나가지 않는다', () => {
-    const half = VIEW / 2
-    for (const [x, y] of [[1, 1], [-1, -1], [1, -1], [-1, 1]]) {
-      const { yaw, pitch } = lookAt({ x, y })
-      expect(Math.abs(yaw) + half).toBeLessThanOrEqual(FOV_H / 2 + 1e-9)
-      expect(Math.abs(pitch) + half).toBeLessThanOrEqual(FOV_V / 2 + 1e-9)
+  // 파노라마 밖을 보면 검은 자리가 생긴다. 화면 가장자리를 촘촘히 훑어서
+  // 어느 한 점도 밖으로 나가지 않아야 한다 — 모서리만 재다가 위쪽 변 한가운데가
+  // 나가 검은 띠가 남았다. 가장 멀리 보는 곳은 모서리가 아니다.
+  it('끝까지 기울여도 화면 어느 점도 사진 밖으로 나가지 않는다', () => {
+    // 셰이더가 광선을 만드는 식 그대로
+    const seen = (ux, uy, view, aspect, look) => {
+      const t = Math.tan(view / 2)
+      let d = [ux * aspect * t, uy * t, -1]
+      const n = Math.hypot(...d)
+      d = d.map((v) => v / n)
+      const cp = Math.cos(look.pitch); const sp = Math.sin(look.pitch)
+      d = [d[0], d[1] * cp - d[2] * sp, d[1] * sp + d[2] * cp]
+      const cy = Math.cos(look.yaw); const sy = Math.sin(look.yaw)
+      d = [d[0] * cy + d[2] * sy, d[1], -d[0] * sy + d[2] * cy]
+      return { lon: Math.atan2(d[0], -d[2]), lat: Math.asin(Math.max(-1, Math.min(1, d[1]))) }
     }
+    for (const aspect of [390 / 613, 0.5, 1, 1.5, 2]) {
+      for (const [x, y] of [[1, 1], [-1, -1], [1, -1], [-1, 1], [0, 1], [1, 0]]) {
+        const look = lookAt({ x, y }, VIEW, aspect)
+        for (let i = -20; i <= 20; i++) {
+          const u = i / 20
+          for (const [ux, uy] of [[u, 1], [u, -1], [1, u], [-1, u]]) {
+            const p = seen(ux, uy, VIEW, aspect, look)
+            expect(Math.abs(p.lon), `aspect ${aspect} uv ${ux},${uy}`).toBeLessThanOrEqual(FOV_H / 2 + 1e-9)
+            expect(Math.abs(p.lat), `aspect ${aspect} uv ${ux},${uy}`).toBeLessThanOrEqual(FOV_V / 2 + 1e-9)
+          }
+        }
+      }
+    }
+  })
+
+  // 가장 멀리 보는 곳은 변의 한가운데다. 모서리는 오히려 덜 간다.
+  it('가장 멀리 보는 곳을 잰다', () => {
+    const aspect = 390 / 613
+    const r = reachOf(VIEW, aspect)
+    const t = Math.tan(VIEW / 2)
+    const corner = Math.abs(Math.asin(t / Math.hypot(aspect * t, t, 1)))
+    expect(r.lat).toBeGreaterThan(corner)
+    expect(r.lat).toBeCloseTo(Math.atan(t), 10)
   })
 
   it('범위를 넘겨 넣어도 끝에서 멈춘다', () => {
@@ -52,9 +82,18 @@ describe('어디를 보는가', () => {
     expect(a.yaw).toBeGreaterThan(a.pitch)
   })
 
-  // 화각이 파노라마만큼 넓으면 돌 자리가 없다. 음수가 되어 거꾸로 돌면 안 된다.
-  it('화각이 파노라마보다 넓으면 돌지 않는다', () => {
-    expect(lookAt({ x: 1, y: 1 }, FOV_H * 2)).toEqual({ yaw: 0, pitch: 0 })
+  // 화각이 넓어질수록 돌 자리가 줄어든다. 어떤 값을 넣어도 거꾸로 돌지는
+  // 않는다 — 음수가 되면 기울인 반대쪽을 보게 된다.
+  it('화각이 넓어질수록 덜 돌고, 거꾸로는 돌지 않는다', () => {
+    const narrow = lookAt({ x: 1, y: 1 }, VIEW, 1)
+    const wide = lookAt({ x: 1, y: 1 }, VIEW * 2, 1)
+    expect(wide.yaw).toBeLessThan(narrow.yaw)
+    expect(wide.pitch).toBeLessThan(narrow.pitch)
+    for (const [v, a] of [[VIEW * 2.6, 1], [VIEW * 2.6, 4], [VIEW, 12]]) {
+      const r = lookAt({ x: 1, y: 1 }, v, a)
+      expect(r.yaw, `view ${v} aspect ${a}`).toBeGreaterThanOrEqual(0)
+      expect(r.pitch, `view ${v} aspect ${a}`).toBeGreaterThanOrEqual(0)
+    }
   })
 })
 

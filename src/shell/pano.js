@@ -21,20 +21,40 @@ export const VIEW = Math.PI / 3       // 60°
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
 
-// 기울기(-1..1)를 바라보는 각도로. 파노라마의 끝을 넘어가면 화면에 빈 자리가
-// 생기므로, 남은 각도만큼만 돈다 — 끝까지 기울여도 가장자리가 비지 않는다.
-export function lookAt({ x = 0, y = 0 } = {}, view = VIEW) {
-  const room = (fov) => Math.max(0, (fov - view) / 2)
+// 화면이 사방으로 얼마나 멀리 보는가. 가장 멀리 보는 곳은 모서리가 아니다 —
+// 위아래로 가장 먼 곳은 위쪽 변의 **한가운데**이고(대각선은 광선이 정규화되며
+// 눌린다), 좌우로 가장 먼 곳은 옆 변의 한가운데다. 모서리만 재다가 화면 위쪽에
+// 검은 띠가 남았다.
+export function reachOf(view = VIEW, aspect = 1) {
+  const t = Math.tan(view / 2)
+  // 세로: uv = (0, 1) — 옆으로 벌어지지 않은 광선이 가장 위를 본다
+  const lat = Math.atan(t)
+  // 가로: uv = (±1, 0)
+  const lon = Math.atan(aspect * t)
+  return { lon, lat }
+}
+
+// 남겨 두는 여유. 요와 피치를 동시에 최대로 주면 두 회전이 서로 영향을 주어
+// 변의 한가운데가 계산보다 몇 도 더 나간다 — 그 상호작용까지 풀기보다, 어느
+// 비율·어느 방향에서도 안전한 값을 재서 쓴다(4°부터 안전, 1° 더 얹었다).
+// 5° 를 빼도 좌우로 ±65° 는 돈다.
+const MARGIN = (5 * Math.PI) / 180
+
+// 기울기(-1..1)를 바라보는 각도로. 파노라마 밖을 보면 검은 자리가 생기므로
+// 화면이 실제로 닿는 만큼을 빼고 남은 각도에서만 돈다.
+export function lookAt({ x = 0, y = 0 } = {}, view = VIEW, aspect = 1) {
+  const r = reachOf(view, aspect)
+  const room = (fov, reach) => Math.max(0, fov / 2 - reach - MARGIN)
   return {
-    yaw: clamp(x, -1, 1) * room(FOV_H),
-    pitch: clamp(y, -1, 1) * room(FOV_V)
+    yaw: clamp(x, -1, 1) * room(FOV_H, r.lon),
+    pitch: clamp(y, -1, 1) * room(FOV_V, r.lat)
   }
 }
 
 // 지금 보고 있는 자리를 사진 안의 퍼센트로. 찍은 사진에 남겨 두면 그때의
 // 구도가 그대로 남는다 — 평면 사진의 framePct 와 같은 값을 돌려준다.
-export function panoFrame({ x = 0, y = 0 } = {}, view = VIEW) {
-  const { yaw, pitch } = lookAt({ x, y }, view)
+export function panoFrame({ x = 0, y = 0 } = {}, view = VIEW, aspect = 1) {
+  const { yaw, pitch } = lookAt({ x, y }, view, aspect)
   return {
     x: Math.round(50 + (yaw / FOV_H) * 100),
     y: Math.round(50 + (pitch / FOV_V) * 100)
@@ -73,11 +93,9 @@ void main() {
   float lon = atan(dir.x, -dir.z);
   float lat = asin(clamp(dir.y, -1.0, 1.0));
   vec2 st = vec2(0.5 + lon / fovH, 0.5 + lat / fovV);
-  // 파노라마 밖을 보면 검게 — 끝을 넘어갔다는 것이 보여야 한다.
-  if (st.x < 0.0 || st.x > 1.0 || st.y < 0.0 || st.y > 1.0) {
-    gl_FragColor = vec4(0.04, 0.05, 0.06, 1.0);
-    return;
-  }
+  // 가장자리를 넘어가면 끝 픽셀을 늘려 쓴다. lookAt 이 넘어가지 않게 막고 있지만
+  // 반올림 한 줄까지 막지는 못한다 — 검은 띠 대신 사진이 이어지는 편이 낫다.
+  st = clamp(st, 0.0, 1.0);
   gl_FragColor = texture2D(img, vec2(st.x, 1.0 - st.y));
 }
 `
@@ -130,7 +148,7 @@ export function makePano(canvas, image) {
     const cw = Math.max(1, Math.round(w * dpr))
     const ch = Math.max(1, Math.round(h * dpr))
     if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch }
-    const { yaw, pitch } = lookAt(pan, view)
+    const { yaw, pitch } = lookAt(pan, view, cw / ch)
     gl.viewport(0, 0, cw, ch)
     gl.uniform2f(uSize, cw, ch)
     gl.uniform2f(uLook, yaw, pitch)
@@ -140,6 +158,27 @@ export function makePano(canvas, image) {
 
   return {
     draw,
+    // 지금 화면에 보이는 것을 그대로 이미지로. 파노라마 원본이 아니라 뷰파인더가
+    // 잘라 낸 그 장면이라, 갤러리에 든 것과 눈으로 본 것이 같아진다.
+    // preserveDrawingBuffer 를 켜 두었으므로 그린 직후가 아니어도 읽을 수 있다.
+    // 세이브(localStorage)에 실리므로 작게 남긴다. 긴 변 720px, jpeg 0.72 면
+    // 폰 화면에서 볼 만하면서 40KB 안팎이다 — 큰 것을 그대로 두면 몇 장 만에
+    // 한도(5MB)를 넘어 저장이 통째로 실패한다.
+    snap: (long = 720, quality = 0.72) => {
+      try {
+        const w = canvas.width
+        const h = canvas.height
+        const k = Math.min(1, long / Math.max(w, h))
+        if (k >= 1) return canvas.toDataURL('image/jpeg', quality)
+        const small = document.createElement('canvas')
+        small.width = Math.round(w * k)
+        small.height = Math.round(h * k)
+        small.getContext('2d').drawImage(canvas, 0, 0, small.width, small.height)
+        return small.toDataURL('image/jpeg', quality)
+      } catch {
+        return null
+      }
+    },
     dispose: () => {
       gl.deleteTexture(tex)
       gl.deleteBuffer(buf)

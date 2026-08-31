@@ -108,6 +108,12 @@ export function freshenAsks(scenario, pending = {}) {
 const snapshot = (s) => {
   const out = { at: Date.now() }
   for (const k of PROGRESS) out[k] = s[k]
+  // 찍은 사진의 그림(dataURL)은 세이브에 싣지 않는다. 한 장이 수십 KB 라
+  // 몇 장만 찍어도 localStorage 한도를 넘겨 저장이 통째로 실패한다 —
+  // 무엇을 언제 찍었는지는 남으므로 불러오면 렌즈 사진으로 그려진다.
+  out.photos = (s.photos ?? []).map((p) => (p.shot?.snap
+    ? { ...p, shot: { ...p.shot, snap: null } }
+    : p))
   return out
 }
 
@@ -1061,7 +1067,7 @@ export const useGame = create((set, get) => ({
   // 폰 카메라. 자산이 있는 사진을 만들어 내지는 못하므로, PC 의 화면 캡처와
   // 같은 방식으로 '무엇을 언제 찍었는지'를 남긴다 — 톡으로 보낼 수 있는 파일이
   // 되는 것이 이 기능의 요점이다.
-  takePhoto: (subject = null, lens = null, frame = null) => {
+  takePhoto: (subject = null, lens = null, frame = null, snap = null) => {
     const s = get()
     const clock = gameClock(s.scenario, { day: s.day, overtime: s.overtime, dayAt: s.dayAt })
     const n = s.photos.length + 1
@@ -1074,7 +1080,10 @@ export const useGame = create((set, get) => ({
       // 어느 쪽이든 열리고, 어느 쪽이든 톡으로 보낼 수 있다.
       // frame 은 찍는 순간 뷰파인더가 보고 있던 자리다(%). 기울여 잡은 구도가
       // 사진에 그대로 남는다 — 같은 사진이라도 어디를 담았는지가 다르다.
-      shot: { title: subject, at: clock.time, day: s.day, camera: true, lens, frame }
+      // snap 은 파노라마를 찍은 순간 뷰파인더에 보이던 그 장면이다(dataURL).
+      // 원본은 180° 로 휘어 있어 그대로 두면 갤러리에 통사진이 들어간다 —
+      // 눈으로 본 것과 갤러리에 든 것이 같아야 한다.
+      shot: { title: subject, at: clock.time, day: s.day, camera: true, lens, frame, snap }
     }
     set({ photos: [...s.photos, photo] })
     play('click')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { dreamGallery, entriesAt, fsView, useGame } from '../engine/store.js'
-import { cameraShot, fileImage } from '../assets/photos.js'
+import { cameraShot, fileImage, photoSrc } from '../assets/photos.js'
 import { Camera as CameraIcon } from '../icons/line.jsx'
 
 // 갤러리. 탐색기로도 같은 폴더를 볼 수 있지만, 폰에서 사진을 보는 방식은
@@ -52,10 +52,11 @@ export default function Gallery() {
         {list.map((file) => (
           <button key={file.id} className="gl-cell" onClick={() => open(file)}
                   title={file.name}>
-            {file.image || cameraShot(file.shot?.lens) ? (
-              <img src={fileImage(file.image) ?? cameraShot(file.shot.lens)}
+            {photoSrc(file) ? (
+              <img src={photoSrc(file)}
                    alt={file.alt ?? file.name} draggable="false"
-                   style={file.shot?.frame
+                   /* 찍어 둔 장면은 이미 그 구도다 — 다시 자르면 두 번 자른다. */
+                   style={!file.shot?.snap && file.shot?.frame
                      ? { objectPosition: `${file.shot.frame.x}% ${file.shot.frame.y}%` }
                      : undefined} />
             ) : file.shot ? (

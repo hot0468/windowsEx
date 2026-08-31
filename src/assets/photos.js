@@ -23,4 +23,10 @@ export const tileShot = (name) => TILES[`./tiles/${name}.webp`]
 // a headline's thumbnail is named after the article id
 export const newsShot = (id) => NEWS[`./news/${id}.webp`]
 export const cameraShot = (name) => CAMERA[`./camera/${name}.webp`]
+
+// 이 사진을 화면에 그릴 때 쓸 그림. 찍는 순간 뷰파인더를 담아 둔 것이
+// 있으면 그것이 먼저다 — 파노라마는 원본이 180° 로 휘어 있어서, 그대로
+// 두면 갤러리에 통사진이 들어간다. 갤러리와 뷰어가 갈리지 않게 여기서만 정한다.
+export const photoSrc = (file) =>
+  file?.shot?.snap ?? fileImage(file?.image) ?? cameraShot(file?.shot?.lens)
 export const wallpaper = WALLPAPER['./wallpaper.webp']

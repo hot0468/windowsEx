@@ -27,7 +27,7 @@ const SUBJECTS = [
 //
 // WebGL 이 없는 환경에서는 아무것도 그리지 않는다. 부르는 쪽이 그때 평면으로
 // 되돌리므로 화면이 비지는 않는다.
-function PanoView({ src, pan, onFail }) {
+function PanoView({ src, pan, onFail, onReady }) {
   const canvas = useRef(null)
   const view = useRef(null)
   const at = useRef(pan)
@@ -47,6 +47,8 @@ function PanoView({ src, pan, onFail }) {
       }
       if (!made) return onFail?.()
       view.current = made
+      // 찍을 때 쓰라고 스냅 함수를 넘겨 준다 — 셔터는 바깥에 있다.
+      onReady?.(made.snap)
       // 기울기는 매 프레임 바뀐다. 그릴 것이 한 장뿐이라 루프가 싸다.
       const loop = () => {
         if (!alive) return
@@ -62,6 +64,7 @@ function PanoView({ src, pan, onFail }) {
       cancelAnimationFrame(raf)
       view.current?.dispose()
       view.current = null
+      onReady?.(null)
     }
   }, [src])
 
@@ -86,6 +89,8 @@ export default function Camera() {
   // 사진이 파노라마(2:1)인지는 실제로 읽어 봐야 안다. 넷 중 일부만 파노라마일
   // 수 있으므로 대상마다 따로 기억한다 — 평면 사진이 구에 발리면 어색해진다.
   const [pano, setPano] = useState({})
+  // 파노라마 뷰파인더가 준 '지금 보이는 것을 이미지로' 함수. 셔터가 이것을 쓴다.
+  const snap = useRef(null)
   const clock = gameClock(scenario, { day, overtime, dayAt })
 
   // 찍은 직후의 흰 번쩍임. 셔터를 눌렀다는 것을 화면이 알린다.
@@ -140,6 +145,7 @@ export default function Camera() {
                 어두운 화면 그대로다. */}
             {lens && wide && (
               <PanoView src={lens} pan={pan}
+                        onReady={(fn) => { snap.current = fn }}
                         onFail={() => setPano((p) => ({ ...p, [subject]: false }))} />
             )}
             {lens && !wide && (
@@ -182,7 +188,9 @@ export default function Camera() {
           <em>{photos.length}</em>
         </button>
         <button className="cam-shutter" aria-label="사진 찍기"
-                onClick={() => setShot(takePhoto(label, subject, wide ? panoFrame(pan) : framePct(pan)))}>
+                onClick={() => setShot(takePhoto(label, subject,
+                  wide ? panoFrame(pan) : framePct(pan),
+                  wide ? snap.current?.() : null))}>
           <span />
         </button>
         <span className="cam-space" />

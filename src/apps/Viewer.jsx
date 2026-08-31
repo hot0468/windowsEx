@@ -4,7 +4,7 @@ import {
   fsView, galleryOf
 } from '../engine/store.js'
 import { useViewport } from '../shell/useViewport.js'
-import { cameraShot, fileImage } from '../assets/photos.js'
+import { cameraShot, fileImage, photoSrc } from '../assets/photos.js'
 import { APPS } from './registry.jsx'
 import { ChevronLeft, ChevronRight } from '../icons/line.jsx'
 
@@ -116,7 +116,7 @@ export default function Viewer({ fileId }) {
   const at = gallery.findIndex((f) => f.id === shown)
   const file = findFile(fs, shown)
   // 카메라로 찍은 것은 렌즈에 보이던 사진(있으면)을 그대로 쓴다.
-  const src = file && (fileImage(file.image) ?? cameraShot(file.shot?.lens))
+  const src = file && photoSrc(file)
 
   // Opening a picture opens the folder it is in, so the arrow keys work without
   // clicking the image first.
@@ -203,7 +203,7 @@ export default function Viewer({ fileId }) {
         <div className="vw-stage" style={{ width: `${ZOOMS[zoom] * 100}%`, height: `${ZOOMS[zoom] * 100}%` }}>
           {/* Blown up on screen is where the tile in the corner is noticed. */}
           <img src={src} alt={file.alt ?? file.name}
-               style={file.shot?.frame
+               style={!file.shot?.snap && file.shot?.frame
                  ? { objectFit: 'cover', objectPosition: `${file.shot.frame.x}% ${file.shot.frame.y}%` }
                  : undefined}
                title={file.tile && !tiles.includes(file.id) ? gates?.hint : undefined}
