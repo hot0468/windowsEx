@@ -22,7 +22,7 @@ export const PROGRESS = ['windows', 'nextZ', 'msgCount', 'readMails', 'seenThrea
   'starred', 'pinned', 'restored', 'showHidden', 'sheetEdits', 'unlocked', 'grants', 'extraMessages', 'pendingAsks', 'bookings',
   'day', 'misses', 'failed', 'scratch', 'ended', 'locks', 'overtime', 'slips', 'edits', 'drawn', 'vpn', 'mining', 'cleaned',
   'roomQuestions', 'boardPicks', 'ripples', 'mercy', 'minedSince', 'bookedFor', 'digging', 'rumor', 'chatted', 'routerDown',
-  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots', 'photos']
+  'mfpFixed', 'beatQueue', 'beatAsk', 'branches', 'dreamt', 'openedHistory', 'readBack', 'myNotes', 'posted', 'wikiEdits', 'tiles', 'myBookmarks', 'hinted', 'dayAt', 'sealed', 'frozen', 'placed', 'uploaded', 'touched', 'slacked', 'sentMails', 'visited', 'traces', 'explorerView', 'callLog', 'calledIn', 'spammedOn', 'wall', 'shots', 'photos', 'codes', 'sms']
 
 // 세이브에 담기는 것은 그때 열려 있던 질문의 사본이다(pendingAsks). 그래서
 // 시나리오의 대사나 정답을 고쳐도 이미 열려 있던 질문은 옛 사본 그대로 남아,
@@ -403,6 +403,10 @@ export const useGame = create((set, get) => ({
   shots: restored?.shots ?? [],
   // 폰 카메라로 찍은 것. 갤러리에 그대로 쌓인다.
   photos: restored?.photos ?? [],
+  // 로그인 인증번호. 사이트마다 하나, 발급될 때 메일과 문자 양쪽으로 간다 —
+  // 문자는 폰에만 있으니 메일이 없으면 PC 에서 못 들어간다.
+  codes: restored?.codes ?? {},
+  sms: restored?.sms ?? [],
   // 전화. 폰에만 있는 물건이라 PC 로 하는 일은 아무것도 막지 않는다 —
   // 메일로 하던 것을 전화로도 할 수 있을 뿐이다.
   // call 은 지금 울리거나 통화 중인 한 통(저장하지 않는다. 세이브를 불러와
@@ -613,6 +617,23 @@ export const useGame = create((set, get) => ({
     set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, minimized: true } : w)) })),
   // 바탕화면 보기(Win+D). 한 번 누르면 모두 내려가고, 한 번 더 누르면 방금
   // 내린 것들만 돌아온다 — 원래 내려가 있던 창은 그대로 둔다.
+  // 맨 앞 창을 화면 반쪽에 붙인다(Ctrl+Alt+←/→). 끌어서 가장자리에 놓는 것과
+  // 같은 자리(snapRect)로 간다 — 손과 키가 다른 자리를 만들면 안 된다.
+  snapFocused: (zone, vw, vh) => {
+    const s = get()
+    const front = s.windows.filter((w) => !w.minimized).sort((a, b) => b.z - a.z)[0]
+    if (!front) return
+    if (zone === 'max') return s.toggleMaximize(front.id)
+    const rect = snapRect(zone, vw, vh, 48)
+    if (rect) s.resizeWindow(front.id, rect)
+  },
+  // 창 순환(Alt+`). 맨 뒤에 있던 창이 앞으로 온다 — 계속 누르면 한 바퀴 돈다.
+  cycleWindows: () => {
+    const s = get()
+    const open = s.windows.filter((w) => !w.minimized).sort((a, b) => a.z - b.z)
+    if (open.length < 2) return
+    s.focusWindow(open[0].id)
+  },
   showDesktop: () => set((s) => {
     const open = s.windows.filter((w) => !w.minimized).map((w) => w.id)
     if (open.length) {
@@ -1107,6 +1128,28 @@ export const useGame = create((set, get) => ({
   },
   dropVpn: () => { set({ vpn: false, vpnDialing: false }); play('click') },
   unlockSite: (url) => set((s) => ({ unlocked: { ...s.unlocked, [url]: true } })),
+  // 인증번호 발급. 여섯 자리를 메일(AR 인증센터)과 문자로 함께 보낸다. 같은
+  // 사이트에 다시 시도하면 새 번호가 나가고 옛 번호는 죽는다.
+  issueCode: (url) => {
+    const s = get()
+    const site = s.scenario.sites.find((x) => x.url === url)
+    const otp = site?.login?.otp
+    if (!otp) return null
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const at = justNow(s.scenario, s.day)
+    const text = otp.text.replace('{code}', code)
+    set((st) => ({
+      codes: { ...st.codes, [url]: code },
+      extraMails: [...st.extraMails, {
+        id: 'otp_' + Date.now(), from: otp.from, date: '방금', at,
+        subject: otp.subject, body: text, canReply: false
+      }],
+      sms: [{ from: otp.sender, text, day: st.day, at }, ...st.sms].slice(0, 30)
+    }))
+    get().showToast({ from: otp.from, text: otp.toast, app: 'mail' })
+    return code
+  },
+  verifyCode: (url, typed) => get().codes[url] !== undefined && String(typed).trim() === get().codes[url],
   // The router's admin page. Stopping DHCP takes the floor down until it is
   // started again; changing the default password is the one thing worth doing.
   breakRouter: () => {

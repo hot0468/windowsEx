@@ -115,3 +115,45 @@ describe('바탕화면 보기', () => {
     expect(byId[2].minimized).toBe(true)
   })
 })
+
+// 키로 창을 다루는 것. 끌어서 가장자리에 놓는 것과 같은 자리로 가야 한다 —
+// 손과 키가 다른 자리를 만들면 둘 중 하나는 거짓말이다.
+describe('창 붙이기와 순환', () => {
+  const win = (id, z) => ({ id, app: 'mail', z, minimized: false, x: 100, y: 100, w: 500, h: 400 })
+  beforeEach(() => useGame.setState({ windows: [win(1, 1), win(2, 2), win(3, 3)], nextZ: 10 }))
+
+  it('맨 앞 창이 왼쪽 반에 붙는다', () => {
+    useGame.getState().snapFocused('left', 1200, 800)
+    const w = useGame.getState().windows.find((x) => x.id === 3)
+    expect(w.x).toBe(0)
+    expect(w.w).toBe(600)
+    expect(w.h).toBe(800 - 48)
+  })
+
+  it('오른콽은 남은 반을 채운다', () => {
+    useGame.getState().snapFocused('right', 1200, 800)
+    const w = useGame.getState().windows.find((x) => x.id === 3)
+    expect(w.x).toBe(600)
+    expect(w.x + w.w).toBe(1200)
+  })
+
+  it('내려간 창은 건드리지 않는다', () => {
+    useGame.setState({ windows: [win(1, 1), { ...win(2, 9), minimized: true }] })
+    useGame.getState().snapFocused('left', 1200, 800)
+    expect(useGame.getState().windows.find((x) => x.id === 2).x).toBe(100)
+    expect(useGame.getState().windows.find((x) => x.id === 1).x).toBe(0)
+  })
+
+  it('순환하면 맨 뒤 창이 앞으로 온다', () => {
+    useGame.getState().cycleWindows()
+    const zs = Object.fromEntries(useGame.getState().windows.map((w) => [w.id, w.z]))
+    expect(zs[1]).toBeGreaterThan(zs[3])
+  })
+
+  it('창이 하나면 순환할 것이 없다', () => {
+    useGame.setState({ windows: [win(1, 1)] })
+    const before = useGame.getState().windows[0].z
+    useGame.getState().cycleWindows()
+    expect(useGame.getState().windows[0].z).toBe(before)
+  })
+})

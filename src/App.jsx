@@ -356,11 +356,19 @@ export default function App() {
         e.preventDefault()
         useGame.getState().capture()
       }
-      // 바탕화면 보기. 실제 윈도우와 같은 자리에 둔다(Win 또는 Meta+D).
-      if (e.metaKey && e.key.toLowerCase() === 'd') {
+      // 바탕화면 보기. 실제 윈도우의 Win+D 는 운영체제가 먼저 가져가 브라우저에
+      // 오지 않는다 — Ctrl+Alt+D 를 같은 뜻으로 받는다(잠금의 Ctrl+Alt+L 과 한 식구).
+      const combo = e.ctrlKey && e.altKey
+      if ((e.metaKey || combo) && e.key.toLowerCase() === 'd') {
         e.preventDefault()
         useGame.getState().showDesktop()
       }
+      // 창을 화면 반쪽에 붙이기 · 최대화. 끌어서 가장자리에 놓는 것과 같은 자리.
+      if (combo && e.key === 'ArrowLeft') { e.preventDefault(); useGame.getState().snapFocused('left', window.innerWidth, window.innerHeight) }
+      if (combo && e.key === 'ArrowRight') { e.preventDefault(); useGame.getState().snapFocused('right', window.innerWidth, window.innerHeight) }
+      if (combo && e.key === 'ArrowUp') { e.preventDefault(); useGame.getState().snapFocused('max') }
+      // 창 순환. Alt+Tab 은 운영체제 것이라 Alt+` 로 받는다.
+      if (e.altKey && !e.ctrlKey && e.key === '`') { e.preventDefault(); useGame.getState().cycleWindows() }
       // arm()은 watchActivity가 keydown까지 듣고 있으므로 여기서 부르지 않는다.
     }
     window.addEventListener('keydown', onKey)

@@ -141,7 +141,7 @@ export default function Taskbar() {
             <LayoutGrid size={19} strokeWidth={1.8} />
           </button>
           {/* 바탕화면 보기. 실제 윈도우처럼 Win+D 로도 된다. */}
-          <button className="tb-icon" title="바탕화면 보기 (Win+D)" onClick={showDesktop}>
+          <button className="tb-icon" title="바탕화면 보기 (Ctrl+Alt+D) · 창 붙이기 Ctrl+Alt+←/→ · 창 순환 Alt+`" onClick={showDesktop}>
             <Monitor size={19} strokeWidth={1.8} />
           </button>
           {knownWindows(windows).map((w) => (
