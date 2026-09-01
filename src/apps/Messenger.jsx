@@ -228,12 +228,13 @@ export default function Messenger({ source }) {
   // other side says something new.
   const arrived = shown.filter((msg) => !msg.me).length
   const spent = thread && answeredAt[thread.id] >= arrived
-  // 잡담을 아는 상대인가. 단톡방과 이름 없는 계정에는 말을 걸 자리가 없다.
-  const talks = Boolean(thread && !quiet && scenario.smalltalk?.[thread.id])
   // A reaction can hand the conversation a new set of choices; otherwise the
   // thread's own sets advance as you keep replying.
   // A conversation still waiting its turn offers nothing to say back yet.
   const quiet = Boolean(thread && heldBack(thread))
+  // 잡담을 아는 상대인가. 단톡방과 이름 없는 계정에는 말을 걸 자리가 없다.
+  // quiet 뒤에 서야 한다 — 앞에 두면 대화를 여는 순간 TDZ로 터져 화면이 하얘진다.
+  const talks = Boolean(thread && !quiet && scenario.smalltalk?.[thread.id])
   // The sets advance as the player keeps replying — their own replies, not
   // every line pushed into the thread, or a day's opening alone would jump
   // straight to the last set.
